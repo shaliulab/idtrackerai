@@ -129,7 +129,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -262,7 +262,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_acceptable_for_training</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_temporary_id</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span> <span class="o">=</span> <span class="n">user_generated_identity</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_globally</span> <span class="o">=</span> <span class="kc">False</span>
@@ -285,7 +285,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_acceptable_for_training</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_temporary_id</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_globally</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_partially</span> <span class="o">=</span> <span class="kc">False</span>
@@ -300,14 +300,14 @@
             <span class="n">attributes_to_delete</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_for_training</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="n">attributes_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_frequencies&#39;</span><span class="p">,</span> <span class="s1">&#39;_P1_vector&#39;</span><span class="p">]</span>
             <span class="n">attributes_to_delete</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;_P2_vector&#39;</span><span class="p">,</span> <span class="s1">&#39;_ambiguous_identities&#39;</span><span class="p">,</span>
                                         <span class="s1">&#39;_certainty_P2&#39;</span><span class="p">])</span>
             <span class="n">delete_attributes_from_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes_to_delete</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">roll_back_to</span> <span class="o">==</span> <span class="s1">&#39;assignment&#39;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="kc">None</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_in_a_global_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -382,8 +382,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">identity_corrected_solving_duplication</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span>
+    <span class="k">def</span> <span class="nf">identity_corrected_solving_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">identity_corrected_solving_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">identity_corrected_closing_gaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -404,8 +408,8 @@
     <span class="k">def</span> <span class="nf">assigned_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_closing_gaps&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span>
-        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_solving_duplication&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_solving_jumps&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span>
 
@@ -451,8 +455,8 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span>
                 <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span>
                 <span class="ow">or</span> <span class="n">fragment</span><span class="o">.</span><span class="n">user_generated_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="ow">or</span> <span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)]</span></div>
+                <span class="ow">or</span> <span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)]</span></div>
 
 <div class="viewcode-block" id="Fragment.get_missing_identities_in_coexisting_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_missing_identities_in_coexisting_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_missing_identities_in_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_identities</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the identities that have not been assigned to the set of fragments coexisting with self</span>
@@ -834,7 +838,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 30, 2019.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.

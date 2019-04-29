@@ -72,6 +72,19 @@ When using information from this web page please reference
   idtracker.ai: tracking all individuals in small or large collectives of unmarked animals <https://rdcu.be/bgN2R>`_
   (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
+.. code-block:: bibtex
+
+  @article{romero2019idtracker,
+  title={idtracker.ai: tracking all individuals in small or large collectives of unmarked animals},
+  author={Romero-Ferrero, Francisco and Bergomi, Mattia G and Hinz, Robert C and Heras, Francisco JH and de Polavieja, Gonzalo G},
+  journal={Nature methods},
+  volume={16},
+  number={2},
+  pages={179},
+  year={2019},
+  publisher={Nature Publishing Group}
+  }
+
 Find `here the preprint <https://arxiv.org/abs/1803.04351>`_ version of the manuscript.
 
 Data

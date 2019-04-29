@@ -129,7 +129,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -355,9 +355,11 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">candidate_id</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">fragment</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="n">candidate_id</span>
+    <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fragment</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="n">candidate_id</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">candidate_id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;***********&quot;</span><span class="p">,</span> <span class="n">fragment</span><span class="o">.</span><span class="n">_identity</span><span class="p">,</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
         <span class="n">fragment</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="n">candidate_id</span></div>
 
 <div class="viewcode-block" id="compute_velocities_consecutive_fragments"><a class="viewcode-back" href="../postprocessing.html#correct_impossible_velocity_jumps.compute_velocities_consecutive_fragments">[docs]</a><span class="k">def</span> <span class="nf">compute_velocities_consecutive_fragments</span><span class="p">(</span><span class="n">neighbour_fragment_past</span><span class="p">,</span>
@@ -591,7 +593,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 30, 2019.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.

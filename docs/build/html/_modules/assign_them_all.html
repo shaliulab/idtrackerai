@@ -204,7 +204,7 @@
     <span class="p">[(</span><span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_is_an_individual&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_is_a_crossing&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_identity&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-        <span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_identity_corrected_solving_duplications&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_identity_corrected_solving_jumps&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">list_of_blobs_no_gaps</span><span class="o">.</span><span class="n">blobs_in_video</span>
         <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span>
         <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
@@ -645,8 +645,8 @@
     <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span>
+                <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span>
                 <span class="k">elif</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span>
                 <span class="k">elif</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -756,7 +756,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 30, 2019.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
