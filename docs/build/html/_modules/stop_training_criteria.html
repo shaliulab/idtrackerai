@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>stop_training_criteria &mdash; idtrackerai v0.0 Manual</title>
+    <title>stop_training_criteria &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -119,12 +132,9 @@
 
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">MAX_FLOAT</span><span class="p">,</span> <span class="n">LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN</span><span class="p">,</span> \
-                    <span class="n">LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN</span><span class="p">,</span> <span class="n">OVERFITTING_COUNTER_THRESHOLD_IDCNN</span><span class="p">,</span> \
-                    <span class="n">OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM</span><span class="p">,</span>\
-                    <span class="n">MAXIMUM_NUMBER_OF_EPOCHS_IDCNN</span>
+<span class="kn">from</span> <span class="nn">confapp</span> <span class="k">import</span> <span class="n">conf</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
@@ -153,7 +163,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">epochs_before_checking_stopping_conditions</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">check_for_loss_plateau</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">first_accumulation_flag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span> <span class="o">=</span> <span class="n">MAXIMUM_NUMBER_OF_EPOCHS_IDCNN</span> <span class="c1">#maximal num of epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">MAXIMUM_NUMBER_OF_EPOCHS_IDCNN</span> <span class="c1">#maximal num of epochs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">=</span> <span class="n">number_of_animals</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">epochs_before_checking_stopping_conditions</span> <span class="o">=</span> <span class="n">epochs_before_checking_stopping_conditions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#number of epochs in which the network is overfitting before stopping the training</span>
@@ -188,15 +198,15 @@
             <span class="n">current_loss</span> <span class="o">=</span> <span class="n">loss_accuracy_validation</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">previous_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">loss_accuracy_validation</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">epochs_before_checking_stopping_conditions</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
             <span class="c1">#The validation loss in the first 10 epochs could have exploded but being decreasing.</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">previous_loss</span><span class="p">):</span> <span class="n">previous_loss</span> <span class="o">=</span> <span class="n">MAX_FLOAT</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">previous_loss</span><span class="p">):</span> <span class="n">previous_loss</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">MAX_FLOAT</span>
             <span class="n">losses_difference</span> <span class="o">=</span> <span class="p">(</span><span class="n">previous_loss</span><span class="o">-</span><span class="n">current_loss</span><span class="p">)</span>
             <span class="c1">#check overfitting</span>
             <span class="k">if</span> <span class="n">losses_difference</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">&gt;=</span> <span class="n">OVERFITTING_COUNTER_THRESHOLD_IDCNN</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_flag</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">&gt;=</span> <span class="n">conf</span><span class="o">.</span><span class="n">OVERFITTING_COUNTER_THRESHOLD_IDCNN</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_flag</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Overfitting</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">return</span> <span class="kc">True</span>
-                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_flag</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">&gt;</span> <span class="n">OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_flag</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">&gt;</span> <span class="n">conf</span><span class="o">.</span><span class="n">OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Overfitting counter, &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span><span class="p">)</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Overfitting first accumulation</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">return</span> <span class="kc">True</span>
@@ -204,10 +214,10 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="c1">#check if the error is not decreasing much</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_for_loss_plateau</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_flag</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">losses_difference</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">current_loss</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_flag</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">losses_difference</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">conf</span><span class="o">.</span><span class="n">LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">current_loss</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;The losses difference is very small, we stop the training</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">return</span> <span class="kc">True</span>
-                <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">losses_difference</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">current_loss</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">losses_difference</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">conf</span><span class="o">.</span><span class="n">LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">current_loss</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;The losses difference is very small, we stop the training</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">return</span> <span class="kc">True</span>
             <span class="c1"># if the individual accuracies in validation are 1. for all the animals</span>
@@ -242,10 +252,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

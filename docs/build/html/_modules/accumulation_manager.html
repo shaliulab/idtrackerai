@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>accumulation_manager &mdash; idtrackerai v0.0 Manual</title>
+    <title>accumulation_manager &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -119,15 +132,11 @@
 
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
-<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">import</span> <span class="nn">psutil</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.assigner</span> <span class="k">import</span> <span class="n">assign</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.trainer</span> <span class="k">import</span> <span class="n">train</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">RATIO_OLD</span><span class="p">,</span> <span class="n">RATIO_NEW</span><span class="p">,</span> <span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span><span class="p">,</span> \
-                        <span class="n">CERTAINTY_THRESHOLD</span><span class="p">,</span> \
-                        <span class="n">MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.list_of_fragments</span> <span class="k">import</span> <span class="n">load_identification_images</span>
+<span class="kn">from</span> <span class="nn">confapp</span> <span class="k">import</span> <span class="n">conf</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -177,7 +186,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span>
                 <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">list_of_global_fragments</span><span class="p">,</span>
-                <span class="n">certainty_threshold</span> <span class="o">=</span> <span class="n">CERTAINTY_THRESHOLD</span><span class="p">,</span>
+                <span class="n">certainty_threshold</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">CERTAINTY_THRESHOLD</span><span class="p">,</span>
                 <span class="n">allow_partial_accumulation</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="n">threshold_acceptable_accumulation</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">video</span> <span class="o">=</span> <span class="n">video</span>
@@ -220,17 +229,17 @@
 <span class="sd">        fragment have been added before&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_fragments</span><span class="o">.</span><span class="n">get_new_images_and_labels_for_training</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;New images for training: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span>  <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;New images for training: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span>  <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">)),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;There are no new images in this accumulation&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Old images for training: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Old images for training: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="p">)),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span></div>
 
 <div class="viewcode-block" id="AccumulationManager.get_images_and_labels_for_training"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#accumulation_manager.AccumulationManager.get_images_and_labels_for_training">[docs]</a>    <span class="k">def</span> <span class="nf">get_images_and_labels_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Create a new dataset of labelled images to train the idCNN in the following way:</span>
-<span class="sd">        Per individual select MAXIMAL_IMAGES_PER_ANIMAL images. Such collection of images is composed</span>
-<span class="sd">        of a ratio corresponding to RATIO_NEW of new images (acquired in the current evaluation of the</span>
-<span class="sd">        global fragments) and RATIO_OLD of images already used</span>
+<span class="sd">        Per individual select conf.MAXIMAL_IMAGES_PER_ANIMAL images. Such collection of images is composed</span>
+<span class="sd">        of a ratio corresponding to conf.RATIO_NEW of new images (acquired in the current evaluation of the</span>
+<span class="sd">        global fragments) and conf.RATIO_OLD of images already used</span>
 <span class="sd">        in the previous iteration. &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Getting images for training...&quot;</span><span class="p">)</span>
         <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -242,54 +251,54 @@
             <span class="n">number_of_new_images</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_images_indices</span><span class="p">)</span>
             <span class="n">number_of_used_images</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">used_images_indices</span><span class="p">)</span>
             <span class="n">number_of_images_for_individual</span> <span class="o">=</span> <span class="n">number_of_new_images</span> <span class="o">+</span> <span class="n">number_of_used_images</span>
-            <span class="k">if</span> <span class="n">number_of_images_for_individual</span> <span class="o">&gt;</span> <span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">number_of_images_for_individual</span> <span class="o">&gt;</span> <span class="n">conf</span><span class="o">.</span><span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span><span class="p">:</span>
                 <span class="c1"># we take a proportion of the old images a new images only if the</span>
-                <span class="c1"># total number of images for this label is bigger than the limit MAXIMAL_IMAGES_PER_ANIMAL</span>
-                <span class="n">number_samples_new</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span> <span class="o">*</span> <span class="n">RATIO_NEW</span><span class="p">)</span>
-                <span class="n">number_samples_used</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span> <span class="o">*</span> <span class="n">RATIO_OLD</span><span class="p">)</span>
+                <span class="c1"># total number of images for this label is bigger than the limit conf.MAXIMAL_IMAGES_PER_ANIMAL</span>
+                <span class="n">number_samples_new</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span> <span class="o">*</span> <span class="n">conf</span><span class="o">.</span><span class="n">RATIO_NEW</span><span class="p">)</span>
+                <span class="n">number_samples_used</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span> <span class="o">*</span> <span class="n">conf</span><span class="o">.</span><span class="n">RATIO_OLD</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">number_of_used_images</span> <span class="o">&lt;</span> <span class="n">number_samples_used</span><span class="p">:</span>
                     <span class="c1"># if the proportion of used images is bigger than the number of</span>
                     <span class="c1"># used images we take all the used images for this label and update</span>
-                    <span class="c1"># the number of new images to reach the MAXIMAL_IMAGES_PER_ANIMAL</span>
+                    <span class="c1"># the number of new images to reach the conf.MAXIMAL_IMAGES_PER_ANIMAL</span>
                     <span class="n">number_samples_used</span> <span class="o">=</span> <span class="n">number_of_used_images</span>
-                    <span class="n">number_samples_new</span> <span class="o">=</span> <span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span> <span class="o">-</span> <span class="n">number_samples_used</span>
+                    <span class="n">number_samples_new</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span> <span class="o">-</span> <span class="n">number_samples_used</span>
                 <span class="k">if</span> <span class="n">number_of_new_images</span> <span class="o">&lt;</span> <span class="n">number_samples_new</span><span class="p">:</span>
                     <span class="c1"># if the proportion of new images is bigger than the number of</span>
                     <span class="c1"># new images we take all the new images for this label and update</span>
-                    <span class="c1"># the number of used images to reac the MAXIMAL_IMAGES_PER_ANIMAL</span>
+                    <span class="c1"># the number of used images to reac the conf.MAXIMAL_IMAGES_PER_ANIMAL</span>
                     <span class="n">number_samples_new</span> <span class="o">=</span> <span class="n">number_of_new_images</span>
-                    <span class="n">number_samples_used</span> <span class="o">=</span> <span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span> <span class="o">-</span> <span class="n">number_samples_new</span>
+                    <span class="n">number_samples_used</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span> <span class="o">-</span> <span class="n">number_samples_new</span>
                 <span class="c1"># we put together a random sample of the new images and the used images</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">[</span><span class="n">new_images_indices</span><span class="p">],</span><span class="n">number_samples_new</span><span class="p">))</span>
+                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">new_images_indices</span><span class="p">],</span> <span class="n">number_samples_new</span><span class="p">))</span>
                     <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">number_samples_new</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># this condition is set because the first time we accumulate the variable used_images is None</span>
-                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="p">[</span><span class="n">used_images_indices</span><span class="p">],</span><span class="n">number_samples_used</span><span class="p">))</span>
+                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">used_images_indices</span><span class="p">]</span> <span class="p">,</span><span class="n">number_samples_used</span><span class="p">))</span>
                     <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">number_samples_used</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># if the total number of images for this label does not exceed the MAXIMAL_IMAGES_PER_ANIMAL</span>
+                <span class="c1"># if the total number of images for this label does not exceed the conf.MAXIMAL_IMAGES_PER_ANIMAL</span>
                 <span class="c1"># we take all the new images and all the used images</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">[</span><span class="n">new_images_indices</span><span class="p">])</span>
+                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">new_images_indices</span><span class="p">])</span>
                     <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">number_of_new_images</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># this condition is set because the first time we accumulate the variable used_images is None</span>
-                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="p">[</span><span class="n">used_images_indices</span><span class="p">])</span>
+                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">used_images_indices</span><span class="p">])</span>
                     <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">number_of_used_images</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">images</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">load_identification_images</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="n">images</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AccumulationManager.update_used_images_and_labels"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#accumulation_manager.AccumulationManager.update_used_images_and_labels">[docs]</a>    <span class="k">def</span> <span class="nf">update_used_images_and_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets as used the images already used for training</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updating used_images...&quot;</span><span class="p">)</span>
+        <span class="c1">#logger.debug(&quot;Updating used_images...&quot;)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">counter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">used_images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_images</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">used_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_labels</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">used_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">used_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">used_labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_labels</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;number of images used for training: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">used_images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_images</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_images</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">used_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">used_labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_labels</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+        <span class="c1">#logger.info(&quot;number of images used for training: %s %s&quot; %(str(self.used_images.shape), str(self.used_labels.shape)))</span>
 
 <div class="viewcode-block" id="AccumulationManager.update_fragments_used_for_training"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#accumulation_manager.AccumulationManager.update_fragments_used_for_training">[docs]</a>    <span class="k">def</span> <span class="nf">update_fragments_used_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Once a global fragment has been used for training, sets the flags</span>
@@ -392,7 +401,7 @@
                                                                 <span class="ow">and</span> <span class="ow">not</span> <span class="n">global_fragment</span><span class="o">.</span><span class="n">used_for_training</span>
                                                                 <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_global_fragments</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_trial</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">minimum_number_of_images_accumulated_to_start_partial_accumulation</span> <span class="o">=</span> <span class="n">MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION</span>
+            <span class="n">minimum_number_of_images_accumulated_to_start_partial_accumulation</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">minimum_number_of_images_accumulated_to_start_partial_accumulation</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_acceptable_global_fragments</span> <span class="o">==</span> <span class="mi">0</span>\
@@ -717,8 +726,8 @@
             <span class="n">candidate_individual_fragments_identifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
-        <span class="n">assigner</span> <span class="o">=</span> <span class="n">assign</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">print_flag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">load_identification_images</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="n">images</span><span class="p">))</span>
+        <span class="n">assigner</span> <span class="o">=</span> <span class="n">assign</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">print_flag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">assigner</span><span class="o">.</span><span class="n">_predictions</span><span class="p">,</span> <span class="n">assigner</span><span class="o">.</span><span class="n">_softmax_probs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">lengths</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">candidate_individual_fragments_identifiers</span></div>
 </pre></div>
@@ -743,10 +752,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>pre_trainer &mdash; idtrackerai v0.0 Manual</title>
+    <title>pre_trainer &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -121,18 +134,15 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.network_params</span> <span class="k">import</span> <span class="n">NetworkParams</span>
+<span class="kn">from</span> <span class="nn">confapp</span> <span class="k">import</span> <span class="n">conf</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.get_data</span> <span class="k">import</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">split_data_train_and_validation</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.id_CNN</span> <span class="k">import</span> <span class="n">ConvNetwork</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.epoch_runner</span> <span class="k">import</span> <span class="n">EpochRunner</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.stop_training_criteria</span> <span class="k">import</span> <span class="n">Stop_Training</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.store_accuracy_and_loss</span> <span class="k">import</span> <span class="n">Store_Accuracy_and_Loss</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.list_of_global_fragments</span> <span class="k">import</span> <span class="n">ListOfGlobalFragments</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">,</span> <span class="n">BATCH_SIZE_IDCNN</span>
+
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
@@ -210,7 +220,7 @@
 <span class="sd">        list of instances of the class :class:`~fragment.Fragment`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Get images and labels from the current global fragment</span>
-    <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">pretraining_global_fragment</span><span class="o">.</span><span class="n">get_images_and_labels_for_pretraining</span><span class="p">()</span>
+    <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">pretraining_global_fragment</span><span class="o">.</span><span class="n">get_images_and_labels</span><span class="p">(</span><span class="n">list_of_fragments</span><span class="o">.</span><span class="n">identification_images_file_path</span><span class="p">)</span>
     <span class="c1"># Instantiate data_set</span>
     <span class="n">training_dataset</span><span class="p">,</span> <span class="n">validation_dataset</span> <span class="o">=</span> <span class="n">split_data_train_and_validation</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span>
                                                                             <span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
@@ -261,7 +271,7 @@
     <span class="k">if</span> <span class="n">plot_flag</span><span class="p">:</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">save_folder</span><span class="p">,</span><span class="s1">&#39;pretraining_gf</span><span class="si">%i</span><span class="s1">.pdf&#39;</span><span class="o">%</span><span class="n">i</span><span class="p">))</span>
     <span class="n">ratio_of_pretrained_images</span> <span class="o">=</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">compute_ratio_of_images_used_for_pretraining</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;limit ratio of images to be used during pretraining: </span><span class="si">%.4f</span><span class="s2"> (if higher than </span><span class="si">%.2f</span><span class="s2"> we stop)&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">ratio_of_pretrained_images</span><span class="p">,</span> <span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;limit ratio of images to be used during pretraining: </span><span class="si">%.4f</span><span class="s2"> (if higher than </span><span class="si">%.2f</span><span class="s2"> we stop)&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">ratio_of_pretrained_images</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">net</span><span class="p">,</span> <span class="n">ratio_of_pretrained_images</span><span class="p">,</span> <span class="n">global_epoch</span><span class="p">,</span> <span class="n">store_training_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">list_of_fragments</span></div>
 
 <div class="viewcode-block" id="pre_train"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#pre_trainer.pre_train">[docs]</a><span class="k">def</span> <span class="nf">pre_train</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">list_of_global_fragments</span><span class="p">,</span>
@@ -270,7 +280,7 @@
                 <span class="n">print_flag</span><span class="p">,</span> <span class="n">plot_flag</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Performs pretraining by iterating on the list of global fragments</span>
 <span class="sd">    sorted by distance travelled, until the threshold</span>
-<span class="sd">    :const:`~constants.MAX_RATIO_OF_PRETRAINED_IMAGES` is reached</span>
+<span class="sd">    :const:`conf.MAX_RATIO_OF_PRETRAINED_IMAGES` is reached</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -339,9 +349,9 @@
                                                                             <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span>
                                                                             <span class="n">print_flag</span> <span class="o">=</span> <span class="n">print_flag</span><span class="p">,</span>
                                                                             <span class="n">plot_flag</span> <span class="o">=</span> <span class="n">plot_flag</span><span class="p">,</span>
-                                                                            <span class="n">batch_size</span> <span class="o">=</span> <span class="n">BATCH_SIZE_IDCNN</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ratio_of_pretrained_images</span> <span class="o">&gt;</span> <span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;pre-training ended: The network has been pre-trained on more than </span><span class="si">%.4f</span><span class="s2"> of the images in global fragment&quot;</span> <span class="o">%</span><span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">)</span>
+                                                                            <span class="n">batch_size</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">BATCH_SIZE_IDCNN</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ratio_of_pretrained_images</span> <span class="o">&gt;</span> <span class="n">conf</span><span class="o">.</span><span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;pre-training ended: The network has been pre-trained on more than </span><span class="si">%.4f</span><span class="s2"> of the images in global fragment&quot;</span> <span class="o">%</span><span class="n">conf</span><span class="o">.</span><span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">)</span>
             <span class="k">break</span>
 
     <span class="k">return</span> <span class="n">net</span></div>
@@ -379,7 +389,7 @@
                     <span class="n">store_accuracy_and_error</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="n">check_for_loss_plateau</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="n">save_summaries</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                    <span class="n">print_flag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">print_flag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                     <span class="n">plot_flag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></div>
 </pre></div>
 
@@ -403,10 +413,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

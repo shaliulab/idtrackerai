@@ -1,8 +1,8 @@
-Trajectories analysis
-=====================
+Jupyter Notebooks for analysis
+==============================
 
 We are constantly developing new tools to analyze the trajectories that
-idtracker.ai outputs. In addition, we also provide Jupyter Lab Notebooks
+idtracker.ai outputs. We provide Jupyter Notebooks
 with examples of analysis routines for groups of animals.
 
 
@@ -13,16 +13,16 @@ The *trajectorytools* python module
 You can install the *trajectorytools* module from the following GitHub repository:
 https://github.com/fjhheras/trajectorytools
 
-^^^^^^^^^^^^^^^^^^^^^
-Jupyter Lab Notebooks
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+Jupyter Notebooks
+^^^^^^^^^^^^^^^^^
 
 You can find some analysis routines from [1]_ implemented with the
 *trajectorytools* module in the Jupyter Lab Notebook *trajcetoroies.ipynb*
-in the following GitLab repository: https://gitlab.com/polavieja_lab/bns2018.
+in the following GitLab repository: https://gitlab.com/polavieja_lab/idtrackerai_notebooks.
 
-Figures generated from the Jupyter Lab Notebook for a video of 10 juvenile fish
-*******************************************************************************
+Figures generated from our Jupyter Notebooks for a video of 10 juvenile fish
+****************************************************************************
 
 Smoothed trajectories
 ---------------------

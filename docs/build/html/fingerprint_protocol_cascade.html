@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>Fingerprint protocol cascade &mdash; idtrackerai v0.0 Manual</title>
+    <title>Fingerprint protocol cascade &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" >
     <link rel="search" title="Search" href="search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="index.html" >
     <link rel="up" title="Code documentation" href="modules.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="modules.html" accesskey="U">Code documentation</a></li> 
     </ul>
@@ -83,7 +84,7 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Fingerprint protocol cascade</a><ul>
 <li><a class="reference internal" href="#module-accumulation_manager">Accumulation manager</a></li>
@@ -93,6 +94,18 @@
 <li><a class="reference internal" href="#pretraining">Pretraining</a></li>
 </ul>
 </li>
+</ul>
+
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
 </ul>
 
         </div>
@@ -182,7 +195,7 @@
 <td>Assigns identities during test to individual fragments and rank them according to the score computed from the certainty of identification and the minimum distance travelled</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.get_images_and_labels_for_training" title="accumulation_manager.AccumulationManager.get_images_and_labels_for_training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_images_and_labels_for_training</span></code></a>()</td>
-<td>Create a new dataset of labelled images to train the idCNN in the following way: Per individual select MAXIMAL_IMAGES_PER_ANIMAL images.</td>
+<td>Create a new dataset of labelled images to train the idCNN in the following way: Per individual select conf.MAXIMAL_IMAGES_PER_ANIMAL images.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.get_new_images_and_labels" title="accumulation_manager.AccumulationManager.get_new_images_and_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_new_images_and_labels</span></code></a>()</td>
 <td>get the images and labels of the new global fragments that are going to be used for training, this function checks whether the images of a individual fragment have been added before</td>
@@ -302,9 +315,9 @@ minimum distance travelled</p>
 <dt id="accumulation_manager.AccumulationManager.get_images_and_labels_for_training">
 <code class="descname">get_images_and_labels_for_training</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/accumulation_manager.html#AccumulationManager.get_images_and_labels_for_training"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accumulation_manager.AccumulationManager.get_images_and_labels_for_training" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new dataset of labelled images to train the idCNN in the following way:
-Per individual select MAXIMAL_IMAGES_PER_ANIMAL images. Such collection of images is composed
-of a ratio corresponding to RATIO_NEW of new images (acquired in the current evaluation of the
-global fragments) and RATIO_OLD of images already used
+Per individual select conf.MAXIMAL_IMAGES_PER_ANIMAL images. Such collection of images is composed
+of a ratio corresponding to conf.RATIO_NEW of new images (acquired in the current evaluation of the
+global fragments) and conf.RATIO_OLD of images already used
 in the previous iteration.</p>
 </dd></dl>
 
@@ -561,50 +574,6 @@ idCNN in an accumulation’s iteration</p>
 <p>The accumulator module contains the main routine used to compute the accumulation process, which
 is an essential part of both the second and third fingerprint protocol.</p>
 <span class="target" id="module-accumulator"></span><dl class="function">
-<dt id="accumulator.accumulate">
-<code class="descclassname">accumulator.</code><code class="descname">accumulate</code><span class="sig-paren">(</span><em>accumulation_manager</em>, <em>video</em>, <em>global_step</em>, <em>net</em>, <em>identity_transfer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/accumulator.html#accumulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accumulator.accumulate" title="Permalink to this definition">¶</a></dt>
-<dd><p>take care of managing  the process of accumulation
-of labelled images. Such process, in complex video, allows us to train  the
-idCNN (or whatever function approximator passed in input as <cite>net</cite>).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>accumulation_manager</strong> <span class="classifier-delimiter">:</span> <span class="classifier">&lt;accumulation_manager.AccumulationManager object&gt;</span></dt>
-<dd><p class="first last">Description of parameter <cite>accumulation_manager</cite>.</p>
-</dd>
-<dt><strong>video</strong> <span class="classifier-delimiter">:</span> <span class="classifier">&lt;video.Video object&gt;</span></dt>
-<dd><p class="first last">Object collecting all the parameters of the video and paths for saving and loading</p>
-</dd>
-<dt><strong>global_step</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">network epoch counter</p>
-</dd>
-<dt><strong>net</strong> <span class="classifier-delimiter">:</span> <span class="classifier">&lt;net.ConvNetwork object&gt;</span></dt>
-<dd><p class="first last">Convolutional neural network object created according to net.params</p>
-</dd>
-<dt><strong>identity_transfer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
-<dd><p class="first last">If true the identity of the individual is also tranferred</p>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>float</strong></dt>
-<dd><p class="first last">Ratio of accumulated images</p>
-</dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#accumulator.early_stop_criteria_for_accumulation" title="accumulator.early_stop_criteria_for_accumulation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">early_stop_criteria_for_accumulation</span></code></a></p>
-</div>
-</dd></dl>
-
-<dl class="function">
 <dt id="accumulator.early_stop_criteria_for_accumulation">
 <code class="descclassname">accumulator.</code><code class="descname">early_stop_criteria_for_accumulation</code><span class="sig-paren">(</span><em>number_of_accumulated_images</em>, <em>number_of_unique_images_in_global_fragments</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/accumulator.html#early_stop_criteria_for_accumulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accumulator.early_stop_criteria_for_accumulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>A particularly succesful accumulation causes an early stop of the training
@@ -855,7 +824,7 @@ images</p>
 <code class="descclassname">pre_trainer.</code><code class="descname">pre_train</code><span class="sig-paren">(</span><em>video</em>, <em>list_of_fragments</em>, <em>list_of_global_fragments</em>, <em>params</em>, <em>store_accuracy_and_error</em>, <em>check_for_loss_plateau</em>, <em>save_summaries</em>, <em>print_flag</em>, <em>plot_flag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pre_trainer.html#pre_train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pre_trainer.pre_train" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs pretraining by iterating on the list of global fragments
 sorted by distance travelled, until the threshold
-<code class="xref py py-const docutils literal notranslate"><span class="pre">MAX_RATIO_OF_PRETRAINED_IMAGES</span></code> is reached</p>
+<code class="xref py py-const docutils literal notranslate"><span class="pre">conf.MAX_RATIO_OF_PRETRAINED_IMAGES</span></code> is reached</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1051,10 +1020,10 @@ images</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 19, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

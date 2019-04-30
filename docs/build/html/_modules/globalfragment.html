@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>globalfragment &mdash; idtrackerai v0.0 Manual</title>
+    <title>globalfragment &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -119,14 +132,12 @@
 
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-<span class="kn">import</span> <span class="nn">matplotlib.lines</span> <span class="k">as</span> <span class="nn">mlines</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">confapp</span> <span class="k">import</span> <span class="n">conf</span>
+
+<span class="kn">from</span> <span class="nn">idtrackerai.list_of_fragments</span> <span class="k">import</span> <span class="n">load_identification_images</span>
+
+
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
@@ -155,7 +166,7 @@
 <span class="sd">        identity</span>
 <span class="sd">    _is_certain : bool</span>
 <span class="sd">        True if each of the individual fragments have scored a certaninty above</span>
-<span class="sd">        the threshold :const:`~constants.CERTAINTY_THRESHOLD`</span>
+<span class="sd">        the threshold :const:`conf.CERTAINTY_THRESHOLD`</span>
 <span class="sd">    _ids_assigned : ndarray</span>
 <span class="sd">        shape [1, number_of_animals] each componenents correspond to the</span>
 <span class="sd">        identity assigned by the algorithm to each of the individual fragments</span>
@@ -261,7 +272,7 @@
         <span class="sd">&quot;&quot;&quot;Sets the global fragment to be eligible for accumulation</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_candidate_for_accumulation</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_images_per_individual_fragment</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_images_per_individual_fragment</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">conf</span><span class="o">.</span><span class="n">MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_candidate_for_accumulation</span> <span class="o">=</span> <span class="kc">False</span></div>
 
     <span class="nd">@property</span>
@@ -365,7 +376,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">total_number_of_images</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">])</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_number_of_images</span></div>
 
-<div class="viewcode-block" id="GlobalFragment.get_images_and_labels_for_pretraining"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.get_images_and_labels_for_pretraining">[docs]</a>    <span class="k">def</span> <span class="nf">get_images_and_labels_for_pretraining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.get_images_and_labels"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.get_images_and_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_images_and_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identification_images_file_path</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s1">&#39;pretraining&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Arrange the images and identities in the global fragment as a</span>
 <span class="sd">        labelled dataset in order to train the idCNN</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -375,9 +386,10 @@
         <span class="k">for</span> <span class="n">temporary_id</span><span class="p">,</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">):</span>
             <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">images</span><span class="p">)</span>
             <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">temporary_id</span><span class="p">]</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span><span class="p">)</span>
-            <span class="n">fragment</span><span class="o">.</span><span class="n">_temporary_id_for_pretraining</span> <span class="o">=</span> <span class="n">temporary_id</span>
+            <span class="k">if</span> <span class="n">scope</span><span class="o">==</span><span class="s1">&#39;pretraining&#39;</span><span class="p">:</span>
+                <span class="n">fragment</span><span class="o">.</span><span class="n">_temporary_id_for_pretraining</span> <span class="o">=</span> <span class="n">temporary_id</span>
 
-        <span class="k">return</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">load_identification_images</span><span class="p">(</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="n">images</span><span class="p">)),</span> <span class="n">labels</span></div>
 
 <div class="viewcode-block" id="GlobalFragment.compute_start_end_frame_indices_of_individual_fragments"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.compute_start_end_frame_indices_of_individual_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">compute_start_end_frame_indices_of_individual_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blobs_in_video</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -427,10 +439,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

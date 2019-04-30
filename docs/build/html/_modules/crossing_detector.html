@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>crossing_detector &mdash; idtrackerai v0.0 Manual</title>
+    <title>crossing_detector &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -119,9 +132,13 @@
 
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">confapp</span> <span class="k">import</span> <span class="n">conf</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.network.cnn_architectures</span> <span class="k">import</span> <span class="n">cnn_model_crossing_detector</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.network.crossings_detector_model.get_crossings_data_set</span> <span class="k">import</span> <span class="n">CrossingDataset</span>
@@ -156,33 +173,49 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Discriminating blobs representing individuals from blobs associated to crossings&quot;</span><span class="p">)</span>
+
+    <span class="n">image_shape</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">identification_image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;identification_images&quot;</span><span class="p">,</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">)),</span>
+                         <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">),</span>
+                         <span class="n">maxshape</span><span class="o">=</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="o">*</span><span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="o">*</span><span class="mi">5</span><span class="p">,</span>
+                                   <span class="n">image_shape</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;number_of_animals&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;video_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">video_path</span>
+
     <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">apply_model_area_to_video</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">model_area</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">identification_image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">use_network</span><span class="p">:</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">reset_default_graph</span><span class="p">()</span>
         <span class="n">video</span><span class="o">.</span><span class="n">create_crossings_detector_folder</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Get individual and crossing images labelled data&quot;</span><span class="p">)</span>
         <span class="n">training_set</span> <span class="o">=</span> <span class="n">CrossingDataset</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;training&#39;</span><span class="p">)</span>
-        <span class="n">training_set</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">sampling_ratio_start</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sampling_ratio_end</span> <span class="o">=</span> <span class="o">.</span><span class="mi">9</span><span class="p">)</span>
-        <span class="n">validation_set</span> <span class="o">=</span> <span class="n">CrossingDataset</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;validation&#39;</span><span class="p">,</span>
-                                                        <span class="n">crossings</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">crossing_blobs</span><span class="p">,</span>
-                                                        <span class="n">individual_blobs</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">individual_blobs</span><span class="p">,</span>
-                                                        <span class="n">image_size</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">image_size</span><span class="p">)</span>
-        <span class="n">validation_set</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">sampling_ratio_start</span> <span class="o">=</span> <span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="n">sampling_ratio_end</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Start crossing detector training&quot;</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Crossing detector training finished&quot;</span><span class="p">)</span>
-        <span class="n">crossing_image_size</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">image_size</span>
-        <span class="n">crossing_image_shape</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">images</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;crossing image shape </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">crossing_image_shape</span><span class="p">))</span>
-        <span class="n">crossings_detector_network_params</span> <span class="o">=</span> <span class="n">NetworkParams_crossings</span><span class="p">(</span><span class="n">number_of_classes</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-                                                                    <span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span>
-                                                                    <span class="n">architecture</span> <span class="o">=</span> <span class="n">cnn_model_crossing_detector</span><span class="p">,</span>
-                                                                    <span class="n">keep_prob</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
-                                                                    <span class="n">save_folder</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">_crossings_detector_folder</span><span class="p">,</span>
-                                                                    <span class="n">image_size</span> <span class="o">=</span> <span class="n">crossing_image_shape</span><span class="p">)</span>
-        <span class="n">net</span> <span class="o">=</span> <span class="n">ConvNetwork_crossings</span><span class="p">(</span><span class="n">crossings_detector_network_params</span><span class="p">)</span>
-        <span class="n">trainer</span> <span class="o">=</span> <span class="n">TrainDeepCrossing</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">training_set</span><span class="p">,</span> <span class="n">validation_set</span><span class="p">,</span>
-                                    <span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">95</span><span class="p">,</span> <span class="n">plot_flag</span> <span class="o">=</span> <span class="n">plot_flag</span><span class="p">,</span>
-                                    <span class="n">return_store_objects</span> <span class="o">=</span> <span class="n">return_store_objects</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">training_set</span><span class="o">.</span><span class="n">there_are_crossings</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;There are not enough crossings to train the crossing detector&quot;</span><span class="p">)</span>
+            <span class="n">video</span><span class="o">.</span><span class="n">_there_are_crossings</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="n">list_of_blobs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">training_set</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">sampling_ratio_start</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sampling_ratio_end</span> <span class="o">=</span> <span class="o">.</span><span class="mi">9</span><span class="p">)</span>
+            <span class="n">validation_set</span> <span class="o">=</span> <span class="n">CrossingDataset</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;validation&#39;</span><span class="p">,</span>
+                                                            <span class="n">crossings</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">crossing_blobs</span><span class="p">,</span>
+                                                            <span class="n">individual_blobs</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">individual_blobs</span><span class="p">,</span>
+                                                            <span class="n">image_size</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">image_size</span><span class="p">)</span>
+            <span class="n">validation_set</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">sampling_ratio_start</span> <span class="o">=</span> <span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="n">sampling_ratio_end</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Start crossing detector training&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Crossing detector training finished&quot;</span><span class="p">)</span>
+            <span class="n">crossing_image_size</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">image_size</span>
+            <span class="n">crossing_image_shape</span> <span class="o">=</span> <span class="n">training_set</span><span class="o">.</span><span class="n">images</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;crossing image shape </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">crossing_image_shape</span><span class="p">))</span>
+            <span class="n">crossings_detector_network_params</span> <span class="o">=</span> <span class="n">NetworkParams_crossings</span><span class="p">(</span><span class="n">number_of_classes</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                                                                        <span class="n">learning_rate</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">LEARNING_RATE_DCD</span><span class="p">,</span>
+                                                                        <span class="n">architecture</span> <span class="o">=</span> <span class="n">cnn_model_crossing_detector</span><span class="p">,</span>
+                                                                        <span class="n">keep_prob</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">KEEP_PROB_IDCNN_PRETRAINING</span><span class="p">,</span>
+                                                                        <span class="n">save_folder</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">_crossings_detector_folder</span><span class="p">,</span>
+                                                                        <span class="n">image_size</span> <span class="o">=</span> <span class="n">crossing_image_shape</span><span class="p">)</span>
+            <span class="n">net</span> <span class="o">=</span> <span class="n">ConvNetwork_crossings</span><span class="p">(</span><span class="n">crossings_detector_network_params</span><span class="p">)</span>
+            <span class="n">trainer</span> <span class="o">=</span> <span class="n">TrainDeepCrossing</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">training_set</span><span class="p">,</span> <span class="n">validation_set</span><span class="p">,</span>
+                                        <span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">95</span><span class="p">,</span> <span class="n">plot_flag</span> <span class="o">=</span> <span class="n">plot_flag</span><span class="p">,</span>
+                                        <span class="n">return_store_objects</span> <span class="o">=</span> <span class="n">return_store_objects</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">trainer</span><span class="o">.</span><span class="n">model_diverged</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;crossing image size </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">crossing_image_size</span><span class="p">))</span>
             <span class="n">video</span><span class="o">.</span><span class="n">crossing_image_shape</span> <span class="o">=</span> <span class="n">crossing_image_shape</span>
@@ -207,6 +240,7 @@
             <span class="k">if</span> <span class="n">return_store_objects</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">trainer</span>
     <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">video</span><span class="o">.</span><span class="n">_there_are_crossings</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">list_of_blobs</span></div>
 </pre></div>
 
@@ -230,10 +264,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

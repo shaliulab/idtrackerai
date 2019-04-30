@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>blob &mdash; idtrackerai v0.0 Manual</title>
+    <title>blob &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -120,8 +133,10 @@
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
@@ -135,6 +150,7 @@
     <span class="kn">import</span> <span class="nn">logging</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.blob&quot;</span><span class="p">)</span>
 
+
 <div class="viewcode-block" id="Blob"><a class="viewcode-back" href="../preprocessing.html#blob.Blob">[docs]</a><span class="k">class</span> <span class="nc">Blob</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Object representing a blob (collection of pixels) segmented from a frame</span>
 
@@ -143,6 +159,8 @@
 
 <span class="sd">    frame_number : int</span>
 <span class="sd">        Object containing all the parameters of the video.</span>
+<span class="sd">    in_frame_index : int</span>
+<span class="sd">        Hierarchy of the blob in the segmentation of the frame</span>
 <span class="sd">    number_of_animals : int</span>
 <span class="sd">        Number of animals to be tracked</span>
 <span class="sd">    centroid : tuple</span>
@@ -157,8 +175,8 @@
 <span class="sd">        Image obtained by clipping the frame to the bounding box</span>
 <span class="sd">    estimated_body_length: float</span>
 <span class="sd">        Body length estimated from the bounding box</span>
-<span class="sd">    _image_for_identification: ndarray</span>
-<span class="sd">        Image fed to the network to get the identity of the animal the blob is associated to</span>
+<span class="sd">    image_for_identification_path: string</span>
+<span class="sd">        Path to where the image for identification is saved</span>
 <span class="sd">    pixels : list</span>
 <span class="sd">        List of ravelled pixels belonging to the blob (wrt the full frame)</span>
 <span class="sd">    _is_an_individual : bool</span>
@@ -176,7 +194,7 @@
 <span class="sd">    _fragment_identifier : int</span>
 <span class="sd">        Unique integer identifying the fragment (built by blob overlapping) to which self belongs to</span>
 <span class="sd">    _blob_index : int</span>
-<span class="sd">        Hierarchy of the blob</span>
+<span class="sd">        Hierarchy of the blob at the beggining of the core of the global fragment. Only used to plot accumulation steps</span>
 <span class="sd">    _used_for_training : bool</span>
 <span class="sd">        If True the image obtained from the blob has been used to train the idCNN</span>
 <span class="sd">    _accumulation_step : int</span>
@@ -187,7 +205,7 @@
 <span class="sd">        The identity corrected manually by the user during validation</span>
 <span class="sd">    _identity_corrected_closing_gaps : int</span>
 <span class="sd">        The identity given to the blob during in postprocessing</span>
-<span class="sd">    _identity_corrected_solving_duplication : int</span>
+<span class="sd">    _identity_corrected_solving_jumps : int</span>
 <span class="sd">        The identity given to the blob while solving duplications</span>
 <span class="sd">    _identity : int</span>
 <span class="sd">        Identity associated to the blob</span>
@@ -210,19 +228,34 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centroid</span><span class="p">,</span> <span class="n">contour</span><span class="p">,</span> <span class="n">area</span><span class="p">,</span>
-                <span class="n">bounding_box_in_frame_coordinates</span><span class="p">,</span> <span class="n">bounding_box_image</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="n">estimated_body_length</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pixels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="n">number_of_animals</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">frame_number</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                 <span class="n">bounding_box_in_frame_coordinates</span><span class="p">,</span> <span class="n">bounding_box_image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">bounding_box_images_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">estimated_body_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">number_of_animals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frame_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">frame_number_in_video_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">in_frame_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pixels_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">video_height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">video_width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">video_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pixels_are_from_eroded_blob</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">has_eroded_pixels</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span> <span class="o">=</span> <span class="n">frame_number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_frame_index</span> <span class="o">=</span> <span class="n">in_frame_index</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">=</span> <span class="n">number_of_animals</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">centroid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centroid</span><span class="p">)</span> <span class="c1"># numpy array (int64): coordinates of the centroid of the blob in pixels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">contour</span> <span class="o">=</span> <span class="n">contour</span> <span class="c1"># openCV contour [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">area</span> <span class="o">=</span> <span class="n">area</span> <span class="c1"># int: number of pixels in the blob</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_in_frame_coordinates</span> <span class="o">=</span> <span class="n">bounding_box_in_frame_coordinates</span> <span class="c1">#tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_image</span> <span class="o">=</span> <span class="n">bounding_box_image</span> <span class="c1"># numpy array (uint8): image of the fish cropped from the video according to the bounding_box_in_frame_coordinates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bounding_box_image</span> <span class="o">=</span> <span class="n">bounding_box_image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_images_path</span> <span class="o">=</span> <span class="n">bounding_box_images_path</span> <span class="c1"># path to where the bounding_box_image is saved</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">estimated_body_length</span> <span class="o">=</span> <span class="n">estimated_body_length</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_image_for_identification</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># numpy array (float32)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span> <span class="o">=</span> <span class="n">pixels</span> <span class="c1"># list of int&#39;s: linearized pixels of the blob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_for_identification_path</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># path where the image for identification is stored</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identification_image_index</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1">##</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pixels_path</span> <span class="o">=</span> <span class="n">pixels_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span> <span class="o">=</span> <span class="n">pixels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eroded_pixels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_height</span> <span class="o">=</span> <span class="n">video_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_width</span> <span class="o">=</span> <span class="n">video_width</span>
+        <span class="c1">##</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_an_individual</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_a_crossing</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_was_a_crossing</span> <span class="o">=</span> <span class="kc">False</span>
@@ -236,8 +269,75 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_generated_while_closing_the_gap</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_path</span> <span class="o">=</span> <span class="n">video_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_number_in_video_path</span> <span class="o">=</span> <span class="n">frame_number_in_video_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixels_are_from_eroded_blob</span> <span class="o">=</span> <span class="n">pixels_are_from_eroded_blob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_eroded_pixels</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bounding_box_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounding_box_image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounding_box_image</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_images_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_images_path</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_images_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_frame_index</span><span class="p">)][:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_path</span><span class="p">)</span>
+            <span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_number_in_video_path</span><span class="p">)</span>
+            <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">bb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_in_frame_coordinates</span>
+            <span class="k">return</span> <span class="n">frame</span><span class="p">[</span><span class="n">bb</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span><span class="n">bb</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">bb</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">bb</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">]</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels_path</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels_are_from_eroded_blob</span><span class="p">:</span>
+                    <span class="n">dataset_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_frame_index</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dataset_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_frame_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-eroded&#39;</span>
+                <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="n">dataset_name</span><span class="p">][:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cimg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">video_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_width</span><span class="p">))</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">cimg</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">contour</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cimg</span> <span class="o">==</span> <span class="mi">255</span><span class="p">)</span>
+            <span class="n">pixels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+            <span class="n">pixels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">([</span><span class="n">pixels</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pixels</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]],</span>
+                                          <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_width</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">pixels</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eroded_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eroded_pixels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels_path</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_frame_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-eroded&#39;</span><span class="p">][:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cimg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">video_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_width</span><span class="p">))</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">cimg</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">contour</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cimg</span> <span class="o">==</span> <span class="mi">255</span><span class="p">)</span>
+            <span class="n">pixels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+            <span class="n">pixels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">([</span><span class="n">pixels</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pixels</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]],</span>
+                                          <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_width</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">pixels</span>
+
+    <span class="nd">@eroded_pixels</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">eroded_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eroded_pixels</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixels_path</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">dataset_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_frame_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-eroded&#39;</span>
+                <span class="k">if</span> <span class="n">dataset_name</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="n">f</span><span class="p">[</span><span class="n">dataset_name</span><span class="p">]</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">eroded_pixels</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">has_eroded_pixels</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_eroded_pixels</span> <span class="o">=</span> <span class="n">eroded_pixels</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fragment_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -354,7 +454,8 @@
 <span class="sd">            True if the lists of pixels have non-empty intersection</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">overlaps</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">intersection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">pixels</span><span class="p">)</span>
+        <span class="n">intersection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">pixels</span><span class="p">,</span>
+                                      <span class="n">assume_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">intersection</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">overlaps</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">overlaps</span></div>
@@ -438,9 +539,13 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_an_individual_in_a_fragment</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_blob_index</span> <span class="o">=</span> <span class="n">new_blob_index</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">image_for_identification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_for_identification</span>
+    <span class="c1"># @property</span>
+    <span class="c1"># def image_for_identification(self):</span>
+    <span class="c1">#     if self.is_an_individual:</span>
+    <span class="c1">#         with h5py.File(self.image_for_identification_path, &#39;r&#39;) as f:</span>
+    <span class="c1">#             return f[&#39;identification_images&#39;][self.identification_image_index]</span>
+    <span class="c1">#     else:</span>
+    <span class="c1">#         return None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">nose_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -492,8 +597,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_a_misclassified_individual</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">identity_corrected_solving_duplication</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span>
+    <span class="k">def</span> <span class="nf">identity_corrected_solving_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">identity_corrected_closing_gaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -530,7 +635,8 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;mean pixels both blobs </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pixels</span><span class="p">)])))</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;non_shared_information_with_previous is nan&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Blob.apply_model_area"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.apply_model_area">[docs]</a>    <span class="k">def</span> <span class="nf">apply_model_area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">model_area</span><span class="p">,</span> <span class="n">identification_image_size</span><span class="p">,</span> <span class="n">number_of_blobs</span><span class="p">):</span>
+<div class="viewcode-block" id="Blob.apply_model_area"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.apply_model_area">[docs]</a>    <span class="k">def</span> <span class="nf">apply_model_area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">model_area</span><span class="p">,</span>
+                         <span class="n">identification_image_size</span><span class="p">,</span> <span class="n">number_of_blobs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Classify self as a crossing or individual blob according to its area</span>
 
 <span class="sd">        Parameters</span>
@@ -562,9 +668,19 @@
 <span class="sd">            Object containing all the parameters of the video.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_image_for_identification</span><span class="p">,</span> \
-        <span class="bp">self</span><span class="o">.</span><span class="n">_extreme1_coordinates</span><span class="p">,</span> \
-        <span class="bp">self</span><span class="o">.</span><span class="n">_extreme2_coordinates</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image_for_identification</span><span class="p">(</span><span class="n">video</span><span class="p">)</span></div>
+        <span class="n">image_for_identification</span><span class="p">,</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_extreme1_coordinates</span><span class="p">,</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_extreme2_coordinates</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image_for_identification</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+
+        <span class="c1"># For RAM optimization</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">dset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;identification_images&#39;</span><span class="p">]</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dset</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                         <span class="n">image_for_identification</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                         <span class="n">image_for_identification</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">dset</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_for_identification</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identification_image_index</span> <span class="o">=</span> <span class="n">i</span></div>
 
 <div class="viewcode-block" id="Blob.get_image_for_identification"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.get_image_for_identification">[docs]</a>    <span class="k">def</span> <span class="nf">get_image_for_identification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">image_size</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute the image that will be used to identify the animal with the idCNN</span>
@@ -592,7 +708,8 @@
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">,</span>
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_in_frame_coordinates</span><span class="p">,</span>
                                                 <span class="n">image_size</span><span class="p">,</span>
-                                                <span class="n">folder_to_save_for_paper_figure</span> <span class="o">=</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">)</span></div>
+                                                <span class="n">folder_to_save_for_paper_figure</span><span class="o">=</span><span class="n">folder_to_save_for_paper_figure</span><span class="p">)</span></div>
+
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_image_for_identification</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">bounding_box_image</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">bounding_box_in_frame_coordinates</span><span class="p">,</span> <span class="n">identification_image_size</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
@@ -626,7 +743,7 @@
         <span class="n">bounding_box_image</span> <span class="o">=</span> <span class="n">remove_background_pixels</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">bounding_box_image</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">bounding_box_in_frame_coordinates</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">)</span>
         <span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">()</span>
         <span class="n">pxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">pixels</span><span class="p">,(</span><span class="n">height</span><span class="p">,</span><span class="n">width</span><span class="p">))</span>
-        <span class="n">pxs1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pxs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">pxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">pxs1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pxs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">pxs</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
         <span class="n">pca</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">pxs1</span><span class="p">)</span>
         <span class="n">rot_ang</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">pca</span><span class="o">.</span><span class="n">components_</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">pca</span><span class="o">.</span><span class="n">components_</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="mi">45</span> <span class="c1"># we substract 45 so that the fish is aligned in the diagonal. This way we have smaller frames</span>
         <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="n">pca</span><span class="o">.</span><span class="n">mean_</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pca</span><span class="o">.</span><span class="n">mean_</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -651,8 +768,8 @@
 
 
         <span class="n">crop_distance</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">identification_image_size</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">x_range</span> <span class="o">=</span> <span class="n">xrange</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">crop_distance</span><span class="p">,</span> <span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">crop_distance</span><span class="p">)</span>
-        <span class="n">y_range</span> <span class="o">=</span> <span class="n">xrange</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">crop_distance</span><span class="p">,</span> <span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">crop_distance</span><span class="p">)</span>
+        <span class="n">x_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">crop_distance</span><span class="p">,</span> <span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">crop_distance</span><span class="p">)</span>
+        <span class="n">y_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">crop_distance</span><span class="p">,</span> <span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">crop_distance</span><span class="p">)</span>
         <span class="n">image_for_identification</span> <span class="o">=</span> <span class="n">minif_rot</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">y_range</span><span class="p">,</span> <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;wrap&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">x_range</span><span class="p">,</span> <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;wrap&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">image_for_identification</span><span class="o">.</span><span class="n">shape</span>
 
@@ -718,7 +835,7 @@
         <span class="n">new_thresholded_image</span> <span class="o">=</span> <span class="n">temp_image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">new_bounding_box_image</span> <span class="o">=</span> <span class="n">bounding_box_image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">new_bounding_box_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">new_bounding_box_image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_GRAY2RGB</span><span class="p">)</span>
-        <span class="n">contours</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">new_thresholded_image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_TREE</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_SIMPLE</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">new_thresholded_image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_TREE</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_SIMPLE</span><span class="p">)</span>
         <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">new_bounding_box_image</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">save_preprocessing_step_image</span><span class="p">(</span><span class="n">new_bounding_box_image</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;1_blob_contour&#39;</span><span class="p">,</span>  <span class="n">min_max</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">temp_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">dilate</span><span class="p">(</span><span class="n">temp_image</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">),</span> <span class="n">iterations</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
@@ -726,7 +843,7 @@
         <span class="n">new_thresholded_image</span> <span class="o">=</span> <span class="n">temp_image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">new_bounding_box_image</span> <span class="o">=</span> <span class="n">bounding_box_image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">new_bounding_box_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">new_bounding_box_image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_GRAY2RGB</span><span class="p">)</span>
-        <span class="n">contours</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">new_thresholded_image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_TREE</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_SIMPLE</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">new_thresholded_image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_TREE</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_SIMPLE</span><span class="p">)</span>
         <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">new_bounding_box_image</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">save_preprocessing_step_image</span><span class="p">(</span><span class="n">new_bounding_box_image</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;2_blob_bw_dilated&#39;</span><span class="p">,</span>  <span class="n">min_max</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">temp_image</span> <span class="o">==</span> <span class="mi">255</span><span class="p">)</span>
@@ -794,10 +911,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

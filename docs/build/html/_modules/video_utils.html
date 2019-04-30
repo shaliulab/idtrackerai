@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>video_utils &mdash; idtrackerai v0.0 Manual</title>
+    <title>video_utils &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -119,24 +132,27 @@
 
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">from</span> <span class="nn">confapp</span> <span class="k">import</span> <span class="n">conf</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span>
-<span class="kn">import</span> <span class="nn">cv2</span>
-<span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.video</span> <span class="k">import</span> <span class="n">Video</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">BACKGROUND_SUBTRACTION_PERIOD</span><span class="p">,</span> <span class="n">NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION</span><span class="p">,</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span> <span class="n">set_mkl_to_single_thread</span><span class="p">,</span> <span class="n">set_mkl_to_multi_thread</span>
+
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">logging</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.video_utils&quot;</span><span class="p">)</span>
+
+
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">The utilities to segment and extract the blob information</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+
 <div class="viewcode-block" id="sum_frames_for_bkg_per_episode_in_single_file_video"><a class="viewcode-back" href="../preprocessing.html#video_utils.sum_frames_for_bkg_per_episode_in_single_file_video">[docs]</a><span class="k">def</span> <span class="nf">sum_frames_for_bkg_per_episode_in_single_file_video</span><span class="p">(</span><span class="n">starting_frame</span><span class="p">,</span>
                                                         <span class="n">ending_frame</span><span class="p">,</span>
                                                         <span class="n">video_path</span><span class="p">,</span> <span class="n">bkg</span><span class="p">):</span>
@@ -165,13 +181,13 @@
     <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Adding from starting frame </span><span class="si">%i</span><span class="s1"> to background&#39;</span> <span class="o">%</span><span class="n">starting_frame</span><span class="p">)</span>
     <span class="n">number_of_frames_for_bkg_in_episode</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">frameInds</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">starting_frame</span><span class="p">,</span><span class="n">ending_frame</span><span class="p">,</span> <span class="n">BACKGROUND_SUBTRACTION_PERIOD</span><span class="p">)</span>
+    <span class="n">frameInds</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">starting_frame</span><span class="p">,</span><span class="n">ending_frame</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">BACKGROUND_SUBTRACTION_PERIOD</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">frameInds</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Frame </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">ind</span><span class="p">)</span>
         <span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">ind</span><span class="p">)</span>
         <span class="n">ret</span><span class="p">,</span> <span class="n">frameBkg</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">frameBkg</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">frameBkg</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">SIGMA_GAUSSIAN_BLURRING</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">frameBkg</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">frameBkg</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">conf</span><span class="o">.</span><span class="n">SIGMA_GAUSSIAN_BLURRING</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
             <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frameBkg</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
             <span class="n">gray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">true_divide</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">gray</span><span class="p">))</span>
@@ -180,6 +196,7 @@
 
     <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">bkg</span><span class="p">,</span> <span class="n">number_of_frames_for_bkg_in_episode</span></div>
+
 
 <div class="viewcode-block" id="sum_frames_for_bkg_per_episode_in_multiple_files_video"><a class="viewcode-back" href="../preprocessing.html#video_utils.sum_frames_for_bkg_per_episode_in_multiple_files_video">[docs]</a><span class="k">def</span> <span class="nf">sum_frames_for_bkg_per_episode_in_multiple_files_video</span><span class="p">(</span><span class="n">video_path</span><span class="p">,</span> <span class="n">bkg</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Computes the sum of frames (1 every 100 frames) for a particular episode of</span>
@@ -202,15 +219,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Adding video </span><span class="si">%s</span><span class="s1"> to background&#39;</span> <span class="o">%</span> <span class="n">video_path</span><span class="p">)</span>
     <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
-    <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">numFrame</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span>
     <span class="n">number_of_frames_for_bkg_in_episode</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">frameInds</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">numFrame</span><span class="p">,</span> <span class="n">BACKGROUND_SUBTRACTION_PERIOD</span><span class="p">)</span>
+    <span class="n">frameInds</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">numFrame</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">BACKGROUND_SUBTRACTION_PERIOD</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">frameInds</span><span class="p">:</span>
         <span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">ind</span><span class="p">)</span>
         <span class="n">ret</span><span class="p">,</span> <span class="n">frameBkg</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">frameBkg</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">frameBkg</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">SIGMA_GAUSSIAN_BLURRING</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">frameBkg</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">frameBkg</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">conf</span><span class="o">.</span><span class="n">SIGMA_GAUSSIAN_BLURRING</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
             <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frameBkg</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
             <span class="n">gray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">true_divide</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">gray</span><span class="p">))</span>
@@ -218,6 +234,7 @@
             <span class="n">number_of_frames_for_bkg_in_episode</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="k">return</span> <span class="n">bkg</span><span class="p">,</span> <span class="n">number_of_frames_for_bkg_in_episode</span></div>
+
 
 <div class="viewcode-block" id="cumpute_background"><a class="viewcode-back" href="../preprocessing.html#video_utils.cumpute_background">[docs]</a><span class="k">def</span> <span class="nf">cumpute_background</span><span class="p">(</span><span class="n">video</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Computes a model of the background by averaging multiple frames of the video.</span>
@@ -242,11 +259,11 @@
     <span class="c1"># initialized as the full frame</span>
     <span class="n">bkg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">video</span><span class="o">.</span><span class="n">original_height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">original_width</span><span class="p">))</span>
     <span class="n">num_cores</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION set to a value different than the default&#39;</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="n">NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION</span> <span class="o">&lt;=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
-            <span class="n">num_cores</span> <span class="o">=</span> <span class="n">NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION</span>
+            <span class="k">assert</span> <span class="n">conf</span><span class="o">.</span><span class="n">NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION</span> <span class="o">&lt;=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+            <span class="n">num_cores</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION &gt; multiprocessing.cpu_count(). Setting NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION set to 1&#39;</span><span class="p">)</span>
             <span class="n">num_cores</span> <span class="o">=</span> <span class="mi">1</span>
@@ -272,6 +289,7 @@
     <span class="n">bkg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">partialBkg</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">bkg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">true_divide</span><span class="p">(</span><span class="n">bkg</span><span class="p">,</span> <span class="n">totNumFrame</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">bkg</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="check_background_substraction"><a class="viewcode-back" href="../preprocessing.html#video_utils.check_background_substraction">[docs]</a><span class="k">def</span> <span class="nf">check_background_substraction</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">old_video</span><span class="p">,</span> <span class="n">use_previous_background</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Checks whether background substraction must be used and in that case it</span>
@@ -306,6 +324,7 @@
 
     <span class="k">return</span> <span class="n">bkg</span></div>
 
+
 <div class="viewcode-block" id="segment_frame"><a class="viewcode-back" href="../preprocessing.html#video_utils.segment_frame">[docs]</a><span class="k">def</span> <span class="nf">segment_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">min_threshold</span><span class="p">,</span> <span class="n">max_threshold</span><span class="p">,</span> <span class="n">bkg</span><span class="p">,</span> <span class="n">ROI</span><span class="p">,</span> <span class="n">useBkg</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the</span>
 <span class="sd">    mask (`ROI`) to a given frame. If `useBkg` is True, the background subtraction</span>
@@ -335,12 +354,15 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">useBkg</span><span class="p">:</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">absdiff</span><span class="p">(</span><span class="n">bkg</span><span class="p">,</span><span class="n">frame</span><span class="p">)</span> <span class="c1">#only step where frame normalization is important, because the background is normalised</span>
-        <span class="n">frame</span> <span class="o">=</span> <span class="mi">255</span> <span class="o">-</span> <span class="n">frame</span> <span class="o">*</span> <span class="p">(</span><span class="mf">255.0</span><span class="o">/</span><span class="n">frame</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="n">p99</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mf">99.95</span><span class="p">)</span><span class="o">*</span><span class="mf">1.001</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">255</span> <span class="o">-</span> <span class="n">frame</span> <span class="o">*</span> <span class="p">(</span><span class="mf">255.0</span><span class="o">/</span><span class="n">p99</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
         <span class="n">frame_segmented</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">inRange</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">min_threshold</span><span class="p">,</span> <span class="n">max_threshold</span><span class="p">)</span> <span class="c1">#output: 255 in range, else 0</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">useBkg</span><span class="p">:</span>
-        <span class="n">frame_segmented</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">inRange</span><span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="p">(</span><span class="mf">255.0</span><span class="o">/</span><span class="n">frame</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">min_threshold</span><span class="p">,</span> <span class="n">max_threshold</span><span class="p">)</span> <span class="c1">#output: 255 in range, else 0</span>
+        <span class="n">p99</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mf">99.95</span><span class="p">)</span><span class="o">*</span><span class="mf">1.001</span>
+        <span class="n">frame_segmented</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">inRange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="p">(</span><span class="mf">255.0</span><span class="o">/</span><span class="n">p99</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">min_threshold</span><span class="p">,</span> <span class="n">max_threshold</span><span class="p">)</span> <span class="c1">#output: 255 in range, else 0</span>
     <span class="n">frame_segmented_and_masked</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">(</span><span class="n">frame_segmented</span><span class="p">,</span><span class="n">frame_segmented</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">ROI</span><span class="p">)</span> <span class="c1">#Applying the mask</span>
     <span class="k">return</span> <span class="n">frame_segmented_and_masked</span></div>
+
 
 <div class="viewcode-block" id="filter_contours_by_area"><a class="viewcode-back" href="../preprocessing.html#video_utils.filter_contours_by_area">[docs]</a><span class="k">def</span> <span class="nf">filter_contours_by_area</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span> <span class="n">min_area</span><span class="p">,</span> <span class="n">max_area</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Filters out contours which number of pixels is smaller than `min_area` or</span>
@@ -368,6 +390,7 @@
             <span class="n">good_contours</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">contour</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">good_contours</span></div>
 
+
 <div class="viewcode-block" id="cnt2BoundingBox"><a class="viewcode-back" href="../preprocessing.html#video_utils.cnt2BoundingBox">[docs]</a><span class="k">def</span> <span class="nf">cnt2BoundingBox</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span><span class="n">bounding_box</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Transforms the coordinates of the contour in the full frame to the the</span>
 <span class="sd">    bounding box of the blob.</span>
@@ -387,6 +410,7 @@
 <span class="sd">        Array with the pairs of coordinates of the contour in the bounding box</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">cnt</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span></div>
+
 
 <div class="viewcode-block" id="get_bounding_box"><a class="viewcode-back" href="../preprocessing.html#video_utils.get_bounding_box">[docs]</a><span class="k">def</span> <span class="nf">get_bounding_box</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">crossing_detector</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Computes the bounding box of a given contour with an extra margin of 45</span>
@@ -434,6 +458,7 @@
         <span class="n">h</span> <span class="o">=</span> <span class="n">height</span> <span class="o">-</span> <span class="n">y</span>
     <span class="k">return</span> <span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),(</span><span class="n">x</span> <span class="o">+</span> <span class="n">w</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">h</span><span class="p">)),</span> <span class="n">original_diagonal</span></div>
 
+
 <div class="viewcode-block" id="getCentroid"><a class="viewcode-back" href="../preprocessing.html#video_utils.getCentroid">[docs]</a><span class="k">def</span> <span class="nf">getCentroid</span><span class="p">(</span><span class="n">cnt</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Computes the centroid of the contour</span>
 
@@ -452,6 +477,7 @@
     <span class="n">x</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="s1">&#39;m10&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">M</span><span class="p">[</span><span class="s1">&#39;m00&#39;</span><span class="p">]</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="s1">&#39;m01&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">M</span><span class="p">[</span><span class="s1">&#39;m00&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="get_pixels"><a class="viewcode-back" href="../preprocessing.html#video_utils.get_pixels">[docs]</a><span class="k">def</span> <span class="nf">get_pixels</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gets the coordinates list of the pixels inside the contour</span>
@@ -475,9 +501,10 @@
     <span class="n">cimg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">))</span>
     <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">cimg</span><span class="p">,</span> <span class="p">[</span><span class="n">cnt</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">thickness</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cimg</span> <span class="o">==</span> <span class="mi">255</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span></div>
 
-<div class="viewcode-block" id="get_bounding_box_image"><a class="viewcode-back" href="../preprocessing.html#video_utils.get_bounding_box_image">[docs]</a><span class="k">def</span> <span class="nf">get_bounding_box_image</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
+
+<div class="viewcode-block" id="get_bounding_box_image"><a class="viewcode-back" href="../preprocessing.html#video_utils.get_bounding_box_image">[docs]</a><span class="k">def</span> <span class="nf">get_bounding_box_image</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">save_pixels</span><span class="p">,</span> <span class="n">save_segmentation_image</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Computes the `bounding_box_image`from a given frame and contour. It also</span>
 <span class="sd">    returns the coordinates of the `bounding_box`, the ravelled `pixels` inside of</span>
 <span class="sd">    the contour and the diagonal of the `bounding_box` as an `estimated_body_length`</span>
@@ -510,20 +537,29 @@
     <span class="n">height</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">width</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">bounding_box</span><span class="p">,</span> <span class="n">estimated_body_length</span> <span class="o">=</span> <span class="n">get_bounding_box</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span> <span class="c1"># the estimated body length is the diagonal of the original bounding_box</span>
-    <span class="n">bounding_box_image</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
-                            <span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
-    <span class="n">contour_in_bounding_box</span> <span class="o">=</span> <span class="n">cnt2BoundingBox</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span><span class="n">bounding_box</span><span class="p">)</span>
-    <span class="n">pixels_in_bounding_box</span> <span class="o">=</span> <span class="n">get_pixels</span><span class="p">(</span><span class="n">contour_in_bounding_box</span><span class="p">,</span>
-                            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span>
-                            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
-    <span class="n">pixels_in_full_frame</span> <span class="o">=</span> <span class="n">pixels_in_bounding_box</span> <span class="o">+</span> \
-                            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
-    <span class="n">pixels_in_full_frame_ravelled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">(</span>
-                                    <span class="p">[</span><span class="n">pixels_in_full_frame</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">pixels_in_full_frame</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]],</span>
-                                    <span class="p">(</span><span class="n">height</span><span class="p">,</span><span class="n">width</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">save_segmentation_image</span> <span class="o">==</span> <span class="s1">&#39;RAM&#39;</span> <span class="ow">or</span> <span class="n">save_segmentation_image</span> <span class="o">==</span> <span class="s1">&#39;DISK&#39;</span><span class="p">:</span>
+        <span class="n">bounding_box_image</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                <span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">elif</span> <span class="n">save_segmentation_image</span> <span class="o">==</span> <span class="s1">&#39;NOT&#39;</span><span class="p">:</span>
+        <span class="n">bounding_box_image</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">contour_in_bounding_box</span> <span class="o">=</span> <span class="n">cnt2BoundingBox</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">bounding_box</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">save_pixels</span> <span class="o">==</span> <span class="s1">&#39;RAM&#39;</span> <span class="ow">or</span> <span class="n">save_pixels</span> <span class="o">==</span> <span class="s1">&#39;DISK&#39;</span><span class="p">:</span>
+        <span class="n">pixels_in_bounding_box</span> <span class="o">=</span> <span class="n">get_pixels</span><span class="p">(</span><span class="n">contour_in_bounding_box</span><span class="p">,</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">pixels_in_full_frame</span> <span class="o">=</span> <span class="n">pixels_in_bounding_box</span> <span class="o">+</span> \
+                                <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="n">pixels_in_full_frame_ravelled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">(</span>
+                                        <span class="p">[</span><span class="n">pixels_in_full_frame</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">pixels_in_full_frame</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]],</span>
+                                        <span class="p">(</span><span class="n">height</span><span class="p">,</span><span class="n">width</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">save_pixels</span> <span class="o">==</span> <span class="s1">&#39;NOT&#39;</span><span class="p">:</span>
+        <span class="n">pixels_in_full_frame_ravelled</span> <span class="o">=</span> <span class="kc">None</span>
+
     <span class="k">return</span> <span class="n">bounding_box</span><span class="p">,</span> <span class="n">bounding_box_image</span><span class="p">,</span> <span class="n">pixels_in_full_frame_ravelled</span><span class="p">,</span> <span class="n">estimated_body_length</span></div>
 
-<div class="viewcode-block" id="get_blobs_information_per_frame"><a class="viewcode-back" href="../preprocessing.html#video_utils.get_blobs_information_per_frame">[docs]</a><span class="k">def</span> <span class="nf">get_blobs_information_per_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">contours</span><span class="p">):</span>
+
+<div class="viewcode-block" id="get_blobs_information_per_frame"><a class="viewcode-back" href="../preprocessing.html#video_utils.get_blobs_information_per_frame">[docs]</a><span class="k">def</span> <span class="nf">get_blobs_information_per_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">save_pixels</span><span class="p">,</span>
+                                    <span class="n">save_segmentation_image</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Computes a set of properties for all the `contours` in a given frame.</span>
 
 <span class="sd">    Parameters</span>
@@ -565,7 +601,8 @@
         <span class="n">bounding_box</span><span class="p">,</span> \
         <span class="n">bounding_box_image</span><span class="p">,</span> \
         <span class="n">pixels_in_full_frame_ravelled</span><span class="p">,</span> \
-        <span class="n">estimated_body_length</span> <span class="o">=</span> <span class="n">get_bounding_box_image</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cnt</span><span class="p">)</span>
+        <span class="n">estimated_body_length</span> <span class="o">=</span> <span class="n">get_bounding_box_image</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">save_pixels</span><span class="p">,</span>
+                                                       <span class="n">save_segmentation_image</span><span class="p">)</span>
         <span class="c1">#bounding boxes</span>
         <span class="n">bounding_boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bounding_box</span><span class="p">)</span>
         <span class="c1"># bounding_box_images</span>
@@ -578,9 +615,12 @@
         <span class="c1"># estimated body lengths list</span>
         <span class="n">estimated_body_lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">estimated_body_length</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">bounding_boxes</span><span class="p">,</span> <span class="n">bounding_box_images</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">estimated_body_lengths</span></div>
+    <span class="k">return</span> <span class="n">bounding_boxes</span><span class="p">,</span> <span class="n">bounding_box_images</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> \
+        <span class="n">pixels</span><span class="p">,</span> <span class="n">estimated_body_lengths</span></div>
 
-<div class="viewcode-block" id="blob_extractor"><a class="viewcode-back" href="../preprocessing.html#video_utils.blob_extractor">[docs]</a><span class="k">def</span> <span class="nf">blob_extractor</span><span class="p">(</span><span class="n">segmented_frame</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">min_area</span><span class="p">,</span> <span class="n">max_area</span><span class="p">):</span>
+
+<div class="viewcode-block" id="blob_extractor"><a class="viewcode-back" href="../preprocessing.html#video_utils.blob_extractor">[docs]</a><span class="k">def</span> <span class="nf">blob_extractor</span><span class="p">(</span><span class="n">segmented_frame</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">min_area</span><span class="p">,</span> <span class="n">max_area</span><span class="p">,</span> <span class="n">save_pixels</span><span class="o">=</span><span class="s1">&#39;DISK&#39;</span><span class="p">,</span>
+                   <span class="n">save_segmentation_image</span><span class="o">=</span><span class="s1">&#39;DISK&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Given a `segmented_frame` it extracts the blobs with area greater than</span>
 <span class="sd">    `min_area` and smaller than `max_area` and it computes a set of relevant</span>
 <span class="sd">    properties for every blob.</span>
@@ -618,15 +658,22 @@
 <span class="sd">    filter_contours_by_area</span>
 <span class="sd">    get_blobs_information_per_frame</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">contours</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">segmented_frame</span><span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">RETR_TREE</span><span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_NONE</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">segmented_frame</span><span class="p">,</span>
+                                              <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_TREE</span><span class="p">,</span>
+                                              <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_NONE</span><span class="p">)</span>
     <span class="c1"># Filter contours by size</span>
-    <span class="n">good_contours_in_full_frame</span> <span class="o">=</span> <span class="n">filter_contours_by_area</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span><span class="n">min_area</span><span class="p">,</span> <span class="n">max_area</span><span class="p">)</span>
+    <span class="n">good_contours_in_full_frame</span> <span class="o">=</span> <span class="n">filter_contours_by_area</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span>
+                                                          <span class="n">min_area</span><span class="p">,</span>
+                                                          <span class="n">max_area</span><span class="p">)</span>
     <span class="c1"># get contours properties</span>
     <span class="n">bounding_boxes</span><span class="p">,</span> <span class="n">bounding_box_images</span><span class="p">,</span> \
-    <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> \
-    <span class="n">estimated_body_lengths</span> <span class="o">=</span> <span class="n">get_blobs_information_per_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">good_contours_in_full_frame</span><span class="p">)</span>
+        <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> \
+        <span class="n">estimated_body_lengths</span> <span class="o">=</span> \
+        <span class="n">get_blobs_information_per_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">good_contours_in_full_frame</span><span class="p">,</span>
+                                        <span class="n">save_pixels</span><span class="p">,</span> <span class="n">save_segmentation_image</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">bounding_boxes</span><span class="p">,</span> <span class="n">bounding_box_images</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">good_contours_in_full_frame</span><span class="p">,</span> <span class="n">estimated_body_lengths</span></div>
+    <span class="k">return</span> <span class="n">bounding_boxes</span><span class="p">,</span> <span class="n">bounding_box_images</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> \
+        <span class="n">good_contours_in_full_frame</span><span class="p">,</span> <span class="n">estimated_body_lengths</span></div>
 </pre></div>
 
           </div>
@@ -649,10 +696,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

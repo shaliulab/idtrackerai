@@ -16,7 +16,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>Index &mdash; idtrackerai v0.0 Manual</title>
+    <title>Index &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
@@ -26,7 +26,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -35,11 +35,12 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="#" >
     <link rel="search" title="Search" href="search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" > 
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="index.html" > 
   </head>
   <body>
 
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	 
     </ul>
               
@@ -82,6 +83,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -119,8 +132,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="fragmentation.html#globalfragment.GlobalFragment.acceptable_for_training">acceptable_for_training() (globalfragment.GlobalFragment method)</a>
-</li>
-      <li><a href="fingerprint_protocol_cascade.html#accumulator.accumulate">accumulate() (in module accumulator)</a>
 </li>
       <li><a href="fingerprint_protocol_cascade.html#module-accumulation_manager">accumulation_manager (module)</a>
 </li>
@@ -248,10 +259,10 @@
 </li>
       <li><a href="fragmentation.html#list_of_fragments.ListOfFragments.compute_number_of_unique_images_used_for_training">compute_number_of_unique_images_used_for_training() (list_of_fragments.ListOfFragments method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="preprocessing.html#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames">compute_overlapping_between_subsequent_frames() (list_of_blobs.ListOfBlobs method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="fragmentation.html#fragment.Fragment.compute_P1_from_frequencies">compute_P1_from_frequencies() (fragment.Fragment static method)</a>
 </li>
       <li><a href="fragmentation.html#fragment.Fragment.compute_P2_vector">compute_P2_vector() (fragment.Fragment method)</a>
@@ -290,6 +301,8 @@
 </li>
       <li><a href="video_information_manager.html#video.Video.create_embeddings_folder">create_embeddings_folder() (video.Video method)</a>
 </li>
+      <li><a href="video_information_manager.html#video.Video.create_images_folders">create_images_folders() (video.Video method)</a>
+</li>
       <li><a href="fragmentation.html#list_of_fragments.ListOfFragments.create_light_list">create_light_list() (list_of_fragments.ListOfFragments method)</a>
 </li>
       <li><a href="fragmentation.html#list_of_fragments.create_list_of_fragments">create_list_of_fragments() (in module list_of_fragments)</a>
@@ -309,6 +322,8 @@
       <li><a href="video_information_manager.html#video.Video.create_trajectories_folder">create_trajectories_folder() (video.Video method)</a>
 </li>
       <li><a href="video_information_manager.html#video.Video.create_trajectories_wo_gaps_folder">create_trajectories_wo_gaps_folder() (video.Video method)</a>
+</li>
+      <li><a href="video_information_manager.html#video.Video.create_trajectories_wo_identities_folder">create_trajectories_wo_identities_folder() (video.Video method)</a>
 </li>
       <li><a href="idCNN.html#id_CNN.createSaver">createSaver() (in module id_CNN)</a>
 </li>
@@ -438,7 +453,7 @@
 </li>
       <li><a href="preprocessing.html#blob.Blob.get_image_for_identification">get_image_for_identification() (blob.Blob method)</a>
 </li>
-      <li><a href="fragmentation.html#globalfragment.GlobalFragment.get_images_and_labels_for_pretraining">get_images_and_labels_for_pretraining() (globalfragment.GlobalFragment method)</a>
+      <li><a href="fragmentation.html#globalfragment.GlobalFragment.get_images_and_labels">get_images_and_labels() (globalfragment.GlobalFragment method)</a>
 </li>
       <li><a href="fingerprint_protocol_cascade.html#accumulation_manager.AccumulationManager.get_images_and_labels_for_training">get_images_and_labels_for_training() (accumulation_manager.AccumulationManager method)</a>
 </li>
@@ -660,6 +675,8 @@
 </li>
       <li><a href="preprocessing.html#list_of_blobs.ListOfBlobs.reconnect">reconnect() (list_of_blobs.ListOfBlobs method)</a>
 </li>
+      <li><a href="idCNN.html#id_CNN.ConvNetwork.reinitialize_conv_layers">reinitialize_conv_layers() (id_CNN.ConvNetwork method)</a>
+</li>
       <li><a href="idCNN.html#id_CNN.ConvNetwork.reinitialize_softmax_and_fully_connected">reinitialize_softmax_and_fully_connected() (id_CNN.ConvNetwork method)</a>
 </li>
       <li><a href="fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.relink_fragments_to_global_fragments">relink_fragments_to_global_fragments() (list_of_global_fragments.ListOfGlobalFragments method)</a>
@@ -776,16 +793,18 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="video_information_manager.html#video.Video.track_wo_identities">track_wo_identities (video.Video attribute)</a>
+</li>
       <li><a href="video_information_manager.html#video.Video.tracking_interval">tracking_interval (video.Video attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="idCNN.html#id_CNN.ConvNetwork.train">train() (id_CNN.ConvNetwork method)</a>
 
       <ul>
         <li><a href="fingerprint_protocol_cascade.html#trainer.train">(in module trainer)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="fingerprint_protocol_cascade.html#module-trainer">trainer (module)</a>
 </li>
   </ul></td>
@@ -867,10 +886,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

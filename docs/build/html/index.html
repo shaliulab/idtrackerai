@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>Welcome to idtracker.ai’s documentation! &mdash; idtrackerai v0.0 Manual</title>
+    <title>Welcome to idtracker.ai’s documentation! &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,12 +34,13 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" >
     <link rel="search" title="Search" href="search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="#" >
-    <link rel="next" title="Some videos tracked with idtracker.ai" href="gallery.html" > 
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="#" >
+    <link rel="next" title="General video conditions" href="video_conditions.html" > 
   </head>
   <body>
 
@@ -71,7 +72,7 @@
            accesskey="I">index</a>
       </li>
       <li class="active">
-        <a href="gallery.html" title="Some videos tracked with idtracker.ai"
+        <a href="video_conditions.html" title="General video conditions"
            accesskey="N">next</a>
       </li>
     </ul>
@@ -84,13 +85,36 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table Of Contents</a></h3>
+  <h3><a href="#">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Welcome to idtracker.ai’s documentation!</a><ul>
-<li><a class="reference internal" href="#contents">Contents:</a></li>
+<li><a class="reference internal" href="#id1">Installation and git repository</a></li>
+<li><a class="reference internal" href="#quickstart"><code class="docutils literal notranslate"><span class="pre">Quickstart</span></code></a></li>
+<li><a class="reference internal" href="#video-conditions"><code class="docutils literal notranslate"><span class="pre">Video</span> <span class="pre">conditions</span></code></a></li>
+<li><a class="reference internal" href="#gallery"><code class="docutils literal notranslate"><span class="pre">Gallery</span></code></a></li>
+<li><a class="reference internal" href="#frequently-asked-questions-faqs"><code class="docutils literal notranslate"><span class="pre">Frequently</span> <span class="pre">Asked</span> <span class="pre">Questions</span> <span class="pre">(FAQs)</span></code></a></li>
+<li><a class="reference internal" href="#trajectory-analysis"><code class="docutils literal notranslate"><span class="pre">Trajectory</span> <span class="pre">analysis</span></code></a></li>
+<li><a class="reference internal" href="#code-documentation"><code class="docutils literal notranslate"><span class="pre">Code</span> <span class="pre">documentation</span></code></a></li>
+<li><a class="reference internal" href="#idmatcher-ai-matches-identities-between-videos">idmatcher.ai matches identities between videos</a></li>
+<li><a class="reference internal" href="#research-using-idtracker-ai">Research using idtracker.ai</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+<li><a class="reference internal" href="#data">Data</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
 <li><a class="reference internal" href="#documentation-index-and-search">Documentation index and search</a></li>
 </ul>
 </li>
+</ul>
+
+<h3><a href="#">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
 </ul>
 
         </div>
@@ -102,78 +126,93 @@
             
   <div class="section" id="welcome-to-idtracker-ai-s-documentation">
 <h1>Welcome to idtracker.ai’s documentation!<a class="headerlink" href="#welcome-to-idtracker-ai-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>idtracker.ai allows to track groups of animals in videos recorded in laboratory conditions.</p>
+<p><a class="reference external" href="http://idtracker.ai/">idtracker.ai</a> allows to track groups of up to 100 unmarked animals from videos.</p>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=Imz3xvPsaEw"><img alt="_images/fish_tracked.png" src="_images/fish_tracked.png" style="width: 150px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/flies_tracked.png" src="_images/flies_tracked.png" style="width: 150px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=d0TTdu41NoA"><img alt="_images/14ants.png" src="_images/14ants.png" style="width: 150px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=ANsThSPgBFM"><img alt="_images/mice.png" src="_images/mice.png" style="width: 150px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=dT28-VcXaCc"><img alt="_images/2fish.png" src="_images/2fish.png" style="width: 150px;" /></a>
+<div class="section" id="id1">
+<h2><a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai">Installation and git repository</a><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>The source code and installation instructions can be found at <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai.git">https://gitlab.com/polavieja_lab/idtrackerai.git</a>.</p>
+</div>
+<div class="section" id="quickstart">
+<h2><a class="reference internal" href="quickstart.html"><span class="doc">Quickstart</span></a><a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
+<p>Check out the <a class="reference internal" href="quickstart.html"><span class="doc">Quickstart</span></a> to learn how to use the software.</p>
+</div>
+<div class="section" id="video-conditions">
+<h2><a class="reference internal" href="video_conditions.html"><span class="doc">Video conditions</span></a><a class="headerlink" href="#video-conditions" title="Permalink to this headline">¶</a></h2>
+<p>Check out the <a class="reference internal" href="video_conditions.html"><span class="doc">General video conditions</span></a> to get some advice in how to create videos
+that will give you the best tracking results with idtracker.ai.</p>
+</div>
+<div class="section" id="gallery">
+<h2><a class="reference internal" href="gallery.html"><span class="doc">Gallery</span></a><a class="headerlink" href="#gallery" title="Permalink to this headline">¶</a></h2>
+<p>Send us your videos using <a class="reference external" href="http://idtracker.ai/">idtracker.ai</a> and we will add them to our gallery with proper attribution.</p>
+</div>
+<div class="section" id="frequently-asked-questions-faqs">
+<h2><a class="reference internal" href="FAQs.html"><span class="doc">Frequently Asked Questions (FAQs)</span></a><a class="headerlink" href="#frequently-asked-questions-faqs" title="Permalink to this headline">¶</a></h2>
+<p>We have summarized in the <a class="reference internal" href="FAQs.html"><span class="doc">FAQs</span></a> some of the questions that we get more often.</p>
+</div>
+<div class="section" id="trajectory-analysis">
+<h2><a class="reference internal" href="trajectories_analysis.html"><span class="doc">Trajectory analysis</span></a><a class="headerlink" href="#trajectory-analysis" title="Permalink to this headline">¶</a></h2>
+<p>We provide a set of <a class="reference internal" href="trajectories_analysis.html"><span class="doc">Jupyter Notebooks for analysis</span></a> of the trajectories that idtracker.ai outputs.</p>
+</div>
+<div class="section" id="code-documentation">
+<h2><a class="reference internal" href="modules.html"><span class="doc">Code documentation</span></a><a class="headerlink" href="#code-documentation" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://idtracker.ai/">idtracker.ai</a> is opensource and free software (both as in freedom and as in free beer).
+We have documented the code so that it is easier for developers to modify it to their needs.</p>
+</div>
+<div class="section" id="idmatcher-ai-matches-identities-between-videos">
+<h2><a class="reference external" href="https://gitlab.com/polavieja_lab/idmatcherai">idmatcher.ai</a> matches identities between videos<a class="headerlink" href="#idmatcher-ai-matches-identities-between-videos" title="Permalink to this headline">¶</a></h2>
+<p>We have also developed a toolbox to match identities between videos, called <a class="reference external" href="https://gitlab.com/polavieja_lab/idmatcherai">idmatcher.ai</a>.</p>
+</div>
+<div class="section" id="research-using-idtracker-ai">
+<h2>Research using idtracker.ai<a class="headerlink" href="#research-using-idtracker-ai" title="Permalink to this headline">¶</a></h2>
+<p>Let us know if you are using <a class="reference external" href="http://idtracker.ai/">idtracker.ai</a> in your research.</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="https://www.biorxiv.org/content/early/2018/12/21/400747">Heras, F. J., Romero-Ferrero, F., Hinz, R. C., &amp; de Polavieja, G. G. (2018). Deep attention networks reveal the rules of collective motion in zebrafish. bioRxiv, 400747.</a></li>
+<li><a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339">Laan, A., Iglesias-Julios, M., &amp; de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679.</a></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
 <p>When using information from this web page please reference</p>
 <blockquote>
-<div>Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018).
-idtracker.ai: Tracking all individuals in large collectives of unmarked animals (submitted)
-(F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P:
-<a class="reference external" href="mailto:gonzalo&#46;polavieja&#37;&#52;&#48;neuro&#46;fchampalimaud&#46;org">gonzalo<span>&#46;</span>polavieja<span>&#64;</span>neuro<span>&#46;</span>fchampalimaud<span>&#46;</span>org</a>)</div></blockquote>
-<p>You can find the arXiv version in the following link: <a class="reference external" href="https://arxiv.org/abs/1803.04351">https://arxiv.org/abs/1803.04351</a>.</p>
-<p>The source code can be found in <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai.git">https://gitlab.com/polavieja_lab/idtrackerai.git</a>. Report any problem by
-opening an issue in the repository.</p>
-<p><strong>[NEW!!]</strong> We are making available analysis tools and a tutorial with examples
-in the format of a Jupyter Lab Notebook. Find more information in
-<a class="reference internal" href="trajectories_analysis.html"><span class="doc">Trajectories analysis</span></a> and in the repositories <a class="reference external" href="https://github.com/fjhheras/trajectorytools">https://github.com/fjhheras/trajectorytools</a>
-and  <a class="reference external" href="https://gitlab.com/polavieja_lab/bns2018">https://gitlab.com/polavieja_lab/bns2018</a>.</p>
-<p>Should you need more information please contact us (<a class="reference external" href="mailto:idtrackerai&#37;&#52;&#48;gmail&#46;com">idtrackerai<span>&#64;</span>gmail<span>&#46;</span>com</a>).</p>
+<div><a class="reference external" href="https://rdcu.be/bgN2R">Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+idtracker.ai: tracking all individuals in small or large collectives of unmarked animals</a>
+(F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: <a class="reference external" href="mailto:gonzalo&#46;polavieja&#37;&#52;&#48;neuro&#46;fchampalimaud&#46;org">gonzalo<span>&#46;</span>polavieja<span>&#64;</span>neuro<span>&#46;</span>fchampalimaud<span>&#46;</span>org</a>)</div></blockquote>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">romero2019idtracker</span><span class="p">,</span>
+<span class="na">title</span><span class="p">=</span><span class="s">{idtracker.ai: tracking all individuals in small or large collectives of unmarked animals}</span><span class="p">,</span>
+<span class="na">author</span><span class="p">=</span><span class="s">{Romero-Ferrero, Francisco and Bergomi, Mattia G and Hinz, Robert C and Heras, Francisco JH and de Polavieja, Gonzalo G}</span><span class="p">,</span>
+<span class="na">journal</span><span class="p">=</span><span class="s">{Nature methods}</span><span class="p">,</span>
+<span class="na">volume</span><span class="p">=</span><span class="s">{16}</span><span class="p">,</span>
+<span class="na">number</span><span class="p">=</span><span class="s">{2}</span><span class="p">,</span>
+<span class="na">pages</span><span class="p">=</span><span class="s">{179}</span><span class="p">,</span>
+<span class="na">year</span><span class="p">=</span><span class="s">{2019}</span><span class="p">,</span>
+<span class="na">publisher</span><span class="p">=</span><span class="s">{Nature Publishing Group}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Find <a class="reference external" href="https://arxiv.org/abs/1803.04351">here the preprint</a> version of the manuscript.</p>
+</div>
+<div class="section" id="data">
+<h2>Data<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h2>
+<p>The data used in the article can be found in the <a class="reference internal" href="data.html"><span class="doc">Data</span></a> section of this webpage.</p>
+</div>
 <div class="section" id="contents">
-<h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gallery.html">Some videos tracked with idtracker.ai</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gallery.html#large-groups-of-zebrafish-d-rerio">Large groups of zebrafish (<em>D. rerio</em>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gallery.html#small-groups-of-zebrafish-d-rerio">Small groups of zebrafish (<em>D. rerio</em>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gallery.html#large-groups-of-fruit-flies-d-melanogaster">Large groups of fruit flies (<em>D. melanogaster</em>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gallery.html#small-groups-of-fruit-flies-d-melanogaster">Small groups of fruit flies (<em>D. melanogaster</em>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gallery.html#small-groups-of-ants">Small groups of ants</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gallery.html#small-groups-of-mice">Small groups of mice</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gallery.html#references">References</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="how_to_install.html">Installation and requirements</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how_to_install.html#requirements">Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how_to_install.html#installation">Installation</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-1-download-the-video-example">Step 1. Download the video example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-2-copy-video-to-an-adequate-location">Step 2. Copy video to an adequate location</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-3-start-a-tracking-session">Step 3. Start a tracking session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-4-select-a-region-of-interests">Step 4. Select a region of interests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-5-video-segmentation-and-preprocessing">Step 5. Video segmentation and preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-6-start-tracking-the-video">Step 6. Start tracking the video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-7-global-and-individual-validation">Step 7. Global and individual validation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#step-8-output-files">Step 8. Output files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#try-the-100-zebrafish-sample-video">Try the 100 zebrafish sample video</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="GUI_explained.html#tab-1-welcome">Tab 1. Welcome</a></li>
-<li class="toctree-l2"><a class="reference internal" href="GUI_explained.html#tab-2-roi-selection">Tab 2. ROI selection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="GUI_explained.html#tab-3-preprocessing">Tab 3. Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="GUI_explained.html#tab-4-tracking">Tab 4. Tracking</a></li>
-<li class="toctree-l2"><a class="reference internal" href="GUI_explained.html#tab-5-validation">Tab 5. Validation</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Trajectories analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="trajectories_analysis.html#the-trajectorytools-python-module">The <em>trajectorytools</em> python module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="trajectories_analysis.html#jupyter-lab-notebooks">Jupyter Lab Notebooks</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="video_information_manager.html">Video information manager</a></li>
-<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="crossing_detector.html">DCD: Deep Crossing detector</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fragmentation.html">Fragmentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="idCNN.html">Identification network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fingerprint_protocol_cascade.html">Fingerprint protocol cascade</a></li>
-<li class="toctree-l2"><a class="reference internal" href="postprocessing.html">Post-processing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="validation.html">Human validation</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="video_collectives_library.html">Collectives videos library</a></li>
-<li class="toctree-l1"><a class="reference internal" href="individual_images_library.html">Individual images library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
 </ul>
 </div>
 </div>
@@ -207,10 +246,10 @@ and  <a class="reference external" href="https://gitlab.com/polavieja_lab/bns201
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

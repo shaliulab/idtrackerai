@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>Preprocessing &mdash; idtrackerai v0.0 Manual</title>
+    <title>Preprocessing &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" >
     <link rel="search" title="Search" href="search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="index.html" >
     <link rel="up" title="Code documentation" href="modules.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="modules.html" accesskey="U">Code documentation</a></li> 
     </ul>
@@ -83,7 +84,7 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Preprocessing</a><ul>
 <li><a class="reference internal" href="#module-blob">Blob</a></li>
@@ -93,6 +94,18 @@
 <li><a class="reference internal" href="#module-video_utils">Segmentation utils</a></li>
 </ul>
 </li>
+</ul>
+
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
 </ul>
 
         </div>
@@ -108,7 +121,7 @@
 <span id="blob"></span><h2>Blob<a class="headerlink" href="#module-blob" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="blob.Blob">
-<em class="property">class </em><code class="descclassname">blob.</code><code class="descname">Blob</code><span class="sig-paren">(</span><em>centroid</em>, <em>contour</em>, <em>area</em>, <em>bounding_box_in_frame_coordinates</em>, <em>bounding_box_image=None</em>, <em>estimated_body_length=None</em>, <em>pixels=None</em>, <em>number_of_animals=None</em>, <em>frame_number=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">blob.</code><code class="descname">Blob</code><span class="sig-paren">(</span><em>centroid</em>, <em>contour</em>, <em>area</em>, <em>bounding_box_in_frame_coordinates</em>, <em>bounding_box_image=None</em>, <em>bounding_box_images_path=None</em>, <em>estimated_body_length=None</em>, <em>pixels=None</em>, <em>number_of_animals=None</em>, <em>frame_number=None</em>, <em>frame_number_in_video_path=None</em>, <em>in_frame_index=None</em>, <em>pixels_path=None</em>, <em>video_height=None</em>, <em>video_width=None</em>, <em>video_path=None</em>, <em>pixels_are_from_eroded_blob=False</em>, <em>has_eroded_pixels=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob" title="Permalink to this definition">¶</a></dt>
 <dd><p>Object representing a blob (collection of pixels) segmented from a frame</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -117,6 +130,9 @@
 <tr class="field-odd field"><th class="field-name">Attributes:</th><td class="field-body"><dl class="first last docutils">
 <dt><strong>frame_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd><p class="first last">Object containing all the parameters of the video.</p>
+</dd>
+<dt><strong>in_frame_index</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Hierarchy of the blob in the segmentation of the frame</p>
 </dd>
 <dt><strong>number_of_animals</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd><p class="first last">Number of animals to be tracked</p>
@@ -139,8 +155,8 @@
 <dt><strong>estimated_body_length: float</strong></dt>
 <dd><p class="first last">Body length estimated from the bounding box</p>
 </dd>
-<dt><strong>_image_for_identification: ndarray</strong></dt>
-<dd><p class="first last">Image fed to the network to get the identity of the animal the blob is associated to</p>
+<dt><strong>image_for_identification_path: string</strong></dt>
+<dd><p class="first last">Path to where the image for identification is saved</p>
 </dd>
 <dt><strong>pixels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
 <dd><p class="first last">List of ravelled pixels belonging to the blob (wrt the full frame)</p>
@@ -167,7 +183,7 @@
 <dd><p class="first last">Unique integer identifying the fragment (built by blob overlapping) to which self belongs to</p>
 </dd>
 <dt><strong>_blob_index</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd><p class="first last">Hierarchy of the blob</p>
+<dd><p class="first last">Hierarchy of the blob at the beggining of the core of the global fragment. Only used to plot accumulation steps</p>
 </dd>
 <dt><strong>_used_for_training</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd><p class="first last">If True the image obtained from the blob has been used to train the idCNN</p>
@@ -184,7 +200,7 @@
 <dt><strong>_identity_corrected_closing_gaps</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd><p class="first last">The identity given to the blob during in postprocessing</p>
 </dd>
-<dt><strong>_identity_corrected_solving_duplication</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dt><strong>_identity_corrected_solving_jumps</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd><p class="first last">The identity given to the blob while solving duplications</p>
 </dd>
 <dt><strong>_identity</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
@@ -1012,14 +1028,14 @@ the video in which all the animals are visible (not touching)</p>
 </tbody>
 </table>
 <p class="rubric">Methods</p>
-<table border="1" class="docutils">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col width="55%" />
-<col width="45%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><strong>__call__</strong></td>
-<td>&#160;</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(area[,&nbsp;std_tolerance])</td>
+<td>Call self as a function.</td>
 </tr>
 </tbody>
 </table>
@@ -1030,7 +1046,7 @@ the video in which all the animals are visible (not touching)</p>
 <span id="segmentation"></span><h2>Segmentation<a class="headerlink" href="#module-segmentation" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="segmentation.get_blobs_in_frame">
-<code class="descclassname">segmentation.</code><code class="descname">get_blobs_in_frame</code><span class="sig-paren">(</span><em>cap</em>, <em>video</em>, <em>segmentation_thresholds</em>, <em>max_number_of_blobs</em>, <em>frame_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/segmentation.html#get_blobs_in_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#segmentation.get_blobs_in_frame" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">segmentation.</code><code class="descname">get_blobs_in_frame</code><span class="sig-paren">(</span><em>cap</em>, <em>video</em>, <em>segmentation_thresholds</em>, <em>max_number_of_blobs</em>, <em>frame_number</em>, <em>global_frame_number</em>, <em>frame_number_in_video_path</em>, <em>bounding_box_images_path</em>, <em>episode</em>, <em>video_path</em>, <em>pixels_path</em>, <em>save_pixels</em>, <em>save_segmentation_image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/segmentation.html#get_blobs_in_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#segmentation.get_blobs_in_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Segments a frame read from <cite>cap</cite> according to the preprocessing parameters
 in <cite>video</cite>. Returns a list <cite>blobs_in_frame</cite> with the Blob objects in the frame
 and the <cite>max_number_of_blobs</cite> found in the video so far. Frames are segmented
@@ -1055,7 +1071,12 @@ in gray scale.</p>
 </dd>
 <dt><strong>frame_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd><p class="first last">Number of the frame being segmented. It is used to print in the terminal the frames
-where the segmentation fails</p>
+where the segmentation fails. This frame is the frame of the episode if the video
+is chuncked.</p>
+</dd>
+<dt><strong>global_frame_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">This is the frame number in the whole video. It will be different to the frame_number
+if the video is chuncked.</p>
 </dd>
 </dl>
 </td>
@@ -1196,7 +1217,7 @@ the list of indices <cite>video.episodes_start_end</cite> is used for the parall
 
 <dl class="function">
 <dt id="segmentation.segment_episode">
-<code class="descclassname">segmentation.</code><code class="descname">segment_episode</code><span class="sig-paren">(</span><em>video</em>, <em>segmentation_thresholds</em>, <em>path=None</em>, <em>episode_start_end_frames=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/segmentation.html#segment_episode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#segmentation.segment_episode" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">segmentation.</code><code class="descname">segment_episode</code><span class="sig-paren">(</span><em>video</em>, <em>segmentation_thresholds</em>, <em>path=None</em>, <em>episode_start_end_frames=None</em>, <em>save_pixels=None</em>, <em>save_segmentation_image=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/segmentation.html#segment_episode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#segmentation.segment_episode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets list of blobs segmented in every frame of the episode of the video
 given by <cite>path</cite> (if the video is splitted in different files) or by
 <cite>episode_start_end_frames</cite> (if the video is given in a single file)</p>
@@ -1245,7 +1266,7 @@ when the video is given in a single file</p>
 <span id="segmentation-utils"></span><h2>Segmentation utils<a class="headerlink" href="#module-video_utils" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="video_utils.blob_extractor">
-<code class="descclassname">video_utils.</code><code class="descname">blob_extractor</code><span class="sig-paren">(</span><em>segmented_frame</em>, <em>frame</em>, <em>min_area</em>, <em>max_area</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#blob_extractor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.blob_extractor" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">video_utils.</code><code class="descname">blob_extractor</code><span class="sig-paren">(</span><em>segmented_frame</em>, <em>frame</em>, <em>min_area</em>, <em>max_area</em>, <em>save_pixels='DISK'</em>, <em>save_segmentation_image='DISK'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#blob_extractor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.blob_extractor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a <cite>segmented_frame</cite> it extracts the blobs with area greater than
 <cite>min_area</cite> and smaller than <cite>max_area</cite> and it computes a set of relevant
 properties for every blob.</p>
@@ -1465,7 +1486,7 @@ frame of the video</p>
 
 <dl class="function">
 <dt id="video_utils.get_blobs_information_per_frame">
-<code class="descclassname">video_utils.</code><code class="descname">get_blobs_information_per_frame</code><span class="sig-paren">(</span><em>frame</em>, <em>contours</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#get_blobs_information_per_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.get_blobs_information_per_frame" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">video_utils.</code><code class="descname">get_blobs_information_per_frame</code><span class="sig-paren">(</span><em>frame</em>, <em>contours</em>, <em>save_pixels</em>, <em>save_segmentation_image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#get_blobs_information_per_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.get_blobs_information_per_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes a set of properties for all the <cite>contours</cite> in a given frame.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1555,7 +1576,7 @@ an estimate for the body length of the animal.</p>
 
 <dl class="function">
 <dt id="video_utils.get_bounding_box_image">
-<code class="descclassname">video_utils.</code><code class="descname">get_bounding_box_image</code><span class="sig-paren">(</span><em>frame</em>, <em>cnt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#get_bounding_box_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.get_bounding_box_image" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">video_utils.</code><code class="descname">get_bounding_box_image</code><span class="sig-paren">(</span><em>frame</em>, <em>cnt</em>, <em>save_pixels</em>, <em>save_segmentation_image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#get_bounding_box_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.get_bounding_box_image" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the <cite>bounding_box_image`from a given frame and contour. It also
 returns the coordinates of the `bounding_box</cite>, the ravelled <cite>pixels</cite> inside of
 the contour and the diagonal of the <cite>bounding_box</cite> as an <cite>estimated_body_length</cite></p>
@@ -1775,10 +1796,10 @@ sum of (ending_frame - starting_frame) / 100 frames for the given episode</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 19, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

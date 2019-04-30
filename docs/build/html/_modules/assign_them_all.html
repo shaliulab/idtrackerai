@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>assign_them_all &mdash; idtrackerai v0.0 Manual</title>
+    <title>assign_them_all &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -119,20 +132,17 @@
 
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">collections</span><span class="o">,</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">cv2</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
-<span class="kn">import</span> <span class="nn">collections</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">cv2</span>
-<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="k">import</span> <span class="n">cdist</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.utils.video_utils</span> <span class="k">import</span> <span class="n">blob_extractor</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.list_of_fragments</span> <span class="k">import</span> <span class="n">ListOfFragments</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.blob</span> <span class="k">import</span> <span class="n">Blob</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.postprocessing.compute_velocity_model</span> <span class="k">import</span> <span class="n">compute_model_velocity</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">VEL_PERCENTILE</span>
+<span class="kn">from</span> <span class="nn">confapp</span> <span class="k">import</span> <span class="n">conf</span>
+
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
@@ -164,26 +174,56 @@
 
 <span class="k">def</span> <span class="nf">compute_max_distance_transform</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">blob</span><span class="p">):</span>
     <span class="n">temp_image</span> <span class="o">=</span> <span class="n">generate_temp_image</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">pixels</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">bounding_box_in_frame_coordinates</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">distanceTransform</span><span class="p">(</span><span class="n">temp_image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cv</span><span class="o">.</span><span class="n">CV_DIST_L2</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cv</span><span class="o">.</span><span class="n">CV_DIST_MASK_PRECISE</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">distanceTransform</span><span class="p">(</span><span class="n">temp_image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">DIST_L2</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">DIST_MASK_PRECISE</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">erode</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">):</span>
     <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">erode</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="n">kernel</span><span class="p">,</span><span class="n">iterations</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">get_eroded_blobs</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">blobs_in_frame</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_eroded_blobs</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">):</span>
+    <span class="n">episode</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">in_which_episode</span><span class="p">(</span><span class="n">frame_number</span><span class="p">)</span>
+    <span class="n">pixels_path</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">SAVE_PIXELS</span> <span class="o">==</span> <span class="s1">&#39;DISK&#39;</span><span class="p">:</span>
+        <span class="n">pixels_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">_segmentation_data_folder</span><span class="p">,</span>
+                                   <span class="s1">&#39;episode_pixels_</span><span class="si">{}</span><span class="s1">.hdf5&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">episode</span><span class="p">)))</span>
+
     <span class="c1"># logger.debug(&#39;Getting eroded blobs&#39;)</span>
     <span class="n">segmented_frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
-        <span class="n">pixels</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">eroded_pixels</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span><span class="s1">&#39;eroded_pixels&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">blob</span><span class="o">.</span><span class="n">pixels</span>
+        <span class="n">pixels</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">eroded_pixels</span> <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;has_eroded_pixels&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">blob</span><span class="o">.</span><span class="n">has_eroded_pixels</span><span class="p">)</span> <span class="k">else</span> <span class="n">blob</span><span class="o">.</span><span class="n">pixels</span>
         <span class="n">pxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">pixels</span><span class="p">,(</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
         <span class="n">segmented_frame</span><span class="p">[</span><span class="n">pxs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">pxs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">255</span>
 
     <span class="n">segmented_eroded_frame</span> <span class="o">=</span> <span class="n">erode</span><span class="p">(</span><span class="n">segmented_frame</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">erosion_kernel_size</span><span class="p">)</span>
     <span class="n">boundingBoxes</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">pixels_all</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">blob_extractor</span><span class="p">(</span><span class="n">segmented_eroded_frame</span><span class="p">,</span> <span class="n">segmented_eroded_frame</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
     <span class="c1"># logger.debug(&#39;Finished getting eroded blobse&#39;)</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">Blob</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span> <span class="n">contour</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounding_box</span><span class="p">,</span> <span class="n">pixels</span> <span class="o">=</span> <span class="n">pixels</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">centroid</span><span class="p">,</span> <span class="n">contour</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">bounding_box</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">pixels_all</span><span class="p">,</span> <span class="n">boundingBoxes</span><span class="p">)]</span>
+    <span class="n">eroded_blobs_in_frame</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">centroid</span><span class="p">,</span> <span class="n">contour</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">bounding_box</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">pixels_all</span><span class="p">,</span> <span class="n">boundingBoxes</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">SAVE_PIXELS</span> <span class="o">==</span> <span class="s1">&#39;DISK&#39;</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">pixels_path</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">frame_number</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-eroded&#39;</span><span class="p">,</span>
+                                  <span class="n">data</span><span class="o">=</span><span class="n">pixels</span><span class="p">)</span>
+            <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span>
+
+        <span class="n">eroded_blobs_in_frame</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Blob</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span>
+                                          <span class="n">contour</span><span class="p">,</span>
+                                          <span class="kc">None</span><span class="p">,</span>
+                                          <span class="n">bounding_box</span><span class="p">,</span>
+                                          <span class="n">bounding_box_image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                          <span class="n">number_of_animals</span><span class="o">=</span><span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span>
+                                          <span class="n">frame_number</span><span class="o">=</span><span class="n">frame_number</span><span class="p">,</span>
+                                          <span class="n">pixels</span><span class="o">=</span><span class="n">pixels</span><span class="p">,</span>
+                                          <span class="n">pixels_path</span><span class="o">=</span><span class="n">pixels_path</span><span class="p">,</span>
+                                          <span class="n">in_frame_index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                                          <span class="n">video_height</span><span class="o">=</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+                                          <span class="n">video_width</span><span class="o">=</span><span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+                                          <span class="n">video_path</span><span class="o">=</span><span class="n">video</span><span class="o">.</span><span class="n">video_path</span><span class="p">,</span>
+                                          <span class="n">pixels_are_eroded</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">eroded_blobs_in_frame</span>
+    <span class="c1"># return [Blob(centroid, contour, None, bounding_box, pixels = pixels)</span>
+    <span class="c1">#             for centroid, contour, pixels, bounding_box in zip(centroids, contours, pixels_all, boundingBoxes)]</span>
 
 <span class="sd">&#39;&#39;&#39; assign them all &#39;&#39;&#39;</span>
 
@@ -191,10 +231,10 @@
     <span class="p">[(</span><span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_is_an_individual&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_is_a_crossing&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_identity&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-        <span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_identity_corrected_solving_duplications&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_identity_corrected_solving_jumpss&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">list_of_blobs_no_gaps</span><span class="o">.</span><span class="n">blobs_in_video</span>
         <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span>
-        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
@@ -226,14 +266,14 @@
 
 <span class="k">def</span> <span class="nf">get_blob_by_identity</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">identity</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="n">identity</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">==</span> <span class="n">identity</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">blob</span><span class="p">]</span>
         <span class="k">elif</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_closing_gaps&#39;</span><span class="p">)</span>
             <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span>
             <span class="n">identity</span> <span class="ow">in</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">blob</span><span class="p">]</span>
         <span class="k">elif</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_closing_gaps&#39;</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span> <span class="ow">and</span>
             <span class="n">identity</span> <span class="o">==</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">blob</span><span class="p">]</span>
     <span class="k">return</span> <span class="kc">None</span>
@@ -248,10 +288,10 @@
 <span class="k">def</span> <span class="nf">get_missing_identities_from_blobs_in_frame</span><span class="p">(</span><span class="n">possible_identities</span><span class="p">,</span> <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">occluded_identities_in_frame</span><span class="p">):</span>
     <span class="n">identities_in_frame</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="n">identities_in_frame</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">identities_in_frame</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="n">identities_in_frame</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">identities_in_frame</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">possible_identities</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">identities_in_frame</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">occluded_identities_in_frame</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">get_candidate_centroid</span><span class="p">(</span><span class="n">individual_gap_interval</span><span class="p">,</span> <span class="n">previous_blob_to_the_gap</span><span class="p">,</span> <span class="n">next_blob_to_the_gap</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">border</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">inner_frame_number</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -261,7 +301,7 @@
                                 <span class="k">if</span> <span class="n">blob_for_interpolation</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="k">else</span>
                                 <span class="n">blob_for_interpolation</span><span class="o">.</span><span class="n">interpolated_centroids</span><span class="p">[</span><span class="n">blob_for_interpolation</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">identity</span><span class="p">)]</span>
                                 <span class="k">for</span> <span class="n">blob_for_interpolation</span> <span class="ow">in</span> <span class="n">blobs_for_interpolation</span><span class="p">]</span>
-    <span class="n">centroids_to_interpolate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">centroids_to_interpolate</span><span class="p">))</span>
+    <span class="n">centroids_to_interpolate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">centroids_to_interpolate</span><span class="p">)))</span>
     <span class="n">argsort_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">argsort_x</span><span class="p">]</span>
     <span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">argsort_x</span><span class="p">]</span>
@@ -270,16 +310,16 @@
     <span class="n">y_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">border</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">argsort_x</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])):</span>
         <span class="c1"># logger.debug(&#39;Finished getting candidate centroids&#39;)</span>
-        <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">border</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">argsort_x</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])):</span>
         <span class="c1"># logger.debug(&#39;Finished getting candidate centroids&#39;)</span>
-        <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">))[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">border</span> <span class="o">==</span> <span class="s1">&#39;end&#39;</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">argsort_x</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])):</span>
         <span class="c1"># logger.debug(&#39;Finished getting candidate centroids&#39;)</span>
-        <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">))[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">border</span> <span class="o">==</span> <span class="s1">&#39;end&#39;</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">argsort_x</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])):</span>
         <span class="c1"># logger.debug(&#39;Finished getting candidate centroids&#39;)</span>
-        <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;border must be start or end: </span><span class="si">%s</span><span class="s1"> was given instead&#39;</span> <span class="o">%</span><span class="n">border</span><span class="p">)</span>
 
@@ -355,7 +395,7 @@
 <span class="k">def</span> <span class="nf">plot_blob_and_centroid</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">blob</span><span class="p">,</span> <span class="n">centroid</span><span class="p">):</span>
     <span class="n">segmented_frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
 
-    <span class="n">pixels</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">eroded_pixels</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span><span class="s1">&#39;eroded_pixels&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">blob</span><span class="o">.</span><span class="n">pixels</span>
+    <span class="n">pixels</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">eroded_pixels</span> <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">has_eroded_pixels</span> <span class="k">else</span> <span class="n">blob</span><span class="o">.</span><span class="n">pixels</span>
     <span class="n">pxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">pixels</span><span class="p">,(</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
     <span class="n">segmented_frame</span><span class="p">[</span><span class="n">pxs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">pxs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">255</span>
 
@@ -424,7 +464,7 @@
             <span class="c1"># logger.debug(&#39;Only a candidate tuple for this original blob&#39;)</span>
             <span class="n">identity</span> <span class="o">=</span> <span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
             <span class="n">centroid</span> <span class="o">=</span> <span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
                 <span class="n">original_blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">identity</span>
                 <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span><span class="s1">&#39;_identity_corrected_closing_gaps&#39;</span><span class="p">,</span> <span class="n">identity</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span>
@@ -432,12 +472,12 @@
             <span class="k">elif</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
                 <span class="n">list_of_occluded_identities</span><span class="p">[</span><span class="n">original_blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">identity</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                        <span class="n">identity</span> <span class="o">=</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">+</span> <span class="p">[</span><span class="n">identity</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                        <span class="n">identity</span> <span class="o">=</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">+</span> <span class="p">[</span><span class="n">identity</span><span class="p">]</span>
                         <span class="n">centroid</span> <span class="o">=</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">interpolated_centroids</span> <span class="o">+</span> <span class="p">[</span><span class="n">centroid</span><span class="p">]</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">identity</span> <span class="o">=</span> <span class="p">[</span><span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="n">identity</span><span class="p">]</span>
+                        <span class="n">identity</span> <span class="o">=</span> <span class="p">[</span><span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="n">identity</span><span class="p">]</span>
                         <span class="n">centroid</span> <span class="o">=</span> <span class="p">[</span><span class="n">original_blob</span><span class="o">.</span><span class="n">centroid</span><span class="p">,</span> <span class="n">centroid</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">identity</span> <span class="o">=</span> <span class="p">[</span><span class="n">identity</span><span class="p">]</span>
@@ -452,9 +492,9 @@
             <span class="n">new_original_blobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">original_blob</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">:</span> <span class="c1"># Note that the original blobs that were unidentified (identity 0) are set to zero before starting the main while loop</span>
             <span class="c1"># logger.debug(&#39;Many candidate tuples for this original blob, and the original blob is a crossing&#39;)</span>
-            <span class="n">candidate_eroded_blobs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">candidate_eroded_blobs_centroids</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">candidate_eroded_blobs_identities</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">candidate_eroded_blobs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">candidate_eroded_blobs_centroids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">candidate_eroded_blobs_identities</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">))[</span><span class="mi">2</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">candidate_eroded_blobs</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># crossing not split</span>
                 <span class="n">original_blob</span><span class="o">.</span><span class="n">interpolated_centroids</span> <span class="o">=</span> <span class="p">[</span><span class="n">candidate_eroded_blob_centroid</span>
                                                                     <span class="k">for</span> <span class="n">candidate_eroded_blob_centroid</span> <span class="ow">in</span> <span class="n">candidate_eroded_blobs_centroids</span><span class="p">]</span>
@@ -524,7 +564,7 @@
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inner_blobs_in_frame</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="c1"># logger.debug(&#39;----There are blobs in the inner frame&#39;)</span>
                         <span class="k">if</span> <span class="n">erosion_counter</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                            <span class="n">eroded_blobs_in_frame</span> <span class="o">=</span> <span class="n">get_eroded_blobs</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">inner_blobs_in_frame</span><span class="p">)</span> <span class="c1">#list of eroded blobs!</span>
+                            <span class="n">eroded_blobs_in_frame</span> <span class="o">=</span> <span class="n">get_eroded_blobs</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">inner_blobs_in_frame</span><span class="p">,</span> <span class="n">inner_frame_number</span><span class="p">)</span> <span class="c1">#list of eroded blobs!</span>
                             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eroded_blobs_in_frame</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                 <span class="n">eroded_blobs_in_frame</span> <span class="o">=</span> <span class="n">inner_blobs_in_frame</span>
                         <span class="k">else</span><span class="p">:</span>
@@ -631,9 +671,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span>
+            <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span>
                 <span class="k">elif</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span>
                 <span class="k">elif</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -678,21 +718,20 @@
     <span class="n">set_individual_with_identity_0_as_crossings</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="p">)</span>
     <span class="n">continue_erosion_protocol</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">previous_number_of_non_split_crossings_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
-                                                    <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span>
-                                                    <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">])</span>
+                                                        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span>
+                                                        <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">])</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="s1">&#39;_erosion_kernel_size&#39;</span><span class="p">):</span>
         <span class="n">video</span><span class="o">.</span><span class="n">_erosion_kernel_size</span> <span class="o">=</span> <span class="n">compute_erosion_disk</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">)</span>
         <span class="n">video</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="s1">&#39;velocity_threshold&#39;</span><span class="p">):</span>
         <span class="n">video</span><span class="o">.</span><span class="n">velocity_threshold</span> <span class="o">=</span> <span class="n">compute_model_velocity</span><span class="p">(</span><span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">,</span>
                                                             <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span>
-                                                            <span class="n">percentile</span> <span class="o">=</span> <span class="n">VEL_PERCENTILE</span><span class="p">)</span>
+                                                            <span class="n">percentile</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">VEL_PERCENTILE</span><span class="p">)</span>
     <span class="n">possible_identities</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">erosion_counter</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">list_of_occluded_identities</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">))]</span>
 
     <span class="k">while</span> <span class="n">continue_erosion_protocol</span> <span class="ow">or</span> <span class="n">erosion_counter</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="c1"># logger.debug(&#39;\nIn main while to close gaps&#39;)</span>
         <span class="n">reset_blobs_in_video_before_erosion_iteration</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">)</span>
         <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">,</span> \
         <span class="n">list_of_occluded_identities</span> <span class="o">=</span> <span class="n">interpolate_trajectories_during_gaps</span><span class="p">(</span><span class="n">video</span><span class="p">,</span>
@@ -743,10 +782,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

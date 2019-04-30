@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>Trajectories analysis &mdash; idtrackerai v0.0 Manual</title>
+    <title>Jupyter Notebooks for analysis &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,13 +34,14 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" >
     <link rel="search" title="Search" href="search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="index.html" >
     <link rel="next" title="Code documentation" href="modules.html" >
-    <link rel="prev" title="Graphical user interface (GUI)" href="GUI_explained.html" > 
+    <link rel="prev" title="FAQs" href="FAQs.html" > 
   </head>
   <body>
 
@@ -63,7 +64,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	 
     </ul>
               
@@ -78,7 +79,7 @@
            accesskey="N">next</a>
       </li>
       <li class="active">
-        <a href="GUI_explained.html" title="Graphical user interface (GUI)"
+        <a href="FAQs.html" title="FAQs"
            accesskey="P">previous</a>
       </li>
     </ul>
@@ -91,12 +92,12 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Trajectories analysis</a><ul>
+<li><a class="reference internal" href="#">Jupyter Notebooks for analysis</a><ul>
 <li><a class="reference internal" href="#the-trajectorytools-python-module">The <em>trajectorytools</em> python module</a></li>
-<li><a class="reference internal" href="#jupyter-lab-notebooks">Jupyter Lab Notebooks</a><ul>
-<li><a class="reference internal" href="#figures-generated-from-the-jupyter-lab-notebook-for-a-video-of-10-juvenile-fish">Figures generated from the Jupyter Lab Notebook for a video of 10 juvenile fish</a><ul>
+<li><a class="reference internal" href="#jupyter-notebooks">Jupyter Notebooks</a><ul>
+<li><a class="reference internal" href="#figures-generated-from-our-jupyter-notebooks-for-a-video-of-10-juvenile-fish">Figures generated from our Jupyter Notebooks for a video of 10 juvenile fish</a><ul>
 <li><a class="reference internal" href="#smoothed-trajectories">Smoothed trajectories</a></li>
 <li><a class="reference internal" href="#velocities-and-accelerations">Velocities and accelerations</a></li>
 <li><a class="reference internal" href="#density-of-neighbours-around-a-focal-fish">Density of neighbours around a focal fish</a></li>
@@ -110,6 +111,18 @@
 </li>
 </ul>
 
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQs.html">FAQs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -117,23 +130,23 @@
         <div class="bodywrapper">
           <div class="body" id="spc-section-body">
             
-  <div class="section" id="trajectories-analysis">
-<h1>Trajectories analysis<a class="headerlink" href="#trajectories-analysis" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="jupyter-notebooks-for-analysis">
+<h1>Jupyter Notebooks for analysis<a class="headerlink" href="#jupyter-notebooks-for-analysis" title="Permalink to this headline">¶</a></h1>
 <p>We are constantly developing new tools to analyze the trajectories that
-idtracker.ai outputs. In addition, we also provide Jupyter Lab Notebooks
+idtracker.ai outputs. We provide Jupyter Notebooks
 with examples of analysis routines for groups of animals.</p>
 <div class="section" id="the-trajectorytools-python-module">
 <h2>The <em>trajectorytools</em> python module<a class="headerlink" href="#the-trajectorytools-python-module" title="Permalink to this headline">¶</a></h2>
 <p>You can install the <em>trajectorytools</em> module from the following GitHub repository:
 <a class="reference external" href="https://github.com/fjhheras/trajectorytools">https://github.com/fjhheras/trajectorytools</a></p>
 </div>
-<div class="section" id="jupyter-lab-notebooks">
-<h2>Jupyter Lab Notebooks<a class="headerlink" href="#jupyter-lab-notebooks" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="jupyter-notebooks">
+<h2>Jupyter Notebooks<a class="headerlink" href="#jupyter-notebooks" title="Permalink to this headline">¶</a></h2>
 <p>You can find some analysis routines from <a class="footnote-reference" href="#id2" id="id1">[1]</a> implemented with the
 <em>trajectorytools</em> module in the Jupyter Lab Notebook <em>trajcetoroies.ipynb</em>
-in the following GitLab repository: <a class="reference external" href="https://gitlab.com/polavieja_lab/bns2018">https://gitlab.com/polavieja_lab/bns2018</a>.</p>
-<div class="section" id="figures-generated-from-the-jupyter-lab-notebook-for-a-video-of-10-juvenile-fish">
-<h3>Figures generated from the Jupyter Lab Notebook for a video of 10 juvenile fish<a class="headerlink" href="#figures-generated-from-the-jupyter-lab-notebook-for-a-video-of-10-juvenile-fish" title="Permalink to this headline">¶</a></h3>
+in the following GitLab repository: <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai_notebooks">https://gitlab.com/polavieja_lab/idtrackerai_notebooks</a>.</p>
+<div class="section" id="figures-generated-from-our-jupyter-notebooks-for-a-video-of-10-juvenile-fish">
+<h3>Figures generated from our Jupyter Notebooks for a video of 10 juvenile fish<a class="headerlink" href="#figures-generated-from-our-jupyter-notebooks-for-a-video-of-10-juvenile-fish" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="smoothed-trajectories">
 <h4>Smoothed trajectories<a class="headerlink" href="#smoothed-trajectories" title="Permalink to this headline">¶</a></h4>
 <img alt="_images/trajectories.png" src="_images/trajectories.png" />
@@ -185,10 +198,10 @@ in the following GitLab repository: <a class="reference external" href="https://
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

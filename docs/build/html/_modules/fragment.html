@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>fragment &mdash; idtrackerai v0.0 Manual</title>
+    <title>fragment &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -116,16 +129,13 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
-<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">confapp</span> <span class="k">import</span> <span class="n">conf</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span> <span class="n">delete_attributes_from_object</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span> <span class="n">MAX_FLOAT</span><span class="p">,</span> <span class="n">MIN_FLOAT</span><span class="p">,</span> <span class="n">FIXED_IDENTITY_THRESHOLD</span>
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
@@ -153,8 +163,6 @@
 <span class="sd">        List of centroids (see :attr:`~blob.Blob.centroid`)</span>
 <span class="sd">    areas : list</span>
 <span class="sd">        List of areas (see :attr:`~blob.Blob.area`)</span>
-<span class="sd">    pixels : list</span>
-<span class="sd">        List of pixels (see :attr:`~blob.Blob.pixels`)</span>
 <span class="sd">    is_an_individual : bool</span>
 <span class="sd">        True if the image has been classified as representing an individual by :func:`~crossing_detector.detect_crossings`</span>
 <span class="sd">    is_a_crossing : bool</span>
@@ -190,13 +198,13 @@
 <span class="sd">    certainty_P2 : float</span>
 <span class="sd">        certainty of the identification of the fragment computed according to meth:`compute_P2_vector`</span>
 <span class="sd">    is_certain : bool</span>
-<span class="sd">        True if :attr:`certainty` is greater than :const:`~constants.CERTAINTY_THRESHOLD`</span>
+<span class="sd">        True if :attr:`certainty` is greater than :const:`conf.CERTAINTY_THRESHOLD`</span>
 <span class="sd">    temporary_id : int</span>
 <span class="sd">        Identity assigned to the fragment during the fingerprint protocols cascade</span>
 <span class="sd">    identity : int</span>
 <span class="sd">        Identity assigned to the fragment</span>
 <span class="sd">    identity_is_fixed : bool</span>
-<span class="sd">        True if the :attr:`certainty_P2` is greater than :const:`~constants.FIXED_IDENTITY_THRESHOLD`</span>
+<span class="sd">        True if the :attr:`certainty_P2` is greater than :const:`conf.FIXED_IDENTITY_THRESHOLD`</span>
 <span class="sd">    identity_corrected_closing_gaps : int</span>
 <span class="sd">        Identity assigned to the fragment while solving the crossing if it exists else None</span>
 <span class="sd">    user_generated_identity : int</span>
@@ -225,7 +233,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragment_identifier</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_end</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                         <span class="n">blob_hierarchy_in_starting_frame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">images</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                         <span class="n">bounding_box_in_frame_coordinates</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                        <span class="n">centroids</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">areas</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pixels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">centroids</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">areas</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                         <span class="n">is_an_individual</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_a_crossing</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                         <span class="n">number_of_animals</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                         <span class="n">user_generated_identity</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -238,7 +246,6 @@
         <span class="k">if</span> <span class="n">centroids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_distance_travelled</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">areas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">areas</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span> <span class="o">=</span> <span class="n">pixels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="o">=</span> <span class="n">is_an_individual</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_a_crossing</span> <span class="o">=</span> <span class="n">is_a_crossing</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">=</span> <span class="n">number_of_animals</span>
@@ -249,7 +256,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_acceptable_for_training</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_temporary_id</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span> <span class="o">=</span> <span class="n">user_generated_identity</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_globally</span> <span class="o">=</span> <span class="kc">False</span>
@@ -272,7 +279,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_acceptable_for_training</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_temporary_id</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_globally</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_partially</span> <span class="o">=</span> <span class="kc">False</span>
@@ -287,14 +294,14 @@
             <span class="n">attributes_to_delete</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_for_training</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="n">attributes_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_frequencies&#39;</span><span class="p">,</span> <span class="s1">&#39;_P1_vector&#39;</span><span class="p">]</span>
             <span class="n">attributes_to_delete</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;_P2_vector&#39;</span><span class="p">,</span> <span class="s1">&#39;_ambiguous_identities&#39;</span><span class="p">,</span>
                                         <span class="s1">&#39;_certainty_P2&#39;</span><span class="p">])</span>
             <span class="n">delete_attributes_from_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes_to_delete</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">roll_back_to</span> <span class="o">==</span> <span class="s1">&#39;assignment&#39;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span> <span class="o">=</span> <span class="kc">None</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_in_a_global_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -369,8 +376,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">identity_corrected_solving_duplication</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span>
+    <span class="k">def</span> <span class="nf">identity_corrected_solving_jumps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_jumps</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">identity_corrected_closing_gaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -391,8 +398,8 @@
     <span class="k">def</span> <span class="nf">assigned_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_closing_gaps&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span>
-        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_solving_duplication&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_solving_jumps&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span>
 
@@ -438,8 +445,8 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span>
                 <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span>
                 <span class="ow">or</span> <span class="n">fragment</span><span class="o">.</span><span class="n">user_generated_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="ow">or</span> <span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)]</span></div>
+                <span class="ow">or</span> <span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_jumps</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)]</span></div>
 
 <div class="viewcode-block" id="Fragment.get_missing_identities_in_coexisting_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_missing_identities_in_coexisting_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_missing_identities_in_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_identities</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the identities that have not been assigned to the set of fragments coexisting with self</span>
@@ -631,7 +638,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">zero_identity_assigned_by_P2</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_ambiguous_identities</span> <span class="o">=</span> <span class="n">possible_identities</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">max_P2</span> <span class="o">&gt;</span> <span class="n">FIXED_IDENTITY_THRESHOLD</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">max_P2</span> <span class="o">&gt;</span> <span class="n">conf</span><span class="o">.</span><span class="n">FIXED_IDENTITY_THRESHOLD</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="n">possible_identities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P1_vector</span><span class="p">))</span>
@@ -658,7 +665,7 @@
             <span class="n">P2_vector_ordered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P2_vector</span><span class="p">)</span>
             <span class="n">P2_first_max</span> <span class="o">=</span> <span class="n">P2_vector_ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">P2_second_max</span> <span class="o">=</span> <span class="n">P2_vector_ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_certainty_P2</span> <span class="o">=</span> <span class="n">MAX_FLOAT</span> <span class="k">if</span> <span class="n">P2_second_max</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">P2_first_max</span> <span class="o">/</span> <span class="n">P2_second_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_certainty_P2</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">MAX_FLOAT</span> <span class="k">if</span> <span class="n">P2_second_max</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">P2_first_max</span> <span class="o">/</span> <span class="n">P2_second_max</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_P2_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_certainty_P2</span> <span class="o">=</span> <span class="mf">0.</span></div>
@@ -821,10 +828,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>

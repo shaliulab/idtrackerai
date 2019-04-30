@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>get_trajectories &mdash; idtrackerai v0.0 Manual</title>
+    <title>get_trajectories &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -34,11 +34,12 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -62,7 +63,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -83,6 +84,18 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
         </div>
       </div>
           <div class="span9">
@@ -219,7 +232,7 @@
 
         <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
 
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
                 <span class="n">centroid_trajectories</span> <span class="o">=</span> <span class="n">assign_point_to_identity</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">centroid</span><span class="p">,</span>
                                                                 <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span>
                                                                 <span class="n">blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">,</span>
@@ -236,6 +249,30 @@
                                                                     <span class="n">centroid_trajectories</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">centroid_trajectories</span><span class="p">,</span> <span class="n">id_probabilities</span></div>
+
+
+<span class="k">def</span> <span class="nf">produce_trajectories_wo_identities</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+    <span class="n">centroid_trajectories</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">identifiers_prev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="s2">&quot;creating trajectories&quot;</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">frame_number</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">identifiers_next</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">fragment_identifier</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">[</span><span class="n">frame_number</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">identifiers_next</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">fragment_identifier</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">[</span><span class="n">frame_number</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">blob_number</span><span class="p">,</span> <span class="n">blob</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span> <span class="ow">in</span> <span class="n">identifiers_prev</span><span class="p">:</span>
+                    <span class="n">column</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">identifiers_prev</span> <span class="o">==</span> <span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">column</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">identifiers_prev</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">identifiers_prev</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span>
+
+                <span class="n">blob</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">column</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">centroid_trajectories</span><span class="p">[</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">centroid</span>
+
+                <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">identifiers_next</span><span class="p">:</span>
+                    <span class="n">identifiers_prev</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">return</span> <span class="n">centroid_trajectories</span><span class="p">,</span> <span class="kc">None</span>
 
 
 <div class="viewcode-block" id="produce_output_dict"><a class="viewcode-back" href="../postprocessing.html#get_trajectories.produce_output_dict">[docs]</a><span class="k">def</span> <span class="nf">produce_output_dict</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
@@ -256,9 +293,16 @@
 <span class="sd">        Output dictionary containing trajectories as values</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">centroid_trajectories</span><span class="p">,</span> <span class="n">id_probabilities</span> <span class="o">=</span> \
-        <span class="n">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">,</span>
-                             <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">video</span><span class="o">.</span><span class="n">track_wo_identities</span><span class="p">:</span>
+        <span class="n">centroid_trajectories</span><span class="p">,</span> <span class="n">id_probabilities</span> <span class="o">=</span> \
+            <span class="n">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">,</span>
+                                 <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">video</span><span class="o">.</span><span class="n">_number_of_animals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">bf</span><span class="p">)</span> <span class="k">for</span> <span class="n">bf</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">])</span>
+        <span class="n">centroid_trajectories</span><span class="p">,</span> <span class="n">id_probabilities</span> <span class="o">=</span> \
+            <span class="n">produce_trajectories_wo_identities</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span>
+                                                <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">,</span>
+                                                <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
     <span class="n">output_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;trajectories&#39;</span><span class="p">:</span> <span class="n">centroid_trajectories</span><span class="p">,</span>
                    <span class="s1">&#39;id_probabilities&#39;</span><span class="p">:</span> <span class="n">id_probabilities</span><span class="p">,</span>
                    <span class="s1">&#39;git_commit&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">git_commit</span><span class="p">,</span>
@@ -310,10 +354,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Apr 29, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
       </li>
     </ul>
     </div>
