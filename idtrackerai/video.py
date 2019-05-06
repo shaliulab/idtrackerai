@@ -934,9 +934,7 @@ class Video(object):
             if hasattr(self, '_crossings_detector_folder') and os.path.isdir(self.crossings_detector_folder):
                 logger.info("Deleting crossing detector folder")
                 rmtree(self.crossings_detector_folder, ignore_errors=True)
-            if os.path.isfile(self.fragments_path):
-                logger.info("Deleting fragments")
-                os.remove(self.fragments_path)
+                
 
         if conf.DATA_POLICY in ['trajectories', 'validation',
                            'knowledge_transfer']:
