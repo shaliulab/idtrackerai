@@ -1,5 +1,5 @@
-Some videos tracked with idtracker.ai
-=====================================
+Gallery
+=======
 
 Large groups of zebrafish (*D. rerio*)
 *********************************
@@ -31,9 +31,11 @@ Video of 8 adult zebrafish with complex behaviors.
 
   <iframe width="280" height="160" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/PdKpJEo9Thw?ecver=1&rel=0&showinfo=01" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-Videos of 10 30dpf zebrafish in a 70cm circular arena.
+Video of 2 adult zebrafish staged to fight.
 
-*Coming soon*
+.. raw:: html
+
+  <iframe width="280" height="160" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/dT28-VcXaCc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 Large groups of fruit flies (*D. melanogaster*)
 *****************************************
@@ -51,17 +53,38 @@ Videos of 100 and 72 fruit flies. For the setup specifications check Supplementa
 Small groups of fruit flies (*D. melanogaster*)
 *****************************************
 
-*Coming soon*
+Compressed video of 10 fruit flies in a circular arena. The setup includes and LED that turns on at different points in the video.
+This could difficult the identification of the flies, as the overall illumination of the video changes. However, idtracker.ai manages to identify all
+individuals even during those events.
+
+.. raw:: html
+
+  <iframe width="280" height="160" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/oe1EfsGjp9k" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+We thank Clara Ferreira from the Moita Lab at Champalimaud Reserach for the video.
 
 Small groups of ants
 ********************
 
-*Coming soon*
+Compressed color video of 14 ants. The shadows in the background, the light reflections in the body of the ants and the immobility of some animals
+could difficult the identification of each individual. However, idtracker.ai manages to identify all animals along the video.
+
+.. raw:: html
+
+  <iframe width="280" height="160" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/d0TTdu41NoA" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+We thank Andrew I. Bruce and Nico Blüthgen for this video.
 
 Small groups of mice
 ********************
 
-*Coming soon*
+.. raw:: html
+
+  <iframe width="280" height="160" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/ANsThSPgBFM?ecver=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+.. raw:: html
+
+  <iframe width="280" height="160" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/XbMn1KiI4Ic?ecver=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 References
 **********

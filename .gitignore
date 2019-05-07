@@ -42,3 +42,5 @@ __pycache__
 idtrackerai\.egg-info/
 
 \.idea/
+
+docs/build/

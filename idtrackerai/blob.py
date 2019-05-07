@@ -129,7 +129,8 @@ class Blob(object):
                  frame_number_in_video_path=None,
                  in_frame_index=None, pixels_path=None,
                  video_height=None, video_width=None,
-                 video_path=None):
+                 video_path=None, pixels_are_from_eroded_blob=False,
+                 has_eroded_pixels=False):
         self.frame_number = frame_number
         self.in_frame_index = in_frame_index
         self.number_of_animals = number_of_animals
@@ -144,7 +145,8 @@ class Blob(object):
         self.identification_image_index = None
         ##
         self._pixels_path = pixels_path
-        self._pixels = pixels # list of int's: linearized pixels of the blob
+        self._pixels = pixels
+        self._eroded_pixels = None
         self.video_height = video_height
         self.video_width = video_width
         ##
@@ -165,6 +167,8 @@ class Blob(object):
         self._identity = None
         self.video_path = video_path
         self.frame_number_in_video_path = frame_number_in_video_path
+        self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
+        self.has_eroded_pixels = False
 
     @property
     def bounding_box_image(self):
@@ -187,7 +191,11 @@ class Blob(object):
             return self._pixels
         elif self._pixels_path is not None and os.path.isfile(self._pixels_path):
             with h5py.File(self._pixels_path, 'r') as f:
-                return f[str(self.frame_number) + '-' + str(self.in_frame_index)][:]
+                if not self.pixels_are_from_eroded_blob:
+                    dataset_name = str(self.frame_number) + '-' + str(self.in_frame_index)
+                else:
+                    dataset_name = str(self.frame_number) + '-' + str(self.in_frame_index) + '-eroded'
+                return f[dataset_name][:]
         else:
             cimg = np.zeros((self.video_height, self.video_width))
             cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
@@ -196,6 +204,34 @@ class Blob(object):
             pixels = np.ravel_multi_index([pixels[:, 0], pixels[:, 1]],
                                           (self.video_height, self.video_width))
             return pixels
+
+    @property
+    def eroded_pixels(self):
+        if self._eroded_pixels is not None:
+            return self._pixels
+        elif self._pixels_path is not None and os.path.isfile(self._pixels_path):
+            with h5py.File(self._pixels_path, 'r') as f:
+                return f[str(self.frame_number) + '-' + str(self.in_frame_index) + '-eroded'][:]
+        else:
+            cimg = np.zeros((self.video_height, self.video_width))
+            cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
+            pts = np.where(cimg == 255)
+            pixels = np.asarray(list(zip(pts[0], pts[1])))
+            pixels = np.ravel_multi_index([pixels[:, 0], pixels[:, 1]],
+                                          (self.video_height, self.video_width))
+            return pixels
+
+    @eroded_pixels.setter
+    def eroded_pixels(self, eroded_pixels):
+        if self._pixels_path is not None:
+            with h5py.File(self._pixels_path, 'a') as f:
+                dataset_name = str(self.frame_number) + '-' + str(self.in_frame_index) + '-eroded'
+                if dataset_name in f:
+                    del f[dataset_name]
+                f.create_dataset(dataset_name, data=eroded_pixels)
+                self.has_eroded_pixels = True
+        else:
+            self._eroded_pixels = eroded_pixels
 
     @property
     def fragment_identifier(self):

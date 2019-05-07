@@ -611,7 +611,7 @@ class Video(object):
 
     @staticmethod
     def update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name):
-        checkpoint_file = open(checkpoint_path, "r")
+        #checkpoint_file = open(checkpoint_path, "r")
         fh, abs_path = mkstemp()
         with os.fdopen(fh,'w') as new_file:
             with open(checkpoint_path) as old_file:
@@ -915,7 +915,7 @@ class Video(object):
     def delete_accumulation_folders(self):
         for path in glob.glob(os.path.join(self.session_folder, '*')):
             if 'accumulation_' in path or 'pretraining' in path:
-                rmtree(path)
+                rmtree(path, ignore_errors=True)
 
     def delete_data(self):
         logger.info("Data policy: {}".format(conf.DATA_POLICY))
@@ -924,7 +924,7 @@ class Video(object):
 
             if os.path.isdir(self._segmentation_data_folder):
                 logger.info("Deleting segmentation images")
-                rmtree(self._segmentation_data_folder)
+                rmtree(self._segmentation_data_folder, ignore_errors=True)
             if os.path.isfile(self.global_fragments_path):
                 logger.info("Deleting global fragments")
                 os.remove(self.global_fragments_path)
@@ -933,16 +933,14 @@ class Video(object):
                 os.remove(self.blobs_path_segmented)
             if hasattr(self, '_crossings_detector_folder') and os.path.isdir(self.crossings_detector_folder):
                 logger.info("Deleting crossing detector folder")
-                rmtree(self.crossings_detector_folder)
-            if os.path.isfile(self.fragments_path):
-                logger.info("Deleting fragments")
-                os.remove(self.fragments_path)
+                rmtree(self.crossings_detector_folder, ignore_errors=True)
+                
 
         if conf.DATA_POLICY in ['trajectories', 'validation',
                            'knowledge_transfer']:
             if os.path.isdir(self._identification_images_folder):
                 logger.info("Deleting identification images")
-                rmtree(self._identification_images_folder)
+                rmtree(self._identification_images_folder, ignore_errors=True)
 
         if conf.DATA_POLICY in ['trajectories', 'validation']:
             logger.info("Deleting CNN models folders")
@@ -951,7 +949,7 @@ class Video(object):
         if conf.DATA_POLICY == 'trajectories':
             if os.path.isdir(self.preprocessing_folder):
                 logger.info("Deleting preprocessing data")
-                rmtree(self.preprocessing_folder)
+                rmtree(self.preprocessing_folder, ignore_errors=True)
 
 
 def scanFolder(path):

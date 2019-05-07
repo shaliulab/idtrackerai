@@ -35,6 +35,7 @@ from idtrackerai.network.identification_model.network_params import NetworkParam
 from idtrackerai.network.identification_model.get_data import DataSet
 from idtrackerai.network.identification_model.id_CNN import ConvNetwork
 from idtrackerai.network.identification_model.get_predictions import GetPrediction
+from idtrackerai.list_of_fragments import ListOfFragments
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
