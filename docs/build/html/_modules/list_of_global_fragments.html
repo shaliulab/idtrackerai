@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-114600635-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <title>list_of_global_fragments &mdash; idtrackerai v2.0.0-alpha Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for list_of_global_fragments</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This file is part of idtracker.ai a multiple animals tracking system</span>
+<span class="c1"># described in [1].</span>
+<span class="c1"># Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,</span>
+<span class="c1"># Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the</span>
+<span class="c1"># Champalimaud Foundation.</span>
+<span class="c1">#</span>
+<span class="c1"># idtracker.ai is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details. In addition, we require</span>
+<span class="c1"># derivatives or applications to acknowledge the authors by citing [1].</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># For more information please send an email (idtrackerai@gmail.com) or</span>
+<span class="c1"># use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.</span>
+<span class="c1">#</span>
+<span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
+<span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">confapp</span> <span class="k">import</span> <span class="n">conf</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.globalfragment</span> <span class="k">import</span> <span class="n">GlobalFragment</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.assigner</span> <span class="k">import</span> <span class="n">assign</span><span class="p">,</span> <span class="n">compute_identification_statistics_for_non_accumulated_fragments</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.accumulation_manager</span> <span class="k">import</span> <span class="n">AccumulationManager</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.list_of_global_fragments&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ListOfGlobalFragments"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments">[docs]</a><span class="k">class</span> <span class="nc">ListOfGlobalFragments</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Collects all the instances of the class</span>
+<span class="sd">    :class:`~glboalfragment.GlobalFragment`</span>
+<span class="sd">    generated by considering the fragments</span>
+<span class="sd">    (see :meth:`~list_of_blobs.compute_fragment_identifier_and_blob_index`)</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    global_fragments : list</span>
+<span class="sd">        list of instances of the class :class:`~globalfragment.GlobalFragment`</span>
+<span class="sd">    number_of_global_fragments :  int</span>
+<span class="sd">        length of `global_fragments`</span>
+<span class="sd">    first_global_fragment_for_accumulation :  &lt;GlobalFragment object&gt;</span>
+<span class="sd">        first global fragment used to start the protocols.</span>
+<span class="sd">        See :meth:`set_first_global_fragment_for_accumulation`</span>
+<span class="sd">    maximum_number_of_images : int</span>
+<span class="sd">        maximum number of images contained in the global fragments listed in</span>
+<span class="sd">        `global_fragments`</span>
+<span class="sd">    non_accumulable_global_fragments : list</span>
+<span class="sd">        list of global fragments that cannot be used during the accumulation</span>
+<span class="sd">        protocols.</span>
+<span class="sd">        See :attr:`~globalfragment.GlobalFragment.candidate_for_accumulation`</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    A minimum number of images per individual fragments is required for a</span>
+<span class="sd">    global fragment to be acceptable for the accumulation. This number is set</span>
+<span class="sd">    in</span>
+<span class="sd">    :const:`conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">global_fragments</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span> <span class="o">=</span> <span class="n">global_fragments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_global_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.reset"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roll_back_to</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Resets all the global fragment by calling recursively the method</span>
+<span class="sd">        :meth:`~globalfragment.GlobalFragment.reset`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">roll_back_to</span><span class="p">)</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.order_by_distance_travelled"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.order_by_distance_travelled">[docs]</a>    <span class="k">def</span> <span class="nf">order_by_distance_travelled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sorts the global fragments by the minimum distance travelled of their</span>
+<span class="sd">        individual fragments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">minimum_distance_travelled</span><span class="p">,</span> <span class="n">reverse</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.give_me_frequencies_first_fragment_accumulated"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.give_me_frequencies_first_fragment_accumulated">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">give_me_frequencies_first_fragment_accumulated</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">fragment</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The frequencies (see :meth:`~fragments.Fragments.compute_identification_statistics`)</span>
+<span class="sd">        are generated artificially for the first global fragments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            identity associated to the `fragment`</span>
+<span class="sd">        number_of_animals : int</span>
+<span class="sd">            number of animals to track</span>
+<span class="sd">        fragment : &lt;Fragment object&gt;</span>
+<span class="sd">            an instance of the class :class:`~fragment.Fragment`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        ndarray</span>
+<span class="sd">            array of zeros with the `i`th component equal to</span>
+<span class="sd">            :attr:`~fragment.Fragment.number_of_images`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">frequencies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">)</span>
+        <span class="n">frequencies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
+        <span class="k">return</span> <span class="n">frequencies</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">abort_knowledge_transfer_on_same_animals</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">net</span><span class="p">):</span>
+        <span class="n">identities</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+        <span class="n">net</span><span class="o">.</span><span class="n">reinitialize_softmax_and_fully_connected</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Identity transfer failed. We proceed by transferring only the convolutional filters.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">identities</span>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.set_first_global_fragment_for_accumulation"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.set_first_global_fragment_for_accumulation">[docs]</a>    <span class="k">def</span> <span class="nf">set_first_global_fragment_for_accumulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">accumulation_trial</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">net</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Selects the first global fragment to be used for accumulation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        video : &lt;Video object&gt;</span>
+<span class="sd">            instance of the class :class:`~video.Video`</span>
+<span class="sd">        accumulation_trial : int</span>
+<span class="sd">            accumulation number (protocol 2 performs a single accumulation</span>
+<span class="sd">            attempt, and if used, protocol 3 will perform 3 other attempts)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            frame number corresponding to the beginning of the selected global</span>
+<span class="sd">            fragment</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order_by_distance_travelled</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">[</span><span class="n">accumulation_trial</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">video</span><span class="o">.</span><span class="n">identity_transfer</span> <span class="ow">or</span> <span class="n">net</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">identities</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Transferring identities from </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">knowledge_transfer_model_folder</span><span class="p">))</span>
+            <span class="n">identities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_transferred_identities</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">net</span><span class="p">)</span>
+
+
+        <span class="p">[(</span><span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_acceptable_for_training&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_temporary_id&#39;</span><span class="p">,</span> <span class="n">identities</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_frequencies&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">give_me_frequencies_first_fragment_accumulated</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span> <span class="n">fragment</span><span class="p">)),</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_is_certain&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_certainty&#39;</span><span class="p">,</span> <span class="mf">1.</span><span class="p">),</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_P1_vector&#39;</span><span class="p">,</span> <span class="n">fragment</span><span class="o">.</span><span class="n">compute_P1_from_frequencies</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">frequencies</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">index_beginning_of_fragment</span></div>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.order_by_distance_to_the_first_global_fragment_for_accumulation"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.order_by_distance_to_the_first_global_fragment_for_accumulation">[docs]</a>    <span class="k">def</span> <span class="nf">order_by_distance_to_the_first_global_fragment_for_accumulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">accumulation_trial</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sorts the global fragments wrt to their distance from the first</span>
+<span class="sd">        global fragment chose for accumulation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        video : &lt;Video object&gt;</span>
+<span class="sd">            instance of the class :class:`~video.Video`</span>
+<span class="sd">        accumulation_trial : int</span>
+<span class="sd">            accumulation number (protocol 2 performs a single accumulation</span>
+<span class="sd">            attempt, and if used, protocol 3 will perform 3 other attempts)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">,</span>
+                                        <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index_beginning_of_fragment</span> <span class="o">-</span> <span class="n">video</span><span class="o">.</span><span class="n">first_frame_first_global_fragment</span><span class="p">[</span><span class="n">accumulation_trial</span><span class="p">]),</span>
+                                        <span class="n">reverse</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_transferred_identities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">net</span><span class="p">):</span>
+        <span class="n">images</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">get_images_and_labels</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s1">&#39;identity_transfer&#39;</span><span class="p">)</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+        <span class="n">assigner</span> <span class="o">=</span> <span class="n">assign</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">compute_identification_statistics_for_non_accumulated_fragments</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">,</span>
+            <span class="n">assigner</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+        <span class="c1"># Check certainties of the individual fragments in the global fragment</span>
+        <span class="c1"># for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:</span>
+        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_acceptable_for_training&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span>
+         <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">AccumulationManager</span><span class="o">.</span><span class="n">is_not_certain</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">CERTAINTY_THRESHOLD</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Identity transfer failed because a fragment is not cergain enough&#39;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;CERTAINTY_THRESHOLD </span><span class="si">%.2f</span><span class="s1">, fragment certainty </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">CERTAINTY_THRESHOLD</span><span class="p">,</span> <span class="n">fragment</span><span class="o">.</span><span class="n">certainty</span><span class="p">))</span>
+                <span class="n">identities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abort_knowledge_transfer_on_same_animals</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">net</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">identities</span>
+
+        <span class="n">P1_array</span><span class="p">,</span> <span class="n">index_individual_fragments_sorted_by_P1_max_to_min</span> <span class="o">=</span> <span class="n">AccumulationManager</span><span class="o">.</span><span class="n">get_P1_array_and_argsort</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="p">)</span>
+
+        <span class="c1"># assign temporary identity to individual fragments by hierarchical P1</span>
+        <span class="k">for</span> <span class="n">index_individual_fragment</span> <span class="ow">in</span> <span class="n">index_individual_fragments_sorted_by_P1_max_to_min</span><span class="p">:</span>
+            <span class="n">fragment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">[</span><span class="n">index_individual_fragment</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">AccumulationManager</span><span class="o">.</span><span class="n">p1_below_random</span><span class="p">(</span><span class="n">P1_array</span><span class="p">,</span> <span class="n">index_individual_fragment</span><span class="p">,</span> <span class="n">fragment</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Identity transfer failed because P1 is below random&#39;</span><span class="p">)</span>
+                <span class="n">identities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abort_knowledge_transfer_on_same_animals</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">net</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">identities</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">temporary_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">P1_array</span><span class="p">[</span><span class="n">index_individual_fragment</span><span class="p">,:])</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">fragment</span><span class="o">.</span><span class="n">check_consistency_with_coexistent_individual_fragments</span><span class="p">(</span><span class="n">temporary_id</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Identity transfer failed because the identities are not consistent&#39;</span><span class="p">)</span>
+                    <span class="n">identities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abort_knowledge_transfer_on_same_animals</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">net</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">identities</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">P1_array</span> <span class="o">=</span> <span class="n">AccumulationManager</span><span class="o">.</span><span class="n">set_fragment_temporary_id</span><span class="p">(</span>
+                                            <span class="n">fragment</span><span class="p">,</span> <span class="n">temporary_id</span><span class="p">,</span> <span class="n">P1_array</span><span class="p">,</span>
+                                            <span class="n">index_individual_fragment</span><span class="p">)</span>
+
+        <span class="c1"># Check if the global fragment is unique after assigning the identities</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Identity transfer failed because the identities are not unique&#39;</span><span class="p">)</span>
+            <span class="n">identities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abort_knowledge_transfer_on_same_animals</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">net</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Identity transfer is not possible. Identities will be intialized&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">video</span><span class="o">.</span><span class="n">_first_global_fragment_knowledge_transfer_identities</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">temporary_id</span> <span class="k">for</span> <span class="n">fragment</span>
+                        <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">==</span> <span class="n">video</span><span class="o">.</span><span class="n">knowledge_transfer_info_dict</span><span class="p">[</span><span class="s1">&#39;number_of_animals&#39;</span><span class="p">]:</span>
+                <span class="n">identities</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">_first_global_fragment_knowledge_transfer_identities</span>
+            <span class="k">elif</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">&lt;</span> <span class="n">video</span><span class="o">.</span><span class="n">knowledge_transfer_info_dict</span><span class="p">[</span><span class="s1">&#39;number_of_animals&#39;</span><span class="p">]:</span>
+                <span class="n">identities</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Identities transferred succesfully&quot;</span><span class="p">)</span>
+
+        <span class="c1"># self.plot_P1s_identity_transfer(video)</span>
+        <span class="k">return</span> <span class="n">identities</span>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.compute_maximum_number_of_images"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.compute_maximum_number_of_images">[docs]</a>    <span class="k">def</span> <span class="nf">compute_maximum_number_of_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the maximum number of images in the global fragments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maximum_number_of_images</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">get_total_number_of_images</span><span class="p">()</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.filter_candidates_global_fragments_for_accumulation"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.filter_candidates_global_fragments_for_accumulation">[docs]</a>    <span class="k">def</span> <span class="nf">filter_candidates_global_fragments_for_accumulation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Filters the global fragments by taking into account the minium</span>
+<span class="sd">        number of images per individual fragments specified in</span>
+<span class="sd">        :attr:`~globalfragment.GlobalFragment.candidate_for_accumulation`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">non_accumulable_global_fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">global_fragment</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">global_fragment</span><span class="o">.</span><span class="n">candidate_for_accumulation</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">global_fragment</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span>
+                    <span class="k">if</span> <span class="n">global_fragment</span><span class="o">.</span><span class="n">candidate_for_accumulation</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_global_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.get_data_plot"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.get_data_plot">[docs]</a>    <span class="k">def</span> <span class="nf">get_data_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gathers data to plot a global fragments statistics summary</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            number of images in the shortest individual fragment</span>
+<span class="sd">        int</span>
+<span class="sd">            number of images in the longest individual fragment</span>
+<span class="sd">        int</span>
+<span class="sd">            number of images per individual fragment in global fragment</span>
+<span class="sd">        int</span>
+<span class="sd">            median number of images in global fragments</span>
+<span class="sd">        float</span>
+<span class="sd">            minimum distance travelled</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">number_of_images_in_shortest_individual_fragment</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">number_of_images_in_longest_individual_fragment</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">number_of_images_per_individual_fragment_in_global_fragment</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">median_number_of_images</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">minimum_distance_travelled</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">:</span>
+            <span class="n">number_of_images_in_shortest_individual_fragment</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">number_of_images_per_individual_fragment</span><span class="p">))</span>
+            <span class="n">number_of_images_in_longest_individual_fragment</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">number_of_images_per_individual_fragment</span><span class="p">))</span>
+            <span class="n">number_of_images_per_individual_fragment_in_global_fragment</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">number_of_images_per_individual_fragment</span><span class="p">)</span>
+            <span class="n">median_number_of_images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">number_of_images_per_individual_fragment</span><span class="p">))</span>
+            <span class="n">minimum_distance_travelled</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">distance_travelled_per_individual_fragment</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">number_of_images_in_shortest_individual_fragment</span><span class="p">,</span>\
+                <span class="n">number_of_images_in_longest_individual_fragment</span><span class="p">,</span>\
+                <span class="n">number_of_images_per_individual_fragment_in_global_fragment</span><span class="p">,</span>\
+                <span class="n">median_number_of_images</span><span class="p">,</span>\
+                <span class="n">minimum_distance_travelled</span></div>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.delete_fragments_from_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.delete_fragments_from_global_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">delete_fragments_from_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes the individual fragments from each of the global fragments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">global_fragment</span><span class="p">,</span><span class="s1">&#39;individual_fragments&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.relink_fragments_to_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.relink_fragments_to_global_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">relink_fragments_to_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Resets the individual fragments to their respective global fragments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">get_individual_fragments_of_global_fragment</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.save"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">global_fragments_path</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves an instance of the class in the path `global_fragments_path`.</span>
+<span class="sd">        Before saving the individual fragments associated to every global</span>
+<span class="sd">        fragment are removes by using the method</span>
+<span class="sd">        :meth:`~delete_fragments_from_global_fragments`</span>
+<span class="sd">        and resets them after saving by calling</span>
+<span class="sd">        :meth:`~relink_fragments_to_global_fragments`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;saving list of global fragments at </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">global_fragments_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_fragments_from_global_fragments</span><span class="p">()</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">global_fragments_path</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># After saving the list of globa fragments the individual fragments are deleted and we need to relink them again</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relink_fragments_to_global_fragments</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ListOfGlobalFragments.load"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.load">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_to_load</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads an instance of the class saved with :meth:`save` and</span>
+<span class="sd">        associates individual fragments to each global fragment by calling</span>
+<span class="sd">        :meth:`~relink_fragments_to_global_fragments`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;loading list of global fragments from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">path_to_load</span><span class="p">)</span>
+        <span class="n">list_of_global_fragments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_to_load</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">list_of_global_fragments</span><span class="o">.</span><span class="n">relink_fragments_to_global_fragments</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">list_of_global_fragments</span></div></div>
+
+<div class="viewcode-block" id="detect_beginnings"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.detect_beginnings">[docs]</a><span class="k">def</span> <span class="nf">detect_beginnings</span><span class="p">(</span><span class="n">boolean_array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Detects the frame where the core of a global fragment starts.</span>
+<span class="sd">    A core of a global fragment is the part of the global fragment where all the</span>
+<span class="sd">    individuals are visible, i.e. the number of animals in the frame equals the</span>
+<span class="sd">    number of animals in the video</span>
+<span class="sd">    :boolean_array: array with True where the number of animals in the frame equals</span>
+<span class="sd">    the number of animals in the video</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">boolean_array</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">boolean_array</span><span class="p">))</span> <span class="k">if</span> <span class="p">(</span><span class="n">boolean_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">boolean_array</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])]</span></div>
+
+<div class="viewcode-block" id="check_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.check_global_fragments">[docs]</a><span class="k">def</span> <span class="nf">check_global_fragments</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">num_animals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns an array with True if:</span>
+<span class="sd">    * each blob has a unique blob intersecting in the past and future</span>
+<span class="sd">    * number of blobs equals num_animals</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">all_blobs_in_a_fragment</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns all the blobs in `blobs_in_frame` that are associated to an</span>
+<span class="sd">        individual</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">same_fragment_identifier</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">blobs_in_frame_past</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if the set of fragments identifiers in the current frame</span>
+<span class="sd">        is the same as in the previous frame, otherwise returns false</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">condition_1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">])</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame_past</span><span class="p">])</span>
+        <span class="n">condition_2</span> <span class="o">=</span> <span class="n">all_blobs_in_a_fragment</span><span class="p">(</span><span class="n">blobs_in_frame_past</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame_past</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_animals</span>
+        <span class="k">return</span> <span class="n">condition_1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">condition_2</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">all_blobs_in_a_fragment</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_animals</span>
+            <span class="ow">and</span> <span class="n">same_fragment_identifier</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">blobs_in_video</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="create_list_of_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.create_list_of_global_fragments">[docs]</a><span class="k">def</span> <span class="nf">create_list_of_global_fragments</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">num_animals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates the list of instances of the class</span>
+<span class="sd">    :class:`~globalfragment.GlobalFragment` used to create :class:`.ListOfGlobalFragments`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    blobs_in_video : list</span>
+<span class="sd">        list of the blob objects (see class :class:`~blob.Blob`) generated</span>
+<span class="sd">        from the blobs segmented in the video</span>
+<span class="sd">    fragments : list</span>
+<span class="sd">        list of instances of the class :class:`~fragment.Fragment`</span>
+<span class="sd">    num_animals : int</span>
+<span class="sd">        number of animals to track</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        list of instances of the class :class:`~globalfragment.GlobalFragment`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">global_fragments_boolean_array</span> <span class="o">=</span> <span class="n">check_global_fragments</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">num_animals</span><span class="p">)</span>
+    <span class="n">indices_beginning_of_fragment</span> <span class="o">=</span> <span class="n">detect_beginnings</span><span class="p">(</span><span class="n">global_fragments_boolean_array</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">GlobalFragment</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">num_animals</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices_beginning_of_fragment</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Apr 29, 2019.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

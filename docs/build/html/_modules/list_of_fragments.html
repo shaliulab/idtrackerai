@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-114600635-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <title>list_of_fragments &mdash; idtrackerai v2.0.0-alpha Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v2.0.0-alpha Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../video_conditions.html">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQs.html">FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+</ul>
+
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for list_of_fragments</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This file is part of idtracker.ai a multiple animals tracking system</span>
+<span class="c1"># described in [1].</span>
+<span class="c1"># Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,</span>
+<span class="c1"># Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the</span>
+<span class="c1"># Champalimaud Foundation.</span>
+<span class="c1">#</span>
+<span class="c1"># idtracker.ai is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details. In addition, we require</span>
+<span class="c1"># derivatives or applications to acknowledge the authors by citing [1].</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># For more information please send an email (idtrackerai@gmail.com) or</span>
+<span class="c1"># use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.</span>
+<span class="c1">#</span>
+<span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
+<span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)</span>
+
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.fragment</span> <span class="k">import</span> <span class="n">Fragment</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span>  <span class="n">set_attributes_of_object_to_value</span><span class="p">,</span> <span class="n">append_values_to_lists</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.list_of_fragments&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ListOfFragments"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments">[docs]</a><span class="k">class</span> <span class="nc">ListOfFragments</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Collects all the instances of the class :class:`~fragment.Fragment`</span>
+<span class="sd">    generated from the blobs extracted from the video during segmentation</span>
+<span class="sd">    (see :mod:`~segmentation`) after having assigned to each Blob instance</span>
+<span class="sd">    a fragment identifier by using the method</span>
+<span class="sd">    :meth:`~list_of_blobs.compute_fragment_identifier_and_blob_index`</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    fragments : list</span>
+<span class="sd">        list of instances of the class :class:`~fragment.Fragment`</span>
+<span class="sd">    number_of_fragments : int</span>
+<span class="sd">        number of fragments computed by the method</span>
+<span class="sd">        :meth:`~list_of_blobs.compute_fragment_identifier_and_blob_index`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">identification_images_file_path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="o">=</span> <span class="n">fragments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identification_images_file_path</span> <span class="o">=</span> <span class="n">identification_images_file_path</span>
+
+<div class="viewcode-block" id="ListOfFragments.get_fragment_identifier_to_index_list"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_fragment_identifier_to_index_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_fragment_identifier_to_index_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a mapping between the attribute :attr:`fragments` and</span>
+<span class="sd">        their identifiers build from the :class:`~list_of_blobs.ListOfBlobs`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Mapping from the collection of fragments to the list of fragment</span>
+<span class="sd">            identifiers</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fragments_identifiers</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">]</span>
+        <span class="n">fragment_identifier_to_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fragments_identifiers</span><span class="p">))</span>
+        <span class="n">fragments_identifiers_argsort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">fragments_identifiers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fragment_identifier_to_index</span><span class="p">[</span><span class="n">fragments_identifiers_argsort</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.reset"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roll_back_to</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Resets all the fragment by using the method</span>
+<span class="sd">        :meth:`~fragment.Fragment.roll_back_to`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Reseting list_of_fragments&quot;</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">roll_back_to</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Done&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.get_images_from_fragments_to_assign"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_images_from_fragments_to_assign">[docs]</a>    <span class="k">def</span> <span class="nf">get_images_from_fragments_to_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Take all the fragments that have not been used to train the idCNN</span>
+<span class="sd">        and that are associated with an individual, and concatenates their</span>
+<span class="sd">        images in order to feed them to the idCNN and get predictions</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            [number_of_images, height, width, number_of_channels]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">images_lists</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span> <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">]</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">image</span> <span class="k">for</span> <span class="n">images</span> <span class="ow">in</span> <span class="n">images_lists</span> <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">images</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">load_identification_images</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="n">images</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ListOfFragments.compute_number_of_unique_images_used_for_pretraining"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.compute_number_of_unique_images_used_for_pretraining">[docs]</a>    <span class="k">def</span> <span class="nf">compute_number_of_unique_images_used_for_pretraining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of images used for pretraining</span>
+<span class="sd">        (without repetitions)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of images used in pretraining</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_pretraining</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.compute_number_of_unique_images_used_for_training"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.compute_number_of_unique_images_used_for_training">[docs]</a>    <span class="k">def</span> <span class="nf">compute_number_of_unique_images_used_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of images used for training</span>
+<span class="sd">        (without repetitions)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of images used in training</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.compute_total_number_of_images_in_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.compute_total_number_of_images_in_global_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">compute_total_number_of_images_in_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the number of images available in global fragments (without repetitions)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_images_in_global_fragments</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
+                                                         <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span>
+                                                         <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulable_individual_fragments</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_images_in_global_fragments</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.compute_ratio_of_images_used_for_pretraining"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.compute_ratio_of_images_used_for_pretraining">[docs]</a>    <span class="k">def</span> <span class="nf">compute_ratio_of_images_used_for_pretraining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the ratio of images used for pretraining over the number of</span>
+<span class="sd">        available images</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Ratio of images used for pretraining</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_number_of_unique_images_used_for_pretraining</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_images_in_global_fragments</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.compute_ratio_of_images_used_for_training"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.compute_ratio_of_images_used_for_training">[docs]</a>    <span class="k">def</span> <span class="nf">compute_ratio_of_images_used_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the ratio of images used for training over the number of</span>
+<span class="sd">        available images</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Ratio of images used for training</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_number_of_unique_images_used_for_training</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_images_in_global_fragments</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.compute_P2_vectors"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.compute_P2_vectors">[docs]</a>    <span class="k">def</span> <span class="nf">compute_P2_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the P2_vector associated to every individual fragment. See</span>
+<span class="sd">        :meth:`~fragment.Fragment.compute_P2_vector`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">compute_P2_vector</span><span class="p">()</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.get_number_of_unidentified_individual_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_number_of_unidentified_individual_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_number_of_unidentified_individual_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of individual fragments that have not been</span>
+<span class="sd">        identified during the fingerprint protocols cascade</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            number of non-identified individual fragments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">fragment</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.get_next_fragment_to_identify"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_next_fragment_to_identify">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_fragment_to_identify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the next fragment to be identified after the fingerprint</span>
+<span class="sd">        protocols cascade by sorting according to the certainty computed with</span>
+<span class="sd">        P2. See :attr:`~fragment.Fragment.certainty_P2`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        &lt;Fragment object&gt;</span>
+<span class="sd">            an instance of the class :class:`~fragment.Fragment`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">]</span>
+        <span class="n">fragments</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">certainty_P2</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.get_data_plot"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_data_plot">[docs]</a>    <span class="k">def</span> <span class="nf">get_data_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gathers the data to plot the individual fragments&#39; statistics of the</span>
+<span class="sd">        video.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            array of shape [number_of_individual_fragments, 1]. Number of</span>
+<span class="sd">            images in individual fragments</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            array of shape [number_of_individual_fragments, 1]. Distance</span>
+<span class="sd">            travelled in every individual fragment</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of images in crossing fragments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">number_of_images_in_individual_fragments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">distance_travelled_individual_fragments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">number_of_images_in_crossing_fragments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
+                <span class="n">number_of_images_in_individual_fragments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span><span class="p">)</span>
+                <span class="n">distance_travelled_individual_fragments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">distance_travelled</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">:</span>
+                <span class="n">number_of_images_in_crossing_fragments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">number_of_images_in_individual_fragments</span><span class="p">),</span>\
+                <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">distance_travelled_individual_fragments</span><span class="p">),</span>\
+                <span class="n">number_of_images_in_crossing_fragments</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.update_from_list_of_blobs"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.update_from_list_of_blobs">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_list_of_blobs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">fragment_identifier_to_index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates an instance of ListOfFragments by considering an instance of</span>
+<span class="sd">        ListOfBlobs (see :class:`~list_of_blobs.ListOfBlobs`)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        blobs_in_video : list</span>
+<span class="sd">            list of the blob objects (see class :class:`~blob.Blob`) generated</span>
+<span class="sd">            from the blobs segmented in the video</span>
+<span class="sd">        fragment_identifier_to_index : list</span>
+<span class="sd">            Mapping from the collection of fragments to the list of fragment</span>
+<span class="sd">            identifiers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">[</span><span class="n">fragment_identifier_to_index</span><span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span><span class="p">]],</span> <span class="s1">&#39;_user_generated_identity&#39;</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">user_generated_identity</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span> <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">user_generated_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="p">]</span></div>
+
+
+    <span class="k">def</span> <span class="nf">update_identification_images_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;identities&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;identification_images&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span>
+                             <span class="n">fillvalue</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">fragment</span><span class="o">.</span><span class="n">images</span><span class="p">:</span>
+                        <span class="n">f</span><span class="p">[</span><span class="s1">&#39;identities&#39;</span><span class="p">][</span><span class="n">image</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identity</span>
+
+
+<div class="viewcode-block" id="ListOfFragments.get_ordered_list_of_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_ordered_list_of_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_ordered_list_of_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">first_frame_first_global_fragment</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sorts the fragments starting from the frame number</span>
+<span class="sd">        `first_frame_first_global_fragment`. According to `scope` the sorting</span>
+<span class="sd">        is done either &quot;to the future&quot; of &quot;to the past&quot; with respect to</span>
+<span class="sd">        `first_frame_first_global_fragment`</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scope : str</span>
+<span class="sd">            either &quot;to_the_past&quot; or &quot;to_the_future&quot;</span>
+<span class="sd">        first_frame_first_global_fragment : int</span>
+<span class="sd">            frame number corresponding to the first frame in which all the</span>
+<span class="sd">            individual fragments coexist in the first global fragment using</span>
+<span class="sd">            in an iteration of the fingerprint protocol cascade</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            list of sorted fragments</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">scope</span> <span class="o">==</span> <span class="s1">&#39;to_the_past&#39;</span><span class="p">:</span>
+            <span class="n">fragments_subset</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">first_frame_first_global_fragment</span><span class="p">]</span>
+            <span class="n">fragments_subset</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">scope</span> <span class="o">==</span> <span class="s1">&#39;to_the_future&#39;</span><span class="p">:</span>
+            <span class="n">fragments_subset</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">first_frame_first_global_fragment</span><span class="p">]</span>
+            <span class="n">fragments_subset</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fragments_subset</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.save"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments_path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;saves an instance of ListOfFragments in the path specified by</span>
+<span class="sd">        `fragments_path`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;saving list of fragments at </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">fragments_path</span><span class="p">)</span>
+        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;coexisting_individual_fragments&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">]</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fragments_path</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">get_coexisting_individual_fragments_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.load"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.load">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path_to_load</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads a previously saved (see :meth:`load`) from the path</span>
+<span class="sd">        `path_to_load`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;loading list of fragments from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">path_to_load</span><span class="p">)</span>
+        <span class="n">list_of_fragments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_to_load</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">get_coexisting_individual_fragments_indices</span><span class="p">(</span><span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">list_of_fragments</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.create_light_list"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.create_light_list">[docs]</a>    <span class="k">def</span> <span class="nf">create_light_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a light version of an instance of ListOfFragments by storing</span>
+<span class="sd">        only the attributes listed in `attributes` in a list of dictionaries</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        attributes : list</span>
+<span class="sd">            list of attributes to be stored</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            list of dictionaries organised per fragment with keys the</span>
+<span class="sd">            attributes listed in `attributes`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">attributes</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">attributes_to_discard</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">,</span> <span class="s1">&#39;coexisting_individual_fragments&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[{</span><span class="n">attribute</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span> <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">fragment</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">attribute</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attributes_to_discard</span><span class="p">}</span>
+                    <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.save_light_list"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.save_light_list">[docs]</a>    <span class="k">def</span> <span class="nf">save_light_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accumulation_folder</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves a list of dictionaries created with the method</span>
+<span class="sd">        :meth:`create_light_list` in the folder `accumulation_folder`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">accumulation_folder</span><span class="p">,</span> <span class="s1">&#39;light_list_of_fragments.npy&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_light_list</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.load_light_list"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.load_light_list">[docs]</a>    <span class="k">def</span> <span class="nf">load_light_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accumulation_folder</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads a list of dictionaries created with the method</span>
+<span class="sd">        :meth:`create_light_list` and saved with :meth:`save_light_list` from</span>
+<span class="sd">        the folder `accumulation_folder`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">list_of_dictionaries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">accumulation_folder</span><span class="p">,</span> <span class="s1">&#39;light_list_of_fragments.npy&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_fragments_dictionary</span><span class="p">(</span><span class="n">list_of_dictionaries</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.update_fragments_dictionary"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.update_fragments_dictionary">[docs]</a>    <span class="k">def</span> <span class="nf">update_fragments_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_dictionaries</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update fragment objects (see :class:`~fragment.Fragment`) by</span>
+<span class="sd">        considering a list of dictionaries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_of_dictionaries</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dictionary</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span><span class="p">,</span> <span class="n">dictionary</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">,</span> <span class="n">list_of_dictionaries</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.get_new_images_and_labels_for_training"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_new_images_and_labels_for_training">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_images_and_labels_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract images and creates labels from every individual fragment</span>
+<span class="sd">        that has not been used to train the network during the fingerprint</span>
+<span class="sd">        protocols cascade</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            images</span>
+<span class="sd">        list</span>
+<span class="sd">            labels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">acceptable_for_training</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span>
+                <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">images</span><span class="p">)</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">temporary_id</span><span class="p">]</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">images</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.get_accumulable_individual_fragments_identifiers"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_accumulable_individual_fragments_identifiers">[docs]</a>    <span class="k">def</span> <span class="nf">get_accumulable_individual_fragments_identifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_global_fragments</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the unique identifiers associated to individual fragments that</span>
+<span class="sd">        can be accumulated</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        list_of_global_fragments : &lt;ListOfGlobalFragments object&gt;</span>
+<span class="sd">            Object collecting the global fragment objects (instances of the</span>
+<span class="sd">            class :class:`~global_fragment.GlobalFragment`) detected in the</span>
+<span class="sd">            entire video</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accumulable_individual_fragments</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">identifier</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="n">list_of_global_fragments</span><span class="o">.</span><span class="n">global_fragments</span>
+                                                                        <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">global_fragment</span><span class="o">.</span><span class="n">individual_fragments_identifiers</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.get_not_accumulable_individual_fragments_identifiers"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_not_accumulable_individual_fragments_identifiers">[docs]</a>    <span class="k">def</span> <span class="nf">get_not_accumulable_individual_fragments_identifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_global_fragments</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the unique identifiers associated to individual fragments that</span>
+<span class="sd">        cannot be accumulated</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        list_of_global_fragments : &lt;ListOfGlobalFragments object&gt;</span>
+<span class="sd">            Object collecting the global fragment objects (instances of the</span>
+<span class="sd">            class :class:`~global_fragment.GlobalFragment`) detected in the</span>
+<span class="sd">            entire video</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">not_accumulable_individual_fragments</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">identifier</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="n">list_of_global_fragments</span><span class="o">.</span><span class="n">non_accumulable_global_fragments</span>
+                                                        <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">global_fragment</span><span class="o">.</span><span class="n">individual_fragments_identifiers</span><span class="p">])</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulable_individual_fragments</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.set_fragments_as_accumulable_or_not_accumulable"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.set_fragments_as_accumulable_or_not_accumulable">[docs]</a>    <span class="k">def</span> <span class="nf">set_fragments_as_accumulable_or_not_accumulable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the attribute :attr:`~fragment.accumulable`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulable_individual_fragments</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_accumulable&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_accumulable_individual_fragments</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_accumulable&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_accumulable&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.get_stats"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_stats">[docs]</a>    <span class="k">def</span> <span class="nf">get_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_global_fragments</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collects the following statistics from both fragments and global</span>
+<span class="sd">        fragments:</span>
+
+<span class="sd">        *number_of_fragments</span>
+<span class="sd">        *number_of_crossing_fragments</span>
+<span class="sd">        *number_of_individual_fragments</span>
+<span class="sd">        *number_of_individual_fragments_not_in_a_global_fragment</span>
+<span class="sd">        *number_of_accumulable_individual_fragments</span>
+<span class="sd">        *number_of_not_accumulable_individual_fragments</span>
+<span class="sd">        *number_of_accumualted_individual_fragments</span>
+<span class="sd">        *number_of_globally_accumulated_individual_fragments</span>
+<span class="sd">        *number_of_partially_accumulated_individual_fragments</span>
+<span class="sd">        *number_of_blobs</span>
+<span class="sd">        *number_of_crossing_blobs</span>
+<span class="sd">        *number_of_individual_blobs</span>
+<span class="sd">        *number_of_individual_blobs_not_in_a_global_fragment</span>
+<span class="sd">        *number_of_accumulable_individual_blobs</span>
+<span class="sd">        *number_of_not_accumulable_individual_blobs</span>
+<span class="sd">        *number_of_accumualted_individual_blobs</span>
+<span class="sd">        *number_of_globally_accumulated_individual_blobs</span>
+<span class="sd">        *number_of_partially_accumulated_individual_blobs</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        list_of_global_fragments : &lt;ListOfGlobalFragments object&gt;</span>
+<span class="sd">            Object collecting the global fragment objects (instances of the</span>
+<span class="sd">            class :class:`~global_fragment.GlobalFragment`) detected in the</span>
+<span class="sd">            entire video</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            dictionary of statistics</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># number of fragments per class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_crossing_fragments</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">is_a_crossing</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_individual_fragments</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_individual_fragments_not_in_a_global_fragment</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="ow">not</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_in_a_global_fragment</span>
+                                                                        <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span>
+                                                                        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_accumulable_individual_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accumulable_individual_fragments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_not_accumulable_individual_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">not_accumulable_individual_fragments</span><span class="p">)</span>
+        <span class="n">fragments_not_accumualted</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_not_accumulated_individual_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accumulable_individual_fragments</span> <span class="o">&amp;</span> <span class="n">fragments_not_accumualted</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_globally_accumulated_individual_fragments</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">accumulated_globally</span>
+                                                                    <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_partially_accumulated_individual_fragments</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">accumulated_partially</span>
+                                                                    <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">])</span>
+        <span class="c1"># number of blobs per class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_crossing_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">is_a_crossing</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_individual_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_individual_blobs_not_in_a_global_fragment</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([(</span><span class="ow">not</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_in_a_global_fragment</span>
+                                                                        <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">)</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
+                                                                        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_accumulable_individual_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">accumulable</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span>
+                                                                <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">accumulable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_not_accumulable_individual_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([(</span><span class="ow">not</span> <span class="n">fragment</span><span class="o">.</span><span class="n">accumulable</span><span class="p">)</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span>
+                                                                <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">accumulable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span>
+        <span class="n">fragments_not_accumualted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulable_individual_fragments</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_not_accumulated_individual_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">in</span> <span class="n">fragments_not_accumualted</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_globally_accumulated_individual_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([(</span><span class="n">fragment</span><span class="o">.</span><span class="n">accumulated_globally</span>
+                                                                    <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">)</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">accumulated_globally</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_partially_accumulated_individual_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([(</span><span class="n">fragment</span><span class="o">.</span><span class="n">accumulated_partially</span>
+                                                                    <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">)</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">accumulated_partially</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;number_of_fragments </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_fragments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;number_of_crossing_fragments </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_crossing_fragments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;number_of_individual_fragments </span><span class="si">%i</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_individual_fragments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;number_of_individual_fragments_not_in_a_global_fragment </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_individual_fragments_not_in_a_global_fragment</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;number_of_accumulable_individual_fragments </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_accumulable_individual_fragments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;number_of_not_accumulable_individual_fragments </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_not_accumulable_individual_fragments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;number_of_not_accumulated_individual_fragments </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_not_accumulated_individual_fragments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;number_of_globally_accumulated_individual_fragments </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_globally_accumulated_individual_fragments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;number_of_partially_accumulated_individual_fragments </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_partially_accumulated_individual_fragments</span><span class="p">)</span>
+        <span class="n">attributes_to_return</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;number_of_fragments&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_crossing_fragments&#39;</span><span class="p">,</span> <span class="s1">&#39;number_of_individual_fragments&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_individual_fragments_not_in_a_global_fragment&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_accumulable_individual_fragments&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_not_accumulable_individual_fragments&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_accumualted_individual_fragments&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_globally_accumulated_individual_fragments&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_partially_accumulated_individual_fragments&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_blobs&#39;</span><span class="p">,</span> <span class="s1">&#39;number_of_crossing_blobs&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_individual_blobs&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_individual_blobs_not_in_a_global_fragment&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_accumulable_individual_blobs&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_not_accumulable_individual_blobs&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_accumualted_individual_blobs&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_globally_accumulated_individual_blobs&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_partially_accumulated_individual_blobs&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attributes_to_return</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="ListOfFragments.plot_stats"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.plot_stats">[docs]</a>    <span class="k">def</span> <span class="nf">plot_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots the statistics obtained through :meth:`get_stats`</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        video : &lt;Video object&gt;</span>
+<span class="sd">            See :class:`~video.Video`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.lines</span> <span class="k">as</span> <span class="nn">mlines</span>
+        <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ion</span><span class="p">()</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;ticks&quot;</span><span class="p">)</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">]</span>
+        <span class="n">hatches</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;//&#39;</span><span class="p">]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;crossings&#39;</span><span class="p">,</span> <span class="s1">&#39;not in GF&#39;</span><span class="p">,</span> <span class="s1">&#39;not accumulable&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;not accumulated&#39;</span><span class="p">,</span> <span class="s1">&#39;globally accumulated&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;partially accumulated&#39;</span><span class="p">]</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_crossing_blobs</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">number_of_individual_blobs_not_in_a_global_fragment</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">number_of_not_accumulable_individual_blobs</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">number_of_not_accumulated_individual_blobs</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">number_of_globally_accumulated_individual_blobs</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">number_of_partially_accumulated_individual_blobs</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_blobs</span> <span class="o">*</span> <span class="mi">100</span>
+        <span class="n">labels_with_percentage</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39; </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">size</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\%$ - &#39;</span> <span class="o">+</span> <span class="n">label</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">sizes</span><span class="p">)]</span>
+        <span class="n">explode</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># only &quot;explode&quot; the 2nd slice (i.e. &#39;Hogs&#39;)</span>
+
+        <span class="n">patches_pie</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span><span class="p">,</span> <span class="n">explode</span><span class="o">=</span><span class="n">explode</span><span class="p">,</span> <span class="n">autopct</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%1.1f%%</span><span class="s1">&#39;</span><span class="p">,</span>
+                    <span class="n">shadow</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">startangle</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">pctdistance</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
+        <span class="c1"># patterns = (&#39;-&#39;, &#39;+&#39;, &#39;x&#39;, &#39;\\&#39;, &#39;*&#39;, &#39;o&#39;, &#39;O&#39;, &#39;.&#39;)</span>
+        <span class="k">for</span> <span class="n">hatch</span><span class="p">,</span> <span class="n">patch</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">hatches</span><span class="p">,</span> <span class="n">patches_pie</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">patch</span><span class="o">.</span><span class="n">set_hatch</span><span class="p">(</span><span class="n">hatch</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>  <span class="c1"># Equal aspect ratio ensures that pie is drawn as a circle.</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">patches_pie</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels_with_percentage</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Blob class percentage&#39;</span><span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">preprocessing_folder</span><span class="p">,</span><span class="s1">&#39;fragments_summary_1.pdf&#39;</span><span class="p">),</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">patches</span>
+        <span class="k">def</span> <span class="nf">get_fragment_identification_type</span><span class="p">(</span><span class="n">fragment</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Returns the an identifier of the process in which fragment has</span>
+<span class="sd">            been identified in the algorithm:</span>
+<span class="sd">            *0: The fragment is a crossing, hence identified only during</span>
+<span class="sd">            post-processing</span>
+<span class="sd">            *1: The (individual) fragment has been identified during the</span>
+<span class="sd">            fingerprint protocols cascade</span>
+<span class="sd">            *2: The (individual) fragment has been identified after the</span>
+<span class="sd">            protocols cascade</span>
+<span class="sd">            *3: The (individual) fragment has not been assigned</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            fragment : &lt;Fragment object&gt;</span>
+<span class="sd">                an instance of the class :class:`~fragment.Fragment`</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            int</span>
+<span class="sd">                identifier of the identification state of the fragment</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">0</span> <span class="c1">#crossing</span>
+            <span class="k">elif</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">accumulated_globally</span> <span class="ow">or</span> <span class="n">fragment</span><span class="o">.</span><span class="n">accumulated_partially</span><span class="p">):</span>
+                <span class="k">return</span> <span class="mi">1</span> <span class="c1">#assigned during accumulation</span>
+            <span class="k">elif</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">2</span> <span class="c1">#assigned after accumulation</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">3</span> <span class="c1">#not assigned</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;crossings&#39;</span><span class="p">,</span> <span class="s1">&#39;assigned during accumulation&#39;</span><span class="p">,</span> <span class="s1">&#39;assigned after accumulation&#39;</span><span class="p">,</span> <span class="s1">&#39;not assigned&#39;</span><span class="p">]</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">]</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;ticks&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
+                <span class="n">blob_index</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">blob_hierarchy_in_starting_frame</span>
+                <span class="nb">type</span> <span class="o">=</span> <span class="n">get_fragment_identification_type</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span>
+                <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">start_end</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span>
+                    <span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">blob_index</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">),</span>   <span class="c1"># (x,y)</span>
+                        <span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>  <span class="c1"># width</span>
+                        <span class="mf">1.</span><span class="p">,</span>          <span class="c1"># height</span>
+                        <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">edgecolor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">facecolor</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="nb">type</span><span class="p">],</span>
+                        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Frame number&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Blob index&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span> <span class="o">+</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">preprocessing_folder</span><span class="p">,</span><span class="s1">&#39;fragments_summary_2.pdf&#39;</span><span class="p">),</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="create_list_of_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.create_list_of_fragments">[docs]</a><span class="k">def</span> <span class="nf">create_list_of_fragments</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate a list of instances of :class:`~fragment.Fragment` collecting</span>
+<span class="sd">    all the fragments in the video.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    blobs_in_video : list</span>
+<span class="sd">        list of the blob objects (see class :class:`~blob.Blob`) generated</span>
+<span class="sd">        from the blobs segmented in the video</span>
+<span class="sd">    number_of_animals : int</span>
+<span class="sd">        Number of animals to track</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        list of instances of :class:`~fragment.Fragment`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">attributes_to_set</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_image_for_identification&#39;</span><span class="p">,</span> <span class="s1">&#39;_next&#39;</span><span class="p">,</span> <span class="s1">&#39;_previous&#39;</span><span class="p">]</span>
+    <span class="n">fragments</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">used_fragment_identifiers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;creating list of fragments&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
+            <span class="n">current_fragment_identifier</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span>
+            <span class="k">if</span> <span class="n">current_fragment_identifier</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_fragment_identifiers</span><span class="p">:</span>
+                <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">identification_image_index</span><span class="p">]</span> <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+                <span class="n">bounding_boxes</span> <span class="o">=</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">bounding_box_in_frame_coordinates</span><span class="p">]</span> <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_a_crossing</span> <span class="k">else</span> <span class="p">[]</span>
+                <span class="n">centroids</span> <span class="o">=</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">centroid</span><span class="p">]</span>
+                <span class="n">areas</span> <span class="o">=</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">area</span><span class="p">]</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">frame_number</span>
+                <span class="n">current</span> <span class="o">=</span> <span class="n">blob</span>
+
+                <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">next</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">fragment_identifier</span> <span class="o">==</span> <span class="n">current_fragment_identifier</span><span class="p">:</span>
+                    <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">bounding_box_in_frame_coordinates</span> <span class="o">=</span> <span class="p">[</span><span class="n">current</span><span class="o">.</span><span class="n">bounding_box_in_frame_coordinates</span><span class="p">]</span> <span class="k">if</span> <span class="n">current</span><span class="o">.</span><span class="n">is_a_crossing</span> <span class="k">else</span> <span class="p">[]</span>
+                    <span class="n">images</span><span class="p">,</span> <span class="n">bounding_boxes</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span> <span class="o">=</span> <span class="n">append_values_to_lists</span><span class="p">([</span><span class="n">current</span><span class="o">.</span><span class="n">identification_image_index</span><span class="p">,</span>
+                                                                <span class="n">bounding_box_in_frame_coordinates</span><span class="p">,</span>
+                                                                <span class="n">current</span><span class="o">.</span><span class="n">centroid</span><span class="p">,</span>
+                                                                <span class="n">current</span><span class="o">.</span><span class="n">area</span><span class="p">],</span>
+                                                                <span class="p">[</span><span class="n">images</span><span class="p">,</span>
+                                                                <span class="n">bounding_boxes</span><span class="p">,</span>
+                                                                <span class="n">centroids</span><span class="p">,</span>
+                                                                <span class="n">areas</span><span class="p">])</span>
+
+                <span class="n">end</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">frame_number</span>
+                <span class="n">fragment</span> <span class="o">=</span> <span class="n">Fragment</span><span class="p">(</span><span class="n">current_fragment_identifier</span><span class="p">,</span>
+                                    <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="c1"># it is not inclusive to follow Python convention</span>
+                                    <span class="n">blob</span><span class="o">.</span><span class="n">blob_index</span><span class="p">,</span>
+                                    <span class="n">images</span><span class="p">,</span>
+                                    <span class="n">bounding_boxes</span><span class="p">,</span>
+                                    <span class="n">centroids</span><span class="p">,</span>
+                                    <span class="n">areas</span><span class="p">,</span>
+                                    <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">,</span>
+                                    <span class="n">blob</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">,</span>
+                                    <span class="n">number_of_animals</span><span class="p">,</span>
+                                    <span class="n">user_generated_identity</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">user_generated_identity</span><span class="p">)</span>
+                <span class="n">used_fragment_identifiers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">current_fragment_identifier</span><span class="p">)</span>
+                <span class="n">fragments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span>
+
+            <span class="n">set_attributes_of_object_to_value</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="n">attributes_to_set</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;getting coexisting individual fragments indices&quot;</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">get_coexisting_individual_fragments_indices</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">fragments</span></div>
+
+
+<span class="k">def</span> <span class="nf">load_identification_images</span><span class="p">(</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="n">images_indices</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">identification_images_file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">dset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;identification_images&#39;</span><span class="p">]</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">dset</span><span class="p">[</span><span class="n">image_index</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="k">for</span> <span class="n">image_index</span> <span class="ow">in</span> <span class="n">images_indices</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">images</span>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Apr 29, 2019.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>
