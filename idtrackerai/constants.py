@@ -27,6 +27,7 @@
 
 from __future__ import absolute_import, print_function, division
 import sys
+import os
 
 MIN_FLOAT = sys.float_info[3]
 MAX_FLOAT = sys.float_info[0]
@@ -45,7 +46,7 @@ AVAILABLE_VIDEO_EXTENSION = ['.avi', '.AVI', '.mp4', '.MP4', '.mpg', '.MPG', '.m
 '''***FRAMES_PER_EPISODE***
 Number of frames per video chunk. Used to parallelise processes
 '''
-FRAMES_PER_EPISODE = 500
+FRAMES_PER_EPISODE = int(os.environ.get('FRAMES_PER_EPISODE', 500))
 #######################################
 ##########   preprocessing  ###########
 #######################################
@@ -318,4 +319,4 @@ HEAD_DIAMETER = 20
 'id_transfer': saves the information needed to perfom identity_transfer to another video
 'id_matcher': saves the information needed to perform identity_matching between videos
 """
-DATA_POLICY = 'all'
+DATA_POLICY = os.environ.get('DATA_POLICY', 'all')
