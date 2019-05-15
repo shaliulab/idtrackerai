@@ -53,7 +53,7 @@ FRAMES_PER_EPISODE = int(os.environ.get('FRAMES_PER_EPISODE', 500))
 """***NUMBER_OF_ANIMALS_DEFAULT
 Number of animals to be tracked
 """
-NUMBER_OF_ANIMALS_DEFAULT = 8
+NUMBER_OF_ANIMALS_DEFAULT = int(os.environ.get('FRAMES_PER_EPISODE', 8))
 """***MIN_AREA_LOWER, MIN_AREA_UPPER***
 Lower and upper bounds for the minimum area slider
 """
@@ -61,7 +61,7 @@ MIN_AREA_LOWER, MIN_AREA_UPPER = 0, 10000
 """***DEFAULT_RESOLUTION_REDUCTION***
 Ratio to which the width and height are rescaled.
 """
-RES_REDUCTION_DEFAULT = 1.0
+RES_REDUCTION_DEFAULT = float(os.environ.get('RES_REDUCTION_DEFAULT', 1.0))
 """***MIN_AREA_DEFAULT, MAX_AREA_DEFAULT***
 Default value for min area in preprocessing
 """
@@ -82,15 +82,15 @@ MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT = 0, 155
 percentile on the average speed of the individuals used to compute the maximal
 velocity threshold
 """
-VEL_PERCENTILE = 99
+VEL_PERCENTILE = int(os.environ.get('VEL_PERCENTILE', 99))
 '''***STD_TOLERANCE***
 Tolerance coefficient in the computation of the individual model area.
 '''
-STD_TOLERANCE = 4
+STD_TOLERANCE = int(os.environ.get('STD_TOLERANCE', 4))
 """***BACKGROUND_SUBTRACTION_PERIOD***
 Period used to sample the video to compute the background model
 """
-BACKGROUND_SUBTRACTION_PERIOD = 500
+BACKGROUND_SUBTRACTION_PERIOD = int(os.environ.get('BACKGROUND_SUBTRACTION_PERIOD', 500))
 """***NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION***
 Number of jobs used to compute the background model
 """
@@ -128,7 +128,7 @@ SAVE_SEGMENTATION_IMAGE = 'DISK' # 'RAM' or 'NOT'
 Minimum number of frame to allow an individual fragment to be part of a
 global one
 '''
-MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = 3
+MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = int(os.environ.get('MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION', 99))
 #######################################
 ##########        CNN       ###########
 #######################################
@@ -163,73 +163,73 @@ LAYERS_TO_OPTIMISE_ACCUMULATION = None # ['fully-connected1','fully_connected_pr
 LAYERS_TO_OPTIMISE_PRETRAINING = None
 '''***LEARNING_RATE_IDCNN_ACCUMULATION***
 '''
-LEARNING_RATE_IDCNN_ACCUMULATION = 0.005
+LEARNING_RATE_IDCNN_ACCUMULATION = float(os.environ.get('LEARNING_RATE_IDCNN_PRETRAINING', 0.005))
 '''***LEARNING_RATE_IDCNN_PRETRAINING***
 '''
-LEARNING_RATE_IDCNN_PRETRAINING = 0.01
+LEARNING_RATE_IDCNN_PRETRAINING = float(os.environ.get('LEARNING_RATE_IDCNN_PRETRAINING', 0.01))
 '''***LEARNING_RATE_DCD***
 '''
-LEARNING_RATE_DCD = 0.001
+LEARNING_RATE_DCD = float(os.environ.get('LEARNING_RATE_DCD', 0.001))
 '''***KEEP_PROB_IDCNN_ACCUMULATION***
 '''
-KEEP_PROB_IDCNN_ACCUMULATION = 1.
+KEEP_PROB_IDCNN_ACCUMULATION = float(os.environ.get('KEEP_PROB_IDCNN_ACCUMULATION', 1.))
 '''***KEEP_PROB_IDCNN_PRETRAINING***
 '''
-KEEP_PROB_IDCNN_PRETRAINING = 1.
+KEEP_PROB_IDCNN_PRETRAINING = float(os.environ.get('KEEP_PROB_IDCNN_PRETRAINING', 1.))
 '''***KEEP_PROB_DCD***
 '''
-KEEP_PROB_DCD = 1.
+KEEP_PROB_DCD = float(os.environ.get('KEEP_PROB_DCD', 1.))
 '''***VALIDATION_PROPORTION***
 Protortion of images used for validation in the IDCNN model
 '''
-VALIDATION_PROPORTION = .1
+VALIDATION_PROPORTION = float(os.environ.get('VALIDATION_PROPORTION', .1))
 '''***BATCH_SIZE_DCD, BATCH_SIZE_IDCNN***
 size of the batches used to train the DCD and idCNN, respectively.
 '''
-BATCH_SIZE_IDCNN = 50
-BATCH_SIZE_DCD = 50
+BATCH_SIZE_IDCNN = int(os.environ.get('BATCH_SIZE_IDCNN', 50))
+BATCH_SIZE_DCD = int(os.environ.get('BATCH_SIZE_DCD', 50))
 '''***BATCH_SIZE_PREDICTIONS***
 size of the batches used to get the output from the DCD and idCNN, respectively.
 Remark: This is done to prevent out-of-memory error in the GPU
 '''
-BATCH_SIZE_PREDICTIONS_DCD = 100
-BATCH_SIZE_PREDICTIONS_IDCNN = 500
+BATCH_SIZE_PREDICTIONS_DCD = int(os.environ.get('BATCH_SIZE_PREDICTIONS_DCD', 100))
+BATCH_SIZE_PREDICTIONS_IDCNN = int(os.environ.get('BATCH_SIZE_PREDICTIONS_IDCNN', 500))
 '''***LEARNING_PERCENTAGE_DIFFERENCE_1 ***
 Overfitting threshold during training
 '''
-LEARNING_PERCENTAGE_DIFFERENCE_1_DCD = .005
-LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN = .005
+LEARNING_PERCENTAGE_DIFFERENCE_1_DCD = float(os.environ.get('LEARNING_PERCENTAGE_DIFFERENCE_1_DCD', .005))
+LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN = float(os.environ.get('LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN', .005))
 '''***LEARNING_PERCENTAGE_DIFFERENCE_2
 Loss plateau threshold during training
 ***'''
-LEARNING_PERCENTAGE_DIFFERENCE_2_DCD = .005
-LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN = .005
+LEARNING_PERCENTAGE_DIFFERENCE_2_DCD = float(os.environ.get('LEARNING_PERCENTAGE_DIFFERENCE_2_DCD', .005))
+LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN = float(os.environ.get('LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN', .005))
 '''***OVERFITTING_COUNTER_THRESHOLD ***
 Number of consecutive overfitting epochs in order to stop the training
 '''
-OVERFITTING_COUNTER_THRESHOLD_DCD = 5
-OVERFITTING_COUNTER_THRESHOLD_IDCNN = 5
-OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM = 10
+OVERFITTING_COUNTER_THRESHOLD_DCD = int(os.environ.get('OVERFITTING_COUNTER_THRESHOLD_DCD', 5))
+OVERFITTING_COUNTER_THRESHOLD_IDCNN = int(os.environ.get('OVERFITTING_COUNTER_THRESHOLD_IDCNN', 5))
+OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM = int(os.environ.get('OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM', 10))
 '''***MAXIMUM_NUMBER_OF_EPOCHS ***
 Maximum number of epochs before forcing the training to stop
 '''
-MAXIMUM_NUMBER_OF_EPOCHS_DCD = 100
-MAXIMUM_NUMBER_OF_EPOCHS_IDCNN = 10000
+MAXIMUM_NUMBER_OF_EPOCHS_DCD = int(os.environ.get('MAXIMUM_NUMBER_OF_EPOCHS_DCD', 100))
+MAXIMUM_NUMBER_OF_EPOCHS_IDCNN = int(os.environ.get('MAXIMUM_NUMBER_OF_EPOCHS_IDCNN', 10000))
 '''***KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION ***
 Number of KM iterations when clustering the embedding generated by the
 first fully-connected layer of the IDCNN
 '''
-KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN = 100
+KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN = float(os.environ.get('KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN', 100))
 '''***KEEP_PROB***
 Default dropout in fully-connected layers if the CNN models (can be changed
 when instantiating the parameter class to be init the CNN)
 '''
-KEEP_PROB = 1.0
+KEEP_PROB = float(os.environ.get('KEEP_PROB', 1.0))
 '''***MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR***
 Minimum number of crossings required to train the crossing detector, otherwise
 only the model area is used to distinguish crossings from individuals
 '''
-MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = 10
+MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = int(os.environ.get('MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR', 10))
 #######################################
 # Deep fingerprint protocols cascade  #
 #######################################
@@ -237,7 +237,7 @@ MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = 10
 If the total of accumulated images + images to be accumulated is above this
 threshold, we stop the accumulation (holds for each deep fingerprint protocol)
 '''
-THRESHOLD_EARLY_STOP_ACCUMULATION = .9995
+THRESHOLD_EARLY_STOP_ACCUMULATION = float(os.environ.get('THRESHOLD_EARLY_STOP_ACCUMULATION', .9995))
 """ ***THRESHOLD_ACCEPTABLE_ACCUMULATION***
 During the deep fingerprint protocol cascade we evaluate the information
 contained in global fragments and, if necessary (1), we accumulate references.
@@ -247,46 +247,46 @@ if equal or bigger than THRESHOLD_ACCEPTABLE_ACCUMULATION.
 ----
 (1) THRESHOLD_EARLY_STOP_ACCUMULATION is not reached
 """
-THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
+THRESHOLD_ACCEPTABLE_ACCUMULATION = float(os.environ.get('THRESHOLD_ACCEPTABLE_ACCUMULATION', .9))
 """***MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
 ***"""
-MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS = 3
+MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS = int(os.environ.get('MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS', 3))
 '''***MAXIMAL_IMAGES_PER_ANIMAL***
 Maximal number of images per indiviudal to be included in the training dataset
 of the idCNN
 '''
-MAXIMAL_IMAGES_PER_ANIMAL = 3000
+MAXIMAL_IMAGES_PER_ANIMAL = int(os.environ.get('MAXIMAL_IMAGES_PER_ANIMAL', 3000))
 '''***RATIO_OLD***
 Percentage of the MAXIMAL_IMAGES_PER_ANIMAL to be subsampled from the images
 accumulated in the previous steps
 '''
-RATIO_OLD = 0.6
+RATIO_OLD = float(os.environ.get('RATIO_OLD', 0.6))
 '''***RATIO_NEW***
 Percentage of the MAXIMAL_IMAGES_PER_ANIMAL to be subsampled from the images
 accumulated in the current step
 '''
-RATIO_NEW = 0.4
+RATIO_NEW = float(os.environ.get('RATIO_NEW', 0.4))
 '''***CERTAINTY_THRESHOLD***
 Minimal certainty of the assignment of an individual fragment to be considered
 acceptable
 '''
-CERTAINTY_THRESHOLD = .1
+CERTAINTY_THRESHOLD = float(os.environ.get('CERTAINTY_THRESHOLD', .1))
 '''***MAX_RATIO_OF_PRETRAINED_IMAGES***
 Maximum ratio of accumulable images to stop protocol 3 (pretraining)
 '''
-MAX_RATIO_OF_PRETRAINED_IMAGES = .95
+MAX_RATIO_OF_PRETRAINED_IMAGES = float(os.environ.get('MAX_RATIO_OF_PRETRAINED_IMAGES', .95))
 '''***MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION***
 Minimal ratio of accumulated images over accumulable images to allow the
 partial accumulation strategy to start
 '''
-MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION = .5
+MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION = float(os.environ.get('MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION', .5))
 '''***RESTORE_CRITERION***
 Values: {"last", "best"}
 When stopping the accumulation it is possible either to store the weights of
 the last model or the ones belonging to the model realising the minimum loss in
 validation.
 '''
-RESTORE_CRITERION = 'last'
+RESTORE_CRITERION = os.environ.get('FIXED_IDENTITY_THRESHOLD', 'last')
 #######################################
 ########   post-processing   ##########
 #######################################
@@ -295,7 +295,7 @@ If the certainty of the assignment of an individual fragment is above this
 threshold we consider the identification certain. Thus, it won't be modified
 either during the final identification or post-processing
 '''
-FIXED_IDENTITY_THRESHOLD = .9
+FIXED_IDENTITY_THRESHOLD = float(os.environ.get('FIXED_IDENTITY_THRESHOLD', .9))
 #######################################
 ##########   fish-specific  ###########
 #######################################
@@ -303,11 +303,11 @@ FIXED_IDENTITY_THRESHOLD = .9
 Parameter giving the standard deviation of the gaussian filtering in the
 contour to calculate curvature
 '''
-SMOOTH_SIGMA = 10
+SMOOTH_SIGMA = int(os.environ.get('SMOOTH_SIGMA', 10))
 '''***HEAD_DIAMETER***
 Distance between nose and base of the head
 '''
-HEAD_DIAMETER = 20
+HEAD_DIAMETER = int(os.environ.get('HEAD_DIAMETER', 20))
 
 ##################################################
 ##########   data management policies  ###########
