@@ -128,7 +128,7 @@ SAVE_SEGMENTATION_IMAGE = 'DISK' # 'RAM' or 'NOT'
 Minimum number of frame to allow an individual fragment to be part of a
 global one
 '''
-MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = int(os.environ.get('MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION', 99))
+MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = int(os.environ.get('MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION', 3))
 #######################################
 ##########        CNN       ###########
 #######################################
