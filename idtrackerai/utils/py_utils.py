@@ -312,7 +312,7 @@ def getExistentFiles(video_object, processes):
         logger.debug("loading old video object from get existent files")
         if os.path.isfile(os.path.join(video_object._previous_session_folder, 'video_object.npy')):
             print(video_object._previous_session_folder)
-            old_video = np.load(os.path.join(video_object._previous_session_folder, 'video_object.npy')).item()
+            old_video = np.load(os.path.join(video_object._previous_session_folder, 'video_object.npy'), allow_pickle=True).item()
             old_video.update_paths(os.path.join(video_object._previous_session_folder, 'video_object.npy'))
             logger.info("old video_object loaded")
         else:

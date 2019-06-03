@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import division, print_function, absolute_import
 import numpy as np
@@ -74,9 +74,9 @@ def compare_all_images(images):
     return distances
 
 if __name__ == "__main__":
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_20171214/video_object.npy').item()
-    list_of_global_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_20171214/preprocessing/global_fragments.npy').item()
-    list_of_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_20171214/preprocessing/fragments.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_20171214/video_object.npy', allow_pickle=True).item()
+    list_of_global_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_20171214/preprocessing/global_fragments.npy', allow_pickle=True).item()
+    list_of_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_20171214/preprocessing/fragments.npy', allow_pickle=True).item()
     list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
     first_global_fragment = list_of_global_fragments.global_fragments[0]
     images = first_global_fragment.individual_fragments[0].images

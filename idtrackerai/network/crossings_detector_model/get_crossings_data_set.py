@@ -217,7 +217,7 @@ if __name__ == "__main__":
     session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
     logger.info("loading video object...")
-    video = np.load(video_path).item(0)
+    video = np.load(video_path, allow_pickle=True).item(0)
     blobs_path = video.blobs_path
     global_fragments_path = video.global_fragments_path
     list_of_blobs = ListOfBlobs.load(video, blobs_path)

@@ -301,7 +301,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video,
         groundtruth_path = \
             os.path.join(video.video_folder,
                          '_groundtruth_with_crossing_identified.npy')
-    groundtruth = np.load(groundtruth_path).item()
+    groundtruth = np.load(groundtruth_path, allow_pickle=True).item()
 
     check_ground_truth_consistency(video, groundtruth.video)
     accumulation_number = int(video.accumulation_folder[-1])
@@ -357,9 +357,9 @@ if __name__ == '__main__':
     session_folder = args.session_folder
     video_object_path = os.path.join(session_folder, 'video_object.npy')
     logger.info("loading video object")
-    video = np.load(video_object_path).item(0)
+    video = np.load(video_object_path, allow_pickle=True).item(0)
     video.update_paths(video_object_path)
     groundtruth_path = os.path.join(video.video_folder, '_groundtruth.npy')
-    groundtruth = np.load(groundtruth_path).item()
+    groundtruth = np.load(groundtruth_path, allow_pickle=True).item()
     video, groundtruth = compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type)
     print(video.gt_accuracy)

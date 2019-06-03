@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import sys
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
-    video = np.load(video_path).item(0)
+    video = np.load(video_path, allow_pickle=True).item(0)
     logger.debug("loading list_of_blobs")
     list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     logger.debug("loading list_of_blobs_no_gaps")
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     list_of_blobs_interpolated = assign_zeros_with_interpolation_identities(list_of_blobs, list_of_blobs_no_gaps)
     list_of_blobs_interpolated.save(video, video._blobs_path_interpolated, number_of_chunks = video.number_of_frames)
     logger.debug("loading ground truth file")
-    groundtruth = np.load(os.path.join(video.video_folder, '_groundtruth.npy')).item()
+    groundtruth = np.load(os.path.join(video.video_folder, '_groundtruth.npy'), allow_pickle=True).item()
     blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
     blobs_in_video_interpolated = list_of_blobs_interpolated.blobs_in_video[groundtruth.start:groundtruth.end]
     logger.debug("computing groundtruth")

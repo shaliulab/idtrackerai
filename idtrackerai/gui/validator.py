@@ -734,7 +734,7 @@ class Validator(BoxLayout):
 
     def on_groundtruth_popup_button_press(self, instance):
         if instance.text == "Use pre-existent ground truth":
-            self.groundtruth = np.load(self.groundtruth_path).item()
+            self.groundtruth = np.load(self.groundtruth_path, allow_pickle=True).item()
             self.plot_groundtruth_statistics()
             self.popup_start_end_groundtruth.dismiss()
         else:
@@ -751,7 +751,7 @@ class Validator(BoxLayout):
         self.groundtruth_path = self.get_groundtruth_path()
         if self.groundtruth_path is not None:
             if not self.recompute_groundtruth:
-                self.groundtruth = np.load(self.groundtruth_path).item()
+                self.groundtruth = np.load(self.groundtruth_path, allow_pickle=True).item()
                 self.plot_groundtruth_statistics()
                 return True
             else:

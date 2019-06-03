@@ -212,7 +212,7 @@ if __name__ == "__main__":
     session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
     logger.info("loading video object...")
-    video = np.load(video_path).item(0)
+    video = np.load(video_path, allow_pickle=True).item(0)
     list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
 
     video.create_trajectories_wo_gaps_folder()

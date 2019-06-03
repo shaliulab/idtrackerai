@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import division
 from itertools import groupby
@@ -369,7 +369,7 @@ def getExistentFiles(video, processes):
     if os.path.isdir(video._previous_session_folder):
         logger.debug("loading old video object from get existent files")
         if os.path.isfile(os.path.join(video._previous_session_folder, 'video_object.npy')):
-            old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy')).item()
+            old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy'), allow_pickle=True).item()
             video.use_previous_knowledge_transfer_decision = old_video.use_previous_knowledge_transfer_decision
             logger.info("old video loaded")
         else:

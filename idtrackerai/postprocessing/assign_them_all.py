@@ -643,7 +643,7 @@ def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
     return list_of_blobs
 
 if __name__ == "__main__":
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_n/video_object.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_n/video_object.npy', allow_pickle=True).item()
     list_of_fragments = ListOfFragments.load(video.fragments_path)
     list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     if len(list_of_blobs.blobs_in_video[-1]) == 0:

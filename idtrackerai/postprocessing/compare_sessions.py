@@ -214,13 +214,13 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--sessions", nargs='+', type=str)
     args = parser.parse_args()
     logger.info("Comparing sessions: {}\n".format(args.sessions))
-    video_objects = [np.load(video_object(s)).item() for s in args.sessions]
+    video_objects = [np.load(video_object(s), allow_pickle=True).item() for s in args.sessions]
     compare_tracked_video(video_objects)
     compare_tracking_parameters(video_objects)
     compare_folders_structure(args.sessions)
     compare_finished_events(video_objects)
     compare_preprocessing_variables(video_objects)
     compare_tracking_variables(video_objects)
-    list_of_fragmentss = [np.load(lists_of_fragments(s)).item() for s in args.sessions]
-    list_of_global_fragmentss = [np.load(lists_of_global_fragments(s)).item() for s in args.sessions]
+    list_of_fragmentss = [np.load(lists_of_fragments(s), allow_pickle=True).item() for s in args.sessions]
+    list_of_global_fragmentss = [np.load(lists_of_global_fragments(s), allow_pickle=True).item() for s in args.sessions]
     compare_list_of_fragments(list_of_fragmentss, list_of_global_fragmentss)

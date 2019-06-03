@@ -283,7 +283,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type = 
         groundtruth_path = os.path.join(video.video_folder,'_groundtruth.npy')
     elif groundtruth_type == 'no_gaps':
         groundtruth_path = os.path.join(video.video_folder,'_groundtruth_with_crossing_identified.npy')
-    groundtruth = np.load(groundtruth_path).item()
+    groundtruth = np.load(groundtruth_path, allow_pickle=True).item()
     blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
     blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
     logger.info("computing groundtruth")
@@ -314,5 +314,5 @@ if __name__ == '__main__':
     session_path = selectDir('./') #select path to video
     video_object_path = os.path.join(session_path,'video_object.npy')
     logger.info("loading video object")
-    video = np.load(video_object_path).item(0)
+    video = np.load(video_object_path, allow_pickle=True).item(0)
     compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type)

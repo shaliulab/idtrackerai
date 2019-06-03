@@ -187,7 +187,7 @@ class Store_Accuracy_and_Loss(object):
         """Load the values stored in case there are any saved
         """
         if os.path.isfile(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')):
-            loss_accuracy_dictionary = np.load(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')).item()
+            loss_accuracy_dictionary = np.load(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), allow_pickle=True).item()
             self.__dict__ = loss_accuracy_dictionary
             if not hasattr(self, 'number_of_epochs_completed'):
                 self.number_of_epochs_completed = []

@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import division, print_function, absolute_import
 import os
@@ -174,9 +174,9 @@ def visualize_embeddings_global_fragments(video, list_of_global_fragments, list_
     return assignerT
 
 if __name__ == "__main__":
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/video_object.npy').item()
-    list_of_global_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/preprocessing/global_fragments.npy').item()
-    list_of_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/preprocessing/fragments.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/video_object.npy', allow_pickle=True).item()
+    list_of_global_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/preprocessing/global_fragments.npy', allow_pickle=True).item()
+    list_of_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/preprocessing/fragments.npy', allow_pickle=True).item()
     params = NetworkParams(video.number_of_animals,
                                 learning_rate = 0.005,
                                 keep_prob = 1.0,

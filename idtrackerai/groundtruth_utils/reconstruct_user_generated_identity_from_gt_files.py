@@ -68,7 +68,7 @@ if __name__ == '__main__':
     session_path = selectDir('./') #select path to video
     video_object_path = os.path.join(session_path,'video_object.npy')
     print("loading video object")
-    video = np.load(video_object_path).item(0)
+    video = np.load(video_object_path, allow_pickle=True).item(0)
     print("loading list_of_blobs")
     list_of_blobs = ListOfBlobs.load(video, os.path.join(session_path, 'preprocessing', 'blobs_collection.npy'))
     print("loading list_of_blobs_interpolated")
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     print("correcting from individual groundtruths")
     individual_groundtruth_paths = glob(os.path.join(video.video_folder,'_individual*.npy'))
     for individual_groundtruth_path in individual_groundtruth_paths:
-        individual_groundtruth = np.load(individual_groundtruth_path).item()
+        individual_groundtruth = np.load(individual_groundtruth_path, allow_pickle=True).item()
 
         for gt_blob in individual_groundtruth.individual_blobs_in_video:
             correct_blob_in_list_of_blobs(gt_blob, list_of_blobs)
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     ### Correct list_of_blobs from global groundtruth
     print("correcting from global groundtruths")
     ground_truth_path = os.path.join(video.video_folder,'_groundtruth.npy')
-    groundtruth = np.load(ground_truth_path).item()
+    groundtruth = np.load(ground_truth_path, allow_pickle=True).item()
     for frame_number in range(groundtruth.start, groundtruth.end + 1):
         gt_blobs_in_frame = groundtruth.blobs_in_video[frame_number]
         correct_blobs_in_frame_in_list_of_blobs(gt_blobs_in_frame, list_of_blobs)

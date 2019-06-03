@@ -117,7 +117,7 @@ class ListOfBlobs(object):
 
         """
         logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
-        list_of_blobs = np.load(path_to_load_blob_list_file).item()
+        list_of_blobs = np.load(path_to_load_blob_list_file, allow_pickle=True).item()
         list_of_blobs.blobs_are_connected = False
         return list_of_blobs
 

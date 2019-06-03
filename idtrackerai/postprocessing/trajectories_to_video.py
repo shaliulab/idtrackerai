@@ -32,9 +32,9 @@ from tqdm import tqdm
 from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 def init(video_path, trajectories_dict_path):
-    video_object = np.load(video_path, encoding='latin1').item()
+    video_object = np.load(video_path, allow_pickle=True, encoding='latin1').item()
     video_object.update_paths(video_path)
-    trajectories  = np.load(trajectories_dict_path, encoding='latin1').item()['trajectories']
+    trajectories  = np.load(trajectories_dict_path, allow_pickle=True, encoding='latin1').item()['trajectories']
     colors = get_spaced_colors_util(video_object.number_of_animals, black = False)
     path_to_save_video = video_object._session_folder +'/tracked.avi'
     fourcc = cv2.VideoWriter_fourcc(*'XVID')

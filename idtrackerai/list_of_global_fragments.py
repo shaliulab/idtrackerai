@@ -317,7 +317,7 @@ class ListOfGlobalFragments(object):
         :meth:`~relink_fragments_to_global_fragments`
         """
         logger.info("loading list of global fragments from %s" %path_to_load)
-        list_of_global_fragments = np.load(path_to_load).item()
+        list_of_global_fragments = np.load(path_to_load, allow_pickle=True).item()
         list_of_global_fragments.relink_fragments_to_global_fragments(fragments)
         return list_of_global_fragments
 

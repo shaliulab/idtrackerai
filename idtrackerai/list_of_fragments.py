@@ -284,7 +284,7 @@ class ListOfFragments(object):
         `path_to_load`
         """
         logger.info("loading list of fragments from %s" %path_to_load)
-        list_of_fragments = np.load(path_to_load).item()
+        list_of_fragments = np.load(path_to_load, allow_pickle=True).item()
         [fragment.get_coexisting_individual_fragments_indices(list_of_fragments.fragments) for fragment in list_of_fragments.fragments]
         return list_of_fragments
 
@@ -319,7 +319,7 @@ class ListOfFragments(object):
         :meth:`create_light_list` and saved with :meth:`save_light_list` from
         the folder `accumulation_folder`
         """
-        list_of_dictionaries = np.load(os.path.join(accumulation_folder, 'light_list_of_fragments.npy'))
+        list_of_dictionaries = np.load(os.path.join(accumulation_folder, 'light_list_of_fragments.npy'), allow_pickle=True)
         self.update_fragments_dictionary(list_of_dictionaries)
 
     def update_fragments_dictionary(self, list_of_dictionaries):

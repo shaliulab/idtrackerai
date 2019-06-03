@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     # session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
-    video = np.load(video_path).item()
+    video = np.load(video_path, allow_pickle=True).item()
     start = getInput('GroundTruth (start)', 'Input the starting frame for the interval in which the video has been validated')
     end = getInput('GroundTruth (end)', 'Input the ending frame for the interval in which the video has been validated')
     #read blob list from video

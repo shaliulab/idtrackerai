@@ -389,7 +389,7 @@ class Video(object):
         if conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN is None:
             raise ValueError("Need to provide a value (path) for the varialbe KNOWLEDGE_TRANSFER_FOLDER_IDCNN in the local_settings.py file")
         self.knowledge_transfer_model_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
-        self.knowledge_transfer_info_dict = np.load(os.path.join(self.knowledge_transfer_model_folder, 'info.npy')).item()
+        self.knowledge_transfer_info_dict = np.load(os.path.join(self.knowledge_transfer_model_folder, 'info.npy'), allow_pickle=True).item()
         if self.is_identity_transfer_possible():
             logger.info("Tracking with identity transfer. The IDENTIFICATION_IMAGE_SIZE will be matched\
                         to the input_image_size of the transferred network")
@@ -934,7 +934,7 @@ class Video(object):
             if hasattr(self, '_crossings_detector_folder') and os.path.isdir(self.crossings_detector_folder):
                 logger.info("Deleting crossing detector folder")
                 rmtree(self.crossings_detector_folder, ignore_errors=True)
-                
+
 
         if conf.DATA_POLICY in ['trajectories', 'validation',
                            'knowledge_transfer']:

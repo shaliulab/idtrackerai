@@ -3,8 +3,8 @@ import numpy as np
 import os
 
 video_path = '/Users/pacoromeroferrero/Movies/example/session_20180817/video_object.npy'
-video = np.load(video_path).item()
-list_of_blobs = np.load(video.blobs_path).item()
+video = np.load(video_path, allow_pickle=True).item()
+list_of_blobs = np.load(video.blobs_path, allow_pickle=True).item()
 
 trajectories = np.ones((video.number_of_frames, video.number_of_animals, 2))*np.nan
 blobs_in_video = list_of_blobs.blobs_in_video

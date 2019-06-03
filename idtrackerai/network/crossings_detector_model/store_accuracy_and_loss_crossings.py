@@ -110,5 +110,5 @@ class Store_Accuracy_and_Loss(object):
 
     def load(self):
         if os.path.isfile(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')):
-            loss_accuracy_dictionary = np.load(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')).item()
+            loss_accuracy_dictionary = np.load(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), allow_pickle=True).item()
             self.__dict__ = loss_accuracy_dictionary
