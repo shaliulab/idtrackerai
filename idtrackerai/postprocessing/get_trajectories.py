@@ -127,7 +127,7 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
         for blob in blobs_in_frame:
 
             if isinstance(blob.final_identity, int) or isinstance(blob.final_identity, np.integer):
-                centroid_trajectories = assign_point_to_identity(blob.centroid,
+                centroid_trajectories = assign_point_to_identity(blob.final_centroid,
                                                                 blob.final_identity,
                                                                 blob.frame_number,
                                                                 centroid_trajectories)
@@ -136,7 +136,7 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
                                                         blob.frame_number,
                                                         id_probabilities)
             elif isinstance(blob.final_identity, list):
-                for identity, centroid in zip(blob.final_identity, blob.interpolated_centroids):
+                for identity, centroid in zip(blob.final_identity, blob.final_centroid):
                     centroid_trajectories = assign_point_to_identity(centroid,
                                                                     identity,
                                                                     blob.frame_number,

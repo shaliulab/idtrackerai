@@ -27,14 +27,11 @@
 
 from __future__ import absolute_import, division, print_function
 import os
-import uuid
 import sys
 import cv2
 import h5py
-import itertools
 import numpy as np
-from tqdm import tqdm
-from joblib import Parallel, delayed
+import copy
 from sklearn.decomposition import PCA
 from idtrackerai.preprocessing.fishcontour import FishContour
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
@@ -134,7 +131,7 @@ class Blob(object):
         self.frame_number = frame_number
         self.in_frame_index = in_frame_index
         self.number_of_animals = number_of_animals
-        self.centroid = np.array(centroid) # numpy array (int64): coordinates of the centroid of the blob in pixels
+        self.centroid = centroid
         self.contour = contour # openCV contour [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]]
         self.area = area # int: number of pixels in the blob
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
@@ -162,6 +159,7 @@ class Blob(object):
         self._accumulation_step = None
         self._generated_while_closing_the_gap = False
         self._user_generated_identity = None
+        self._user_generated_centroid = None
         self._identity_corrected_closing_gaps = None
         self._identity_corrected_solving_jumps = None
         self._identity = None
@@ -694,7 +692,130 @@ class Blob(object):
             self._nose_coordinates = None
             self._head_coordinates = None
 
-def remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, folder_to_save_for_paper_figure):
+    """ The following methods are only to be used for the validation and modification
+    of trajectories with the pythonvideoannotator after the video is tracked """
+
+    @property
+    def user_generated_centroid(self):
+        return self._user_generated_centroid
+
+    @property
+    def assigned_centroid(self):
+        if hasattr(self, 'interpolated_centroids') and self.interpolated_centroids is not None:
+            return self.interpolated_centroids
+        else:
+            return self.centroid
+
+    @property
+    def final_centroid(self):
+        if self.user_generated_centroid is not None:
+            return self.user_generated_centroid
+        else:
+            return self.assigned_centroid
+
+    def remove_centroid(self, centroid):
+        """ Remove the centroid and the identity from the blob if it exist.
+
+        Parameters
+        ----------
+        centroid : tuple
+            centroid to be removed
+        """
+        assert isinstance(centroid, tuple) and len(centroid) == 2
+        if isinstance(self.final_centroid, list) and len(self.final_centroid) > 1:
+            if self.user_generated_centroid is None:
+                self._user_generated_centroid = copy.deepcopy(self.final_centroid)
+            if self.user_generated_identity is None:
+                self._user_generated_identity = self.final_identity
+            try:
+                index = self.user_generated_centroid.index(centroid)
+                self.user_generated_centroid.pop(index)
+                self.user_generated_identity.pop(index)
+            except ValueError:
+                print("Centroid to be removed not in blob")
+        else:
+            print("Cannot remove the centroid of the blob, \
+                  because it is the only centroid")
+
+    def add_centroid(self, centroid, id):
+        """ Adds a centroid with a given identity, id.
+
+        Parameters
+        ----------
+        centroid : tuple
+            len(centroid) must be 2
+        id : int
+            identity of the centroid. id must be > 0 and <= number_of_animals
+        """
+        assert isinstance(centroid, tuple) and len(centroid) == 2
+        assert isinstance(id, int) and id > 0 and id <= self.number_of_animals
+        if self.user_generated_centroid is None:
+            self._user_generated_centroid = copy.deepcopy(self.final_centroid)
+        if self.user_generated_identity is None:
+            self._user_generated_identity = self.final_identity
+        if not isinstance(self.user_generated_centroid, list):
+            self._user_generated_centroid = [copy.deepcopy(self.final_centroid)]
+        if not isinstance(self.user_generated_identity, list):
+            self._user_generated_identity = [self.final_identity]
+        self._user_generated_centroid.append(centroid)
+        self._user_generated_identity.append(id)
+
+    def update_identity(self, new_id, old_id=None):
+        """ Updates identity. If the blob has multiple identities already assigned
+        the old_id to be modified must be specified.
+
+        Parameters
+        ----------
+        new_id : int
+            new value for the identity of the blob
+        old_id : int
+            old value of the identity of the blob. It must be specified when the
+            blob has multiple identities already assigned.
+        """
+        assert isinstance(new_id, int)
+        if self.user_generated_identity is None:
+            self._user_generated_identity = self.final_identity
+
+        if not isinstance(self.final_identity, list):
+            self._user_generated_identity = new_id
+        else:
+            assert old_id is not None
+            assert isinstance(old_id, int) and old_id > 0 and old_id <= self.number_of_animals
+            try:
+                index = self.user_generated_identity.index(old_id)
+                self.user_generated_identity[index] = new_id
+            except ValueError:
+                print('Identity cannot be updated because there is no centroid with old_id')
+
+    def update_centroid(self, old_centroid, new_centroid):
+        """ Updates the coordinates of the centrod
+
+        Parameters
+        ----------
+        old_centroid : tuple
+            len(centroid) must be 2
+        new_centroid : tuple
+            len(new_centroid) must be 2
+        """
+        assert isinstance(old_centroid, tuple) and len(old_centroid) == 2
+        assert isinstance(new_centroid, tuple) and len(new_centroid) == 2
+
+        if self.user_generated_centroid is None:
+            self._user_generated_centroid = copy.deepcopy(self.final_centroid)
+
+        if isinstance(self.final_identity, list):
+            try:
+                index = self.user_generated_centroid.index(old_centroid)
+                self.user_generated_centroid[index] = new_centroid
+            except ValueError:
+                print("There is no centroid with the values of old_centroid")
+        else:
+            self._user_generated_centroid = new_centroid
+
+
+def remove_background_pixels(height, width, bounding_box_image, pixels,
+                             bounding_box_in_frame_coordinates,
+                             folder_to_save_for_paper_figure):
     """Removes the background pixels substiuting them with a homogeneous black
     background.
 
