@@ -697,7 +697,10 @@ class Blob(object):
 
     @property
     def user_generated_centroid(self):
-        return self._user_generated_centroid
+        if hasattr(self, '_user_generated_centroid'):
+            return self._user_generated_centroid
+        else:
+            return None
 
     @property
     def assigned_centroid(self):
@@ -712,6 +715,77 @@ class Blob(object):
             return self.user_generated_centroid
         else:
             return self.assigned_centroid
+
+
+    @property
+    def final_centroids(self):
+        """
+        :return: Return a list of the final centroids.
+        """
+        centroids = self.final_centroid
+        if isinstance(centroids, list):
+            return centroids
+        else:
+            return [centroids]
+
+    @property
+    def final_identities(self):
+        """
+        :return: Return a list of the final identifications.
+        """
+        identities = self.final_identity
+        if isinstance(identities, list):
+            return identities
+        else:
+            return [identities]
+
+
+    def draw(self, image, colors_lst=None):
+        """
+        Draw the blob representation in an image
+        :param numpy.array image: Image where the blob should be draw.
+        :param str selected_id: Identity of the selected blob.
+        :param colors_lst: List of colors used to draw the blobs.
+        """
+        contour = self.contour
+
+        for identity, centroid in zip(self.final_identities, self.final_centroids):
+
+            pos = int(round(centroid[0], 0)), int(round(centroid[1], 0))
+
+            if colors_lst:
+                color = colors_lst[identity] if identity is not None else colors_lst[0]
+            else:
+                color = (0,0,255)
+
+            cv2.polylines(image, np.array([contour]), True, (0, 255, 0), 1)
+
+            cv2.circle(image, pos, 8, (255, 255, 255), -1, lineType=cv2.LINE_AA)
+            cv2.circle(image, pos, 6, color, -1, lineType=cv2.LINE_AA)
+
+            if identity is not None:
+
+                if self.user_generated_identity is not None:
+                    idroot = 'u-'
+                elif self.identity_corrected_closing_gaps is not None and not self.is_an_individual:
+                    idroot = 'c-'
+                else:
+                    idroot = ''
+
+                idstr = idroot + str(identity)
+                text_size = cv2.getTextSize(idstr, cv2.FONT_HERSHEY_SIMPLEX, 1.0, thickness=2)
+                text_width = text_size[0][0]
+                str_pos = pos[0] - text_width // 2, pos[1] - 12
+
+                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), thickness=3,
+                            lineType=cv2.LINE_AA)
+                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, thickness=2, lineType=cv2.LINE_AA)
+            else:
+                bounding_box = self.bounding_box_in_frame_coordinates
+                rect_color   = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
+                cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
+
+
 
     def remove_centroid(self, centroid):
         """ Remove the centroid and the identity from the blob if it exist.
@@ -803,7 +877,7 @@ class Blob(object):
         if self.user_generated_centroid is None:
             self._user_generated_centroid = copy.deepcopy(self.final_centroid)
 
-        if isinstance(self.final_identity, list):
+        if isinstance(self.final_centroid, list):
             try:
                 index = self.user_generated_centroid.index(old_centroid)
                 self.user_generated_centroid[index] = new_centroid
