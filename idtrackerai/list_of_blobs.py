@@ -438,7 +438,9 @@ class ListOfBlobs(object):
         end_frame : int
             Frame where to end the interpolation
         """
-        assert start_frame < end_frame
+        if start_frame < end_frame:
+            raise Exception('The initial frame has to be higher than the last frame.')
+
         # Collect centroids of blobs with identity id that were modified by the user
         user_generated_centroids = []
         blobs_of_id = []

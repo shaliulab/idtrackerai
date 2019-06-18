@@ -787,7 +787,7 @@ class Blob(object):
 
 
 
-    def remove_centroid(self, centroid):
+    def remove_centroid(self, video, centroid):
         """ Remove the centroid and the identity from the blob if it exist.
 
         Parameters
@@ -805,13 +805,15 @@ class Blob(object):
                 index = self.user_generated_centroid.index(centroid)
                 self.user_generated_centroid.pop(index)
                 self.user_generated_identity.pop(index)
+
+                video.is_centroid_updated = True
             except ValueError:
-                print("Centroid to be removed not in blob")
+                raise Exception("Centroid to be removed not in blob")
         else:
-            print("Cannot remove the centroid of the blob, \
+            raise Exception("Cannot remove the centroid of the blob, \
                   because it is the only centroid")
 
-    def add_centroid(self, centroid, id):
+    def add_centroid(self, video, centroid, id):
         """ Adds a centroid with a given identity, id.
 
         Parameters
@@ -833,6 +835,8 @@ class Blob(object):
             self._user_generated_identity = [self.final_identity]
         self._user_generated_centroid.append(centroid)
         self._user_generated_identity.append(id)
+
+        video.is_centroid_updated = True
 
     def update_identity(self, new_id, old_id=None):
         """ Updates identity. If the blob has multiple identities already assigned
@@ -861,7 +865,7 @@ class Blob(object):
             except ValueError:
                 print('Identity cannot be updated because there is no centroid with old_id')
 
-    def update_centroid(self, old_centroid, new_centroid):
+    def update_centroid(self, video, old_centroid, new_centroid):
         """ Updates the coordinates of the centrod
 
         Parameters
@@ -871,6 +875,8 @@ class Blob(object):
         new_centroid : tuple
             len(new_centroid) must be 2
         """
+
+        video.is_centroid_updated = True
         assert isinstance(old_centroid, tuple) and len(old_centroid) == 2
         assert isinstance(new_centroid, tuple) and len(new_centroid) == 2
 

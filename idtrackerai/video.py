@@ -32,6 +32,8 @@ from shutil import move, rmtree
 from natsort import natsorted
 from confapp import conf
 
+from idtrackerai.postprocessing.assign_them_all import close_trajectories_gaps
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -141,6 +143,20 @@ class Video(object):
         self._number_of_channels = 1
         if conf.SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
+
+        # Flag to decide which type of interpolation is done. This flag is updated when we update a blob centroid
+        self._is_centroid_updated = False
+
+    @property
+    def is_centroid_updater(self):
+        if not hasattr(self, '_is_centroid_updated'):
+            return False
+        else:
+            return self._is_centroid_updated
+
+    @is_centroid_updater.setter
+    def is_centroid_updated(self, value):
+        self._is_centroid_updated = value
 
     @property
     def number_of_channels(self):
@@ -950,6 +966,31 @@ class Video(object):
             if os.path.isdir(self.preprocessing_folder):
                 logger.info("Deleting preprocessing data")
                 rmtree(self.preprocessing_folder, ignore_errors=True)
+
+
+    def interpolate(self, list_of_blobs=None, list_of_fragments=None, identity=None, start=None, end=None):
+        """
+        Does the blobs positions interpolation
+
+        :param ListOfBlobs list_of_blobs:
+        :param identity:
+        :param int start:
+        :param int end:
+        :param ListOfFragments list_of_fragments:
+        """
+
+        if self.is_centroid_updated:
+            assert identity is not None and start is not None and end is not None and list_of_blobs is not None
+
+            list_of_blobs.interpolate_from_user_generated_centroids(identity, start, end)
+
+        else:
+            assert list_of_fragments is not None and list_of_blobs is not None
+
+            close_trajectories_gaps(self, list_of_blobs, list_of_fragments)
+
+        self._is_centroid_updated = False
+
 
 
 def scanFolder(path):
