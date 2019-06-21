@@ -423,6 +423,9 @@ class ListOfBlobs(object):
                 if check_tracking(blobs_in_frame):
                     return blob.frame_number
 
+    def remove_centroid(self, frame_index, blob_id, centroid):
+        pass
+
     def interpolate_from_user_generated_centroids(self, id, start_frame, end_frame):
         """
         Interpolates linearly the centroids of the blobs of identity id between
@@ -440,7 +443,8 @@ class ListOfBlobs(object):
         end_frame : int
             Frame where to end the interpolation
         """
-        if start_frame < end_frame:
+
+        if start_frame >= end_frame:
             raise Exception('The initial frame has to be higher than the last frame.')
 
         # Collect centroids of blobs with identity id that were modified by the user
