@@ -740,7 +740,7 @@ class Blob(object):
             return [identities]
 
 
-    def draw(self, image, colors_lst=None):
+    def draw(self, image, colors_lst=None, selected_id=None):
         """
         Draw the blob representation in an image
         :param numpy.array image: Image where the blob should be draw.
@@ -764,6 +764,9 @@ class Blob(object):
             cv2.circle(image, pos, 6, color, -1, lineType=cv2.LINE_AA)
 
             if identity is not None:
+
+                if identity==selected_id:
+                    cv2.circle(image, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
 
                 if self.user_generated_identity is not None:
                     idroot = 'u-'
