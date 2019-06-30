@@ -982,7 +982,7 @@ class Video(object):
         if self.is_centroid_updated:
             assert identity is not None and start is not None and end is not None and list_of_blobs is not None
 
-            list_of_blobs.interpolate_from_user_generated_centroids(identity, start, end)
+            list_of_blobs.interpolate_from_user_generated_centroids(self, identity, start, end)
 
         else:
             assert list_of_fragments is not None and list_of_blobs is not None

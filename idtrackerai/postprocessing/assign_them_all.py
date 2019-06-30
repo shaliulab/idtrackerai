@@ -302,9 +302,11 @@ def plot_blob_and_centroid(video, blob, centroid):
     cv2.imshow("segmented_eroded_frame %i " %blob.frame_number, segmented_eroded_frame)
     cv2.waitKey()
 
-def get_nearest_eroded_blob_to_candidate_centroid(eroded_blobs, candidate_centroid, identity, inner_frame_number):
+
+def get_nearest_eroded_blob_to_candidate_centroid(eroded_blobs, candidate_centroid, identity=None, inner_frame_number=None):
     eroded_blob_index = np.argmin([blob.distance_from_countour_to(candidate_centroid) for blob in eroded_blobs])
     return eroded_blobs[eroded_blob_index]
+
 
 def nearest_candidate_blob_is_near_enough(video, candidate_blob, candidate_centroid, blob_in_border_frame):
     points = [candidate_centroid, blob_in_border_frame.centroid]

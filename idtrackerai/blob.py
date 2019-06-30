@@ -739,7 +739,6 @@ class Blob(object):
         else:
             return [identities]
 
-
     def draw(self, image, colors_lst=None, selected_id=None):
         """
         Draw the blob representation in an image
@@ -768,7 +767,7 @@ class Blob(object):
                 if identity==selected_id:
                     cv2.circle(image, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
 
-                if self.user_generated_identity is not None:
+                if self.user_generated_identity is not None or self.user_generated_centroid is not None:
                     idroot = 'u-'
                 elif self.identity_corrected_closing_gaps is not None and not self.is_an_individual:
                     idroot = 'c-'
@@ -788,9 +787,19 @@ class Blob(object):
                 rect_color   = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
                 cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
 
+    def removable_identity(self, identity_to_remove, blobs_in_frame):
+        for blob in blobs_in_frame:
+            if blob != self:
+                if isinstance(blob.final_identity, list) and identity_to_remove in blob.final_identity:
+                    return True
+                elif blob.final_identity == identity_to_remove:
+                    return True
+            else:
+                if isinstance(blob.final_identity, list) and blob.final_identity.count(identity_to_remove) > 1:
+                    return True
+        return False
 
-
-    def remove_centroid(self, video, centroid):
+    def remove_centroid(self, video, identity, centroid, blobs_in_frame):
         """ Remove the centroid and the identity from the blob if it exist.
 
         Parameters
@@ -798,7 +807,13 @@ class Blob(object):
         centroid : tuple
             centroid to be removed
         """
-        assert isinstance(centroid, tuple) and len(centroid) == 2
+        if not (isinstance(centroid, tuple) and len(centroid) == 2):
+            raise Exception("The centroid must be a tuple of length 2")
+
+        if not self.removable_identity(identity, blobs_in_frame):
+            raise Exception("The centroid cannot be remove beucase it belongs to a unique identity. \
+                            Only centroids of duplicated identities can be deleted")
+
         if isinstance(self.final_centroid, list) and len(self.final_centroid) > 1:
             if self.user_generated_centroid is None:
                 self._user_generated_centroid = copy.deepcopy(self.final_centroid)
@@ -826,8 +841,11 @@ class Blob(object):
         id : int
             identity of the centroid. id must be > 0 and <= number_of_animals
         """
-        assert isinstance(centroid, tuple) and len(centroid) == 2
-        assert isinstance(id, int) and id > 0 and id <= self.number_of_animals
+        if not (isinstance(centroid, tuple) and len(centroid) == 2):
+            raise Exception("The centroid must be a tuple of length 2")
+        if not (isinstance(id, int) and id > 0 and id <= self.number_of_animals):
+            raise Exception("The identity must be an integer between 1 and the number of animals in the video")
+
         if self.user_generated_centroid is None:
             self._user_generated_centroid = copy.deepcopy(self.final_centroid)
         if self.user_generated_identity is None:
@@ -853,20 +871,47 @@ class Blob(object):
             old value of the identity of the blob. It must be specified when the
             blob has multiple identities already assigned.
         """
-        assert isinstance(new_id, int)
+        if not(isinstance(new_id, int) and new_id > 0 and new_id <= self.number_of_animals):
+            raise Exception('The new identity must be an integer between 1 and the number of animals in the video')
+
         if self.user_generated_identity is None:
             self._user_generated_identity = self.final_identity
 
         if not isinstance(self.final_identity, list):
             self._user_generated_identity = new_id
         else:
-            assert old_id is not None
-            assert isinstance(old_id, int) and old_id > 0 and old_id <= self.number_of_animals
+            if old_id is None:
+                raise Exception("The old identity cannot be None")
+            if not (isinstance(old_id, int) and old_id > 0 and old_id <= self.number_of_animals):
+                raise Exception("The old identity must be an integer between 1 and the number of animals in the video")
             try:
                 index = self.user_generated_identity.index(old_id)
                 self.user_generated_identity[index] = new_id
             except ValueError:
                 print('Identity cannot be updated because there is no centroid with old_id')
+
+
+    def propagate_identity(self, new_blob_identity, old_id=None):
+        """Propagates the identity specified by new_blob_identity. If the blob has
+        multiple identities (e.g. is a crossing). The old_id needs to be specified.
+        """
+        count_past_corrections = 1 #to take into account the modification already done in the current frame
+        count_future_corrections = 0
+
+        current = self
+
+        while len(current.next) == 1 and current.next[0].fragment_identifier == self.fragment_identifier:
+            current.next[0].update_identity(new_blob_identity, old_id)
+            current = current.next[0]
+            count_future_corrections += 1
+
+        current = self
+
+        while len(current.previous) == 1 and current.previous[0].fragment_identifier == self.fragment_identifier:
+            current.previous[0].update_identity(new_blob_identity, old_id)
+            current = current.previous[0]
+            count_past_corrections += 1
+
 
     def update_centroid(self, video, old_centroid, new_centroid):
         """ Updates the coordinates of the centrod
@@ -880,8 +925,10 @@ class Blob(object):
         """
 
         video.is_centroid_updated = True
-        assert isinstance(old_centroid, tuple) and len(old_centroid) == 2
-        assert isinstance(new_centroid, tuple) and len(new_centroid) == 2
+        if not (isinstance(old_centroid, tuple) and len(old_centroid) == 2):
+            raise Exception("The old_centroid must be a tuple of length 2")
+        if not (isinstance(new_centroid, tuple) and len(new_centroid) == 2):
+            raise Exception("The new centroid must be a tuple of length 2")
 
         if self.user_generated_centroid is None:
             self._user_generated_centroid = copy.deepcopy(self.final_centroid)
