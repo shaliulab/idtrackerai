@@ -413,7 +413,8 @@ class ListOfBlobs(object):
         """
         logger.debug('next_frame_to_validate: {0}'.format(current_frame))
 
-        assert current_frame > 0 and current_frame < len(self.blobs_in_video)
+        if not (current_frame > 0 and current_frame < len(self.blobs_in_video)):
+            raise Exception("The frame number must be between 0 and the number of frames in the video")
         if direction == 'future':
             blobs_in_frame_to_check = self.blobs_in_video[current_frame+1:]
         elif direction == 'past':
@@ -522,8 +523,10 @@ class ListOfBlobs(object):
             Identity of the blobs to be reseted (default None). If None,
             all the blobs are reseted
         """
-        assert start_frame < end_frame
-        assert id is None or id > 0 # missing id <= self.number_of_animals but the attribute does not exist
+        if start_frame > end_frame:
+            raise Exception("Initial frame number must be smaller than the final frame number")
+        if not (id is None or id > 0):
+            raise Exception("Identity must be None or a positive integer") # missing id <= self.number_of_animals but the attribute does not exist
         for blobs_in_frame in self.blobs_in_video[start_frame:end_frame]:
             if id is None:
                 # Reset all user generated identities and centroids
