@@ -160,6 +160,7 @@ class Blob(object):
         self._generated_while_closing_the_gap = False
         self._user_generated_identity = None
         self._user_generated_centroid = None
+        self.interpolated_centroids = None
         self._identity_corrected_closing_gaps = None
         self._identity_corrected_solving_jumps = None
         self._identity = None

@@ -21,19 +21,21 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
-from __future__ import absolute_import, division, print_function
-import itertools
 import sys
+import itertools
 import numpy as np
 from tqdm import tqdm
+
 from idtrackerai.blob import Blob
 from idtrackerai.preprocessing.model_area import ModelArea
 from idtrackerai.preprocessing.erosion import get_eroded_blobs, get_new_blobs_in_frame_after_erosion
 from idtrackerai.utils.py_utils import interpolate_nans
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -71,14 +73,14 @@ class ListOfBlobs(object):
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
 
-    def connect(self):
-        """Connects blobs in subsequent frames by computing their overlapping
-        """
-        logger.info("Connecting list of blob objects")
-        for frame_i in tqdm(range(1,self.number_of_frames), desc='connecting blobs'):
-            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
-                if blob_0.overlaps_with(blob_1):
-                    blob_0.now_points_to(blob_1)
+    # def connect(self):
+    #     """Connects blobs in subsequent frames by computing their overlapping
+    #     """
+    #     logger.info("Connecting list of blob objects")
+    #     for frame_i in tqdm(range(1,self.number_of_frames), desc='connecting blobs'):
+    #         for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
+    #             if blob_0.overlaps_with(blob_1):
+    #                 blob_0.now_points_to(blob_1)
 
     def reconnect(self):
         """Connects blobs in subsequent frames by computing their overlapping
@@ -302,16 +304,16 @@ class ListOfBlobs(object):
                                                blobs_in_frame, model_area,
                                                identification_image_size)
 
-    def get_data_plot(self):
-        """Gets the areas of all the blobs segmented in the video
-
-        Returns
-        -------
-        list
-            Areas of all the blobs segmented in the video
-
-        """
-        return [blob.area for blobs_in_frame in self.blobs_in_video for blob in blobs_in_frame]
+    # def get_data_plot(self):
+    #     """Gets the areas of all the blobs segmented in the video
+    #
+    #     Returns
+    #     -------
+    #     list
+    #         Areas of all the blobs segmented in the video
+    #
+    #     """
+    #     return [blob.area for blobs_in_frame in self.blobs_in_video for blob in blobs_in_frame]
 
 
     def check_maximal_number_of_blob(self, number_of_animals, return_maximum_number_of_blobs = False):
@@ -372,27 +374,27 @@ class ListOfBlobs(object):
                 fragment = fragments[fragment_identifier_to_index[blob.fragment_identifier]]
                 [setattr(blob, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes if hasattr(fragment, attribute)]
 
-    def compute_nose_and_head_coordinates(self):
-        """Computes nose and head coordinate for all the blobs segmented from the
-        video
-        """
-        for blobs_in_frame in self.blobs_in_video:
-            for blob in blobs_in_frame:
-                blob.get_nose_and_head_coordinates()
-
-    def erode(self, video):
-        """Erodes all the blobs in the video
-
-        Parameters
-        ----------
-        video : <Video object>
-            see :class:`~video.Video`
-        """
-
-        for frame_number, blobs_in_frame in enumerate(tqdm(self.blobs_in_video, desc = 'eroding blobs')):
-            eroded_blobs_in_frame = get_eroded_blobs(video, blobs_in_frame)
-            if len(eroded_blobs_in_frame) <= video.number_of_animals:
-                self.blobs_in_video[frame_number] = get_new_blobs_in_frame_after_erosion(video, blobs_in_frame, eroded_blobs_in_frame)
+    # def compute_nose_and_head_coordinates(self):
+    #     """Computes nose and head coordinate for all the blobs segmented from the
+    #     video
+    #     """
+    #     for blobs_in_frame in self.blobs_in_video:
+    #         for blob in blobs_in_frame:
+    #             blob.get_nose_and_head_coordinates()
+    #
+    # def erode(self, video):
+    #     """Erodes all the blobs in the video
+    #
+    #     Parameters
+    #     ----------
+    #     video : <Video object>
+    #         see :class:`~video.Video`
+    #     """
+    #
+    #     for frame_number, blobs_in_frame in enumerate(tqdm(self.blobs_in_video, desc = 'eroding blobs')):
+    #         eroded_blobs_in_frame = get_eroded_blobs(video, blobs_in_frame)
+    #         if len(eroded_blobs_in_frame) <= video.number_of_animals:
+    #             self.blobs_in_video[frame_number] = get_new_blobs_in_frame_after_erosion(video, blobs_in_frame, eroded_blobs_in_frame)
 
     def next_frame_to_validate(self, current_frame, direction):
         """Returns the next frame to be validated given the current frame an
@@ -423,9 +425,6 @@ class ListOfBlobs(object):
             for blob in blobs_in_frame:
                 if check_tracking(blobs_in_frame):
                     return blob.frame_number
-
-    # def remove_centroid(self, frame_index, blob_id, centroid):
-    #     pass
 
     def interpolate_from_user_generated_centroids(self, video, id, start_frame, end_frame):
         """
@@ -480,11 +479,14 @@ class ListOfBlobs(object):
         if not (len(user_generated_centroids) == len(blobs_of_id) == end_frame-start_frame):
             raise Exception("The number of user generated centroids before interpolation does \
                             not match the number of frames interpolated.")
+        if np.isnan(user_generated_centroids[0][0]) or np.isnana(user_generated_centroids[-1][0]):
+            raise Exception("The first and last frame of the interpolation interval must contain a \
+                            user generated centroid marked with the 'u-' prefix")
         user_generated_centroids = np.asarray(user_generated_centroids)
         # interpolate linearlry the centroids not generated by the user
         interpolate_nans(user_generated_centroids)
         # assign the new centroids to the blobs with identity id.
-        frames = range(start_frame, end_frame)
+        frames = range(start_frame, end_frame+1)
         for i, (blob, frame) in enumerate(zip(blobs_of_id, frames)):
             if blob is not None:
                 if not isinstance(blob.final_centroid, list):

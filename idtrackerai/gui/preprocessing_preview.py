@@ -41,7 +41,7 @@ from functools import partial
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import numpy as np, time, cv2, matplotlib, matplotlib.pyplot as plt
 from idtrackerai.preprocessing.segmentation import segment_frame, resegment
-from idtrackerai.utils.video_utils import blob_extractor
+from idtrackerai.utils.segmentation_utils import blob_extractor
 from scipy.stats import mode
 from confapp import conf
 

@@ -21,21 +21,19 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
-from __future__ import absolute_import, division, print_function
-import os
 import sys
 import numpy as np
-import tensorflow as tf
-from tqdm import tqdm
-from idtrackerai.network.identification_model.network_params import NetworkParams
+
 from idtrackerai.network.identification_model.get_data import DataSet
-from idtrackerai.network.identification_model.id_CNN import ConvNetwork
 from idtrackerai.network.identification_model.get_predictions import GetPrediction
-from idtrackerai.list_of_fragments import ListOfFragments
+from idtrackerai.network.identification_model.id_CNN import ConvNetwork # for documentation
+from idtrackerai.list_of_fragments import ListOfFragments # for documentation
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -47,7 +45,7 @@ else:
 Identification of individual fragments given the predictions generate by the idCNN
 """
 
-def assign(net, images, print_flag):
+def assign(net, images):
     """Gathers the predictions relative to the images contained in `images`.
     Such predictions are returned as attributes of `assigner`.
 
@@ -57,9 +55,6 @@ def assign(net, images, print_flag):
         Convolutional neural network object created according to net.params
     images : ndarray
         array of images
-    print_flag : bool
-        If True additional information gathered while getting the predictions
-        are displayed in the terminal
 
     Returns
     -------
@@ -82,7 +77,7 @@ def assign(net, images, print_flag):
     return assigner
 
 
-def compute_identification_statistics_for_non_accumulated_fragments(fragments, assigner, number_of_animals = None):
+def compute_identification_statistics_for_non_accumulated_fragments(fragments, assigner, number_of_animals=None):
     """Given the predictions associated to the images in each (individual)
     fragment in the list fragments if computes the statistics necessary for the
     identification of fragment.
@@ -103,7 +98,7 @@ def compute_identification_statistics_for_non_accumulated_fragments(fragments, a
             next_counter_value = counter + fragment.number_of_images
             predictions = assigner.predictions[counter : next_counter_value]
             softmax_probs = assigner.softmax_probs[counter : next_counter_value]
-            fragment.compute_identification_statistics(predictions, softmax_probs, number_of_animals = number_of_animals)
+            fragment.compute_identification_statistics(predictions, softmax_probs, number_of_animals=number_of_animals)
             counter = next_counter_value
 
 def assign_identity(list_of_fragments):
@@ -123,8 +118,9 @@ def assign_identity(list_of_fragments):
         fragment.assign_identity()
         number_of_unidentified_individual_fragments -= 1
 
-def assigner(list_of_fragments, video, net):
-    """This is the main function of this method: given a list_of_fragments it
+
+def assign_remaining_fragments(list_of_fragments, video, net):
+    """This is the main function of this module: given a list_of_fragments it
     puts in place the routine to identify, if possible, each of the individual
     fragments. The starting point for the identification is given by the
     predictions produced by the ConvNetwork net passed as input. The organisation
@@ -157,7 +153,7 @@ def assigner(list_of_fragments, video, net):
         images = list_of_fragments.get_images_from_fragments_to_assign()
         logger.debug("Images shape before assignment %s" %str(images.shape))
         logger.info("Getting predictions")
-        assigner = assign(net, images, print_flag = False)
+        assigner = assign(net, images)
         logger.debug("Number of generated predictions: %s" %str(len(assigner._predictions)))
         logger.debug("Predictions range: %s" %str(np.unique(assigner._predictions)))
         compute_identification_statistics_for_non_accumulated_fragments(list_of_fragments.fragments, assigner)

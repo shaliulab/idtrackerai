@@ -24,7 +24,7 @@ from idtrackerai.accumulation_manager                                    import 
 from idtrackerai.list_of_blobs                                           import ListOfBlobs
 from idtrackerai.accumulator                                             import perform_one_accumulation_step
 from idtrackerai.pre_trainer                                             import pre_train_global_fragment
-from idtrackerai.assigner                                                import assigner
+from idtrackerai.assigner                                                import assign_remaining_fragments
 from confapp                                                             import conf
 
 
@@ -310,7 +310,6 @@ class TrackerAPI(object):
             self.chosen_video.video,
             self.global_step,
             self.net,
-            self.chosen_video.video.identity_transfer,
             save_summaries = save_summaries,
             GUI_axes = None,
             net_properties = None,
@@ -726,8 +725,8 @@ class TrackerAPI(object):
         self.chosen_video.video._identify_time = time.time()
         logger.warning("In identify")
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'accumulation')
-        logger.warning("Calling assigner")
-        assigner(self.chosen_video.list_of_fragments, self.chosen_video.video, self.net)
+        logger.warning("Assigning remaining fragments")
+        assign_remaining_fragments(self.chosen_video.list_of_fragments, self.chosen_video.video, self.net)
         self.chosen_video.video._has_been_assigned = True
         self.chosen_video.video.save()
 

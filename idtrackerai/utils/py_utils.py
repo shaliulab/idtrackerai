@@ -21,21 +21,21 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
-from __future__ import division, absolute_import, print_function
-from itertools import groupby
 import os
+import sys
 import glob
 import re
+
 import numpy as np
+from itertools import groupby
 import multiprocessing
-import sys
 import matplotlib
 from matplotlib import cm
-import subprocess
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -44,19 +44,13 @@ else:
     import logging
     logger = logging.getLogger("__main__.py_utils")
 
-### Git utils ###
-def get_git_revision_hash():
-    try:
-        return subprocess.check_output(['git', 'rev-parse', 'HEAD'])
-    except:
-        return 'not in a git repository'
-
 ### MKL
 def set_mkl_to_single_thread():
     logger.info('Setting MKL library to use single thread')
     os.environ['MKL_NUM_THREADS'] = '1'
     os.environ['OMP_NUM_THREADS'] = '1'
     os.environ['MKL_DYNAMIC'] = 'FALSE'
+
 def set_mkl_to_multi_thread():
     logger.info('Setting MKL library to use multiple threads')
     os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())
@@ -80,13 +74,6 @@ def delete_attributes_from_object(object_to_modify, list_of_attributes):
     [delattr(object_to_modify, attribute) for attribute in list_of_attributes if hasattr(object_to_modify, attribute)]
 
 ### Dict utils ###
-def getVarFromDict(dictVar,variableNames):
-    ''' get variables from a standard python dictionary '''
-    return [dictVar[v] for v in variableNames]
-
-def maskArray(im1,im2,w1,w2):
-    return np.add(np.multiply(im1,w1),np.multiply(im2,w2))
-
 def flatten(l):
     ''' flatten a list of lists '''
     try:
@@ -95,93 +82,10 @@ def flatten(l):
         ans = [y for x in l for y in (x if isinstance(x, tuple) else (x,))]
     return ans
 
-def cycle(l):
-    ''' shift the list one element towards the right
-    [a,b,c] -> [c,a,b] '''
-    l.insert(0,l.pop())
-    return l
-
-def Ncycle(l,n):
-    for i in range(n):
-        l = cycle(l)
-    return l
-
-def countRate(array):
-    # count repetitions of each element in array and returns the multiset
-    # (el, multiplicity(el))
-    # [1,1,2,1] outputs [(1,2), (2,1), (1,1)]
-    return [(key,len(list(group))) for key, group in groupby(array)]
-
-def countRateSet(array):
-    # count repetitions of each element in array, by summing the multiplicity of
-    # identical components
-    # [1,1,2,1] outputs [(1,3), (2,1)]
-    uniqueEl = list(set(array))
-    ratePerElement = [(key,len(list(group))) for key, group in groupby(array)]
-    return [(el,sum([pair[1] for pair in ratePerElement if pair[0]== el])) for el in uniqueEl]
-
-def groupByCustom(array, keys, ind): #FIXME it can be done matricially
-    """
-    given an array to group and an array of keys returns the array grouped in a
-    dictionary according to the keys listed at the index ind
-    """
-    dictionary = {i: [] for i in keys}
-    for el in array:
-        dictionary[el[ind]].append(el)
-
-    return dictionary
-
-def deleteDuplicates(array):
-    # deletes duplicate sublists in list
-    newArray = []
-    delInds = []
-    for i,elem in enumerate(array):
-        if elem not in newArray:
-            newArray.append(elem)
-        else:
-            delInds.append(i)
-
-    return newArray,delInds
-
-
-def ssplit2(seq,splitters):
-    """
-    split a list at splitters, if the splitted sequence is longer than 1
-    """
-    seq=list(seq)
-    if splitters and seq:
-        splitters=set(splitters).intersection(seq)
-        if splitters:
-            result=[]
-            begin=0
-            for end in range(len(seq)):
-                if seq[end] in splitters:
-                    if (end > begin and len(seq[begin:end])>1) :
-                        result.append(seq[begin:end])
-                    begin=end+1
-            if begin<len(seq):
-                result.append(seq[begin:])
-            return result
-    return [seq]
-
 def natural_sort(l):
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
     return sorted(l, key = alphanum_key)
-
-def getSubfolders(folder):
-    ''' returns subfolders of a given path'''
-    return [os.path.join(folder, path) for path in os.listdir(folder) if os.path.isdir(os.path.join(folder, path))]
-
-def getFiles(folder):
-    ''' returns files of a given path'''
-    return [name for name in os.listdir(folder) if os.path.isfile(os.path.join(folder, name))]
-
-def getFilesAndSubfolders(folder):
-    ''' returns files and subfodlers of a given path in two different lists'''
-    files = [name for name in os.listdir(folder) if os.path.isfile(os.path.join(folder, name))]
-    subfolders = [name for name in os.listdir(folder) if os.path.isdir(os.path.join(folder, name))]
-    return files, subfolders
 
 def scanFolder(path):
     ### NOTE if the video selected does not finish with '_1' the scanFolder function won't select all of them. This can be improved
@@ -324,22 +228,6 @@ def getExistentFiles(video_object, processes):
 
     return existentFile, old_video
 
-
-def get_existent_preprocessing_steps(old_video, listNames):
-    """
-    get processes already computed in a previous session
-    """
-    existentFile = {name:'0' for name in listNames}
-    if old_video.bkg is not None:
-        existentFile['bkg'] = '1'
-    if old_video.ROI is not None:
-        existentFile['ROI'] = '1'
-    if hasattr(old_video, 'resolution_reduction'):
-        if old_video.resolution_reduction is not None:
-            existentFile['resolution_reduction'] = '1'
-    return existentFile
-
-
 def interpolate_nans(t):
     """Interpolates nans linearly in a trajectory
 
@@ -356,7 +244,6 @@ def interpolate_nans(t):
     # Ugly slow hack, as reshape seems not to return a view always
     back_t = reshaped_t.reshape(shape_t)
     t[...] = back_t
-
 
 def _nan_helper(y):
     """Helper to handle indices and logical indices of NaNs.

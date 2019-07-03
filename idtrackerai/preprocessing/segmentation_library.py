@@ -43,7 +43,7 @@ sys.path.append('../utils')
 
 from idtrackerai.utils.py_utils import  flatten, loadFile, saveFile
 from video_utils_library import collectAndSaveVideoInfo, generateVideoTOC, getVideoInfo
-from idtrackerai.utils.video_utils import segment_frame, blob_extractor
+from idtrackerai.utils.segmentation_utils import segment_frame, blob_extractor
 
 def segment_episode(path, height, width, mask, useBkg, bkg, EQ, min_threshold, max_threshold, min_area, max_area, episode_start_end_frames = None,framesPerSegment=None):
     # locally called

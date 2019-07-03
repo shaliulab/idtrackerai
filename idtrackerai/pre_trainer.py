@@ -21,17 +21,19 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
-from __future__ import absolute_import, division, print_function
 import os
 import sys
+
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from confapp import conf
-from idtrackerai.network.identification_model.get_data import DataSet, split_data_train_and_validation
+
+from idtrackerai.network.identification_model.get_data import split_data_train_and_validation
 from idtrackerai.network.identification_model.id_CNN import ConvNetwork
 from idtrackerai.network.identification_model.epoch_runner import EpochRunner
 from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
@@ -93,7 +95,6 @@ def pre_train_global_fragment(net,
         canvas of the matplotlib figure initialised in
         :class:`~tracker.Tracker` used to update the figure in the GUI
         visualisation of pretraining
-
 
     Returns
     -------
@@ -250,38 +251,38 @@ def pre_train(video, list_of_fragments, list_of_global_fragments,
 
     return net
 
-def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params):
-    """Initialises and starts the pretraining (3rd fingerprint protocol)
-
-    Parameters
-    ----------
-    old_video : <Video object>
-        an instance of the class :class:`~video.Video`
-    video :<Video object>
-        an instance of the class :class:`~video.Video`
-    list_of_fragments : <ListOfFragments object>
-        an instance of the class :class:`~list_of_fragments.ListOfFragments`
-    list_of_global_fragments : <ListOfGlobalFragments object>
-        an instance of the class
-        :class:`~list_of_global_fragments.ListOfGlobalFragments`
-    pretrain_network_params :  <NetworkParams object>
-        an instance of the class :class:`~network_params.NetworkParams`
-    """
-    #Reset used_for_training and acceptable_for_training flags
-    if old_video and old_video.first_accumulation_finished == True:
-        list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-        list_of_fragments.reset(roll_back_to = 'fragmentation')
-    logger.info("Starting pretraining. Checkpoints will be stored in %s" %video.pretraining_folder)
-    if video.tracking_with_knowledge_transfer:
-        logger.info("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
-        pretrain_network_params.knowledge_transfer_folder = video.knowledge_transfer_model_folder
-    #start pretraining
-    logger.info("Start pretraining")
-    net = pre_train(video, list_of_fragments,
-                    list_of_global_fragments,
-                    pretrain_network_params,
-                    store_accuracy_and_error = True,
-                    check_for_loss_plateau = True,
-                    save_summaries = False,
-                    print_flag = False,
-                    plot_flag = False)
+# def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params):
+#     """Initialises and starts the pretraining (3rd fingerprint protocol)
+#
+#     Parameters
+#     ----------
+#     old_video : <Video object>
+#         an instance of the class :class:`~video.Video`
+#     video :<Video object>
+#         an instance of the class :class:`~video.Video`
+#     list_of_fragments : <ListOfFragments object>
+#         an instance of the class :class:`~list_of_fragments.ListOfFragments`
+#     list_of_global_fragments : <ListOfGlobalFragments object>
+#         an instance of the class
+#         :class:`~list_of_global_fragments.ListOfGlobalFragments`
+#     pretrain_network_params :  <NetworkParams object>
+#         an instance of the class :class:`~network_params.NetworkParams`
+#     """
+#     #Reset used_for_training and acceptable_for_training flags
+#     if old_video and old_video.first_accumulation_finished == True:
+#         list_of_global_fragments.reset(roll_back_to = 'fragmentation')
+#         list_of_fragments.reset(roll_back_to = 'fragmentation')
+#     logger.info("Starting pretraining. Checkpoints will be stored in %s" %video.pretraining_folder)
+#     if video.tracking_with_knowledge_transfer:
+#         logger.info("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
+#         pretrain_network_params.knowledge_transfer_folder = video.knowledge_transfer_model_folder
+#     #start pretraining
+#     logger.info("Start pretraining")
+#     net = pre_train(video, list_of_fragments,
+#                     list_of_global_fragments,
+#                     pretrain_network_params,
+#                     store_accuracy_and_error = True,
+#                     check_for_loss_plateau = True,
+#                     save_summaries = False,
+#                     print_flag = False,
+#                     plot_flag = False)

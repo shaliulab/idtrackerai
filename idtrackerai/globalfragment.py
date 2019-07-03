@@ -21,16 +21,16 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
-from __future__ import absolute_import, division, print_function
-import numpy as np, sys
+import sys
+import numpy as np
 from confapp import conf
 
 from idtrackerai.list_of_fragments import load_identification_images
-
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -93,6 +93,24 @@ class GlobalFragment(object):
         self.reset(roll_back_to = 'fragmentation')
         self._is_unique = False
         self._is_certain = False
+
+    @property
+    def candidate_for_accumulation(self):
+        return self._candidate_for_accumulation
+
+    @property
+    def used_for_training(self):
+        return all([fragment.used_for_training for fragment in self.individual_fragments])
+
+    @property
+    def is_unique(self):
+        self.check_uniqueness(scope = 'global')
+        return self._is_unique
+
+    @property
+    def is_partially_unique(self):
+        self.check_uniqueness(scope = 'partial')
+        return self._is_partially_unique
 
     def reset(self, roll_back_to):
         """Resets attributes to the fragmentation step in the algorithm,
@@ -169,43 +187,8 @@ class GlobalFragment(object):
         if np.min(self.number_of_images_per_individual_fragment) < conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION:
             self._candidate_for_accumulation = False
 
-    @property
-    def candidate_for_accumulation(self):
-        return self._candidate_for_accumulation
-
     def get_total_number_of_images(self):
         return sum([fragment.number_of_images for fragment in self.individual_fragments])
-
-    # @property
-    # def uniqueness_score(self):
-    #     return self._uniqueness_score
-    #
-    # def compute_uniqueness_score(self, P1_individual_fragments):
-    #     """ Computes the distance of the assignation probabilities (P2) per
-    #     individual fragment in the global fragment to the identity matrix of
-    #     dimension number of animals.
-    #     uniqueness_score = 0.0 means that every individual is assigned with
-    #     certainty 1.0 once and only once in the global fragment
-    #     """
-    #     if not self._used_for_training and self.is_unique:
-    #         identity = np.identity(self.number_of_animals)
-    #         P1_mat = np.vstack(P1_individual_fragments) # stack P1 of each individual fragment in the global fragment into a matrix
-    #         perm = np.argmax(P1_mat,axis=1) # get permutation that orders the matrix to match the identity matrix
-    #         P1_mat = P1_mat[:,perm] # apply permutation
-    #         self._uniqueness_score = np.linalg.norm(P1_mat - identity)
-    #
-    # @property
-    # def score(self):
-    #     return self._score
-    #
-    # def compute_score(self, P1_individual_fragments, max_distance_travelled):
-    #     if not self._used_for_training and self.is_unique:
-    #         self.compute_uniqueness_score(P1_individual_fragments)
-    #         self._score = self.uniqueness_score**2 + (max_distance_travelled - self.minimum_distance_travelled)**2
-
-    @property
-    def used_for_training(self):
-        return all([fragment.used_for_training for fragment in self.individual_fragments])
 
     def acceptable_for_training(self, accumulation_strategy):
         """Returns True if the global fragment is acceptable for training.
@@ -227,16 +210,6 @@ class GlobalFragment(object):
             return all([fragment.acceptable_for_training for fragment in self.individual_fragments])
         else:
             return any([fragment.acceptable_for_training for fragment in self.individual_fragments])
-
-    @property
-    def is_unique(self):
-        self.check_uniqueness(scope = 'global')
-        return self._is_unique
-
-    @property
-    def is_partially_unique(self):
-        self.check_uniqueness(scope = 'partial')
-        return self._is_partially_unique
 
     def check_uniqueness(self, scope):
         """Checks that the identities assigned to the individual fragments are
@@ -285,18 +258,18 @@ class GlobalFragment(object):
 
         return np.asarray(load_identification_images(identification_images_file_path, images)), labels
 
-    def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
-        """
-
-        Parameters
-        ----------
-        blobs_in_video : list
-            list of the blob objects (see :class:`~blob.Blob`) segmented from
-            the video
-
-        """
-        self.starts_ends_individual_fragments = [blob.compute_fragment_start_end()
-            for blob in blobs_in_video[self.index_beginning_of_fragment]]
+    # def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
+    #     """
+    #
+    #     Parameters
+    #     ----------
+    #     blobs_in_video : list
+    #         list of the blob objects (see :class:`~blob.Blob`) segmented from
+    #         the video
+    #
+    #     """
+    #     self.starts_ends_individual_fragments = [blob.compute_fragment_start_end()
+    #         for blob in blobs_in_video[self.index_beginning_of_fragment]]
 
     def update_individual_fragments_attribute(self, attribute, value):
         """Update `attribute` in every individual fragment in the global

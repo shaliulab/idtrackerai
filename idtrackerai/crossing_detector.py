@@ -21,18 +21,19 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import sys
 
-from __future__ import absolute_import, division, print_function
-import os
 import numpy as np
 import h5py
-import cv2
-import sys
-from confapp import conf
 import tensorflow as tf
+
+from confapp import conf
+
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.network.cnn_architectures import cnn_model_crossing_detector
 from idtrackerai.network.crossings_detector_model.get_crossings_data_set import CrossingDataset
@@ -40,6 +41,7 @@ from idtrackerai.network.crossings_detector_model.network_params_crossings impor
 from idtrackerai.network.crossings_detector_model.crossings_detector_model import ConvNetwork_crossings
 from idtrackerai.network.crossings_detector_model.train_crossings_detector import TrainDeepCrossing
 from idtrackerai.network.crossings_detector_model.get_predictions_crossings import GetPredictionCrossigns
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -47,8 +49,9 @@ else:
     import logging
     logger = logging.getLogger("__main__.crossing_detector")
 
+### FIXME: This function returns either a TrainDeepCrossing object or a ListOfBlobs. Not good practice.
 def detect_crossings(list_of_blobs, video, model_area, use_network = True, return_store_objects = False, plot_flag = True):
-    """Short summary.
+    """Classify all blobs in the video as bing crossings or individuals.
 
     Parameters
     ----------
@@ -65,6 +68,10 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
     plot_flag : bool
         If True a figure representing the values of the loss function, accuracy and accuracy per class for both the training and validation set.
 
+    Returns
+    -------
+
+    trainer or list_of_blobs : TrainDeepCrossing or ListOfBlobs()
     """
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
 

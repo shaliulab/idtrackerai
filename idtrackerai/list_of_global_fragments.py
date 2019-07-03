@@ -21,12 +21,16 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from __future__ import absolute_import, division, print_function
-import numpy as np, sys
+import sys
+
+import numpy as np
 from confapp import conf
+
 from idtrackerai.globalfragment import GlobalFragment
 from idtrackerai.assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
 from idtrackerai.accumulation_manager import AccumulationManager
@@ -78,7 +82,8 @@ class ListOfGlobalFragments(object):
         """Resets all the global fragment by calling recursively the method
         :meth:`~globalfragment.GlobalFragment.reset`
         """
-        [global_fragment.reset(roll_back_to) for global_fragment in self.global_fragments]
+        for global_fragment in self.global_fragments:
+            global_fragment.reset(roll_back_to)
 
     def order_by_distance_travelled(self):
         """Sorts the global fragments by the minimum distance travelled of their
@@ -178,6 +183,17 @@ class ListOfGlobalFragments(object):
                                         reverse = False)
 
     def get_transferred_identities(self, video, net):
+        """Assigns an identity to the images of the first global fragment using
+        a network passed by the user to perform identity transfer
+
+        Parameters
+        ----------
+        video : <Video object>
+            instance of the class :class:`~video.Video`.
+        net : ConvNetwork object
+            network used to assign the identities of the first global fragment.
+
+        """
         images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels(video.identification_images_file_path, scope='identity_transfer')
         images = np.asarray(images)
         assigner = assign(net, images, False)
@@ -251,50 +267,52 @@ class ListOfGlobalFragments(object):
                     if global_fragment.candidate_for_accumulation]
         self.number_of_global_fragments = len(self.global_fragments)
 
-    def get_data_plot(self):
-        """Gathers data to plot a global fragments statistics summary
-
-        Returns
-        -------
-        int
-            number of images in the shortest individual fragment
-        int
-            number of images in the longest individual fragment
-        int
-            number of images per individual fragment in global fragment
-        int
-            median number of images in global fragments
-        float
-            minimum distance travelled
-
-        """
-        number_of_images_in_shortest_individual_fragment = []
-        number_of_images_in_longest_individual_fragment = []
-        number_of_images_per_individual_fragment_in_global_fragment = []
-        median_number_of_images = []
-        minimum_distance_travelled = []
-        for global_fragment in self.global_fragments:
-            number_of_images_in_shortest_individual_fragment.append(min(global_fragment.number_of_images_per_individual_fragment))
-            number_of_images_in_longest_individual_fragment.append(max(global_fragment.number_of_images_per_individual_fragment))
-            number_of_images_per_individual_fragment_in_global_fragment.append(global_fragment.number_of_images_per_individual_fragment)
-            median_number_of_images.append(np.median(global_fragment.number_of_images_per_individual_fragment))
-            minimum_distance_travelled.append(min(global_fragment.distance_travelled_per_individual_fragment))
-
-        return number_of_images_in_shortest_individual_fragment,\
-                number_of_images_in_longest_individual_fragment,\
-                number_of_images_per_individual_fragment_in_global_fragment,\
-                median_number_of_images,\
-                minimum_distance_travelled
+    # def get_data_plot(self):
+    #     """Gathers data to plot a global fragments statistics summary
+    #
+    #     Returns
+    #     -------
+    #     int
+    #         number of images in the shortest individual fragment
+    #     int
+    #         number of images in the longest individual fragment
+    #     int
+    #         number of images per individual fragment in global fragment
+    #     int
+    #         median number of images in global fragments
+    #     float
+    #         minimum distance travelled
+    #
+    #     """
+    #     number_of_images_in_shortest_individual_fragment = []
+    #     number_of_images_in_longest_individual_fragment = []
+    #     number_of_images_per_individual_fragment_in_global_fragment = []
+    #     median_number_of_images = []
+    #     minimum_distance_travelled = []
+    #     for global_fragment in self.global_fragments:
+    #         number_of_images_in_shortest_individual_fragment.append(min(global_fragment.number_of_images_per_individual_fragment))
+    #         number_of_images_in_longest_individual_fragment.append(max(global_fragment.number_of_images_per_individual_fragment))
+    #         number_of_images_per_individual_fragment_in_global_fragment.append(global_fragment.number_of_images_per_individual_fragment)
+    #         median_number_of_images.append(np.median(global_fragment.number_of_images_per_individual_fragment))
+    #         minimum_distance_travelled.append(min(global_fragment.distance_travelled_per_individual_fragment))
+    #
+    #     return number_of_images_in_shortest_individual_fragment,\
+    #             number_of_images_in_longest_individual_fragment,\
+    #             number_of_images_per_individual_fragment_in_global_fragment,\
+    #             median_number_of_images,\
+    #             minimum_distance_travelled
 
     def delete_fragments_from_global_fragments(self):
         """Deletes the individual fragments from each of the global fragments
         """
-        [setattr(global_fragment,'individual_fragments',None) for global_fragment in self.global_fragments]
+        for global_fragment in self.global_fragments:
+            global_fragment.individual_fragments = None
 
     def relink_fragments_to_global_fragments(self, fragments):
         """Resets the individual fragments to their respective global fragments
         """
-        [global_fragment.get_individual_fragments_of_global_fragment(fragments) for global_fragment in self.global_fragments]
+        for global_fragment in self.global_fragments:
+            global_fragment.get_individual_fragments_of_global_fragment(fragments)
 
     def save(self, global_fragments_path, fragments):
         """Saves an instance of the class in the path `global_fragments_path`.

@@ -21,15 +21,19 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import sys
 
-from __future__ import absolute_import, division, print_function
-from confapp import conf
+import numpy as np
+
 from idtrackerai.trainer import train
 from idtrackerai.accumulation_manager import get_predictions_of_candidates_fragments
-import numpy as np, sys
+from confapp import conf
+
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -38,39 +42,17 @@ else:
     import logging
     logger = logging.getLogger('__main__.accumulator')
 
-def early_stop_criteria_for_accumulation(number_of_accumulated_images, number_of_unique_images_in_global_fragments):
-    """A particularly succesful accumulation causes an early stop of the training
-    and accumulaton process. This function returns the value, expressed as a ratio
-    that is evaluated to trigger this behaviour.
-
-    Parameters
-    ----------
-    number_of_accumulated_images : int
-        Number of images used during the accumulation process (the labelled dataset used to train the network
-        is subsampled from this set of images).
-    number_of_unique_images_in_global_fragments : int
-        Total number of accumulable images.
-
-    Returns
-    -------
-    float
-        Ratio of accumulated images over accumulable images
-
-    """
-    return number_of_accumulated_images / number_of_unique_images_in_global_fragments
 
 def perform_one_accumulation_step(accumulation_manager,
                                     video,
                                     global_step,
                                     net,
-                                    identity_transfer,
                                     GUI_axes = None,
                                     net_properties = None,
                                     plot_flag = False,
                                     save_summaries = False):
-    #logger.info("accumulation step %s" %accumulation_manager.counter)
+    logger.info("accumulation step %s" %accumulation_manager.counter)
     video.accumulation_step = accumulation_manager.counter
-    #(we do not take images from individual fragments already used)
     accumulation_manager.get_new_images_and_labels()
     images, labels = accumulation_manager.get_images_and_labels_for_training()
     logger.debug("images: %s" %str(images.shape))
@@ -86,7 +68,6 @@ def perform_one_accumulation_step(accumulation_manager,
                                                     print_flag = False,
                                                     plot_flag = plot_flag,
                                                     global_step = global_step,
-                                                    identity_transfer = identity_transfer,
                                                     accumulation_manager = accumulation_manager)
     if net_properties is not None:
         net_properties.setter(global_step)
@@ -155,50 +136,3 @@ def perform_one_accumulation_step(accumulation_manager,
     accumulation_manager.ratio_accumulated_images = accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
     video.store_accumulation_statistics_data(video.accumulation_trial)
     return accumulation_manager.ratio_accumulated_images, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data
-
-
-# def accumulate(accumulation_manager,
-#                 video,
-#                 global_step,
-#                 net,
-#                 identity_transfer):
-#     """take care of managing  the process of accumulation
-#     of labelled images. Such process, in complex video, allows us to train  the
-#     idCNN (or whatever function approximator passed in input as `net`).
-#
-#     Parameters
-#     ----------
-#     accumulation_manager : <accumulation_manager.AccumulationManager object>
-#         Description of parameter `accumulation_manager`.
-#     video : <video.Video object>
-#         Object collecting all the parameters of the video and paths for saving and loading
-#     global_step : int
-#         network epoch counter
-#     net : <net.ConvNetwork object>
-#         Convolutional neural network object created according to net.params
-#     identity_transfer : bool
-#         If true the identity of the individual is also tranferred
-#
-#     Returns
-#     -------
-#     float
-#         Ratio of accumulated images
-#
-#     See Also
-#     --------
-#     early_stop_criteria_for_accumulation
-#
-#     """
-#     video.init_accumulation_statistics_attributes()
-#     accumulation_manager.threshold_early_stop_accumulation = conf.THRESHOLD_EARLY_STOP_ACCUMULATION
-#
-#     while accumulation_manager.continue_accumulation:
-#         perform_one_accumulation_step(accumulation_manager,
-#                         video,
-#                         global_step,
-#                         net,
-#                         identity_transfer,
-#                         GUI_axes = None,
-#                         net_properties = None,
-#                         plot_flag = False)
-#     return accumulation_manager.ratio_accumulated_images

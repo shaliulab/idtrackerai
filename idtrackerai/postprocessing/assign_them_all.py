@@ -30,7 +30,7 @@ import collections, numpy as np, cv2, sys, os
 from tqdm import tqdm
 import h5py
 from scipy.spatial.distance import cdist
-from idtrackerai.utils.video_utils import blob_extractor
+from idtrackerai.utils.segmentation_utils import blob_extractor
 from idtrackerai.list_of_fragments import ListOfFragments
 from idtrackerai.blob import Blob
 from idtrackerai.list_of_blobs import ListOfBlobs

@@ -21,15 +21,17 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
-from __future__ import absolute_import, division, print_function
 import sys
 import numpy as np
 from confapp import conf
+
 from idtrackerai.utils.py_utils import delete_attributes_from_object
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -309,6 +311,15 @@ class Fragment(object):
     def non_consistent(self):
         return self._non_consistent
 
+    @property
+    def number_of_images(self):
+        return len(self.images)
+
+    @property
+    def has_enough_accumulated_coexisting_fragments(self):
+        return sum([fragment.used_for_training
+                    for fragment in self.coexisting_individual_fragments]) >= self.number_of_coexisting_individual_fragments/2
+
     def get_attribute_of_coexisting_fragments(self, attribute):
         """Retrieve a spevific attribute from the collection of fragments
         coexisting (in frame) with self
@@ -326,46 +337,42 @@ class Fragment(object):
         """
         return [getattr(fragment,attribute) for fragment in self.coexisting_individual_fragments]
 
-    def get_fixed_identities_of_coexisting_fragments(self):
-        """Considers the fragments coexisting with self and returns their
-        identities if they are fixed (see :attr:identity_is_fixed)
-
-        Returns
-        -------
-        type
-            Description of returned object.
-
-        """
-        return [fragment.assigned_identity for fragment in self.coexisting_individual_fragments
-                if fragment.used_for_training
-                or fragment.user_generated_identity is not None
-                or (fragment.identity_corrected_solving_jumps is not None
-                and fragment.identity_corrected_solving_jumps != 0)]
-
-    def get_missing_identities_in_coexisting_fragments(self, fixed_identities):
-        """Returns the identities that have not been assigned to the set of fragments coexisting with self
-
-        Parameters
-        ----------
-        fixed_identities : list
-            List of fixed identities
-
-        Returns
-        -------
-        list
-            List of missing identities in coexisting fragments
-
-        """
-        identities = self.get_attribute_of_coexisting_fragments('assigned_identity')
-        identities = [identity for identity in identities if identity != 0]
-        if not self.identity in fixed_identities:
-            return list((set(self.possible_identities) - set(identities)) | set([self.identity]))
-        else:
-            return list(set(self.possible_identities) - set(identities))
-
-    @property
-    def number_of_images(self):
-        return len(self.images)
+    # def get_fixed_identities_of_coexisting_fragments(self):
+    #     """Considers the fragments coexisting with self and returns their
+    #     identities if they are fixed (see :attr:identity_is_fixed)
+    #
+    #     Returns
+    #     -------
+    #     type
+    #         Description of returned object.
+    #
+    #     """
+    #     return [fragment.assigned_identity for fragment in self.coexisting_individual_fragments
+    #             if fragment.used_for_training
+    #             or fragment.user_generated_identity is not None
+    #             or (fragment.identity_corrected_solving_jumps is not None
+    #             and fragment.identity_corrected_solving_jumps != 0)]
+    #
+    # def get_missing_identities_in_coexisting_fragments(self, fixed_identities):
+    #     """Returns the identities that have not been assigned to the set of fragments coexisting with self
+    #
+    #     Parameters
+    #     ----------
+    #     fixed_identities : list
+    #         List of fixed identities
+    #
+    #     Returns
+    #     -------
+    #     list
+    #         List of missing identities in coexisting fragments
+    #
+    #     """
+    #     identities = self.get_attribute_of_coexisting_fragments('assigned_identity')
+    #     identities = [identity for identity in identities if identity != 0]
+    #     if not self.identity in fixed_identities:
+    #         return list((set(self.possible_identities) - set(identities)) | set([self.identity]))
+    #     else:
+    #         return list(set(self.possible_identities) - set(identities))
 
     def set_distance_travelled(self):
         """Computes the distance travelled by the individual in the fragment.
@@ -390,7 +397,9 @@ class Fragment(object):
         return np.sqrt(np.sum(np.diff(self.centroids, axis = 0)**2, axis = 1))
 
     def compute_border_velocity(self, other):
-        """Velocity necessary to cover the space between two fragments
+        """Velocity necessary to cover the space between two fragments. Note that
+        these velocities are divided by the number of frames that separate self and other
+        outside of the function.
 
         Parameters
         ----------
@@ -441,11 +450,6 @@ class Fragment(object):
                                             if fragment.is_an_individual and self.are_overlapping(fragment)
                                             and fragment is not self]
         self.number_of_coexisting_individual_fragments = len(self.coexisting_individual_fragments)
-
-    @property
-    def has_enough_accumulated_coexisting_fragments(self):
-        return sum([fragment.used_for_training
-                    for fragment in self.coexisting_individual_fragments]) >= self.number_of_coexisting_individual_fragments/2
 
     def check_consistency_with_coexistent_individual_fragments(self, temporary_id):
         """Check that the temporary identity assigned to the fragment is

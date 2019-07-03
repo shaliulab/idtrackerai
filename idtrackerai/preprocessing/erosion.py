@@ -30,7 +30,7 @@ import os
 import sys
 import numpy as np
 import cv2
-from idtrackerai.utils.video_utils import blob_extractor
+from idtrackerai.utils.segmentation_utils import blob_extractor
 from idtrackerai.blob import Blob
 
 def get_eroded_blobs_with_pixels_in_original_blob(video, original_blob, eroded_blobs_in_frame):

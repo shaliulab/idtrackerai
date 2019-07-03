@@ -21,16 +21,25 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 
-from __future__ import absolute_import, division, print_function
-import cv2, time, glob, os, numpy as np, sys
+
+import os
+import sys
+import time
+import glob
 from tempfile import mkstemp
 from shutil import move, rmtree
+
+import numpy as np
+import cv2
 from natsort import natsorted
 from confapp import conf
+
 
 from idtrackerai.postprocessing.assign_them_all import close_trajectories_gaps
 
@@ -148,13 +157,13 @@ class Video(object):
         self._is_centroid_updated = False
 
     @property
-    def is_centroid_updater(self):
+    def is_centroid_updated(self):
         if not hasattr(self, '_is_centroid_updated'):
             return False
         else:
             return self._is_centroid_updated
 
-    @is_centroid_updater.setter
+    @is_centroid_updated.setter
     def is_centroid_updated(self, value):
         self._is_centroid_updated = value
 
@@ -375,7 +384,6 @@ class Video(object):
 
     def save(self):
         """save class"""
-        #self._git_commit = get_git_revision_hash()
         logger.info("saving video object in %s" %self.path_to_video_object)
         np.save(self.path_to_video_object, self)
 
@@ -519,10 +527,6 @@ class Video(object):
     @property
     def model_area(self):
         return self._model_area
-
-    @property
-    def gamma_fit_parameters(self):
-        return self._gamma_fit_parameters
 
     @property
     def maximum_number_of_images_in_global_fragments(self):
@@ -837,16 +841,16 @@ class Video(object):
         self.accumulation_statistics[accumulation_trial] = [getattr(self, stat_attr)
                                                             for stat_attr in self.accumulation_statistics_attributes_list]
 
-    @property
-    def final_training_folder(self):
-        return self._final_training_folder
-
-    def create_training_folder(self):
-        """Folder in which the last model is stored (after accumulation)
-        """
-        self._final_training_folder = os.path.join(self.session_folder, 'training')
-        if not os.path.isdir(self.final_training_folder):
-            os.makedirs(self.final_training_folder)
+    # @property
+    # def final_training_folder(self):
+    #     return self._final_training_folder
+    #
+    # def create_training_folder(self):
+    #     """Folder in which the last model is stored (after accumulation)
+    #     """
+    #     self._final_training_folder = os.path.join(self.session_folder, 'training')
+    #     if not os.path.isdir(self.final_training_folder):
+    #         os.makedirs(self.final_training_folder)
 
     def create_trajectories_folder(self):
         """Folder in which trajectories files are stored
@@ -992,7 +996,6 @@ class Video(object):
         self._is_centroid_updated = False
 
 
-
 def scanFolder(path):
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
@@ -1007,9 +1010,3 @@ def scanFolder(path):
         else:
             paths = natsorted([path for path in paths if filename_split in path])
             return paths
-
-
-if __name__ == "__main__":
-
-    video = Video()
-    video.video_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi'

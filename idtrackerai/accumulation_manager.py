@@ -21,17 +21,20 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import sys
 
-from __future__ import absolute_import, division, print_function
-import numpy as np
 import random
+import numpy as np
+
 from idtrackerai.assigner import assign
 from idtrackerai.list_of_fragments import load_identification_images
 from confapp import conf
-import sys
+
 
 """
 The accumulation manager module
@@ -44,7 +47,7 @@ else:
     logger = logging.getLogger("__main__.accumulation_manager")
 
 class AccumulationManager(object):
-    """ Manages the accumulation process.
+    """ Manages the process of accumulating images for training the network.
 
     Attributes
     ----------
@@ -101,7 +104,7 @@ class AccumulationManager(object):
     @property
     def continue_accumulation(self):
         """ We stop the accumulation when there are not more global fragments
-        that are acceptable for training"""
+        that are acceptable for training."""
         if not any([(global_fragment.acceptable_for_training(self.accumulation_strategy)
                     and not global_fragment.used_for_training)
                     for global_fragment in self.list_of_global_fragments.global_fragments]):
@@ -111,15 +114,14 @@ class AccumulationManager(object):
             logger.warning('There are fragments acceptable for training')
             return True
 
-
     def update_counter(self):
         """ Update iteration counter
         """
         self.counter += 1
 
     def get_new_images_and_labels(self):
-        """ get the images and labels of the new global fragments that are going
-        to be used for training, this function checks whether the images of a individual
+        """ Get the images and labels of the new global fragments that are going
+        to be used for training. This function checks whether the images of a individual
         fragment have been added before"""
         self.new_images, self.new_labels = self.list_of_fragments.get_new_images_and_labels_for_training()
         if self.new_images is not None:
@@ -185,36 +187,48 @@ class AccumulationManager(object):
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training
         """
-        #logger.debug("Updating used_images...")
+        logger.debug("Updating used_images...")
         if self.counter == 0:
             self.used_images = self.new_images
             self.used_labels = self.new_labels
         elif self.new_images is not None:
             self.used_images = self.used_images + self.new_images
             self.used_labels = np.concatenate([self.used_labels, self.new_labels], axis=0)
-        #logger.info("number of images used for training: %s %s" %(str(self.used_images.shape), str(self.used_labels.shape)))
+        logger.info("number of images used for training: %s %s" %(str(len(self.used_images)), str(len(self.used_labels))))
 
     def update_fragments_used_for_training(self):
         """ Once a global fragment has been used for training, sets the flags
         used_for_training to TRUE and acceptable_for_training to FALSE"""
         logger.debug("Setting used_for_training to TRUE and acceptable for training to FALSE for the global fragments already used...")
-        [(setattr(fragment,'_used_for_training',True),
-            setattr(fragment,'_acceptable_for_training',False),
-            fragment.set_partially_or_globally_accumulated(self.accumulation_strategy),
-            setattr(fragment, '_accumulation_step', self.counter))
-            for fragment in self.list_of_fragments.fragments
-            if fragment.acceptable_for_training == True
-            and not fragment.used_for_training]
+        for fragment in self.list_of_fragments.fragments:
+            if fragment.acceptable_for_training and not fragment.used_for_training:
+                fragment._used_for_training = True
+                fragment._acceptable_for_training = False
+                fragment.set_partially_or_globally_accumulated(self.accumulation_strategy)
+                fragment._accumulation_step = self.counter
+
+        # [(setattr(fragment,'_used_for_training',True),
+        #     setattr(fragment,'_acceptable_for_training',False),
+        #     fragment.set_partially_or_globally_accumulated(self.accumulation_strategy),
+        #     setattr(fragment, '_accumulation_step', self.counter))
+        #     for fragment in self.list_of_fragments.fragments
+        #     if fragment.acceptable_for_training == True
+        #     and not fragment.used_for_training]
 
     def assign_identities_to_fragments_used_for_training(self):
-        """ assign the identities to the global fragments used for training and their individual fragments.
+        """ Assign the identities to the global fragments used for training and their individual fragments.
         This function checks that the identities of the individual fragments in the global fragment
         are consistent with the previously assigned identities
         """
-        [(setattr(fragment, '_identity', getattr(fragment, 'temporary_id') + 1),
-        fragment.set_P1_vector_accumulated())
-            for fragment in self.list_of_fragments.fragments
-            if fragment.used_for_training]
+        for fragment in self.list_of_fragments.fragments:
+            if fragment.used_for_training:
+                fragment._identity = fragment.temporary_id + 1
+                fragment.set_P1_vector_accumulated()
+
+        # [(setattr(fragment, '_identity', getattr(fragment, 'temporary_id') + 1),
+        # fragment.set_P1_vector_accumulated())
+        #     for fragment in self.list_of_fragments.fragments
+        #     if fragment.used_for_training]
 
     def update_individual_fragments_used_for_training(self):
         """Returns the individual fragments used for training.
@@ -283,7 +297,13 @@ class AccumulationManager(object):
     def get_acceptable_global_fragments_for_training(self, candidate_individual_fragments_identifiers):
         """Assigns identities during test to individual fragments and rank them
         according to the score computed from the certainty of identification and the
-        minimum distance travelled"""
+        minimum distance travelled.
+
+        Parameters
+        ----------
+        candidate_individual_fragments_identifiers : list
+            List of fragment identifiers.
+        """
         self.accumulation_strategy = 'global'
         self.candidate_individual_fragments_identifiers = candidate_individual_fragments_identifiers
         self.reset_accumulation_variables()
@@ -317,7 +337,6 @@ class AccumulationManager(object):
         ----------
         fragment : Fragment object
             Collection of images related to the same individual
-
         """
         if fragment.identifier not in self.temporary_individual_fragments_used \
         and fragment.identifier not in self.individual_fragments_used:
@@ -331,8 +350,6 @@ class AccumulationManager(object):
         ----------
         global_fragment : GlobalFragment object
             Collection of images relative to a part of the video in which all the animals are visible.
-
-
         """
         for fragment in global_fragment.individual_fragments:
             self.reset_non_acceptable_fragment(fragment)
@@ -372,7 +389,6 @@ class AccumulationManager(object):
             P1 computed for every individual fragment in the global fragment
         index_individual_fragments_sorted_by_P1_max_to_min : nd.array
             Argsort of P1 array of each individual fragment
-
         """
         # get array of P1 values for the global fragment
         P1_array = np.asarray([fragment.P1_vector for fragment in global_fragment.individual_fragments])
@@ -401,7 +417,6 @@ class AccumulationManager(object):
         -------
         p1_below_random_flag : bool
             True if a fragment has been identified with a certainty below random
-
         """
         return np.max(P1_array[index_individual_fragment,:]) < 1. / fragment.number_of_images
 
@@ -425,7 +440,6 @@ class AccumulationManager(object):
         -------
         P1_array  : nd.array
             updated P1 array
-
         """
         fragment._temporary_id = int(temporary_id)
         P1_array[index_individual_fragment,:] = 0.
@@ -440,7 +454,6 @@ class AccumulationManager(object):
         global_fragment : GlobalFragment
             Object collecting the individual fragments relative to a part of the
             video in which all the animals are visible
-
         """
         if self.accumulation_strategy == 'global':
             # Check certainties of the individual fragments in the global fragment
@@ -607,7 +620,6 @@ def get_predictions_of_candidates_fragments(net, video, fragments):
         cumulative sum of the number of images contained in every fragment (used to rebuild the collection of images per fragment after gathering predicions and softmax vectors from the gpu)
     candidate_individual_fragments_identifiers : list
         list of fragment identifiers
-
     """
     images = []
     lengths = []
@@ -621,6 +633,6 @@ def get_predictions_of_candidates_fragments(net, video, fragments):
 
     if len(images) != 0:
         images = np.asarray(load_identification_images(video.identification_images_file_path, images))
-        assigner = assign(net, images, print_flag = False)
+        assigner = assign(net, images)
 
     return assigner._predictions, assigner._softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers

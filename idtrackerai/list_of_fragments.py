@@ -21,18 +21,21 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
-from __future__ import absolute_import, division, print_function
 import os
 import sys
+
 import h5py
 import numpy as np
 from tqdm import tqdm
+
 from idtrackerai.fragment import Fragment
-from idtrackerai.utils.py_utils import  set_attributes_of_object_to_value, append_values_to_lists
+from idtrackerai.utils.py_utils import set_attributes_of_object_to_value, append_values_to_lists
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -82,7 +85,8 @@ class ListOfFragments(object):
         :meth:`~fragment.Fragment.roll_back_to`
         """
         logger.warning("Reseting list_of_fragments")
-        [fragment.reset(roll_back_to) for fragment in self.fragments]
+        for fragment in self.fragments:
+            fragment.reset(roll_back_to)
         logger.warning("Done")
 
     def get_images_from_fragments_to_assign(self):
@@ -185,50 +189,53 @@ class ListOfFragments(object):
         fragments.sort(key=lambda x: x.certainty_P2, reverse=True)
         return fragments[0]
 
-    def get_data_plot(self):
-        """Gathers the data to plot the individual fragments' statistics of the
-        video.
-
-        Returns
-        -------
-        ndarray
-            array of shape [number_of_individual_fragments, 1]. Number of
-            images in individual fragments
-        ndarray
-            array of shape [number_of_individual_fragments, 1]. Distance
-            travelled in every individual fragment
-        int
-            Number of images in crossing fragments
-        """
-        number_of_images_in_individual_fragments = []
-        distance_travelled_individual_fragments = []
-        number_of_images_in_crossing_fragments = []
-        for fragment in self.fragments:
-            if fragment.is_an_individual:
-                number_of_images_in_individual_fragments.append(fragment.number_of_images)
-                distance_travelled_individual_fragments.append(fragment.distance_travelled)
-            elif fragment.is_a_crossing:
-                number_of_images_in_crossing_fragments.append(fragment.number_of_images)
-        return np.asarray(number_of_images_in_individual_fragments),\
-                np.asarray(distance_travelled_individual_fragments),\
-                number_of_images_in_crossing_fragments
-
-    def update_from_list_of_blobs(self, blobs_in_video, fragment_identifier_to_index):
-        """Updates an instance of ListOfFragments by considering an instance of
-        ListOfBlobs (see :class:`~list_of_blobs.ListOfBlobs`)
-
-        Parameters
-        ----------
-        blobs_in_video : list
-            list of the blob objects (see class :class:`~blob.Blob`) generated
-            from the blobs segmented in the video
-        fragment_identifier_to_index : list
-            Mapping from the collection of fragments to the list of fragment
-            identifiers
-        """
-        [setattr(self.fragments[fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.user_generated_identity)
-            for blobs_in_frame in blobs_in_video for blob in blobs_in_frame if blob.user_generated_identity is not None ]
-
+    # def get_data_plot(self):
+    #     """Gathers the data to plot the individual fragments' statistics of the
+    #     video.
+    #
+    #     Returns
+    #     -------
+    #     ndarray
+    #         array of shape [number_of_individual_fragments, 1]. Number of
+    #         images in individual fragments
+    #     ndarray
+    #         array of shape [number_of_individual_fragments, 1]. Distance
+    #         travelled in every individual fragment
+    #     int
+    #         Number of images in crossing fragments
+    #     """
+    #     number_of_images_in_individual_fragments = []
+    #     distance_travelled_individual_fragments = []
+    #     number_of_images_in_crossing_fragments = []
+    #     for fragment in self.fragments:
+    #         if fragment.is_an_individual:
+    #             number_of_images_in_individual_fragments.append(fragment.number_of_images)
+    #             distance_travelled_individual_fragments.append(fragment.distance_travelled)
+    #         elif fragment.is_a_crossing:
+    #             number_of_images_in_crossing_fragments.append(fragment.number_of_images)
+    #     return np.asarray(number_of_images_in_individual_fragments),\
+    #             np.asarray(distance_travelled_individual_fragments),\
+    #             number_of_images_in_crossing_fragments
+    #
+    # def update_from_list_of_blobs(self, blobs_in_video, fragment_identifier_to_index):
+    #     """Updates an instance of ListOfFragments by considering an instance of
+    #     ListOfBlobs (see :class:`~list_of_blobs.ListOfBlobs`)
+    #
+    #     Parameters
+    #     ----------
+    #     blobs_in_video : list
+    #         list of the blob objects (see class :class:`~blob.Blob`) generated
+    #         from the blobs segmented in the video
+    #     fragment_identifier_to_index : list
+    #         Mapping from the collection of fragments to the list of fragment
+    #         identifiers
+    #     """
+    #     for blobs_in_frame in blobs_in_video:
+    #         for blob in blobs_in_frame:
+    #             if blob.user_generated_centroid is not None:
+    #                 self.self.fragments[fragment_identifier_to_index[blob.fragment_identifier]]._user_generated_identity = blob.user_generated_identity
+        # [setattr(self.fragments[fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.user_generated_identity)
+        #     for blobs_in_frame in blobs_in_video for blob in blobs_in_frame if blob.user_generated_identity is not None ]
 
     def update_identification_images_dataset(self):
         with h5py.File(self.identification_images_file_path, 'a') as f:
@@ -274,9 +281,11 @@ class ListOfFragments(object):
         `fragments_path`
         """
         logger.info("saving list of fragments at %s" %fragments_path)
-        [setattr(fragment, 'coexisting_individual_fragments', None) for fragment in self.fragments]
+        for fragment in self.fragments:
+            self.coexisting_individual_fragments = None
         np.save(fragments_path,self)
-        [fragment.get_coexisting_individual_fragments_indices(self.fragments) for fragment in self.fragments]
+        for fragment in self.fragments:
+            fragment.get_coexisting_individual_fragments_indices(self.fragments)
 
     @classmethod
     def load(cls, path_to_load):
@@ -285,7 +294,8 @@ class ListOfFragments(object):
         """
         logger.info("loading list of fragments from %s" %path_to_load)
         list_of_fragments = np.load(path_to_load, allow_pickle=True).item()
-        [fragment.get_coexisting_individual_fragments_indices(list_of_fragments.fragments) for fragment in list_of_fragments.fragments]
+        for fragment in list_of_fragments.fragments:
+            fragment.get_coexisting_individual_fragments_indices(list_of_fragments.fragments)
         return list_of_fragments
 
     def create_light_list(self, attributes = None):
@@ -489,107 +499,107 @@ class ListOfFragments(object):
             'number_of_partially_accumulated_individual_blobs']
         return {key: getattr(self, key) for key in self.__dict__ if key in attributes_to_return}
 
-    def plot_stats(self, video):
-        """Plots the statistics obtained through :meth:`get_stats`
-
-        Parameters
-        ----------
-        video : <Video object>
-            See :class:`~video.Video`
-        """
-        from matplotlib import pyplot as plt
-        import matplotlib.lines as mlines
-        import seaborn as sns
-        plt.ion()
-        fig, ax = plt.subplots(1,1)
-        sns.set_style("ticks")
-        colors = ['grey', 'y', 'y', 'r', 'g', 'g']
-        hatches = ['', '', '/', '', '', '//']
-        labels = ['crossings', 'not in GF', 'not accumulable',
-                    'not accumulated', 'globally accumulated',
-                    'partially accumulated']
-        sizes = np.asarray([self.number_of_crossing_blobs,
-                            self.number_of_individual_blobs_not_in_a_global_fragment,
-                            self.number_of_not_accumulable_individual_blobs,
-                            self.number_of_not_accumulated_individual_blobs,
-                            self.number_of_globally_accumulated_individual_blobs,
-                            self.number_of_partially_accumulated_individual_blobs]) / self.number_of_blobs * 100
-        labels_with_percentage = [' %.2f' %size + r'$\%$ - ' + label for label, size in zip(labels, sizes)]
-        explode = (0, 0, 0, 0, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
-
-        patches_pie = ax.pie(sizes, colors = colors, explode=explode, autopct='%1.1f%%',
-                    shadow=False, startangle=90, pctdistance=1.1)
-        # patterns = ('-', '+', 'x', '\\', '*', 'o', 'O', '.')
-        for hatch, patch in zip(hatches, patches_pie[0]):
-            patch.set_hatch(hatch)
-        ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-        ax.legend(patches_pie, labels=labels_with_percentage, loc=3, title = 'Blob class percentage')
-
-        fig.savefig(os.path.join(video.preprocessing_folder,'fragments_summary_1.pdf'), transparent=True)
-
-        import matplotlib.patches as patches
-        def get_fragment_identification_type(fragment):
-            """Returns the an identifier of the process in which fragment has
-            been identified in the algorithm:
-            *0: The fragment is a crossing, hence identified only during
-            post-processing
-            *1: The (individual) fragment has been identified during the
-            fingerprint protocols cascade
-            *2: The (individual) fragment has been identified after the
-            protocols cascade
-            *3: The (individual) fragment has not been assigned
-
-            Parameters
-            ----------
-            fragment : <Fragment object>
-                an instance of the class :class:`~fragment.Fragment`
-
-            Returns
-            -------
-            int
-                identifier of the identification state of the fragment
-
-            """
-            if fragment.is_a_crossing:
-                return 0 #crossing
-            elif fragment.is_an_individual and (fragment.accumulated_globally or fragment.accumulated_partially):
-                return 1 #assigned during accumulation
-            elif fragment.identity != 0:
-                return 2 #assigned after accumulation
-            else:
-                return 3 #not assigned
-
-        labels = ['crossings', 'assigned during accumulation', 'assigned after accumulation', 'not assigned']
-        colors = ['k', 'g', 'y', 'r']
-        fig, ax = plt.subplots(1,1)
-        sns.set_style("ticks")
-
-        for fragment in self.fragments:
-            if fragment.is_an_individual:
-                blob_index = fragment.blob_hierarchy_in_starting_frame
-                type = get_fragment_identification_type(fragment)
-                (start, end) = fragment.start_end
-                ax.add_patch(
-                    patches.Rectangle(
-                        (start, blob_index - 0.5),   # (x,y)
-                        end - start,  # width
-                        1.,          # height
-                        fill=True,
-                        edgecolor=None,
-                        facecolor=colors[type],
-                        alpha = 1.
-                    )
-                )
-
-        ax.axis('tight')
-        ax.set_xlabel('Frame number')
-        ax.set_ylabel('Blob index')
-        ax.set_yticks(range(0,video.number_of_animals,4))
-        ax.set_yticklabels(range(1,video.number_of_animals+1,4))
-        ax.set_xlim([0., video.number_of_frames])
-        ax.set_ylim([-.5, .5 + video.number_of_animals - 1])
-        fig.savefig(os.path.join(video.preprocessing_folder,'fragments_summary_2.pdf'), transparent=True)
-        plt.show()
+    # def plot_stats(self, video):
+    #     """Plots the statistics obtained through :meth:`get_stats`
+    #
+    #     Parameters
+    #     ----------
+    #     video : <Video object>
+    #         See :class:`~video.Video`
+    #     """
+    #     from matplotlib import pyplot as plt
+    #     import matplotlib.lines as mlines
+    #     import seaborn as sns
+    #     plt.ion()
+    #     fig, ax = plt.subplots(1,1)
+    #     sns.set_style("ticks")
+    #     colors = ['grey', 'y', 'y', 'r', 'g', 'g']
+    #     hatches = ['', '', '/', '', '', '//']
+    #     labels = ['crossings', 'not in GF', 'not accumulable',
+    #                 'not accumulated', 'globally accumulated',
+    #                 'partially accumulated']
+    #     sizes = np.asarray([self.number_of_crossing_blobs,
+    #                         self.number_of_individual_blobs_not_in_a_global_fragment,
+    #                         self.number_of_not_accumulable_individual_blobs,
+    #                         self.number_of_not_accumulated_individual_blobs,
+    #                         self.number_of_globally_accumulated_individual_blobs,
+    #                         self.number_of_partially_accumulated_individual_blobs]) / self.number_of_blobs * 100
+    #     labels_with_percentage = [' %.2f' %size + r'$\%$ - ' + label for label, size in zip(labels, sizes)]
+    #     explode = (0, 0, 0, 0, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+    #
+    #     patches_pie = ax.pie(sizes, colors = colors, explode=explode, autopct='%1.1f%%',
+    #                 shadow=False, startangle=90, pctdistance=1.1)
+    #     # patterns = ('-', '+', 'x', '\\', '*', 'o', 'O', '.')
+    #     for hatch, patch in zip(hatches, patches_pie[0]):
+    #         patch.set_hatch(hatch)
+    #     ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    #     ax.legend(patches_pie, labels=labels_with_percentage, loc=3, title = 'Blob class percentage')
+    #
+    #     fig.savefig(os.path.join(video.preprocessing_folder,'fragments_summary_1.pdf'), transparent=True)
+    #
+    #     import matplotlib.patches as patches
+    #     def get_fragment_identification_type(fragment):
+    #         """Returns the an identifier of the process in which fragment has
+    #         been identified in the algorithm:
+    #         *0: The fragment is a crossing, hence identified only during
+    #         post-processing
+    #         *1: The (individual) fragment has been identified during the
+    #         fingerprint protocols cascade
+    #         *2: The (individual) fragment has been identified after the
+    #         protocols cascade
+    #         *3: The (individual) fragment has not been assigned
+    #
+    #         Parameters
+    #         ----------
+    #         fragment : <Fragment object>
+    #             an instance of the class :class:`~fragment.Fragment`
+    #
+    #         Returns
+    #         -------
+    #         int
+    #             identifier of the identification state of the fragment
+    #
+    #         """
+    #         if fragment.is_a_crossing:
+    #             return 0 #crossing
+    #         elif fragment.is_an_individual and (fragment.accumulated_globally or fragment.accumulated_partially):
+    #             return 1 #assigned during accumulation
+    #         elif fragment.identity != 0:
+    #             return 2 #assigned after accumulation
+    #         else:
+    #             return 3 #not assigned
+    #
+    #     labels = ['crossings', 'assigned during accumulation', 'assigned after accumulation', 'not assigned']
+    #     colors = ['k', 'g', 'y', 'r']
+    #     fig, ax = plt.subplots(1,1)
+    #     sns.set_style("ticks")
+    #
+    #     for fragment in self.fragments:
+    #         if fragment.is_an_individual:
+    #             blob_index = fragment.blob_hierarchy_in_starting_frame
+    #             type = get_fragment_identification_type(fragment)
+    #             (start, end) = fragment.start_end
+    #             ax.add_patch(
+    #                 patches.Rectangle(
+    #                     (start, blob_index - 0.5),   # (x,y)
+    #                     end - start,  # width
+    #                     1.,          # height
+    #                     fill=True,
+    #                     edgecolor=None,
+    #                     facecolor=colors[type],
+    #                     alpha = 1.
+    #                 )
+    #             )
+    #
+    #     ax.axis('tight')
+    #     ax.set_xlabel('Frame number')
+    #     ax.set_ylabel('Blob index')
+    #     ax.set_yticks(range(0,video.number_of_animals,4))
+    #     ax.set_yticklabels(range(1,video.number_of_animals+1,4))
+    #     ax.set_xlim([0., video.number_of_frames])
+    #     ax.set_ylim([-.5, .5 + video.number_of_animals - 1])
+    #     fig.savefig(os.path.join(video.preprocessing_folder,'fragments_summary_2.pdf'), transparent=True)
+    #     plt.show()
 
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):

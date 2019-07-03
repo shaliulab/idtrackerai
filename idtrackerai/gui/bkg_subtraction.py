@@ -37,7 +37,7 @@ from kivy.uix.textinput import TextInput
 from kivy.graphics import *
 from kivy.graphics.transformation import Matrix
 from idtrackerai.gui.kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
-from idtrackerai.utils.video_utils import cumpute_background
+from idtrackerai.utils.segmentation_utils import cumpute_background
 from idtrackerai.gui.visualise_video import VisualiseVideo
 global CHOSEN_VIDEO
 class BkgSubtraction(BoxLayout):

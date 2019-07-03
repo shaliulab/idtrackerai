@@ -41,7 +41,7 @@ from scipy import ndimage
 from confapp import conf
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import flatten, set_mkl_to_single_thread, set_mkl_to_multi_thread
-from idtrackerai.utils.video_utils import segment_frame, blob_extractor
+from idtrackerai.utils.segmentation_utils import segment_frame, blob_extractor
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger

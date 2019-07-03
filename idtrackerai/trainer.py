@@ -21,13 +21,18 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import os
+import sys
 
-from __future__ import absolute_import, division, print_function
-import os, sys, matplotlib.pyplot as plt, numpy as np
+import matplotlib.pyplot as plt
+import numpy as np
 from confapp import conf
+
 from idtrackerai.network.identification_model.get_data import DataSet, split_data_train_and_validation
 from idtrackerai.network.identification_model.epoch_runner import EpochRunner
 from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
@@ -40,7 +45,6 @@ else:
     import logging
     logger = logging.getLogger("__main__.trainer")
 
-
 def train(video,
           fragments,
           net,
@@ -52,7 +56,6 @@ def train(video,
           print_flag,
           plot_flag,
           global_step=0,
-          identity_transfer=False,
           accumulation_manager=None,
           batch_size=conf.BATCH_SIZE_IDCNN):
     """Short summary.
@@ -110,7 +113,7 @@ def train(video,
     """
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
-    #logger.info("Training...")
+    logger.info("Training...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'training')
     if plot_flag:
@@ -166,7 +169,7 @@ def train(video,
         global_step += trainer.epochs_completed
         #logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss[global_step0:]))
         # update used_for_training flag to True for fragments used
-        #logger.info("Accumulation step completed. Updating global fragments used for training")
+        logger.info("Accumulation step completed. Updating global fragments used for training")
         if accumulation_manager is not None:
             accumulation_manager.update_fragments_used_for_training()
         # plot if asked

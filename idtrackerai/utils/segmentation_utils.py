@@ -21,17 +21,20 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import sys
 
-from __future__ import absolute_import, division, print_function
 import cv2
-from confapp import conf
-from joblib import Parallel, delayed
 import numpy as np
 import multiprocessing
-from idtrackerai.utils.py_utils import *
+from joblib import Parallel, delayed
+from confapp import conf
+
+# from idtrackerai.utils.py_utils import *
 from idtrackerai.utils.py_utils import set_mkl_to_single_thread, set_mkl_to_multi_thread
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
@@ -39,7 +42,7 @@ if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     logger = Logger
 else:
     import logging
-    logger = logging.getLogger("__main__.video_utils")
+    logger = logging.getLogger("__main__.segmentation_utils")
 
 
 """
@@ -183,41 +186,6 @@ def cumpute_background(video):
     bkg = np.sum(np.asarray(partialBkg),axis=0)
     bkg = np.true_divide(bkg, totNumFrame)
     return bkg.astype('float32')
-
-
-def check_background_substraction(video, old_video, use_previous_background):
-    """Checks whether background substraction must be used and in that case it
-    checks whether a previous computed background can be used. Otherwise it
-    computes the background model from scracth or it returns None if background
-    substraction must not be used.
-
-    Parameters
-    ----------
-    video : <Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
-    old_video : <Video object>
-        Same object as video but with the information of a previous tracking session
-    use_previous_background : bool
-        Indicates whether the background computed in a previous session must be used or not
-
-    Returns
-    -------
-    bkg : nd.array
-        Array with the model of the background.
-
-    See Also
-    --------
-    cumpute_background
-    """
-    bkg = None
-    if video.subtract_bkg:
-        if use_previous_background and old_video.bkg is not None:
-            bkg = old_video.bkg
-        else:
-            bkg = cumpute_background(video)
-
-    return bkg
-
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the

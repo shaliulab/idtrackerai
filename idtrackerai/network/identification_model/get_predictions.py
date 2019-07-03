@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 from confapp import conf
@@ -51,10 +51,6 @@ class GetPrediction(object):
     predictions : ndarray
         Array of shape [number of images, 1] with the predictions computed as the argmax
         of the softmax vector of every image (in dense format).
-    predictions_KNN : ndarray
-        Array of shape [number of images, 1] with the predictions for every image computed
-        after a clustering of the second to last fully connected layer with KNN algorithm
-        (in dense format)
     _fc_vectors : ndarray
         Array of shape [number of images, number of neurons in second to last fully connected layer]
     batch_size : int
@@ -113,52 +109,3 @@ class GetPrediction(object):
             self._predictions.append(predictions_batch)
         self._softmax_probs = np.concatenate(self._softmax_probs, axis = 0)
         self._predictions = np.concatenate(self._predictions, axis = 0)
-
-    def get_predictions_fully_connected_embedding(self, batch_operation, number_of_animals):
-        """Not used in the current version of the algorithm. Only for analysis.
-        """
-        self._index_in_epoch = 0
-        while self._index_in_epoch < self.data_set._num_images:
-            fc_vectors = batch_operation(self.next_batch(self.batch_size))
-            self._fc_vectors.append(fc_vectors)
-        self._fc_vectors = np.concatenate(self._fc_vectors, axis = 0)
-        _, self._predictions_KNN = kMeansCluster(self._fc_vectors, number_of_animals, conf.KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN)
-
-def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 0.0):
-    """Not used in the current version of the algorithm. Only for analysis.
-    """
-    vectors = tf.constant(vector_values)
-    centroids = tf.Variable(tf.slice(tf.random_shuffle(vectors),
-                                   [0,0],[num_clusters,-1]))
-    old_centroids = tf.Variable(tf.zeros([num_clusters,vector_values.shape[1]]))
-    centroid_distance = tf.Variable(tf.zeros([num_clusters,vector_values.shape[1]]))
-    expanded_vectors = tf.expand_dims(vectors, 0)
-    expanded_centroids = tf.expand_dims(centroids, 1)
-    distances = tf.reduce_sum(
-        tf.square(tf.subtract(expanded_vectors, expanded_centroids)), 2)
-    assignments = tf.argmin(distances, 0)
-    means = tf.stack([
-        tf.reduce_mean(
-            tf.boolean_mask(
-                vectors, tf.equal(assignments, c)
-            ), 0)
-        for c in range(num_clusters)])
-    save_old_centroids = tf.assign(old_centroids, centroids)
-    update_centroids = tf.assign(centroids, means)
-    init_op = tf.initialize_all_variables()
-    performance = tf.assign(centroid_distance, tf.subtract(centroids, old_centroids))
-    check_stop = tf.reduce_sum(tf.abs(performance))
-
-    with tf.Session() as sess:
-        sess.run(init_op)
-        for step in range(max_num_steps):
-            logger.info("KMeanClustering: Running step %s" %str(step))
-            sess.run(save_old_centroids)
-            _, centroid_values, assignment_values = sess.run([update_centroids,
-                                                        centroids,
-                                                        assignments])
-            sess.run(check_stop)
-            current_stop_coeficient = check_stop.eval()
-            if current_stop_coeficient <= stop_coeficient:
-                break
-        return centroid_values, assignment_values
