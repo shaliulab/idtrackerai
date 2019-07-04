@@ -44,3 +44,5 @@ idtrackerai\.egg-info/
 \.idea/
 
 docs/build/
+
+local_settings\.py

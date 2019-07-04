@@ -82,18 +82,28 @@ def find_the_gap_interval(blobs_in_video, possible_identities, gap_start, list_o
     # logger.debug('Finished finding gap interval')
     return (gap_start, gap_end)
 
+# def get_blob_by_identity(blobs_in_frame, identity):
+#     for blob in blobs_in_frame:
+#         if blob.final_identity == identity:
+#             return [blob]
+#         elif (hasattr(blob, 'identity_corrected_closing_gaps')
+#             and isinstance(blob.identity_corrected_closing_gaps, list) and
+#             identity in blob.identity_corrected_closing_gaps):
+#             return [blob]
+#         elif (hasattr(blob, 'identity_corrected_closing_gaps')
+#             and (isinstance(blob.identity_corrected_closing_gaps, int) or isinstance(blob.identity_corrected_closing_gaps, np.integer)) and
+#             identity == blob.identity_corrected_closing_gaps):
+#             return [blob]
+#     return None
+
 def get_blob_by_identity(blobs_in_frame, identity):
     for blob in blobs_in_frame:
-        if blob.final_identity == identity:
+        if identity in blob.final_identities:
             return [blob]
-        elif (hasattr(blob, 'identity_corrected_closing_gaps')
-            and isinstance(blob.identity_corrected_closing_gaps, list) and
-            identity in blob.identity_corrected_closing_gaps):
-            return [blob]
-        elif (hasattr(blob, 'identity_corrected_closing_gaps')
-            and (isinstance(blob.identity_corrected_closing_gaps, int) or isinstance(blob.identity_corrected_closing_gaps, np.integer)) and
-            identity == blob.identity_corrected_closing_gaps):
-            return [blob]
+        # if (isinstance(blob.final_identity, int) or isinstance(blob.final_identity, np.integer)) and blob.final_identity == identity:
+        #     return [blob]
+        # elif isinstance(blob.final_identity, list) and identity in blob.final_identity:
+        #     return [blob]
     return None
 
 def get_candidate_blobs_by_overlapping(blob_to_test, eroded_blobs_in_frame):
@@ -106,18 +116,17 @@ def get_candidate_blobs_by_overlapping(blob_to_test, eroded_blobs_in_frame):
 def get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame):
     identities_in_frame = []
     for blob in blobs_in_frame:
-        if isinstance(blob.final_identity, int) or isinstance(blob.final_identity, np.integer):
-            identities_in_frame.append(blob.final_identity)
-        elif isinstance(blob.final_identity, list):
-            identities_in_frame.extend(blob.final_identity)
+        # if isinstance(blob.final_identity, int) or isinstance(blob.final_identity, np.integer):
+        #     identities_in_frame.append(blob.final_identity)
+        # elif isinstance(blob.final_identity, list):
+        #     identities_in_frame.extend(blob.final_identity)
+        identities_in_frame.extend(blob.final_identities)
     return (set(possible_identities) - set(identities_in_frame)) - set(occluded_identities_in_frame)
 
 def get_candidate_centroid(individual_gap_interval, previous_blob_to_the_gap, next_blob_to_the_gap, identity, border = '', inner_frame_number = None):
     # logger.debug('Getting candidate centroids')
     blobs_for_interpolation = [previous_blob_to_the_gap, next_blob_to_the_gap]
-    centroids_to_interpolate = [blob_for_interpolation.centroid
-                                if blob_for_interpolation.is_an_individual else
-                                blob_for_interpolation.interpolated_centroids[blob_for_interpolation.identity_corrected_closing_gaps.index(identity)]
+    centroids_to_interpolate = [blob_for_interpolation.final_centroids[blob_for_interpolation.final_identities.index(identity)]
                                 for blob_for_interpolation in blobs_for_interpolation]
     centroids_to_interpolate = np.asarray(list(zip(*centroids_to_interpolate)))
     argsort_x = np.argsort(centroids_to_interpolate[0])
@@ -469,7 +478,7 @@ def reset_blobs_in_video_before_erosion_iteration(blobs_in_video):
         for blob in blobs_in_frame:
             if blob.is_a_crossing:
                 blob._identity = None
-            elif blob.is_an_individual and isinstance(blob.identity_corrected_closing_gaps, list):
+            elif blob.is_an_individual and isinstance(blob.final_identity, list):
                 blob._identity_corrected_closing_gaps = None
 
 
