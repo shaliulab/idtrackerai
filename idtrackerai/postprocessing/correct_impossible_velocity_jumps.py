@@ -21,11 +21,11 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
-from __future__ import absolute_import, print_function, division
 import numpy as np
 from tqdm import tqdm
 
@@ -242,6 +242,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
 
     fragment._identity_corrected_solving_jumps = candidate_id
 
+
 def compute_velocities_consecutive_fragments(neighbour_fragment_past,
                                                 fragment,
                                                 neighbour_fragment_future):
@@ -277,6 +278,7 @@ def compute_velocities_consecutive_fragments(neighbour_fragment_past,
     if neighbour_fragment_future is not None:
         velocities[1] = neighbour_fragment_future.compute_border_velocity(fragment)
     return velocities
+
 
 def get_fragment_with_same_identity(video, list_of_fragments, fragment, direction):
     """Get the `neighbour_fragment` with the same identity in a given `direction`
@@ -321,6 +323,7 @@ def get_fragment_with_same_identity(video, list_of_fragments, fragment, directio
         frame_number += -1 if direction == 'to_the_past' else 1
 
     return neighbour_fragment, number_of_frames_in_direction
+
 
 def compute_neighbour_fragments_and_velocities(video, list_of_fragments, fragment):
     """Computes the fragments with the same identities to the past and to the
@@ -372,6 +375,7 @@ def compute_neighbour_fragments_and_velocities(video, list_of_fragments, fragmen
     velocities_between_fragments = np.asarray(velocities) / np.asarray([number_of_frames_in_past, number_of_frames_in_future])
 
     return neighbour_fragment_past, neighbour_fragment_future, velocities_between_fragments
+
 
 def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = None):
     """Checks whether the velocity needed to join two consecutive fragments with

@@ -158,10 +158,7 @@ class Video(object):
 
     @property
     def is_centroid_updated(self):
-        if not hasattr(self, '_is_centroid_updated'):
-            return False
-        else:
-            return self._is_centroid_updated
+        return self._is_centroid_updated
 
     @is_centroid_updated.setter
     def is_centroid_updated(self, value):

@@ -21,14 +21,17 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import sys
 
-from __future__ import absolute_import, print_function, division
-import os, sys, cv2, numpy as np
+import cv2
+import numpy as np
 from confapp import conf
-from idtrackerai.list_of_blobs import ListOfBlobs
+
 from idtrackerai.network.identification_model.get_data import duplicate_PCA_images
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
@@ -46,7 +49,7 @@ class CrossingDataset(object):
         self.scope = scope
         self.dataset_image_size = dataset_image_size
         self.blobs = blobs_list
-        self.there_are_crossings = True 
+        self.there_are_crossings = True
         self.get_video_height_and_width_according_to_resolution_reduction()
         if (scope == 'training' or scope == 'validation'):
             self.get_list_of_crossing_blobs_for_training(crossings, image_size)
@@ -210,22 +213,3 @@ class CrossingDataset(object):
         start = int(num_examples * sampling_ratio_start)
         end = int(num_examples * sampling_ratio_end)
         return data[start : end]
-
-if __name__ == "__main__":
-    from idtrackerai.utils.GUI_utils import selectDir
-    ''' select blobs list tracked to compare against ground truth '''
-    session_path = selectDir('./') #select path to video
-    video_path = os.path.join(session_path,'video_object.npy')
-    logger.info("loading video object...")
-    video = np.load(video_path, allow_pickle=True).item(0)
-    blobs_path = video.blobs_path
-    global_fragments_path = video.global_fragments_path
-    list_of_blobs = ListOfBlobs.load(video, blobs_path)
-    blobs = list_of_blobs.blobs_in_video
-
-    training_set = CrossingDataset(blobs, video)
-    training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .5, scope = 'training')
-    np.save(video_folder + '_training_set.npy', training_set)
-    validation_set = CrossingDataset(blobs, video)
-    validation_set.get_data(sampling_ratio_start = .5, sampling_ratio_end = 1., scope = 'validation')
-    np.save(video_folder + '_validation_set.npy', validation_set)

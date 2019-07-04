@@ -21,12 +21,15 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from __future__ import absolute_import, division, print_function
-import sys, numpy as np, psutil
+import sys
+import psutil
+
+import numpy as np
 from confapp import conf
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
@@ -84,22 +87,22 @@ class GetPredictionCrossigns(object):
             predictions = self.predict(test_images)
         return predictions
 
-    def get_predictions_from_images(self, images):
-        image_size_bytes = np.prod(images.shape[1:])*4
-        number_of_images_to_be_fitted_in_RAM = len(images)
-        num_images_that_can_fit_in_RAM = int(psutil.virtual_memory().available*.9/image_size_bytes)
-        if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
-            logger.debug("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
-            number_of_predictions_retrieved = 0
-            predictions = []
-            i = 0
-            while number_of_predictions_retrieved < number_of_images_to_be_fitted_in_RAM:
-                images_batch = images[i*num_images_that_can_fit_in_RAM : (i+1)*num_images_that_can_fit_in_RAM]
-                predictions.extend(self.predict(images_batch))
-                number_of_predictions_retrieved = len(predictions)
-                i += 1
-        else:
-            logger.debug("There is enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
-            logger.info("getting predictions...")
-            predictions = self.predict(images)
-        return predictions
+    # def get_predictions_from_images(self, images):
+    #     image_size_bytes = np.prod(images.shape[1:])*4
+    #     number_of_images_to_be_fitted_in_RAM = len(images)
+    #     num_images_that_can_fit_in_RAM = int(psutil.virtual_memory().available*.9/image_size_bytes)
+    #     if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
+    #         logger.debug("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+    #         number_of_predictions_retrieved = 0
+    #         predictions = []
+    #         i = 0
+    #         while number_of_predictions_retrieved < number_of_images_to_be_fitted_in_RAM:
+    #             images_batch = images[i*num_images_that_can_fit_in_RAM : (i+1)*num_images_that_can_fit_in_RAM]
+    #             predictions.extend(self.predict(images_batch))
+    #             number_of_predictions_retrieved = len(predictions)
+    #             i += 1
+    #     else:
+    #         logger.debug("There is enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+    #         logger.info("getting predictions...")
+    #         predictions = self.predict(images)
+    #     return predictions

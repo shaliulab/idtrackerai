@@ -21,15 +21,17 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
-from __future__ import absolute_import, division, print_function
 import os
 import sys
+
 import tensorflow as tf
 import numpy as np
+
 from idtrackerai.network.cnn_architectures import cnn_model_0, \
                                                     cnn_model_1, \
                                                     cnn_model_2, \
@@ -58,12 +60,14 @@ CNN_MODELS_DICT = {0: cnn_model_0,
                     10: cnn_model_10,
                     11: cnn_model_11}
 
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
 else:
     import logging
     logger = logging.getLogger("__main__.id_CNN")
+
 
 class ConvNetwork():
     """Manages the main Tensorflow graph for the convolutional network that
@@ -321,17 +325,17 @@ class ConvNetwork():
             [v for v in tf.global_variables()
              if 'soft' in v.name or 'full' in v.name]))
 
-    def reinitialize_conv_layers(self):
-        """Reinizializes the weights in the conv layers indicated in the list
-        conv_layers_list. The list can include the names 'conv1', 'conv2' or
-        'conv3'
-        """
-        if self.params.kt_conv_layers_to_discard is not None:
-            logger.debug('Reinitializing conv layers')
-            logger.debug(self.params.kt_conv_layers_to_discard)
-            self.session.run(tf.variables_initializer(
-                [v for v in tf.global_variables()
-                 if v.name in self.params.kt_conv_layers_to_discard]))
+    # def reinitialize_conv_layers(self):
+    #     """Reinizializes the weights in the conv layers indicated in the list
+    #     conv_layers_list. The list can include the names 'conv1', 'conv2' or
+    #     'conv3'
+    #     """
+    #     if self.params.kt_conv_layers_to_discard is not None:
+    #         logger.debug('Reinitializing conv layers')
+    #         logger.debug(self.params.kt_conv_layers_to_discard)
+    #         self.session.run(tf.variables_initializer(
+    #             [v for v in tf.global_variables()
+    #              if v.name in self.params.kt_conv_layers_to_discard]))
 
     @staticmethod
     def check_checkpoint_path(checkpoint_path, restore_folder):
@@ -444,12 +448,12 @@ class ConvNetwork():
         feed_dict = {self.x_pl: batch}
         return self.session.run([self.softmax_probs,self.predictions], feed_dict = feed_dict)
 
-    def get_fully_connected_vectors(self,batch):
-        """Runs in the tensorflow session :attr:`session` the :attr:`fc_vector`
-        operation
-        """
-        feed_dict = {self.x_pl: batch}
-        return self.session.run(self.fc_vector, feed_dict = feed_dict)
+    # def get_fully_connected_vectors(self,batch):
+    #     """Runs in the tensorflow session :attr:`session` the :attr:`fc_vector`
+    #     operation
+    #     """
+    #     feed_dict = {self.x_pl: batch}
+    #     return self.session.run(self.fc_vector, feed_dict = feed_dict)
 
     def write_summaries(self,epoch_i,feed_dict_train, feed_dict_val):
         """Writes the summaries using the :attr:`summary_str_training` and

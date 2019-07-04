@@ -45,7 +45,7 @@ from idtrackerai.utils.segmentation_utils import blob_extractor
 from scipy.stats import mode
 from confapp import conf
 
-from .preprocessing_preview_api import PreprocessingPreviewAPI
+from idtrackerai.preprocessing_preview_api import PreprocessingPreviewAPI
 
 class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
 

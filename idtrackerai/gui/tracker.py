@@ -41,7 +41,7 @@ from idtrackerai.gui.kivy_utils import HelpButton, CustomLabel
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt, os, matplotlib
 
-from .tracker_api import TrackerAPI
+from idtrackerai.tracker_api import TrackerAPI
 
 class Tracker(TrackerAPI, BoxLayout):
 
@@ -222,7 +222,7 @@ class Tracker(TrackerAPI, BoxLayout):
 
 
 
-    
+
     def accumulation_loop(self):
         if hasattr(self, 'one_shot_accumulation_popup'):
             delattr(self, 'one_shot_accumulation_popup')
@@ -231,7 +231,7 @@ class Tracker(TrackerAPI, BoxLayout):
         self.one_shot_accumulation_popup.open()
         Clock.schedule_interval(self.accumulate, 2)
 
-    
+
 
     def accumulation_parachute_init(self, iteration_number):
         super().accumulation_parachute_init(
@@ -245,7 +245,7 @@ class Tracker(TrackerAPI, BoxLayout):
         super().save_after_first_accumulation()
 
 
-    
+
 
 
 
@@ -496,7 +496,7 @@ class Tracker(TrackerAPI, BoxLayout):
     #         self.chosen_video.video._kt_conv_layers_to_discard = self.accumulation_network_params._kt_conv_layers_to_discard
 
 
-    
+
     def create_network_params_labels(self):
         self.cnn_model_label = CustomLabel(font_size = 14, text = "CNN model: ", halign = "left")
         self.learning_rate_label = CustomLabel(font_size = 14, text = "learning_rate: ", halign = "left")

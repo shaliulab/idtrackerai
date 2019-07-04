@@ -33,7 +33,6 @@ from tqdm import tqdm
 
 from idtrackerai.blob import Blob
 from idtrackerai.preprocessing.model_area import ModelArea
-from idtrackerai.preprocessing.erosion import get_eroded_blobs, get_new_blobs_in_frame_after_erosion
 from idtrackerai.utils.py_utils import interpolate_nans
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
@@ -374,28 +373,6 @@ class ListOfBlobs(object):
                 fragment = fragments[fragment_identifier_to_index[blob.fragment_identifier]]
                 [setattr(blob, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes if hasattr(fragment, attribute)]
 
-    # def compute_nose_and_head_coordinates(self):
-    #     """Computes nose and head coordinate for all the blobs segmented from the
-    #     video
-    #     """
-    #     for blobs_in_frame in self.blobs_in_video:
-    #         for blob in blobs_in_frame:
-    #             blob.get_nose_and_head_coordinates()
-    #
-    # def erode(self, video):
-    #     """Erodes all the blobs in the video
-    #
-    #     Parameters
-    #     ----------
-    #     video : <Video object>
-    #         see :class:`~video.Video`
-    #     """
-    #
-    #     for frame_number, blobs_in_frame in enumerate(tqdm(self.blobs_in_video, desc = 'eroding blobs')):
-    #         eroded_blobs_in_frame = get_eroded_blobs(video, blobs_in_frame)
-    #         if len(eroded_blobs_in_frame) <= video.number_of_animals:
-    #             self.blobs_in_video[frame_number] = get_new_blobs_in_frame_after_erosion(video, blobs_in_frame, eroded_blobs_in_frame)
-
     def next_frame_to_validate(self, current_frame, direction):
         """Returns the next frame to be validated given the current frame an
         the direction to iterate
@@ -503,7 +480,7 @@ class ListOfBlobs(object):
                 nearest_blob.add_centroid(video, tuple(user_generated_centroids[i,:]), id)
 
 
-    def reset_user_generated_identities_and_centroids(self, start_frame, end_frame, id=None):
+    def reset_user_generated_identities_and_centroids(self, video, start_frame, end_frame, id=None):
         """
         Resets the identities and centroids generetad by the user to the ones assigned by the software
 
@@ -548,6 +525,9 @@ class ListOfBlobs(object):
                                 blob.user_generated_identity.pop(index)
                             if blob.user_generated_centroid is not None:
                                 blob.user_generated_centroid.pop(index)
+        video._is_centroid_updated = any([blob.user_generated_centroid is not None
+                                          for blobs_in_frame in self.blobs_in_video
+                                          for blob in blobs_in_frame])
 
 
 def check_tracking(blobs_in_frame):

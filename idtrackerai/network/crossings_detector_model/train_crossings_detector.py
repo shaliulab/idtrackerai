@@ -21,31 +21,32 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from __future__ import absolute_import, division, print_function
-import itertools
-import pickle
 import os
 import sys
+import psutil
+
+import itertools
+import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-import psutil
-from idtrackerai.network.cnn_architectures import cnn_model_crossing_detector
-from idtrackerai.network.crossings_detector_model.network_params_crossings import NetworkParams_crossings
-from idtrackerai.network.crossings_detector_model.crossings_detector_model import ConvNetwork_crossings
+
 from idtrackerai.network.crossings_detector_model.stop_training_criteria_crossings import Stop_Training
 from idtrackerai.network.crossings_detector_model.store_accuracy_and_loss_crossings import Store_Accuracy_and_Loss
 from idtrackerai.network.crossings_detector_model.epoch_runner_crossings import EpochRunner
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
 else:
     import logging
     logger = logging.getLogger("__main__.train_crossing_detector")
+
 
 class TrainDeepCrossing(object):
     def __init__(self, net, training_dataset, validation_dataset,

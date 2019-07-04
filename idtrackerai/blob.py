@@ -33,7 +33,6 @@ import h5py
 import numpy as np
 import copy
 from sklearn.decomposition import PCA
-from idtrackerai.preprocessing.fishcontour import FishContour
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -677,21 +676,6 @@ class Blob(object):
 
         return image_for_identification_standarised, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int')), image_for_identification
 
-    def get_nose_and_head_coordinates(self):
-        """Only for zebrafish: Compute the nose coordinate according to [1]_
-
-        .. [1] Wang, Shuo Hong, et al. "Automated planar tracking the waving
-            bodies of multiple zebrafish swimming in shallow water."
-            PloS one 11.4 (2016): e0154714.
-        """
-        if self.is_an_individual:
-            contour_cnt = FishContour.fromcv2contour(self.contour)
-            noseFull, _, head_centroid_full = contour_cnt.find_nose_and_orientation()
-            self._nose_coordinates = tuple(noseFull.astype('float32'))
-            self._head_coordinates = tuple(head_centroid_full.astype('float32'))
-        else:
-            self._nose_coordinates = None
-            self._head_coordinates = None
 
     """ The following methods are only to be used for the validation and modification
     of trajectories with the pythonvideoannotator after the video is tracked """

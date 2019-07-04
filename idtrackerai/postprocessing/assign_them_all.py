@@ -21,21 +21,28 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import os
+import sys
 
-from __future__ import absolute_import, print_function, division
-import collections, numpy as np, cv2, sys, os
+import collections
+import numpy as np
+import cv2
 from tqdm import tqdm
-import h5py
 from scipy.spatial.distance import cdist
-from idtrackerai.utils.segmentation_utils import blob_extractor
+from confapp import conf
+
+from idtrackerai.preprocessing.erosion import compute_erosion_disk, \
+                                            erode, \
+                                            get_eroded_blobs
 from idtrackerai.list_of_fragments import ListOfFragments
-from idtrackerai.blob import Blob
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.postprocessing.compute_velocity_model import compute_model_velocity
-from confapp import conf
+
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -44,83 +51,7 @@ else:
     import logging
     logger = logging.getLogger("__main__.assign_them_all")
 
-''' erosion '''
-def compute_erosion_disk(video, blobs_in_video):
-    return np.ceil(np.nanmedian([compute_min_frame_distance_transform(video, blobs_in_frame)
-                    for blobs_in_frame in blobs_in_video if len(blobs_in_frame) > 0])).astype(np.int)
-
-def compute_min_frame_distance_transform(video, blobs_in_frame):
-    max_distance_transform = [compute_max_distance_transform(video, blob)
-                    for blob in blobs_in_frame
-                    if blob.is_an_individual]
-    return np.min(max_distance_transform) if len(max_distance_transform) > 0 else np.nan
-
-def generate_temp_image(video, pixels, bounding_box_in_frame_coordinates):
-    pxs = np.array(np.unravel_index(pixels,(video.height, video.width))).T
-    pxs = np.array([pxs[:, 0] - bounding_box_in_frame_coordinates[0][1],
-                    pxs[:, 1] - bounding_box_in_frame_coordinates[0][0]])
-    temp_image = np.zeros((bounding_box_in_frame_coordinates[1][1] -
-                            bounding_box_in_frame_coordinates[0][1],
-                            bounding_box_in_frame_coordinates[1][0] -
-                            bounding_box_in_frame_coordinates[0][0])).astype('uint8')
-    temp_image[pxs[0,:], pxs[1,:]] = 255
-    return temp_image
-
-def compute_max_distance_transform(video, blob):
-    temp_image = generate_temp_image(video, blob.pixels, blob.bounding_box_in_frame_coordinates)
-    return np.max(cv2.distanceTransform(temp_image, cv2.DIST_L2, cv2.DIST_MASK_PRECISE))
-
-def erode(image, kernel_size):
-    kernel = np.ones(kernel_size, np.uint8)
-    return cv2.erode(image,kernel,iterations = 1)
-
-def get_eroded_blobs(video, blobs_in_frame, frame_number):
-    episode = video.in_which_episode(frame_number)
-    pixels_path = None
-    if conf.SAVE_PIXELS == 'DISK':
-        pixels_path = os.path.join(video._segmentation_data_folder,
-                                   'episode_pixels_{}.hdf5'.format(str(episode)))
-
-    # logger.debug('Getting eroded blobs')
-    segmented_frame = np.zeros((video.height, video.width)).astype('uint8')
-
-    for blob in blobs_in_frame:
-        pixels = blob.eroded_pixels if (hasattr(blob, 'has_eroded_pixels') and blob.has_eroded_pixels) else blob.pixels
-        pxs = np.array(np.unravel_index(pixels,(video.height, video.width))).T
-        segmented_frame[pxs[:,0], pxs[:,1]] = 255
-
-    segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
-    boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(segmented_eroded_frame, segmented_eroded_frame, 0, np.inf)
-    # logger.debug('Finished getting eroded blobse')
-    eroded_blobs_in_frame = []
-    for i, (centroid, contour, pixels, bounding_box) in enumerate(zip(centroids, contours, pixels_all, boundingBoxes)):
-        if conf.SAVE_PIXELS == 'DISK':
-            with h5py.File(pixels_path, 'a') as f:
-                f.create_dataset(str(frame_number) + '-' + str(i) + '-eroded',
-                                  data=pixels)
-            pixels=None
-
-        eroded_blobs_in_frame.append(Blob(centroid,
-                                          contour,
-                                          None,
-                                          bounding_box,
-                                          bounding_box_image=None,
-                                          number_of_animals=video.number_of_animals,
-                                          frame_number=frame_number,
-                                          pixels=pixels,
-                                          pixels_path=pixels_path,
-                                          in_frame_index=i,
-                                          video_height=video.height,
-                                          video_width=video.width,
-                                          video_path=video.video_path,
-                                          pixels_are_eroded=True))
-
-    return eroded_blobs_in_frame
-    # return [Blob(centroid, contour, None, bounding_box, pixels = pixels)
-    #             for centroid, contour, pixels, bounding_box in zip(centroids, contours, pixels_all, boundingBoxes)]
-
 ''' assign them all '''
-
 def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
     [(setattr(blob, '_is_an_individual', False),
         setattr(blob, '_is_a_crossing', True),
@@ -130,13 +61,6 @@ def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
         for blob in blobs_in_frame
         if blob.final_identity == 0]
 
-def flatten(l):
-    for el in l:
-        if isinstance(el, collections.Iterable) and not isinstance(el, basestring):
-            for sub in flatten(el):
-                yield sub
-        else:
-            yield el
 
 def find_the_gap_interval(blobs_in_video, possible_identities, gap_start, list_of_occluded_identities):
     # logger.debug('Finding gap interval')
@@ -280,27 +204,9 @@ def get_previous_and_next_blob_wrt_gap(blobs_in_video, possible_identities, iden
     # logger.debug('Finished finding previons and next blobs to the gap of this identity')
     return individual_gap_interval, previous_blob_to_the_gap, next_blob_to_the_gap
 
+
 def get_closest_contour_point_to(contour, candidate_centroid):
     return tuple(contour[np.argmin(cdist([candidate_centroid], np.squeeze(contour)))][0])
-
-def get_internal_point_to_blob(pixels):
-    return tuple(contour[np.argmin(cdist([candidate_centroid], np.squeeze(contour)))][0])
-
-def plot_blob_and_centroid(video, blob, centroid):
-    segmented_frame = np.zeros((video.height, video.width)).astype('uint8')
-
-    pixels = blob.eroded_pixels if blob.has_eroded_pixels else blob.pixels
-    pxs = np.array(np.unravel_index(pixels,(video.height, video.width))).T
-    segmented_frame[pxs[:,0], pxs[:,1]] = 255
-
-    segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
-    segmented_eroded_frame = cv2.cvtColor(segmented_eroded_frame, cv2.COLOR_GRAY2RGB)
-    segmented_frame = cv2.cvtColor(segmented_frame, cv2.COLOR_GRAY2RGB)
-    cv2.circle(segmented_eroded_frame, centroid, 1, (0, 255, 0), -1)
-    cv2.circle(segmented_frame, centroid, 1, (0, 255, 0), -1)
-    cv2.imshow("segmented_frame %i " %blob.frame_number, segmented_frame)
-    cv2.imshow("segmented_eroded_frame %i " %blob.frame_number, segmented_eroded_frame)
-    cv2.waitKey()
 
 
 def get_nearest_eroded_blob_to_candidate_centroid(eroded_blobs, candidate_centroid, identity=None, inner_frame_number=None):
@@ -313,8 +219,10 @@ def nearest_candidate_blob_is_near_enough(video, candidate_blob, candidate_centr
     distances = np.asarray([np.sqrt(candidate_blob.squared_distance_to(point)) for point in points])
     return np.any(distances < video.velocity_threshold)
 
+
 def eroded_blob_overlaps_with_blob_in_border_frame(eroded_blob, blob_in_border_frame):
     return eroded_blob.overlaps_with(blob_in_border_frame)
+
 
 def centroid_is_inside_of_any_eroded_blob(candidate_eroded_blobs, candidate_centroid):
     # logger.debug('Checking whether the centroids is inside of a blob')
@@ -322,6 +230,7 @@ def centroid_is_inside_of_any_eroded_blob(candidate_eroded_blobs, candidate_cent
     # logger.debug('Finished whether the centroids is inside of a blob')
     return [blob for blob in candidate_eroded_blobs
             if cv2.pointPolygonTest(blob.contour, candidate_centroid, False) >= 0]
+
 
 def evaluate_candidate_blobs_and_centroid(video, candidate_eroded_blobs, candidate_centroid, blob_in_border_frame, blobs_in_frame = None, inner_frame_number = None, identity = None):
     # logger.debug('Evaluating candidate blobs and centroids')
@@ -343,11 +252,13 @@ def evaluate_candidate_blobs_and_centroid(video, candidate_eroded_blobs, candida
         # logger.debug('Finished evaluating candidate blobs and centroids: there where no candidate blobs')
         return None, None
 
+
 def get_candidate_tuples_with_centroids_in_original_blob(original_blob, candidate_tuples_to_close_gap):
     candidate_tuples_with_centroids_in_original_blob = [candidate_tuple for candidate_tuple in candidate_tuples_to_close_gap
                                                         if cv2.pointPolygonTest(original_blob.contour,
                                                         tuple([int(c) for c in candidate_tuple[1]]), False) >= 0]
     return candidate_tuples_with_centroids_in_original_blob
+
 
 def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_identities, original_inner_blobs_in_frame, candidate_tuples_to_close_gap, list_of_occluded_identities):
     # logger.debug('Assigning identity to new blobs')
@@ -428,6 +339,7 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
     # logger.debug('Finished assigning identity to new blobs')
     return blobs_in_video, list_of_occluded_identities
 
+
 def get_forward_backward_list_of_frames(gap_interval):
     """input:
     gap_interval: array of tuple [start_frame_number, end_frame_number]
@@ -438,6 +350,7 @@ def get_forward_backward_list_of_frames(gap_interval):
     gap_range = range(gap_interval[0],gap_interval[1])
     gap_length = len(gap_range)
     return np.insert(gap_range[::-1], np.arange(gap_length), gap_range)[:gap_length]
+
 
 def interpolate_trajectories_during_gaps(video, list_of_blobs, list_of_fragments, list_of_occluded_identities, possible_identities, erosion_counter):
     # logger.debug('In interpolate_trajectories_during_gaps')
@@ -529,10 +442,12 @@ def interpolate_trajectories_during_gaps(video, list_of_blobs, list_of_fragments
             # logger.debug('-We do not check the first frame')
     return blobs_in_video, list_of_occluded_identities
 
+
 def get_number_of_non_split_crossing(blobs_in_video):
     return len([blob for blobs_in_frame in blobs_in_video
                 for blob in blobs_in_frame
                 if blob.is_a_crossing])
+
 
 def reset_blobs_in_video_before_erosion_iteration(blobs_in_video):
     """Resets the identity of crossings and individual with multiple identities
@@ -557,9 +472,11 @@ def reset_blobs_in_video_before_erosion_iteration(blobs_in_video):
             elif blob.is_an_individual and isinstance(blob.identity_corrected_closing_gaps, list):
                 blob._identity_corrected_closing_gaps = None
 
+
 def closing_gap_stopping_criteria(blobs_in_video, previous_number_of_non_split_crossings_blobs):
     current_number_of_non_split_crossings = get_number_of_non_split_crossing(blobs_in_video)
     return current_number_of_non_split_crossings, previous_number_of_non_split_crossings_blobs > current_number_of_non_split_crossings
+
 
 def clean_individual_blob_before_saving(blobs_in_video):
     """Clean inidividual blobs whose identity is a list (it cannot be, hence an
@@ -643,16 +560,3 @@ def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
 
     list_of_blobs.blobs_in_video = clean_individual_blob_before_saving(list_of_blobs.blobs_in_video)
     return list_of_blobs
-
-if __name__ == "__main__":
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_n/video_object.npy', allow_pickle=True).item()
-    list_of_fragments = ListOfFragments.load(video.fragments_path)
-    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
-    if len(list_of_blobs.blobs_in_video[-1]) == 0:
-        list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
-    list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
-    list_of_blobs = close_trajectories_gaps(video, list_of_blobs)
-
-    video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
-    video.save()
-    list_of_blobs.save(video, path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)

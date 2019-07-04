@@ -21,15 +21,19 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
-
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import os
 import sys
+
 import numpy as np
 from tqdm import tqdm
+
 from idtrackerai.list_of_blobs import ListOfBlobs
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -204,25 +208,3 @@ def produce_output_dict(blobs_in_video, video):
                    'frames_per_second': video.frames_per_second,
                    'body_length': video.median_body_length}
     return output_dict
-
-if __name__ == "__main__":
-    from idtrackerai.utils.GUI_utils import selectDir
-    # #SIMPLE USAGE EXAMPLE
-    # BLOB_FILE_NAME = "blobs_collection.npy"
-    session_path = selectDir('./') #select path to video
-    video_path = os.path.join(session_path,'video_object.npy')
-    logger.info("loading video object...")
-    video = np.load(video_path, allow_pickle=True).item(0)
-    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
-
-    video.create_trajectories_wo_gaps_folder()
-    logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_wo_gaps_folder)
-    trajectories_wo_gaps_file = os.path.join(video.trajectories_wo_gaps_folder, 'output_dict.npy')
-    trajectories_wo_gaps = produce_output_dict(list_of_blobs.blobs_in_video, video)
-    np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
-    logger.info("Saving trajectories")
-    video._has_trajectories_wo_gaps = True
-    video.save()
-
-    #trajectories = produce_trajectories(blobs_list.blobs_in_video, video.number_of_frames, video.number_of_animals)
-    #save_trajectories(trajectories, trajectories_folder)
