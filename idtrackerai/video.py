@@ -998,12 +998,4 @@ def scanFolder(path):
     filename, extension = os.path.splitext(video)
     folder = os.path.dirname(path)
     paths = glob.glob(folder + "/*" + extension)
-    if len(paths) == 1:
-        return paths
-    else:
-        filename_split = filename.split("_")[:-1][0]
-        if filename_split == filename:
-            raise ValueError("To process videos separated in segments use the following notation: video_name_1, video_name_2, ...")
-        else:
-            paths = natsorted([path for path in paths if filename_split in path])
-            return paths
+    return natsorted(paths)

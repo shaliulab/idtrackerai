@@ -44,31 +44,32 @@ else:
 
 
 def perform_one_accumulation_step(accumulation_manager,
-                                    video,
-                                    global_step,
-                                    net,
-                                    GUI_axes = None,
-                                    net_properties = None,
-                                    plot_flag = False,
-                                    save_summaries = False):
-    logger.info("accumulation step %s" %accumulation_manager.counter)
+                                  video,
+                                  global_step,
+                                  net,
+                                  GUI_axes=None,
+                                  net_properties=None,
+                                  plot_flag=False,
+                                  save_summaries=False):
+    logger.info("accumulation step %s" % accumulation_manager.counter)
     video.accumulation_step = accumulation_manager.counter
     accumulation_manager.get_new_images_and_labels()
     images, labels = accumulation_manager.get_images_and_labels_for_training()
-    logger.debug("images: %s" %str(images.shape))
-    logger.debug("labels: %s" %str(labels.shape))
+    logger.debug("images: %s" % str(images.shape))
+    logger.debug("labels: %s" % str(labels.shape))
     global_step, net,\
-    store_validation_accuracy_and_loss_data,\
-    store_training_accuracy_and_loss_data = train(video,
-                                                    accumulation_manager.list_of_fragments.fragments,
-                                                    net, images, labels,
-                                                    store_accuracy_and_error = True,
-                                                    check_for_loss_plateau = True,
-                                                    save_summaries = save_summaries,
-                                                    print_flag = False,
-                                                    plot_flag = plot_flag,
-                                                    global_step = global_step,
-                                                    accumulation_manager = accumulation_manager)
+        store_validation_accuracy_and_loss_data,\
+        store_training_accuracy_and_loss_data = \
+        train(video,
+              accumulation_manager.list_of_fragments.fragments,
+              net, images, labels,
+              store_accuracy_and_error=True,
+              check_for_loss_plateau=True,
+              save_summaries=save_summaries,
+              print_flag=False,
+              plot_flag=plot_flag,
+              global_step=global_step,
+              accumulation_manager=accumulation_manager)
     if net_properties is not None:
         net_properties.setter(global_step)
     # update the set of images used for training

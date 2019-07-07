@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from confapp import conf
 
-from idtrackerai.network.identification_model.get_data import DataSet, split_data_train_and_validation
+from idtrackerai.network.identification_model.get_data import split_data_train_and_validation
 from idtrackerai.network.identification_model.epoch_runner import EpochRunner
 from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
 from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
@@ -44,6 +44,7 @@ if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
 else:
     import logging
     logger = logging.getLogger("__main__.trainer")
+
 
 def train(video,
           fragments,
@@ -119,7 +120,8 @@ def train(video,
     if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)
-        fig.canvas.set_window_title('Accumulation ' + str(video.accumulation_trial) + '-' + str(video.accumulation_step))
+        title = 'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step)
+        fig.canvas.set_window_title(title)
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
     # Instantiate data set
     training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
@@ -175,13 +177,12 @@ def train(video,
         # plot if asked
         if plot_flag:
             store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, fragments, black = False)
-            store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r')
-            store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b')
+            store_training_accuracy_and_loss_data.plot(ax_arr, color='r')
+            store_validation_accuracy_and_loss_data.plot(ax_arr, color='b')
+            fig.savefig(os.path.join(net.params.save_folder, title + '.pdf'))
         # store training and validation losses and accuracies
         if store_accuracy_and_error:
             store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
             store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
-        if plot_flag:
-            fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
         net.save()
         return global_step, net, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data

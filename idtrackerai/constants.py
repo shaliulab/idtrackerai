@@ -99,10 +99,6 @@ NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION = None # Set None to use the default 
 Number of jobs used to perform the segmentation
 """
 NUMBER_OF_CORES_FOR_SEGMENTATION = None # Set None to use the default mode of the system. (see segmentation.py module for details)
-"""***IDENTIFICATION_IMAGE_SIZE***
-size of the identification images. Used for idmatcher.ai
-"""
-IDENTIFICATION_IMAGE_SIZE = None #It should be a tuple of len 3 (width, height, chanels), e.g. (46, 46, 1)
 """***SIGMA_GAUSSIAN_BLURRING***
 sigma for gaussian blurring tests
 """
@@ -121,6 +117,9 @@ RAM: image is stored in the blob object in the ram
 NOT: image is not stored and are computed from the contour everytime
 """
 SAVE_SEGMENTATION_IMAGE = 'DISK' # 'RAM' or 'NOT'
+"""***PLOT_CROSSING_DETECTOR***
+"""
+PLOT_CROSSING_DETECTOR=False
 #######################################
 #########  global fragments  ##########
 #######################################
@@ -132,6 +131,9 @@ MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = int(os.environ.get
 #######################################
 ##########        CNN       ###########
 #######################################
+'''***PLOT_ACCUMULATION_STEPS***
+'''
+PLOT_ACCUMULATION_STEPS = False
 '''***CNN_MODEL***
 Architecture for the IDCNN network. By default the model 0 is used, which correspond
 to the model of the paper. Check the different models in the module cnn_architectures.py
@@ -149,6 +151,10 @@ KNOWLEDGE_TRANSFER_FOLDER_IDCNN = None
 Bloonean
 '''
 IDENTITY_TRANSFER = False
+"""***IDENTIFICATION_IMAGE_SIZE***
+size of the identification images. Used for idmatcher.ai
+"""
+IDENTIFICATION_IMAGE_SIZE = None #It should be a tuple of len 3 (width, height, chanels), e.g. (46, 46, 1)
 '''***USE_ADAM_OPTIMISER***
 By default the identification neural network is trained with SGD. If this parameter
 is set to TRUE, the network will be trained with the ADAM optimizer.
@@ -303,7 +309,7 @@ HEAD_DIAMETER = int(os.environ.get('HEAD_DIAMETER', 20))
 'all': saves all the data as it is generated from tracking
 'trajectories': saves only the trajectories
 'validation': saves the information needed to validate the video
-'id_transfer': saves the information needed to perfom identity_transfer to another video
-'id_matcher': saves the information needed to perform identity_matching between videos
+'knowledge_transfer': saves the information needed to perfom identity_transfer to another video
+'idmatcher.ai': saves the information needed to perform identity_matching between videos
 """
 DATA_POLICY = os.environ.get('DATA_POLICY', 'all')

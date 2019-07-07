@@ -1,22 +1,20 @@
-import numpy as np, time
-import sys
+import numpy as np
+import time
 
 from confapp import conf
+
+from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.preprocessing.segmentation import segment
+from idtrackerai.crossing_detector import detect_crossings
+
+from idtrackerai.list_of_global_fragments import ListOfGlobalFragments, create_list_of_global_fragments
+from idtrackerai.list_of_fragments        import ListOfFragments, create_list_of_fragments
 
 if not hasattr(conf,'PYFORMS_MODE'):
     from kivy.logger import Logger as logger
 else:
     import logging; logger = logging.getLogger(__name__)
 
-
-from confapp import conf
-
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.preprocessing.segmentation import segment_frame, segment, resegment
-from idtrackerai.crossing_detector import detect_crossings
-
-from idtrackerai.list_of_global_fragments import ListOfGlobalFragments, create_list_of_global_fragments
-from idtrackerai.list_of_fragments        import ListOfFragments, create_list_of_fragments
 
 class PreprocessingPreviewAPI(object):
 
@@ -178,7 +176,7 @@ class PreprocessingPreviewAPI(object):
                 self.chosen_video.video.model_area,
                 use_network = True,
                 return_store_objects = True,
-                plot_flag = False
+                plot_flag = conf.PLOT_CROSSING_DETECTOR
             )
         else:
 
@@ -188,7 +186,7 @@ class PreprocessingPreviewAPI(object):
                 self.chosen_video.video.model_area,
                 use_network = False,
                 return_store_objects = False,
-                plot_flag = False
+                plot_flag = conf.PLOT_CROSSING_DETECTOR
             )
             self.chosen_video.list_of_blob.save(
                 self.chosen_video.video,
