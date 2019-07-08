@@ -94,8 +94,10 @@ class Video(object):
         size of the kernel used to erode blobs while solving the crossings. See
         :mod:`~assign_them_all`
     """
-    def __init__(self, video_path = None):
+
+    def __init__(self, video_path = None, open_multiple_files=False):
         logger.debug("Video object init")
+        self._open_multiple_files = open_multiple_files
         self._video_path = video_path #string: path to the video
         self._number_of_animals = None #int: number of animals in the video
         self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
