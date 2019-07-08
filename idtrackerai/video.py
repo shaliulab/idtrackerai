@@ -478,11 +478,15 @@ class Video(object):
     def number_of_episodes(self):
         return self._number_of_episodes
 
+    @property
+    def open_multiple_files(self):
+        return self._open_multiple_files
+
     def check_split_video(self):
         """If the video is divided in segments retrieves their paths
         """
         paths_to_video_segments = scanFolder(self.video_path)
-        if len(paths_to_video_segments) > 1:
+        if len(paths_to_video_segments) > 1 and self.open_multiple_files:
             return paths_to_video_segments
         else:
             return None
