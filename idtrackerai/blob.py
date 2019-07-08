@@ -116,6 +116,9 @@ class Blob(object):
 
     extreme2_coordinates : tuple
 
+    _resolution_reduction: float
+
+
     """
     def __init__(self, centroid, contour, area,
                  bounding_box_in_frame_coordinates, bounding_box_image=None,
@@ -126,7 +129,8 @@ class Blob(object):
                  in_frame_index=None, pixels_path=None,
                  video_height=None, video_width=None,
                  video_path=None, pixels_are_from_eroded_blob=False,
-                 has_eroded_pixels=False):
+                 has_eroded_pixels=False,
+                 resolution_reduction=1.):
         self.frame_number = frame_number
         self.in_frame_index = in_frame_index
         self.number_of_animals = number_of_animals
@@ -167,6 +171,7 @@ class Blob(object):
         self.frame_number_in_video_path = frame_number_in_video_path
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
         self.has_eroded_pixels = False
+        self._resolution_reduction = resolution_reduction
 
     @property
     def bounding_box_image(self):
@@ -401,6 +406,10 @@ class Blob(object):
 
         """
         return np.abs(cv2.pointPolygonTest(self.contour, point, True))
+
+    @property
+    def resolution_reduction(self):
+        return self._resolution_reduction
 
     @property
     def used_for_training(self):

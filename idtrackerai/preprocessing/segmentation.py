@@ -200,7 +200,8 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds,
                     video_height=video.height,
                     video_width=video.width,
                     video_path=video_path,
-                    frame_number_in_video_path=frame_number_in_video_path)
+                    frame_number_in_video_path=frame_number_in_video_path,
+                    resolution_reduction=video.resolution_reduction)
         blobs_in_frame.append(blob)
 
     if len(centroids) > max_number_of_blobs:
