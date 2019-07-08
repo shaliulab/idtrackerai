@@ -289,8 +289,8 @@ class TrackerAPI(object):
         self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(self.chosen_video.video, net=self.net, accumulation_trial=0))
         self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = 0)
         self.accumulation_manager = AccumulationManager(self.chosen_video.video, self.chosen_video.list_of_fragments,
-                                                    self.chosen_video.list_of_global_fragments,
-                                                    threshold_acceptable_accumulation = conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                                                        self.chosen_video.list_of_global_fragments,
+                                                        threshold_acceptable_accumulation = conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)
         self.global_step = 0
 
         if create_popup: create_popup()
@@ -313,7 +313,7 @@ class TrackerAPI(object):
             save_summaries = save_summaries,
             GUI_axes = None,
             net_properties = None,
-            plot_flag = False
+            plot_flag = conf.PLOT_ACCUMULATION_STEPS
         )
         self.accumulation_step_finished = True
 

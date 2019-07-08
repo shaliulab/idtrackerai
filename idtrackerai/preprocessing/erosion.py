@@ -27,23 +27,29 @@
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import os
-import sys
 
 import numpy as np
 import cv2
+import h5py
 
 from idtrackerai.blob import Blob
+from idtrackerai.utils.segmentation_utils import blob_extractor
 
 ''' erosion '''
+
+
 def compute_erosion_disk(video, blobs_in_video):
     return np.ceil(np.nanmedian([compute_min_frame_distance_transform(video, blobs_in_frame)
-                    for blobs_in_frame in blobs_in_video if len(blobs_in_frame) > 0])).astype(np.int)
+                                 for blobs_in_frame in blobs_in_video
+                                 if len(blobs_in_frame) > 0])).astype(np.int)
+
 
 def compute_min_frame_distance_transform(video, blobs_in_frame):
     max_distance_transform = [compute_max_distance_transform(video, blob)
-                    for blob in blobs_in_frame
-                    if blob.is_an_individual]
+                              for blob in blobs_in_frame
+                              if blob.is_an_individual]
     return np.min(max_distance_transform) if len(max_distance_transform) > 0 else np.nan
+
 
 def generate_temp_image(video, pixels, bounding_box_in_frame_coordinates):
     pxs = np.array(np.unravel_index(pixels,(video.height, video.width))).T
@@ -55,6 +61,7 @@ def generate_temp_image(video, pixels, bounding_box_in_frame_coordinates):
                             bounding_box_in_frame_coordinates[0][0])).astype('uint8')
     temp_image[pxs[0,:], pxs[1,:]] = 255
     return temp_image
+
 
 def compute_max_distance_transform(video, blob):
     temp_image = generate_temp_image(video, blob.pixels, blob.bounding_box_in_frame_coordinates)
@@ -103,6 +110,6 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
                                           video_height=video.height,
                                           video_width=video.width,
                                           video_path=video.video_path,
-                                          pixels_are_eroded=True))
+                                          has_eroded_pixels=True))
 
     return eroded_blobs_in_frame

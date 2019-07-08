@@ -282,7 +282,7 @@ class ListOfFragments(object):
         """
         logger.info("saving list of fragments at %s" %fragments_path)
         for fragment in self.fragments:
-            self.coexisting_individual_fragments = None
+            fragment.coexisting_individual_fragments = None
         np.save(fragments_path,self)
         for fragment in self.fragments:
             fragment.get_coexisting_individual_fragments_indices(self.fragments)
