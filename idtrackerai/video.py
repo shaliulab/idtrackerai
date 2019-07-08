@@ -993,6 +993,17 @@ class Video(object):
         self._is_centroid_updated = False
 
 
+    def get_first_frame(self, list_of_blobs):
+        if self.number_of_animals != 1:
+            return self.first_frame_first_global_fragment[self.accumulation_trial]
+        elif self.number_of_animals == 1:
+            return 0
+        else:
+            for blobs_in_frame in list_of_blobs.blobs_in_video:
+                if len(blobs_in_frame) != 0:
+                    return blobs_in_frame[0].frame_number
+
+
 def scanFolder(path):
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
