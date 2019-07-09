@@ -528,6 +528,10 @@ class Video(object):
         return self._median_body_length
 
     @property
+    def median_body_length_full_resolution(self):
+        return self.median_body_length/self.resolution_reduction
+
+    @property
     def model_area(self):
         return self._model_area
 

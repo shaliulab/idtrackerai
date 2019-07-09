@@ -688,6 +688,16 @@ class Blob(object):
 
     """ The following methods are only to be used for the validation and modification
     of trajectories with the pythonvideoannotator after the video is tracked """
+    @property
+    def contour_full_resolution(self):
+        return (self.contour/self.resolution_reduction).astype(np.int32)
+
+
+    @property
+    def bounding_box_full_resolution(self):
+        bounding_box_full_resolution = (np.asarray(self.bounding_box_in_frame_coordinates)/self.resolution_reduction).astype(int)
+        return tuple(map(tuple, bounding_box_full_resolution))
+
 
     @property
     def user_generated_centroid(self):
@@ -710,6 +720,15 @@ class Blob(object):
         else:
             return self.assigned_centroid
 
+    @property
+    def final_centroid_full_resolution(self):
+        if isinstance(self.final_centroid, list):
+            return [(centroid[0]/self.resolution_reduction,
+                     centroid[1]/self.resolution_reduction) for centroid in self.final_centroid]
+        else:
+            return (self.final_centroid[0]/self.resolution_reduction,
+                    self.final_centroid[1]/self.resolution_reduction)
+
 
     @property
     def final_centroids(self):
@@ -721,6 +740,12 @@ class Blob(object):
             return centroids
         else:
             return [centroids]
+
+    @property
+    def final_centroids_full_resolution(self):
+        return [(centroid[0]/self.resolution_reduction,
+                 centroid[1]/self.resolution_reduction) for centroid in self.final_centroids]
+
 
     @property
     def final_identities(self):
@@ -740,9 +765,9 @@ class Blob(object):
         :param str selected_id: Identity of the selected blob.
         :param colors_lst: List of colors used to draw the blobs.
         """
-        contour = self.contour
+        contour = self.contour_full_resolution
 
-        for identity, centroid in zip(self.final_identities, self.final_centroids):
+        for identity, centroid in zip(self.final_identities, self.final_centroids_full_resolution):
 
             pos = int(round(centroid[0], 0)), int(round(centroid[1], 0))
 
@@ -777,7 +802,7 @@ class Blob(object):
                             lineType=cv2.LINE_AA)
                 cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, thickness=2, lineType=cv2.LINE_AA)
             else:
-                bounding_box = self.bounding_box_in_frame_coordinates
+                bounding_box = self.bounding_box_full_resolution
                 rect_color   = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
                 cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
 
@@ -793,14 +818,18 @@ class Blob(object):
                     return True
         return False
 
-    def remove_centroid(self, video, identity, centroid, blobs_in_frame):
+    def remove_centroid(self, video, identity, centroid, blobs_in_frame,
+                        apply_resolution_reduction=True):
         """ Remove the centroid and the identity from the blob if it exist.
 
         Parameters
         ----------
         centroid : tuple
-            centroid to be removed
+            centroid to be removed in full frame coordinates,
+            without the application of the resolution reduction
         """
+        if apply_resolution_reduction:
+            centroid = (centroid[0]*self.resolution_reduction, centroid[1]*self.resolution_reduction)
         if not (isinstance(centroid, tuple) and len(centroid) == 2):
             raise Exception("The centroid must be a tuple of length 2")
 
@@ -814,27 +843,29 @@ class Blob(object):
             if self.user_generated_identity is None:
                 self._user_generated_identity = self.final_identity
             try:
-                index = self.user_generated_centroid.index(centroid)
+                index = self.user_generated_centroid.index(centroid) # Maybe this does not work as I am multiplying and divigin by resolution reduction in several places
                 self.user_generated_centroid.pop(index)
                 self.user_generated_identity.pop(index)
 
                 video.is_centroid_updated = True
             except ValueError:
-                raise Exception("Centroid to be removed not in blob")
+                raise Exception("Cannot find the centroid in the selected blob")
         else:
             raise Exception("Cannot remove the centroid of the blob, \
                   because it is the only centroid")
 
-    def add_centroid(self, video, centroid, id):
+    def add_centroid(self, video, centroid, id, apply_resolution_reduction=True):
         """ Adds a centroid with a given identity, id.
 
         Parameters
         ----------
         centroid : tuple
-            len(centroid) must be 2
+            centroid to be added in full resolution coordinates. len(centroid) must be 2
         id : int
             identity of the centroid. id must be > 0 and <= number_of_animals
         """
+        if apply_resolution_reduction:
+            centroid = (centroid[0]*self.resolution_reduction, centroid[1]*self.resolution_reduction)
         if not (isinstance(centroid, tuple) and len(centroid) == 2):
             raise Exception("The centroid must be a tuple of length 2")
         if not (isinstance(id, int) and id > 0 and id <= self.number_of_animals):
@@ -919,6 +950,10 @@ class Blob(object):
         """
 
         video.is_centroid_updated = True
+        old_centroid = (old_centroid[0]*self.resolution_reduction,
+                        old_centroid[1]*self.resolution_reduction)
+        new_centroid = (new_centroid[0]*self.resolution_reduction,
+                        new_centroid[1]*self.resolution_reduction)
         if not (isinstance(old_centroid, tuple) and len(old_centroid) == 2):
             raise Exception("The old_centroid must be a tuple of length 2")
         if not (isinstance(new_centroid, tuple) and len(new_centroid) == 2):

@@ -477,7 +477,8 @@ class ListOfBlobs(object):
                                         for candidate_blob in self.blobs_in_video[frame]
                                         if candidate_blob.is_a_crossing])
                 nearest_blob = self.blobs_in_video[frame][blob_index]
-                nearest_blob.add_centroid(video, tuple(user_generated_centroids[i,:]), id)
+                nearest_blob.add_centroid(video, tuple(user_generated_centroids[i,:]), id,
+                                          apply_resolution_reduction=False)
 
 
     def reset_user_generated_identities_and_centroids(self, video, start_frame, end_frame, id=None):

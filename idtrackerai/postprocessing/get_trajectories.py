@@ -131,16 +131,17 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
         for blob in blobs_in_frame:
 
             if isinstance(blob.final_identity, int) or isinstance(blob.final_identity, np.integer):
-                centroid_trajectories = assign_point_to_identity(blob.final_centroid,
+                centroid_trajectories = assign_point_to_identity(blob.final_centroid_full_resolution,
                                                                 blob.final_identity,
                                                                 blob.frame_number,
                                                                 centroid_trajectories)
-                id_probabilities = assign_P2_to_identity(blob._P2_vector,
-                                                        blob.final_identity,
-                                                        blob.frame_number,
-                                                        id_probabilities)
+                if hasattr(blob, '_P2_vector') and blob._P2_vector is not None:
+                    id_probabilities = assign_P2_to_identity(blob._P2_vector,
+                                                            blob.final_identity,
+                                                            blob.frame_number,
+                                                            id_probabilities)
             elif isinstance(blob.final_identity, list):
-                for identity, centroid in zip(blob.final_identity, blob.final_centroid):
+                for identity, centroid in zip(blob.final_identity, blob.final_centroid_full_resolution):
                     centroid_trajectories = assign_point_to_identity(centroid,
                                                                     identity,
                                                                     blob.frame_number,
@@ -166,7 +167,7 @@ def produce_trajectories_wo_identities(blobs_in_video, number_of_frames, number_
                     identifiers_prev[column] = blob.fragment_identifier
 
                 blob._identity = int(column+1)
-                centroid_trajectories[frame_number, column, :] = blob.centroid
+                centroid_trajectories[frame_number, column, :] = blob.final_centroid_full_resolution[0] # blobs that are individual only have one centroid
 
                 if blob.fragment_identifier not in identifiers_next:
                     identifiers_prev[column] = np.nan
@@ -206,5 +207,5 @@ def produce_output_dict(blobs_in_video, video):
                    'git_commit': video.git_commit,
                    'video_path': video.video_path,
                    'frames_per_second': video.frames_per_second,
-                   'body_length': video.median_body_length}
+                   'body_length': video.median_body_length_full_resolution}
     return output_dict
