@@ -409,7 +409,10 @@ class Blob(object):
 
     @property
     def resolution_reduction(self):
-        return self._resolution_reduction
+        if hasattr(self, '_resolution_reduction'):
+            return self._resolution_reduction
+        else:
+            return 1.0
 
     @property
     def used_for_training(self):
