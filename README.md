@@ -1,4 +1,6 @@
-# idtracker.ai (v1.0.3-alpha)
+# idtracker.ai (v3.0.0-alpha)
+
+THIS README TO BE UPDATED...
 
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
 
@@ -17,7 +19,7 @@ idtracker.ai is coded in python 2.7 and uses Tensorflow libraries
  a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
  Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU.
 
-## Installation (v1.0.1-alpha).
+## Installation (v3.0.0-alpha).
 
 The installation of idtracker.ai requires some amount of interaction with the linux
 terminal. Read the following paragraph only if your are not familiar with the terminal in linux operating systems.
