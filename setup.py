@@ -25,12 +25,8 @@
 # idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
-
-import os
 import sys
-from distutils.sysconfig import get_python_lib
 from setuptools import find_packages, setup
-import subprocess
 
 CURRENT_PYTHON = sys.version_info[:2]
 REQUIRED_PYTHON = (3, 6)
@@ -44,30 +40,27 @@ install it on Python {}.{}.
 """.format(*(REQUIRED_PYTHON + CURRENT_PYTHON)))
     sys.exit(1)
 
-requirements = ['pygame >= 1.9.3',
-                'numpy >= 1.13.0',
+requirements = ['numpy >= 1.13.0',
                 'natsort >= 5.0.2',
                 'matplotlib >= 2.1',
                 'seaborn >= 0.8',
                 'tqdm >= 4.19',
                 'joblib >= 0.11',
                 'scikit-learn >= 0.19',
-                'PyAutoGUI >= 0.9.36',
                 'pyyaml >= 3.12',
                 'psutil >= 5.4.3',
                 'h5py >= 2.7.0',
                 'xlib == 0.21',
-                'Kivy-Garden >= 0.1.4',
-                'matplotlib >= 2.0.0',
                 'msgpack-numpy >= 0.3.9',
                 'msgpack-python >= 0.4.8',
-                'natsort >= 5.0.2',
                 'pandas >= 0.20.2',
-                'PyYAML >= 3.12',
                 'scipy >= 0.19.0',
                 'sklearn >= 0.0',
                 'tables >= 3.3.0',
-                'dask >= 0.17.0']
+                'dask >= 0.17.0',
+                'opencv-python == 3.4.5.20',
+                'tensoflow == 1.13.1'
+                ]
 
 
 EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*",
@@ -76,11 +69,11 @@ EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*",
 
 setup(
     name='idtrackerai',
-    version='1.0.1-alpha',
+    version='3.0.0-alpha',
     python_requires='>={}.{}'.format(*REQUIRED_PYTHON),
     url='https://www.idtracker.ai/',
     author='',
-    author_email='info@idtracker.ai',
+    author_email='idtracker@gmail.com',
     description=('A tracking algorithm based on convolutional neural networks'),
     license='',
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
@@ -88,15 +81,15 @@ setup(
     install_requires=requirements,
     zip_safe=False,
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Pre-Alpha',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering'
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
     ],
