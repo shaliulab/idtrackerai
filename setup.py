@@ -59,7 +59,8 @@ requirements = ['numpy >= 1.13.0',
                 'tables >= 3.3.0',
                 'dask >= 0.17.0',
                 'opencv-python == 3.4.5.20',
-                'tensoflow == 1.13.1'
+                'tensorflow == 1.13.1',
+                'confapp'
                 ]
 
 
@@ -69,7 +70,7 @@ EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*",
 
 setup(
     name='idtrackerai',
-    version='3.0.0-alpha',
+    version='3.0.2-alpha',
     python_requires='>={}.{}'.format(*REQUIRED_PYTHON),
     url='https://www.idtracker.ai/',
     author='',
@@ -81,7 +82,7 @@ setup(
     install_requires=requirements,
     zip_safe=False,
     classifiers=[
-        'Development Status :: 3 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Intended Audience :: Developers',
@@ -90,7 +91,7 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
-        'Topic :: Scientific/Engineering'
+        'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
     ],
 )

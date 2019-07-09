@@ -46,3 +46,6 @@ idtrackerai\.egg-info/
 docs/build/
 
 local_settings\.py
+
+dist/*
+build/*
