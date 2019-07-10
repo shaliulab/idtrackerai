@@ -27,6 +27,7 @@
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 import sys
 from setuptools import find_packages, setup
+import re
 
 CURRENT_PYTHON = sys.version_info[:2]
 REQUIRED_PYTHON = (3, 6)
@@ -68,18 +69,26 @@ EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*",
                         "test", "test.*",
                         "docs", "docs.*"]
 
+version = ''
+with open('idtrackerai/__init__.py', 'r') as fd:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE).group(1)
+
 setup(
     name='idtrackerai',
-    version='3.0.2-alpha',
+    version=version,
     python_requires='>={}.{}'.format(*REQUIRED_PYTHON),
     url='https://www.idtracker.ai/',
-    author='',
+    author='Francisco Romero Ferrero, Mattia G. Bergomi, Francisco J.H. Heras, Ricardo Ribeiro',
     author_email='idtracker@gmail.com',
-    description=('A tracking algorithm based on convolutional neural networks'),
-    license='',
+    description=('A multi-animal tracking algorithm based on convolutional neural networks'),
+    license='GPLv3+',
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
     install_requires=requirements,
+    extras_require={
+        'gui':['idtrackerai-app[gui]'],
+        'gpu':['tensorflow-gpu==1.13.1']
+    },
     zip_safe=False,
     classifiers=[
         'Development Status :: 3 - Alpha',

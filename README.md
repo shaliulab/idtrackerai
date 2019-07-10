@@ -1,8 +1,22 @@
 # idtracker.ai (v3.0.0-alpha)
 
-THIS README TO BE UPDATED...
+This is the **NEW VERSION** of the tracking software idtracker.ai.
 
-[idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
+idtracker.ai is a multi-animal tracking software for laboratory conditions. This
+work has been published in [Nature Methods](https://www.nature.com/articles/s41592-018-0295-5?WT.feed_name=subjects_software) [1] ([pdf here](https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n/view?usp=sharing))
+
+## What is new in version 3.0.0?
+
+- New Graphical User Interface (GUI) based on [Pyforms](https://pyforms.readthedocs.io/en/v4/).
+- Track videos from the command line with the *terminal_mode*.
+- Save your preprocessing parameters for a video and load them with the *terminal_mode*. This will allow you to track batches of videos sequentially without having to interact with the GUI.
+- Change advance tracking parameters using a *local_settins.py* file.
+- Improved memory management during tracking. Identification images and sets of pixels can be
+now saved in RAM or DISK. Set these parameters using the *local_settings.py* file. Saving images and pixels in the DISK will make the tracking slower, but will allow you to track longer videos with less RAM memory.
+- Improved data storage management. Use the parameter *DATA_POLICY* in the *local_settings.py* file to decide which files to save after the tracking. For example, this will prevent you from storing heavy unnecessary files if what you only need are the trajectories.
+- Improved validation and correction of trajectories with a new GUI based on [Python Video Annotator](https://pythonvideoannotator.readthedocs.io/en/master/).
+- Overall improvements in the internal structure of the code.
+- Multiple bugs fixed.
 
 ## Hardware requirements
 
@@ -11,13 +25,11 @@ idtracker.ai has been tested in computers with the following specifications:
 - Operating system: 64bit GNU/linux Mint 18.3
 - CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
 - GPU: Nvidia TITAN X or GeForce GTX 1080 Ti
-- RAM: 32Gb (for small groups) or 128Gb (for large groups)
+- RAM: 32Gb-128Gb (depending on the needs of the video).
 - Disk: 1TB SSD
 
-idtracker.ai is coded in python 2.7 and uses Tensorflow libraries
-(version 1.7.0). Due to the intense use of deep neural networks, we recommend using
- a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
- Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU.
+idtracker.ai is coded in python 3.6 and uses Tensorflow libraries
+(version 1.13). Due to the intense use of deep neural networks, we recommend using a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU.
 
 ## Installation (v3.0.0-alpha).
 
@@ -215,8 +227,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 For more information please send an email (idtrackerai@gmail.com) or
 use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 
-**[1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-(2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (submitted).**
+**[1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+(F.R.-F. and M.G.B. contributed equally to this work.
+Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)**
 
 *F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P:
 gonzalo.polavieja@neuro.fchampalimaud.org.*
