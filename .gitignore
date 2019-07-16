@@ -26,6 +26,7 @@
 !*.gitignore
 
 #except docs folder and subfolders
+docs/build/*
 !docs/scipy-sphinx-theme/*
 !docs/source/*
 !docs/make.bat
