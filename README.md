@@ -1,11 +1,10 @@
-# idtracker.ai (v3.0.0-alpha)
+# idtracker.ai (v3.0.5-alpha)
 
 This is the **NEW VERSION** of the tracking software idtracker.ai.
 
-idtracker.ai is a multi-animal tracking software for laboratory conditions. This
-work has been published in [Nature Methods](https://www.nature.com/articles/s41592-018-0295-5?WT.feed_name=subjects_software) [1] ([pdf here](https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n/view?usp=sharing))
+idtracker.ai is a multi-animal tracking software for laboratory conditions. This work has been published in [Nature Methods](https://www.nature.com/articles/s41592-018-0295-5?WT.feed_name=subjects_software) [1] ([pdf here](https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n/view?usp=sharing))
 
-## What is new in version 3.0.0?
+## What is new in version 3.0.5?
 
 - New Graphical User Interface (GUI) based on [Pyforms](https://pyforms.readthedocs.io/en/v4/).
 - Track videos from the command line with the *terminal_mode*.
@@ -20,9 +19,9 @@ now saved in RAM or DISK. Set these parameters using the *local_settings.py* fil
 
 ## Hardware requirements
 
-idtracker.ai has been tested in computers with the following specifications:
+idtracker.ai (v3) has been tested in computers with the following specifications:
 
-- Operating system: 64bit GNU/linux Mint 18.3
+- Operating system: 64bit GNU/linux Mint 19.1 and Ubuntu 18.4
 - CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
 - GPU: Nvidia TITAN X or GeForce GTX 1080 Ti
 - RAM: 32Gb-128Gb (depending on the needs of the video).
@@ -31,72 +30,59 @@ idtracker.ai has been tested in computers with the following specifications:
 idtracker.ai is coded in python 3.6 and uses Tensorflow libraries
 (version 1.13). Due to the intense use of deep neural networks, we recommend using a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU.
 
-## Installation (v3.0.0-alpha).
+## Installation (v3.0.5-alpha).
 
-The installation of idtracker.ai requires some amount of interaction with the linux
-terminal. Read the following paragraph only if your are not familiar with the terminal in linux operating systems.
+This version can be installed using the Python package manager PyPI. For an easy
+installation in clusters, the application and the graphical user interface (GUI)
+can be installed separately. Below we give installation instructions
+for the different usage cases.
 
-In Linux Mint you can open a terminal using the icon with the gray symbol ">_" on the left in the bottom bar. We provide the commands needed to install idtracker.ai from the terminal. In this documentation inputs to the terminal and outputs are shown inside of a box. You can type them directly in the command line and press ENTER to execute them.
-Right-click with your mouse to copy and paste commands from the instructions to the terminal.
-(NOTE: do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
 
-The time needed to install the system varies with the output of the pre-installation checks and the download speed of the network when cloning the repository and dowloading the dependencies. In our computers and network, the total installation time is typicall of 15 minutes.
+### Install NVIDIA drivers 410 (for Linux with GPU support)
 
-### Pre-installation checks
+This new version of idtracker.ai runs on Tensorflow 1.13.1 which requires CUDA toolkit 10 and cuDNN 7.5. In Linux, the CUDA toolkit 10.0 requires that at least the NVIDIA drivers version 410.48 are installed. You can check the CUDA compatibilities [here](https://docs.nvidia.com/deploy/cuda-compatibility/)
 
-###### Make sure that your system is updated
-
-Check if your system is up to date running the following command in the terminal:
-
-    sudo apt update
-
-Upgrade your system running:
-
-    sudo apt upgrade
-
-###### GPU Drivers.
-
-Make sure that your GPU drivers are installed.
-
-If you are using an NVIDIA GPU you can check that the drivers are properly
-installed typing.
+To check whether the NVIDIA drivers are correclty installed in your computer, open a terminal and type
 
     nvidia-smi
 
-in your terminal. You should get an output that looks like:
+You should get an output similar to this one
 
+    Tue Jul 16 11:45:05 2019       
     +-----------------------------------------------------------------------------+
-    | NVIDIA-SMI 384.111                Driver Version: 384.111                   |
+    | NVIDIA-SMI 410.104      Driver Version: 410.104      CUDA Version: 10.0     |
     |-------------------------------+----------------------+----------------------+
     | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
     | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
     |===============================+======================+======================|
-    |   0  GeForce GTX 108...  Off  | 00000000:03:00.0  On |                  N/A |
-    |  0%   35C    P5    24W / 250W |    569MiB / 11171MiB |      1%      Default |
+    |   0  GeForce GTX 1070    Off  | 00000000:01:00.0  On |                  N/A |
+    | N/A   52C    P0    23W /  N/A |    373MiB /  8111MiB |      0%      Default |
     +-------------------------------+----------------------+----------------------+
 
     +-----------------------------------------------------------------------------+
     | Processes:                                                       GPU Memory |
     |  GPU       PID   Type   Process name                             Usage      |
     |=============================================================================|
-    |    0      1266      G   /usr/lib/xorg/Xorg                           280MiB |
-    |    0      1712      G   cinnamon                                     119MiB |
-    |    0      2402      G   ...vendor-id=0x10de --gpu-device-id=0x1b06    50MiB |
-    |    0      3869      G   ...-token=B623FBCDF5B2B7F30ECB74EC9ADEFC8F   117MiB |
+    |    0      1045      G   /usr/lib/xorg/Xorg                           214MiB |
+    |    0      2499      G   ...nced GL_KHR_blend_equation_advanced_coh   106MiB |
+    |    0     19703      G   ...-token=15281238DF27105D2E5E5FF8BF106888    50MiB |
     +-----------------------------------------------------------------------------+
 
-If the command *nvidia-smi* does not show an output similar to this one, is possible
-thay the NVIDIA drivers are not installed. In Linux Mint 18.3 you can install the NVIDIA
-drivers using the Driver Manager that can be found in the Menu button in the bottom left of the screen.
+If you fail to get this output, you can check the [installation instructions for the NVIDIA drivers 410 in this web page](https://www.mvps.net/docs/install-nvidia-drivers-ubuntu-18-04-lts-bionic-beaver-linux/)
 
-**NOTE** Do not install the *intel-microcode* driver
-as it might enter in conflict with the parts of idtracker.ai that are parallelized. When installing this driver we have experienced hangs in the background subtraction and in the segmentation parts of the algorithm.
+### Installation instructions (Conda environment).
 
-###### Miniconda package manager
+#### Preparing a Conda environment where idtracker.ai will be installed
+It is good practice to install python packages in virtual environments. In particular,
+we recommend using Conda virtual environments. Find here the [Conda installation
+instructions for Linux, Windows and MacOS](https://docs.conda.io/projects/conda/en/latest/user-guide/install/).
 
-The installation process requires [miniconda](https://conda.io/miniconda.html) to be installed in your computer. Skip the next paragraphs if Miniconda2 or Miniconda3 are already installed.
+When deciding whether to install Anaconda or Miniconda, you can find some information about the difference
+[here](https://stackoverflow.com/questions/45421163/anaconda-vs-miniconda). For simplicity, we recommend
+installing Miniconda.
 
-To check whether miniconda is installed in your computer type
+To check whether the Conda package manager is installed, you can open your terminal (Anaconda prompt in Windows)
+and type
 
     conda
 
@@ -104,63 +90,70 @@ if you get the following output
 
     conda: command not found
 
-miniconda is not installed in your system. Follow the next instructions to install it.
+miniconda is not installed in your system. Follow the instructions in the link above to install it.
 
-Using the terminal, download the miniconda installation file
+Create a Conda environment where idtarcker.ai will be installed.
 
-    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+    conda create -n idtrackerai python=3.6
 
-and give it executable permissions.
+You can learn more about managing Conda environments in [this link](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
 
-    chmod u+x Miniconda2-latest-Linux-x86_64.sh
+Once the Conda environment has been create you should be able to activate doing
 
-Execute the file
+    conda activate idtrackerai
 
-    ./Miniconda2-latest-Linux-x86_64.sh
+or
 
-You will be asked to review the license agreement and accept the terms and conditions.  
-Review the license agreement by pressing ENTER and accept the terms typing "yes".
+    source activate idtrackerai.
 
-Then you will be asked to confirm the location of the installation. Press ENTER
-to continue with the default installation. Finally you will be asked to prepend
-the install location to PATH in your .bashrc file.
-Type "yes" to continue with the default installation.
+The following commands are to be run inside of the *idtrackerai* conda environment that you just created
 
-**IMPORTANT** At the end of the installation close the terminal and open a new one.
+#### Installation option 1 (GUI, GPU support) (NVIDIA drivers 410 already installed for Linux).
 
-### Installation
+You can install idtracker.ai with GUI support with the following command (run inside the conda environment)
 
-Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/install.sh)
-using the following command.
+    pip instal idtrackerai[gui]
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.2-alpha/install.sh
+To get GPU support without having to manually install the CUDA 10.0 and the cuDNN 7.6, you can install Tensorflow with GPU support with the Conda package manager with the following command:
 
-Give install.sh executable permissions by typing
+    conda install tensorflow-gpu=1.13
 
-    chmod u+x install.sh
+Conda will install the CUDA 10.0 and cuDNN 7.6 in your Conda environment for you.
 
-and execute it
+#### Installation option 2 (GUI, GPU support) (NVIDIA drivers 410, CUDA 10.0 and cuDNN 7.5.0 already installed).
 
-    ./install.sh
+If you prefer to install the CUDA 10.0 and the cuDNN 7.6 in your system, you can [follow these instructions](https://medium.com/better-programming/install-tensorflow-1-13-on-ubuntu-18-04-with-gpu-support-239b36d29070) until step 6.
 
-The installation can take several minutes. At the end of the process the last lines
-of the terminal should show a message similar to this:
+Then, you can install idtracker.ai with GUI an GPU support running the command:
 
-    Download done (21059 downloaded)
-    Extracting...
-    Installing new version...
-    Done! garden.matplotlib is installed at: /home/rhea/.kivy/garden/garden.matplotlib
-    Cleaning...
+    pip install idtrackerai[gui,gpu]
 
-If the installation did not succeed try proceeding step by step, by running
-the following commands in your terminal:
+This command will install Tensorflow 1.13.1 with GPU support for you.
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.3-alpha/env-mint18.3-tf1.2-ocv2.13-kivy1.9.yml
-    conda env create -f env-mint18.3-tf1.2-ocv2.13-kivy1.9.yml
-    source activate idtrackerai-environment
-    git clone https://gitlab.com/polavieja_lab/idtrackerai.git
-    pip install idtrackerai/.
-    garden install matplotlib
+#### Installation option 3 (no-GUI, GPU support).
+
+In some cases, users might want to use idtracker.ai from the command line and read the pre-processing parameters from a *.json* file (see instructions to generate a *.json* file below). This can be useful if you have a dedicated computer for tracking multiple videos in a batch and you access it with SSH, or if your are gonna install idtracker.ai in a cluster.
+
+If the CUDA 10.0 and the cuDNN are already installed in your computer, you only need to run the following command
+
+    pip install idtrackerai[gpu]
+
+if you want that Conda installs the CUDA 10.0 and cuDNN 7.6 in your Conda environment, then run
+
+    pip install idtrackerai
+    conda install tensorflow-gpu=1.13
+
+#### Installation option 4 (GUI, no-GPU support).
+
+In some cases, the user might not need the GPU support for idtracker.ai. For example, when tracking single animals, tracking without identities, or when setting the preprocessing parameters to then track the video in a different computer or in a cluster.
+
+In this case, you only need to install idtracker.ai with GUI support with the command
+
+    pip install idtrackerai[gui]
+
+### Installation instructions (Docker).
+
+*Coming soon*
 
 ### Troubleshooting installation
 
@@ -168,37 +161,37 @@ the following commands in your terminal:
 
 ### Uninstall and remove software
 
-*coming soon*
+As idtracker.ai can be now installed using a PyPI, to uninstall it you just need to execute
 
-## Open idtracker.ai
+    pip uninstall idtrackerai
 
-If the installation succeed correctly you can test the system by launching the GUI.
-Open a terminal and activate the conda environment idtrackerai-environment
+If you installed idtracker.ai inside of a Conda environment, you can also remove the environment by doing
 
-    source activate idtrackerai-environment
+    conda remove -n name-of-the-environment --all
 
-Once the environment is activate launch the GUI
+## Open or run idtracker.ai
 
-    idtrackeraiGUI
+If you installed idtracker.ai with GUI support, you can run the following commands to
+start the GUI.
 
-The GUI can also be launched from its main script. First go the the gui folder:
+    conda activate idtrackerai
+    idtrackerai
 
-    cd idtrackerai/gui/
+If you installed idtracker.ai without the GUI support but want to launch it from the terminal, you can run the following commands
 
-Then run the script idtrackeraiApp.py using Python.
+    conda activate idtrackerai
+    idtrackerai terminal_mode --load your-parameters-file.json --exec track_video
 
-    python idtrackeraiApp.py
-
-Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions
-to track a simple example video.
+Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions to track a simple example video or to learnt to save the preprocessing parameters to a *.json* file.
 
 ## Documentation and examples of tracked videos
 
 http://idtracker.ai
 
 ## Contributors
-* Mattia G. Bergomi
 * Francisco Romero-Ferrero
+* Mattia G. Bergomi
+* Ricardo Ribeiro
 * Francisco J.H. Heras
 
 ## License
