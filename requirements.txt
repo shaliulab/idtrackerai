@@ -1,99 +1,22 @@
-absl-py==0.7.1
-AnyQt==0.0.10
-astor==0.8.0
-bleach==3.1.0
-certifi==2019.6.16
-chardet==3.0.4
-Click==7.0
-coloredlogs==10.0
-confapp==1.0.9
-cycler==0.10.0
-dask==2.1.0
-docutils==0.14
-gast==0.2.2
-geometry-designer==0.3.36
-grpcio==1.22.0
-h5py==2.9.0
-humanfriendly==4.18
-idna==2.8
-idtrackerai==3.0.5a0
-idtrackerai-app==0.0.2a0
-joblib==0.13.2
-Keras-Applications==1.0.8
-Keras-Preprocessing==1.1.0
-kiwisolver==1.1.0
-Markdown==3.1.1
-matplotlib==3.1.1
-mkl-random==1.0.2
-mock==3.0.5
-Modular-computer-vision-API==0.2.26
-Modular-computer-vision-API-GUI==0.2.29
-msgpack==0.6.1
-msgpack-numpy==0.4.4.3
-msgpack-python==0.5.6
-natsort==6.0.0
-numexpr==2.6.9
-numpy==1.16.4
-opencv-python==3.4.5.20
-pandas==0.24.2
-Pillow==6.1.0
-pkginfo==1.5.0.1
-protobuf==3.9.0
-psutil==5.6.3
-public==2019.4.13
-PyForms-GUI==4.904.147
-PyForms-Terminal==4.0.10
-Pygments==2.4.2
-PyOpenGL==3.1.0
-PyOpenGL-accelerate==3.1.0
-pyparsing==2.4.0
-pypi-xmlrpc==2019.4.13
-PyQt5==5.13.0
-PyQt5-sip==4.19.18
-PyQtWebEngine==5.13.0
-python-dateutil==2.8.0
-Python-video-annotator==3.300.496
-Python-video-annotator-models==0.7.74
-Python-video-annotator-models-gui==0.6.57
-Python-video-annotator-module-background-finder==0.4.19
-Python-video-annotator-module-contours-images==0.4.26
-Python-video-annotator-module-create-paths==0.4.13
-Python-video-annotator-module-deeplab==0.901.19
-Python-video-annotator-module-distances==0.4.16
-Python-video-annotator-module-eventstats==0.4.13
-Python-video-annotator-module-find-orientation==0.4.16
-Python-video-annotator-module-IdTrackerAI==0.0.41
-Python-video-annotator-module-import-export==0.4.21
-Python-video-annotator-module-motion-counter==0.4.24
-Python-video-annotator-module-path-editor==0.4.26
-Python-video-annotator-module-path-map==0.5.14
-Python-video-annotator-module-regions-filter==0.4.16
-Python-video-annotator-module-smooth-paths==0.4.17
-Python-video-annotator-module-timeline==0.5.24
-Python-video-annotator-module-tracking==0.5.36
-Python-video-annotator-module-virtual-object-generator==0.5.24
-pytz==2019.1
-PyYAML==5.1.1
-QScintilla==2.11.2
-readme-renderer==24.0
-requests==2.22.0
-requests-toolbelt==0.9.1
-scikit-learn==0.21.2
-scipy==1.3.0
-seaborn==0.9.0
-Send2Trash==1.5.0
-simplejson==3.16.0
-six==1.12.0
-sklearn==0.0
-tables==3.5.2
-tensorboard==1.13.1
-tensorflow==1.13.1
-tensorflow-estimator==1.13.0
-termcolor==1.1.0
-tqdm==4.32.2
-twine==1.13.0
-urllib3==1.25.3
-visvis==1.11.2
-webencodings==0.5.1
-Werkzeug==0.15.4
-xlib==0.21
+numpy >= 1.13.0
+natsort >= 5.0.2
+matplotlib >= 2.1
+seaborn >= 0.8
+tqdm >= 4.19
+joblib >= 0.11
+scikit-learn >= 0.19
+pyyaml >= 3.12
+psutil >= 5.4.3
+h5py >= 2.7.0
+xlib == 0.21
+msgpack-numpy >= 0.3.9
+msgpack-python >= 0.4.8
+pandas >= 0.20.2
+scipy >= 0.19.0
+sklearn >= 0.0
+tables >= 3.3.0
+dask >= 0.17.0
+opencv-python == 3.4.5.20
+tensorflow == 1.13.1
+confapp
+idtrackerai-app[gui]
