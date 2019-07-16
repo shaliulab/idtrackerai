@@ -19,4 +19,3 @@ dask >= 0.17.0
 opencv-python == 3.4.5.20
 tensorflow == 1.13.1
 confapp
-idtrackerai-app[gui]
