@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import json
 
 import gdown
 
@@ -22,20 +23,38 @@ def download_example_video(output_folder=''):
     if not os.path.isdir(video_example_folder):
         os.mkdir(video_example_folder)
 
-    output_file = os.path.join(video_example_folder, 'example_video_idtrackerai.avi')
+    output_file_avi = os.path.join(video_example_folder, 'example_video_idtrackerai.avi')
 
-    gdown.download(TEST_VIDEO_URL, output_file, quiet=False)
+    gdown.download(TEST_VIDEO_URL, output_file_avi, quiet=False)
+
+    return output_file_avi
 
 
-def download():
+def update_json(video_path):
+    json_file_path = os.path.join(IDTRACKERAI_FOLDER, 'tests', 'test.json')
+
+    with open(json_file_path) as json_file:
+        json_content = json.load(json_file)
+
+    json_content['_video']['value'] = video_path
+
+    with open(json_file_path, 'w') as json_file:
+        json.dump(json_content, json_file)
+
+    return json_file_path
+
+
+def test():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output_folder",
                         type=str,
                         help="Path to the folder where the video will be stored")
     args = parser.parse_args()
-    download_example_video(args.output_folder)
+    video_path = download_example_video(args.output_folder)
+    json_file_path = update_json(video_path)
+    os.system('idtrackerai terminal_mode --load {} --exec track_video'.format(json_file_path))
 
 
 if __name__ == "__main__":
-    download()
+    test()

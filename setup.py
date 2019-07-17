@@ -63,6 +63,7 @@ requirements = ['numpy >= 1.13.0',
                 'tensorflow == 1.13.1',
                 'idtrackerai-app',
                 'confapp',
+                'gdown'
                 ]
 
 
@@ -106,7 +107,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'idtrackerai_download_video=idtrackerai.tests.example_video:download',
+            'idtrackerai_test=idtrackerai.tests.test_example_video:test',
         ],
     }
 )

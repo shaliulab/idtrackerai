@@ -20,6 +20,7 @@
 !*.css_t
 !*.conf
 !*.txt
+!*.json
 
 *.pyc
 
