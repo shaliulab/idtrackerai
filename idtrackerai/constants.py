@@ -32,6 +32,9 @@ import os
 MIN_FLOAT = sys.float_info[3]
 MAX_FLOAT = sys.float_info[0]
 
+IDTRACKERAI_FOLDER = os.path.dirname(os.path.abspath(__file__))
+TEST_VIDEO_URL='https://drive.google.com/uc?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC'
+
 PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
             'protocol3_accumulation', 'residual_identification',
             'post_processing']

@@ -61,7 +61,8 @@ requirements = ['numpy >= 1.13.0',
                 'dask >= 0.17.0',
                 'opencv-python == 3.4.5.20',
                 'tensorflow == 1.13.1',
-                'confapp'
+                'idtrackerai-app',
+                'confapp',
                 ]
 
 
@@ -103,4 +104,9 @@ setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
     ],
+    entry_points={
+        'console_scripts': [
+            'idtrackerai_download_video=idtrackerai.tests.example_video:download',
+        ],
+    }
 )
