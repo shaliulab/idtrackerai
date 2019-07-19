@@ -53,7 +53,7 @@ To start the GUI open a terminal and type
   source activate idtrackerai-environment
   idtrackeraiGUI
 
-.. figure:: ./_static/qs_img1.png
+.. figure:: ./_static/quickstart_kivy/qs_img1.png
    :scale: 50 %
    :align: right
    :alt: welcome tab
@@ -83,7 +83,7 @@ Step 4. Select a region of interests
 If needed, it is possible to select one or more ROIs to limit the tracking to a
 portion of each frame of the video or to prevent objects to be detected.
 
-.. figure:: ./_static/qs_img3.png
+.. figure:: ./_static/quickstart_kivy/qs_img3.png
    :scale: 50 %
    :align: center
    :alt: roi
@@ -114,7 +114,7 @@ swimming area is the biggest ring that is completely included in the frame.*
 Step 5. Video segmentation and preprocessing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. figure:: ./_static/qs_img4.png
+.. figure:: ./_static/quickstart_kivy/qs_img4.png
    :scale: 50 %
    :align: right
    :alt: preprocessing
@@ -135,7 +135,7 @@ to animals, despite their intensity. The bars plot on the bottom displays the
 areas of the detected objects in the current frame. A horizontal line indicates
 the minimum of the areas of the segmented blobs.
 
-.. figure:: ./_static/qs_img6.png
+.. figure:: ./_static/quickstart_kivy/qs_img6.png
   :scale: 50 %
   :align: right
   :alt: welcome tab
@@ -183,7 +183,7 @@ on the sample video of 100 zebrafish:*
 Step 6. Start tracking the video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. figure:: ./_static/qs_img7.png
+.. figure:: ./_static/quickstart_kivy/qs_img7.png
    :scale: 50 %
    :align: right
    :alt: welcome tab
@@ -196,7 +196,7 @@ only advanced users to access this options. After clicking on the button
 “Start protocol cascade” a popup will keep you updated about the state of
 the algorithm.
 
-.. figure:: ./_static/qs_img8.png
+.. figure:: ./_static/quickstart_kivy/qs_img8.png
    :scale: 20 %
    :align: center
    :alt: welcome tab
@@ -217,7 +217,7 @@ when animals touch or cross.
 Step 7. Global and individual validation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. figure:: ./_static/qs_img9.png
+.. figure:: ./_static/quickstart_kivy/qs_img9.png
    :scale: 50 %
    :align: right
    :alt: welcome tab
@@ -252,7 +252,7 @@ where they are not crossing can be found in the folder "trajectories". The
 trajectories with the interpolated position of the animals during the crossings
 can be found in the folder "trajectories_wo_gaps".
 
-.. figure:: ./_static/session_folder.png
+.. figure:: ./_static/quickstart_kivy/session_folder.png
    :scale: 80 %
    :align: center
    :alt: welcome tab

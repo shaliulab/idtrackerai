@@ -30,13 +30,15 @@ def download_example_video(output_folder=''):
     return output_file_avi
 
 
-def update_json(video_path):
+def update_json(video_path, args):
     json_file_path = os.path.join(IDTRACKERAI_FOLDER, 'tests', 'test.json')
 
     with open(json_file_path) as json_file:
         json_content = json.load(json_file)
 
     json_content['_video']['value'] = video_path
+    if args.no_identities:
+        json_content['_no_ids']['value'] = True
 
     with open(json_file_path, 'w') as json_file:
         json.dump(json_content, json_file)
@@ -50,9 +52,12 @@ def test():
     parser.add_argument("-o", "--output_folder",
                         type=str,
                         help="Path to the folder where the video will be stored")
+    parser.add_argument("-n", "--no_identities",
+                        action='store_true',
+                        help="Flag to track without identities")
     args = parser.parse_args()
     video_path = download_example_video(args.output_folder)
-    json_file_path = update_json(video_path)
+    json_file_path = update_json(video_path, args)
     os.system('idtrackerai terminal_mode --load {} --exec track_video'.format(json_file_path))
 
 
