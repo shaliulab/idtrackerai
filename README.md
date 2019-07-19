@@ -9,7 +9,7 @@ idtracker.ai is a multi-animal tracking software for laboratory conditions. This
 - New Graphical User Interface (GUI) based on [Pyforms](https://pyforms.readthedocs.io/en/v4/).
 - Track videos from the command line with the *terminal_mode*.
 - Save your preprocessing parameters for a video and load them with the *terminal_mode*. This will allow you to track batches of videos sequentially without having to interact with the GUI.
-- Change advance tracking parameters using a *local_settins.py* file.
+- Change advance tracking parameters using a *local_settings.py* file.
 - Improved memory management during tracking. Identification images and sets of pixels can be
 now saved in RAM or DISK. Set these parameters using the *local_settings.py* file. Saving images and pixels in the DISK will make the tracking slower, but will allow you to track longer videos with less RAM memory.
 - Improved data storage management. Use the parameter *DATA_POLICY* in the *local_settings.py* file to decide which files to save after the tracking. For example, this will prevent you from storing heavy unnecessary files if what you only need are the trajectories.

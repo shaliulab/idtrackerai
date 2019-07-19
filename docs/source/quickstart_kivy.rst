@@ -1,8 +1,9 @@
 Quickstart
 ==========
 
-In this section we explain how to start tracking a video with idtracker.ai v3. For more information about
-the different functionalities of the system go to the :doc:`./GUI_explained` section. Please read the notes in
+In this section we explain how to start tracking a video with idtracker.ai. For more information about
+the different functionalities of the system go to the
+:doc:`./GUI_explained` section or check the Supplementary Material in [1]_. Please read the notes in
 italics to get advice about how to set the parameters to track the sample videos with
 good performance levels.
 
@@ -15,23 +16,9 @@ Step 0. Install idtracker.ai
 If you haven't installed the software yet, got to the `gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
 where you will find the instructions to install it in both Windows and Linux computers.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 1. Test the installation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment
-where you installed idtracker.ai. Run the command:
-
-    idtrackerai_test
-
-This command will download a small example video and will execute idtracker.ai
-with default parameters.
-
-In an installation with GPU the test took XXXX minutes in our computer. 
-
-
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 2. Download the video example
+Step 1. Download the video example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If it is the first time that you are using this system, we recommend to start with
 the video example of 8 adult zebrafish (*Danio rerio*). You can download it from
@@ -42,7 +29,7 @@ We recommend to start with the video of 8 fish as it is faster to track and it i
 to get use to the system.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 3. Copy video to an adequate location
+Step 2. Copy video to an adequate location
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Copy the video to a folder where you want the output files to be placed.
 Depending on the length of the video, the number of animals, and the number

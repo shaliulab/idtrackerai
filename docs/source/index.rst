@@ -1,5 +1,5 @@
-Welcome to idtracker.ai's documentation!
-========================================
+Welcome to idtracker.ai's v3 documentation!
+===========================================
 
 `idtracker.ai <http://idtracker.ai/>`_ allows to track groups of up to 100 unmarked animals from videos.
 
@@ -19,12 +19,24 @@ Welcome to idtracker.ai's documentation!
     :width: 150
     :target: https://www.youtube.com/watch?v=dT28-VcXaCc
 
+What is new in idtracker.ai v3?
+===============================
 
+- We made the installation easier by putting idtracker.ai in the PyPI package manager.
+- New Graphical User Interface (GUI) based on [Pyforms](https://pyforms.readthedocs.io/en/v4/).
+- Track videos from the command line with the *terminal_mode*.
+- Save the preprocessing parameters for a video and load them with the *terminal_mode*. This will allow you to track batches of videos sequentially without having to interact with the GUI.
+- Change advance tracking parameters using a *local_settings.py* file.
+- Improved memory management during tracking. Segmentation images and sets of pixels can be
+now saved in RAM or DISK. Identification images are saved in DISK. Set these parameters using the *local_settings.py* file. Saving images and pixels in the DISK will make the tracking slower, but will allow you to track longer videos with less RAM memory.
+- Improved data storage management. Use the parameter *DATA_POLICY* in the *local_settings.py* file to decide which files to save after the tracking. For example, this will prevent you from storing heavy unnecessary files if what you only need are the trajectories.
+- Improved validation and correction of trajectories with a new GUI based on [Python Video Annotator](https://pythonvideoannotator.readthedocs.io/en/master/).
+- Overall improvements in the internal structure of the code.
+- Multiple bugs fixed.
 
 `Installation and git repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
 *******************************
 The source code and installation instructions can be found at https://gitlab.com/polavieja_lab/idtrackerai.git.
-
 
 :doc:`Quickstart <./quickstart>`
 ********************************
