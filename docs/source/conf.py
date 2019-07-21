@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.abspath('../../idtrackerai/plots'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/plots/old_plots'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/postprocessing'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/groundtruth_utils'))
-sys.path.insert(0, os.path.abspath('../../idtrackerai/tf_cnnvisualisation'))
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',

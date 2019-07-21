@@ -57,3 +57,5 @@ build/*
 data/
 
 out-parameters\.txt
+
+docs/idtrackerai-app\.log

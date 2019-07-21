@@ -27,8 +27,7 @@ What is new in idtracker.ai v3?
 - Track videos from the command line with the *terminal_mode*.
 - Save the preprocessing parameters for a video and load them with the *terminal_mode*. This will allow you to track batches of videos sequentially without having to interact with the GUI.
 - Change advance tracking parameters using a *local_settings.py* file.
-- Improved memory management during tracking. Segmentation images and sets of pixels can be
-now saved in RAM or DISK. Identification images are saved in DISK. Set these parameters using the *local_settings.py* file. Saving images and pixels in the DISK will make the tracking slower, but will allow you to track longer videos with less RAM memory.
+- Improved memory management during tracking. Segmentation images and sets of pixels can be now saved in RAM or DISK. Identification images are saved in DISK. Set these parameters using the *local_settings.py* file. Saving images and pixels in the DISK will make the tracking slower, but will allow you to track longer videos with less RAM memory.
 - Improved data storage management. Use the parameter *DATA_POLICY* in the *local_settings.py* file to decide which files to save after the tracking. For example, this will prevent you from storing heavy unnecessary files if what you only need are the trajectories.
 - Improved validation and correction of trajectories with a new GUI based on [Python Video Annotator](https://pythonvideoannotator.readthedocs.io/en/master/).
 - Overall improvements in the internal structure of the code.
@@ -114,9 +113,11 @@ Contents
    video_conditions
    quickstart
    GUI_explained
+   tracking_from_terminal
+   advanced_parameters
+   trajectories_analysis
    gallery
    FAQs
-   trajectories_analysis
    modules
    data
 
