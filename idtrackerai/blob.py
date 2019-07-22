@@ -101,8 +101,8 @@ class Blob(object):
         Identity associated to the blob
     is_identified : bool
         True if self.identity is not None
-    final_identity : int
-        Identity assigned to self after validation
+    final_identities : list
+        Identities assigned to self after validation
     assigned_identity : int
         Identity assigned to self by the algorithm (ignoring eventual correction made by the user during validation)
     has_ambiguous_identity: bool
@@ -161,10 +161,10 @@ class Blob(object):
         self._used_for_training = None
         self._accumulation_step = None
         self._generated_while_closing_the_gap = False
-        self._user_generated_identity = None
-        self._user_generated_centroid = None
+        self._user_generated_identities = None
+        self._user_generated_centroids = None
         self.interpolated_centroids = None
-        self._identity_corrected_closing_gaps = None
+        self._identities_corrected_closing_gaps = None
         self._identity_corrected_solving_jumps = None
         self._identity = None
         self.video_path = video_path
@@ -490,37 +490,40 @@ class Blob(object):
         return self._identity
 
     @property
-    def user_generated_identity(self):
-        return self._user_generated_identity
-
-    @user_generated_identity.setter
-    def user_generated_identity(self, new_value):
-        if self.is_a_crossing and self.assigned_identity is None:
-            self._is_an_individual = True
-            self._is_a_crossing = False
-            self._is_a_misclassified_individual = True
+    def user_generated_identities(self):
+        return self._user_generated_identities
 
     @property
     def identity_corrected_solving_jumps(self):
         return self._identity_corrected_solving_jumps
 
     @property
-    def identity_corrected_closing_gaps(self):
-        return self._identity_corrected_closing_gaps
+    def identities_corrected_closing_gaps(self):
+        return self._identities_corrected_closing_gaps
 
     @property
-    def final_identity(self):
-        if hasattr(self, 'user_generated_identity') and self.user_generated_identity is not None:
-            return self.user_generated_identity
-        else:
-            return self.assigned_identity
+    def assigned_identities(self):
+        if self.identities_corrected_closing_gaps is not None:
+            return self.identities_corrected_closing_gaps
+        elif self.identity_corrected_solving_jumps is not None:
+            return [self.identity_corrected_solving_jumps]
+        return [self.identity]
 
     @property
-    def assigned_identity(self):
-        if hasattr(self, 'identity_corrected_closing_gaps') and self.identity_corrected_closing_gaps is not None:
-            return self.identity_corrected_closing_gaps
-        else:
-            return self.identity
+    def final_identities(self):
+        """
+        :return: Return a list of the final centroids.
+        """
+        if self.user_generated_identities is not None:
+            # Note that sometimes len(user_generated_identities) > len(assigned_identities)
+            final_identities = []
+            for i, user_generated_identity in enumerate(self.user_generated_identities):
+                if user_generated_identity is not None or user_generated_identity < 0:
+                    final_identities.append(user_generated_identity)
+                else:
+                    final_identities.append(self.assigned_identities[i])
+            return final_identities
+        return self.assigned_identities
 
     @property
     def is_identified(self):
@@ -703,63 +706,43 @@ class Blob(object):
 
 
     @property
-    def user_generated_centroid(self):
-        if hasattr(self, '_user_generated_centroid'):
-            return self._user_generated_centroid
-        else:
-            return None
+    def user_generated_centroids(self):
+        if hasattr(self, '_user_generated_centroids'):
+            return self._user_generated_centroids
+        return None
 
     @property
-    def assigned_centroid(self):
+    def assigned_centroids(self):
         if hasattr(self, 'interpolated_centroids') and self.interpolated_centroids is not None:
+            assert isinstance(self.interpolated_centroids, list)
             return self.interpolated_centroids
-        else:
-            return self.centroid
-
-    @property
-    def final_centroid(self):
-        if self.user_generated_centroid is not None:
-            return self.user_generated_centroid
-        else:
-            return self.assigned_centroid
-
-    @property
-    def final_centroid_full_resolution(self):
-        if isinstance(self.final_centroid, list):
-            return [(centroid[0]/self.resolution_reduction,
-                     centroid[1]/self.resolution_reduction) for centroid in self.final_centroid]
-        else:
-            return (self.final_centroid[0]/self.resolution_reduction,
-                    self.final_centroid[1]/self.resolution_reduction)
-
+        return [self.centroid]
 
     @property
     def final_centroids(self):
         """
         :return: Return a list of the final centroids.
         """
-        centroids = self.final_centroid
-        if isinstance(centroids, list):
-            return centroids
-        else:
-            return [centroids]
+        if self.user_generated_centroids is not None:
+            # Note that sometimes len(user_generated_centroids) > len(assigned_centroids)
+            final_centroids = []
+            for i, user_generated_centroid in enumerate(self.user_generated_centroids):
+                if not user_generated_centroid[0] is None or user_generated_centroid[0] < 0:
+                    final_centroids.append(user_generated_centroid)
+                else:
+                    final_centroids.append(self.assigned_centroids[i])
+            return final_centroids
+        return self.assigned_centroids
+
 
     @property
     def final_centroids_full_resolution(self):
+        """
+        :return: Return a list of the final centroids in the full resolution of the frame
+        """
         return [(centroid[0]/self.resolution_reduction,
-                 centroid[1]/self.resolution_reduction) for centroid in self.final_centroids]
+                 centroid[1]/self.resolution_reduction) for centroid in self.finals_centroid]
 
-
-    @property
-    def final_identities(self):
-        """
-        :return: Return a list of the final identifications.
-        """
-        identities = self.final_identity
-        if isinstance(identities, list):
-            return identities
-        else:
-            return [identities]
 
     def draw(self, image, colors_lst=None, selected_id=None):
         """
@@ -770,14 +753,14 @@ class Blob(object):
         """
         contour = self.contour_full_resolution
 
-        for identity, centroid in zip(self.final_identities, self.final_centroids_full_resolution):
+        for i, (identity, centroid) in enumerate(zip(self.final_identities, self.final_centroids_full_resolution)):
 
             pos = int(round(centroid[0], 0)), int(round(centroid[1], 0))
 
             if colors_lst:
                 color = colors_lst[identity] if identity is not None else colors_lst[0]
             else:
-                color = (0,0,255)
+                color = (0, 0, 255)
 
             cv2.polylines(image, np.array([contour]), True, (0, 255, 0), 1)
 
@@ -786,12 +769,14 @@ class Blob(object):
 
             if identity is not None:
 
-                if identity==selected_id:
+                if identity == selected_id:
                     cv2.circle(image, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
 
-                if self.user_generated_identity is not None or self.user_generated_centroid is not None:
+                u_id = self.user_generated_identities[i]
+                u_cent_x = self.user_generated_centroids[i][0]
+                if (u_id is not None and u_id > 0) or (u_cent_x is not None and u_cent_x > 0):
                     idroot = 'u-'
-                elif self.identity_corrected_closing_gaps is not None and not self.is_an_individual:
+                elif self.identity_corrected_closing_gaps[i] is not None and not self.is_an_individual:
                     idroot = 'c-'
                 else:
                     idroot = ''
@@ -812,14 +797,43 @@ class Blob(object):
     def removable_identity(self, identity_to_remove, blobs_in_frame):
         for blob in blobs_in_frame:
             if blob != self:
-                if isinstance(blob.final_identity, list) and identity_to_remove in blob.final_identity:
-                    return True
-                elif blob.final_identity == identity_to_remove:
+                if identity_to_remove in blob.final_identities:
                     return True
             else:
-                if isinstance(blob.final_identity, list) and blob.final_identity.count(identity_to_remove) > 1:
+                if blob.final_identities.count(identity_to_remove) > 1:
                     return True
         return False
+
+    def update_centroid(self, video, old_centroid, new_centroid):
+        """ Updates the coordinates of the centrod
+
+        Parameters
+        ----------
+        old_centroid : tuple
+            len(centroid) must be 2
+        new_centroid : tuple
+            len(new_centroid) must be 2
+        """
+
+        video.is_centroid_updated = True
+        old_centroid = (old_centroid[0]*self.resolution_reduction,
+                        old_centroid[1]*self.resolution_reduction)
+        new_centroid = (new_centroid[0]*self.resolution_reduction,
+                        new_centroid[1]*self.resolution_reduction)
+
+        if not (isinstance(old_centroid, tuple) and len(old_centroid) == 2):
+            raise Exception("The old_centroid must be a tuple of length 2")
+        if not (isinstance(new_centroid, tuple) and len(new_centroid) == 2):
+            raise Exception("The new centroid must be a tuple of length 2")
+
+        if self.user_generated_centroids is None:
+            self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
+
+        try:
+            centroid_index = self.final_centroids.index(old_centroid)
+            self.user_generated_centroids[centroid_index] = new_centroid
+        except ValueError:
+            print("There is no centroid with the values of old_centroid")
 
     def remove_centroid(self, video, identity, centroid, blobs_in_frame,
                         apply_resolution_reduction=True):
@@ -840,50 +854,49 @@ class Blob(object):
             raise Exception("The centroid cannot be remove beucase it belongs to a unique identity. \
                             Only centroids of duplicated identities can be deleted")
 
-        if isinstance(self.final_centroid, list) and len(self.final_centroid) > 1:
-            if self.user_generated_centroid is None:
-                self._user_generated_centroid = copy.deepcopy(self.final_centroid)
-            if self.user_generated_identity is None:
-                self._user_generated_identity = self.final_identity
-            try:
-                index = self.user_generated_centroid.index(centroid) # Maybe this does not work as I am multiplying and divigin by resolution reduction in several places
-                self.user_generated_centroid.pop(index)
-                self.user_generated_identity.pop(index)
+        try:
+            centroid_index = self.final_centroids.index(centroid)
+        except ValueError:
+            raise Exception("Cannot find the centroid in the selected blob")
 
-                video.is_centroid_updated = True
-            except ValueError:
-                raise Exception("Cannot find the centroid in the selected blob")
+        if len(self.final_centroids) > 1:
+            if self.user_generated_centroids is None:
+                self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
+            self._user_generated_centroids[centroid_index] = (-1, -1)
+            if self.user_generated_identities is None:
+                self._user_generated_identities = [None]*len(self.final_identities)
+            self._user_generated_identities[centroid_index] = -1
+            video.is_centroid_updated = True
         else:
             raise Exception("Cannot remove the centroid of the blob, \
                   because it is the only centroid")
 
-    def add_centroid(self, video, centroid, id, apply_resolution_reduction=True):
-        """ Adds a centroid with a given identity, id.
+    def add_centroid(self, video, centroid, identity,
+                     apply_resolution_reduction=True):
+        """ Adds a centroid with a given identity, identity.
 
         Parameters
         ----------
         centroid : tuple
             centroid to be added in full resolution coordinates. len(centroid) must be 2
-        id : int
-            identity of the centroid. id must be > 0 and <= number_of_animals
+        identity : int
+            identity of the centroid. identity must be > 0 and <= number_of_animals
         """
         if apply_resolution_reduction:
-            centroid = (centroid[0]*self.resolution_reduction, centroid[1]*self.resolution_reduction)
+            centroid = (centroid[0]*self.resolution_reduction,
+                        centroid[1]*self.resolution_reduction)
         if not (isinstance(centroid, tuple) and len(centroid) == 2):
             raise Exception("The centroid must be a tuple of length 2")
-        if not (isinstance(id, int) and id > 0 and id <= self.number_of_animals):
+        if not (isinstance(identity, int) and identity > 0 and identity <= self.number_of_animals):
             raise Exception("The identity must be an integer between 1 and the number of animals in the video")
 
-        if self.user_generated_centroid is None:
-            self._user_generated_centroid = copy.deepcopy(self.final_centroid)
-        if self.user_generated_identity is None:
-            self._user_generated_identity = self.final_identity
-        if not isinstance(self.user_generated_centroid, list):
-            self._user_generated_centroid = [copy.deepcopy(self.final_centroid)]
-        if not isinstance(self.user_generated_identity, list):
-            self._user_generated_identity = [self.final_identity]
-        self._user_generated_centroid.append(centroid)
-        self._user_generated_identity.append(id)
+        if self.user_generated_centroids is None:
+            self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
+        if self.user_generated_identities is None:
+            self.user_generated_identities = [None]*len(self.final_identities)
+
+        self._user_generated_centroids.append(centroid)
+        self.user_generated_identities.append(identity)
 
         video.is_centroid_updated = True
 
@@ -902,8 +915,8 @@ class Blob(object):
         if not(isinstance(new_id, int) and new_id > 0 and new_id <= self.number_of_animals):
             raise Exception('The new identity must be an integer between 1 and the number of animals in the video')
 
-        if self.user_generated_identity is None:
-            self._user_generated_identity = self.final_identity
+        if self.user_generated_identities is None:
+            self._user_generated_identities = [None]*len(self.user_generated_identities)
 
         if not isinstance(self.final_identity, list):
             self._user_generated_identity = new_id
@@ -939,40 +952,6 @@ class Blob(object):
             current.previous[0].update_identity(new_blob_identity, old_id)
             current = current.previous[0]
             count_past_corrections += 1
-
-
-    def update_centroid(self, video, old_centroid, new_centroid):
-        """ Updates the coordinates of the centrod
-
-        Parameters
-        ----------
-        old_centroid : tuple
-            len(centroid) must be 2
-        new_centroid : tuple
-            len(new_centroid) must be 2
-        """
-
-        video.is_centroid_updated = True
-        old_centroid = (old_centroid[0]*self.resolution_reduction,
-                        old_centroid[1]*self.resolution_reduction)
-        new_centroid = (new_centroid[0]*self.resolution_reduction,
-                        new_centroid[1]*self.resolution_reduction)
-        if not (isinstance(old_centroid, tuple) and len(old_centroid) == 2):
-            raise Exception("The old_centroid must be a tuple of length 2")
-        if not (isinstance(new_centroid, tuple) and len(new_centroid) == 2):
-            raise Exception("The new centroid must be a tuple of length 2")
-
-        if self.user_generated_centroid is None:
-            self._user_generated_centroid = copy.deepcopy(self.final_centroid)
-
-        if isinstance(self.final_centroid, list):
-            try:
-                index = self.user_generated_centroid.index(old_centroid)
-                self.user_generated_centroid[index] = new_centroid
-            except ValueError:
-                print("There is no centroid with the values of old_centroid")
-        else:
-            self._user_generated_centroid = new_centroid
 
 
 def remove_background_pixels(height, width, bounding_box_image, pixels,

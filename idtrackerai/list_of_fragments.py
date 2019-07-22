@@ -189,54 +189,6 @@ class ListOfFragments(object):
         fragments.sort(key=lambda x: x.certainty_P2, reverse=True)
         return fragments[0]
 
-    # def get_data_plot(self):
-    #     """Gathers the data to plot the individual fragments' statistics of the
-    #     video.
-    #
-    #     Returns
-    #     -------
-    #     ndarray
-    #         array of shape [number_of_individual_fragments, 1]. Number of
-    #         images in individual fragments
-    #     ndarray
-    #         array of shape [number_of_individual_fragments, 1]. Distance
-    #         travelled in every individual fragment
-    #     int
-    #         Number of images in crossing fragments
-    #     """
-    #     number_of_images_in_individual_fragments = []
-    #     distance_travelled_individual_fragments = []
-    #     number_of_images_in_crossing_fragments = []
-    #     for fragment in self.fragments:
-    #         if fragment.is_an_individual:
-    #             number_of_images_in_individual_fragments.append(fragment.number_of_images)
-    #             distance_travelled_individual_fragments.append(fragment.distance_travelled)
-    #         elif fragment.is_a_crossing:
-    #             number_of_images_in_crossing_fragments.append(fragment.number_of_images)
-    #     return np.asarray(number_of_images_in_individual_fragments),\
-    #             np.asarray(distance_travelled_individual_fragments),\
-    #             number_of_images_in_crossing_fragments
-    #
-    # def update_from_list_of_blobs(self, blobs_in_video, fragment_identifier_to_index):
-    #     """Updates an instance of ListOfFragments by considering an instance of
-    #     ListOfBlobs (see :class:`~list_of_blobs.ListOfBlobs`)
-    #
-    #     Parameters
-    #     ----------
-    #     blobs_in_video : list
-    #         list of the blob objects (see class :class:`~blob.Blob`) generated
-    #         from the blobs segmented in the video
-    #     fragment_identifier_to_index : list
-    #         Mapping from the collection of fragments to the list of fragment
-    #         identifiers
-    #     """
-    #     for blobs_in_frame in blobs_in_video:
-    #         for blob in blobs_in_frame:
-    #             if blob.user_generated_centroid is not None:
-    #                 self.self.fragments[fragment_identifier_to_index[blob.fragment_identifier]]._user_generated_identity = blob.user_generated_identity
-        # [setattr(self.fragments[fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.user_generated_identity)
-        #     for blobs_in_frame in blobs_in_video for blob in blobs_in_frame if blob.user_generated_identity is not None ]
-
     def update_identification_images_dataset(self):
         with h5py.File(self.identification_images_file_path, 'a') as f:
             f.create_dataset("identities", (f['identification_images'].shape[0], 1),
@@ -245,7 +197,6 @@ class ListOfFragments(object):
                 if fragment.used_for_training:
                     for image in fragment.images:
                         f['identities'][image] = fragment.identity
-
 
     def get_ordered_list_of_fragments(self, scope = None, first_frame_first_global_fragment = None):
         """Sorts the fragments starting from the frame number
