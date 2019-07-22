@@ -33,6 +33,24 @@ What is new in idtracker.ai v3?
 - Overall improvements in the internal structure of the code.
 - Multiple bugs fixed.
 
+Contents
+********
+
+.. toctree::
+   :maxdepth: 1
+
+   video_conditions
+   quickstart
+   GUI_explained
+   tracking_from_terminal
+   advanced_parameters
+   identity_matching
+   trajectories_analysis
+   gallery
+   FAQs
+   modules
+   data
+
 `Installation and git repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
 *******************************
 The source code and installation instructions can be found at https://gitlab.com/polavieja_lab/idtrackerai.git.
@@ -102,24 +120,6 @@ Find `here the preprint <https://arxiv.org/abs/1803.04351>`_ version of the manu
 Data
 ****
 The data used in the article can be found in the :doc:`./data` section of this webpage.
-
-
-Contents
-********
-
-.. toctree::
-   :maxdepth: 1
-
-   video_conditions
-   quickstart
-   GUI_explained
-   tracking_from_terminal
-   advanced_parameters
-   trajectories_analysis
-   gallery
-   FAQs
-   modules
-   data
 
 
 Documentation index and search
