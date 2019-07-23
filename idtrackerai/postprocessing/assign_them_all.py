@@ -269,7 +269,7 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
             elif original_blob.is_an_individual:
                 list_of_occluded_identities[original_blob.frame_number].append(identity)
             elif original_blob.is_a_crossing:
-                if original_blob.final_identities is not None:
+                if original_blob.identities_corrected_closing_gaps is not None:
                     identity = original_blob.identities_corrected_closing_gaps + [identity]
                     centroid = original_blob.interpolated_centroids + [centroid]
                 else:
@@ -278,7 +278,7 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
                 frame_number = original_blob.frame_number
                 new_blob = candidate_tuples_with_centroids_in_original_blob[0][0]
                 new_blob.frame_number = frame_number
-                new_blob._identities_corrected_closing_gaps = [identity]
+                new_blob._identities_corrected_closing_gaps = identity
                 new_blob.interpolated_centroids = centroid
                 original_blob = new_blob
 

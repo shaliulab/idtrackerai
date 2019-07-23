@@ -518,10 +518,11 @@ class Blob(object):
             # Note that sometimes len(user_generated_identities) > len(assigned_identities)
             final_identities = []
             for i, user_generated_identity in enumerate(self.user_generated_identities):
-                if user_generated_identity is not None or user_generated_identity < 0:
-                    final_identities.append(user_generated_identity)
-                else:
+                if user_generated_identity is None:
                     final_identities.append(self.assigned_identities[i])
+                elif user_generated_identity > 0:
+                    final_identities.append(user_generated_identity)
+
             return final_identities
         return self.assigned_identities
 
@@ -727,10 +728,10 @@ class Blob(object):
             # Note that sometimes len(user_generated_centroids) > len(assigned_centroids)
             final_centroids = []
             for i, user_generated_centroid in enumerate(self.user_generated_centroids):
-                if not user_generated_centroid[0] is None or user_generated_centroid[0] < 0:
-                    final_centroids.append(user_generated_centroid)
-                else:
+                if user_generated_centroid[0] is None:
                     final_centroids.append(self.assigned_centroids[i])
+                elif user_generated_centroid[0] > 0:
+                    final_centroids.append(user_generated_centroid)
             return final_centroids
         return self.assigned_centroids
 
@@ -741,7 +742,7 @@ class Blob(object):
         :return: Return a list of the final centroids in the full resolution of the frame
         """
         return [(centroid[0]/self.resolution_reduction,
-                 centroid[1]/self.resolution_reduction) for centroid in self.finals_centroid]
+                 centroid[1]/self.resolution_reduction) for centroid in self.final_centroids]
 
 
     def draw(self, image, colors_lst=None, selected_id=None):
@@ -772,15 +773,14 @@ class Blob(object):
                 if identity == selected_id:
                     cv2.circle(image, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
 
-                if self.user_generated_identities is not None and self.user_generated_centroids is not None:
-                    u_id = self.user_generated_identities[i]
-                    u_cent_x = self.user_generated_centroids[i][0]
-                    if (u_id is not None and u_id > 0) or (u_cent_x is not None and u_cent_x > 0):
-                        idroot = 'u-'
+                idroot = ''
+                if self.user_generated_identities is not None and (self.user_generated_identities[i] is not None and self.user_generated_identities[i] > 0):
+                    idroot = 'u-'
+                elif self.user_generated_centroids is not None and (self.user_generated_centroids[i][0] is not None and self.user_generated_centroids[i][0] > 0):
+                    idroot = 'u-'
                 elif self.identities_corrected_closing_gaps is not None and not self.is_an_individual:
                     idroot = 'c-'
-                else:
-                    idroot = ''
+
 
                 idstr = idroot + str(identity)
                 text_size = cv2.getTextSize(idstr, cv2.FONT_HERSHEY_SIMPLEX, 1.0, thickness=2)
@@ -834,7 +834,7 @@ class Blob(object):
             centroid_index = self.final_centroids.index(old_centroid)
             self.user_generated_centroids[centroid_index] = new_centroid
         except ValueError:
-            print("There is no centroid with the values of old_centroid")
+            raise Exception("There is no centroid with the values of old_centroid")
 
     def remove_centroid(self, video, identity, centroid, blobs_in_frame,
                         apply_resolution_reduction=True):
@@ -894,14 +894,14 @@ class Blob(object):
         if self.user_generated_centroids is None:
             self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
         if self.user_generated_identities is None:
-            self.user_generated_identities = [None]*len(self.final_identities)
+            self._user_generated_identities = [None]*len(self.final_identities)
 
         self._user_generated_centroids.append(centroid)
         self.user_generated_identities.append(identity)
 
         video.is_centroid_updated = True
 
-    def update_identity(self, new_id, old_id, centroid):
+    def update_identity(self, new_id, centroid):
         """ Updates identity. If the blob has multiple identities already assigned
         the old_id to be modified must be specified.
 
@@ -916,11 +916,8 @@ class Blob(object):
         if not(isinstance(new_id, int) and new_id > 0 and new_id <= self.number_of_animals):
             raise Exception('The new identity must be an integer between 1 and the number of animals in the video')
 
-        if not (isinstance(old_id, int) and old_id > 0 and old_id <= self.number_of_animals):
-            raise Exception("The old identity must be an integer between 1 and the number of animals in the video")
-
         if self.user_generated_identities is None:
-            self._user_generated_identities = [None]*len(self.user_generated_identities)
+            self._user_generated_identities = [None]*len(self.final_identities)
 
         centroid_index = self.final_centroids.index(centroid)
 
@@ -928,10 +925,10 @@ class Blob(object):
             centroid_index = self.final_centroids.index(centroid)
             self.user_generated_identities[centroid_index] = new_id
         except ValueError:
-            print('Identity cannot be updated because there is no centroid with old_id')
+            raise Exception('Identity cannot be updated because there is no such centroid in the blob')
 
 
-    def propagate_identity(self, new_blob_identity, old_id, centroid):
+    def propagate_identity(self, new_blob_identity, centroid):
         """Propagates the identity specified by new_blob_identity.
         """
         count_past_corrections = 1 #to take into account the modification already done in the current frame
@@ -947,7 +944,7 @@ class Blob(object):
                 next_centroid = current.next[0].final_centroids[index_centroid]
             else:
                 next_centroid = current.next[0].final_centroids[0]
-            current.next[0].update_identity(new_blob_identity, old_id, next_centroid)
+            current.next[0].update_identity(new_blob_identity, next_centroid)
             current = current.next[0]
             current_centroid = np.asarray(next_centroid)
             count_future_corrections += 1
@@ -961,7 +958,7 @@ class Blob(object):
                 previous_centroid = current.previous[0].final_centroids[index_centroid]
             else:
                 previous_centroid = current.previous[0].final_centroids[0]
-            current.previous[0].update_identity(new_blob_identity, old_id, previous_centroid)
+            current.previous[0].update_identity(new_blob_identity, previous_centroid)
             current = current.previous[0]
             current_centroid = np.asarray(previous_centroid)
             count_past_corrections += 1

@@ -160,7 +160,7 @@ def produce_trajectories_wo_identities(blobs_in_video, number_of_frames, number_
                     identifiers_prev[column] = blob.fragment_identifier
 
                 blob._identity = int(column+1)
-                centroid_trajectories[frame_number, column, :] = blob.final_centroid_full_resolution[0] # blobs that are individual only have one centroid
+                centroid_trajectories[frame_number, column, :] = blob.final_centroids_full_resolution[0] # blobs that are individual only have one centroid
 
                 if blob.fragment_identifier not in identifiers_next:
                     identifiers_prev[column] = np.nan
