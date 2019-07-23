@@ -104,7 +104,7 @@ class Stop_Training(object):
                     logger.info('Overfitting\n')
                     return True
                 elif self.first_accumulation_flag and self.overfitting_counter > conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM:
-                    print('Overfitting counter, ', self.overfitting_counter)
+                    # print('Overfitting counter, ', self.overfitting_counter)
                     logger.info('Overfitting first accumulation\n')
                     return True
             else:

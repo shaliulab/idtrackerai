@@ -150,7 +150,7 @@ class ConvNetwork():
 
     """
     def __init__(self, params, training_flag = True, restore_index = None):
-        print("*** params", params.__dict__)
+        # print("*** params", params.__dict__)
         # Set main attibutes of the class
         self.image_width = params.image_size[0]
         self.image_height = params.image_size[1]

@@ -149,8 +149,8 @@ class Store_Accuracy_and_Loss(object):
 
         for fragment in fragments:
             if getattr(fragment, attribute_to_check) and fragment.is_an_individual:
-                if fragment.final_identity is not None:
-                    blob_index = fragment.final_identity - 1
+                if fragment.final_identities is not None and len(fragment.final_identities)==1:
+                    blob_index = fragment.final_identities[0] - 1
                 elif self.scope == 'pretraining':
                     blob_index = fragment.blob_hierarchy_in_starting_frame
                 else:

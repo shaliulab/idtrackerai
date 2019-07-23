@@ -933,8 +933,8 @@ class Video(object):
 
         for fragment in fragments:
             if fragment.is_an_individual:
-                if fragment.assigned_identity != 0:
-                    weighted_P2 += fragment.P2_vector[fragment.assigned_identity - 1] * fragment.number_of_images
+                if fragment.assigned_identities[0] != 0:
+                    weighted_P2 += fragment.P2_vector[fragment.assigned_identities[0] - 1] * fragment.number_of_images
                 number_of_individual_blobs += fragment.number_of_images
 
         self.overall_P2 = weighted_P2 / number_of_individual_blobs

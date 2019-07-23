@@ -359,7 +359,7 @@ def segment(video):
                                         for i in range(0,len(video.episodes_start_end),num_jobs)]
 
         for episodes_start_end_sublist in tqdm(episodes_start_end_sublists, desc='Segmentation progress'):
-            OupPutParallel = Parallel(n_jobs=NUMBER_OF_JOBS_FOR_SEGMENTATION)(
+            OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
                                 delayed(segment_episode)(video, segmentation_thresholds, None, episode_start_end_frames,
                                                          conf.SAVE_PIXELS, conf.SAVE_SEGMENTATION_IMAGE)
                                 for episode_start_end_frames in episodes_start_end_sublist)
@@ -374,8 +374,7 @@ def segment(video):
                                        for i in range(0,len(video.episodes_start_end), num_jobs)]
 
         for pathsSubList, episodes_start_end_sublist in tqdm(list(zip(pathsSubLists, episodes_start_end_sublists)), desc='Segmentation progress'):
-            print(pathsSubList)
-            OupPutParallel = Parallel(n_jobs=NUMBER_OF_JOBS_FOR_SEGMENTATION)(
+            OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
                                 delayed(segment_episode)(video, segmentation_thresholds, path, episode_start_end_frames,
                                                          conf.SAVE_PIXELS, conf.SAVE_SEGMENTATION_IMAGE)
                                 for path, episode_start_end_frames in zip(pathsSubList, episodes_start_end_sublist))
@@ -383,7 +382,6 @@ def segment(video):
             maximum_number_of_blobs_in_episode.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
     set_mkl_to_multi_thread()
-    print(maximum_number_of_blobs_in_episode)
     video._maximum_number_of_blobs = max(flatten(maximum_number_of_blobs_in_episode))
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))
