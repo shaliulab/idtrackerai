@@ -101,13 +101,13 @@ class Fragment(object):
         Identity assigned to the fragment
     identity_is_fixed : bool
         True if the :attr:`certainty_P2` is greater than :const:`conf.FIXED_IDENTITY_THRESHOLD`
-    identity_corrected_closing_gaps : int
+    identities_corrected_closing_gaps : list
         Identity assigned to the fragment while solving the crossing if it exists else None
     user_generated_identity : int
         Identity assigned to the fragment by the user during validation if it exists else None
-    final_identity : int
-        Final identity of the fragment. It corresponds to :attr:`user_generated_identity` if it exist otherwise to the identity assigned by the algorithm
-    assigned_identity : int
+    final_identities : list
+        Final identities of the fragment. It corresponds to :attr:`user_generated_identities` if it exist otherwise to the identity assigned by the algorithm
+    assigned_identities : list
         Identity assigned to the fragment by the algorithm
     ambiguous_identities : list
         List of possible identities in case the assignment is ambiguous (two or more identity can be assigned to the fragment with the same certainty)
@@ -132,7 +132,7 @@ class Fragment(object):
                         centroids = None, areas = None,
                         is_an_individual = None, is_a_crossing = None,
                         number_of_animals = None,
-                        user_generated_identity = None):
+                        user_generated_identities = None):
         self.identifier = fragment_identifier
         self.start_end = start_end
         self.blob_hierarchy_in_starting_frame = blob_hierarchy_in_starting_frame
@@ -153,7 +153,7 @@ class Fragment(object):
         self._temporary_id = None
         self._identity = None
         self._identity_corrected_solving_jumps = None
-        self._user_generated_identity = user_generated_identity
+        self._user_generated_identities = user_generated_identities
         self._identity_is_fixed = False
         self._accumulated_globally = False
         self._accumulated_partially = False
@@ -276,28 +276,28 @@ class Fragment(object):
         return self._identity_corrected_solving_jumps
 
     @property
-    def identity_corrected_closing_gaps(self):
-        return self._identity_corrected_closing_gaps
+    def identities_corrected_closing_gaps(self):
+        return self._identities_corrected_closing_gaps
 
     @property
     def user_generated_identity(self):
         return self._user_generated_identity
 
     @property
-    def final_identity(self):
-        if hasattr(self, 'user_generated_identity') and self.user_generated_identity is not None:
-            return self.user_generated_identity
+    def final_identities(self):
+        if hasattr(self, 'user_generated_identities') and self.user_generated_identities is not None:
+            return self.user_generated_identities
         else:
-            return self.assigned_identity
+            return self.assigned_identities
 
     @property
-    def assigned_identity(self):
-        if hasattr(self, 'identity_corrected_closing_gaps') and self.identity_corrected_closing_gaps is not None:
-            return self.identity_corrected_closing_gaps
+    def assigned_identities(self):
+        if hasattr(self, 'identiies_corrected_closing_gaps') and self.identities_corrected_closing_gaps is not None:
+            return self.identiies_corrected_closing_gaps
         elif hasattr(self, 'identity_corrected_solving_jumps') and self.identity_corrected_solving_jumps is not None:
-            return self.identity_corrected_solving_jumps
+            return [self.identity_corrected_solving_jumps]
         else:
-            return self.identity
+            return [self.identity]
 
     @property
     def ambiguous_identities(self):
@@ -336,43 +336,6 @@ class Fragment(object):
 
         """
         return [getattr(fragment,attribute) for fragment in self.coexisting_individual_fragments]
-
-    # def get_fixed_identities_of_coexisting_fragments(self):
-    #     """Considers the fragments coexisting with self and returns their
-    #     identities if they are fixed (see :attr:identity_is_fixed)
-    #
-    #     Returns
-    #     -------
-    #     type
-    #         Description of returned object.
-    #
-    #     """
-    #     return [fragment.assigned_identity for fragment in self.coexisting_individual_fragments
-    #             if fragment.used_for_training
-    #             or fragment.user_generated_identity is not None
-    #             or (fragment.identity_corrected_solving_jumps is not None
-    #             and fragment.identity_corrected_solving_jumps != 0)]
-    #
-    # def get_missing_identities_in_coexisting_fragments(self, fixed_identities):
-    #     """Returns the identities that have not been assigned to the set of fragments coexisting with self
-    #
-    #     Parameters
-    #     ----------
-    #     fixed_identities : list
-    #         List of fixed identities
-    #
-    #     Returns
-    #     -------
-    #     list
-    #         List of missing identities in coexisting fragments
-    #
-    #     """
-    #     identities = self.get_attribute_of_coexisting_fragments('assigned_identity')
-    #     identities = [identity for identity in identities if identity != 0]
-    #     if not self.identity in fixed_identities:
-    #         return list((set(self.possible_identities) - set(identities)) | set([self.identity]))
-    #     else:
-    #         return list(set(self.possible_identities) - set(identities))
 
     def set_distance_travelled(self):
         """Computes the distance travelled by the individual in the fragment.
@@ -680,11 +643,13 @@ class Fragment(object):
         """
         if scope == 'to_the_past':
             neighbour = [fragment for fragment in fragments
-                            if fragment.assigned_identity == self.assigned_identity
+                            if fragment.is_an_individual and len(fragment.assigned_identities) == 1
+                            and fragment.assigned_identities[0] == self.assigned_identities[0]
                             and self.start_end[0] - fragment.start_end[1] == number_of_frames_in_direction]
         elif scope == 'to_the_future':
             neighbour = [fragment for fragment in fragments
-                            if fragment.assigned_identity == self.assigned_identity
+                            if fragment.is_an_individual and len(fragment.assigned_identities) == 1
+                            and fragment.assigned_identities[0] == self.assigned_identities[0]
                             and fragment.start_end[0] - self.start_end[1] == number_of_frames_in_direction]
 
         assert len(neighbour) < 2

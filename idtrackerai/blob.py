@@ -93,7 +93,7 @@ class Blob(object):
         If True the blob has been generated while solving the crossings
     _user_generated_identity : int
         The identity corrected manually by the user during validation
-    _identity_corrected_closing_gaps : int
+    _identities_corrected_closing_gaps : list
         The identity given to the blob during in postprocessing
     _identity_corrected_solving_jumps : int
         The identity given to the blob while solving duplications
@@ -103,7 +103,7 @@ class Blob(object):
         True if self.identity is not None
     final_identities : list
         Identities assigned to self after validation
-    assigned_identity : int
+    assigned_identities : list
         Identity assigned to self by the algorithm (ignoring eventual correction made by the user during validation)
     has_ambiguous_identity: bool
         True if during either accumulation of residual identification the blob has
@@ -772,11 +772,12 @@ class Blob(object):
                 if identity == selected_id:
                     cv2.circle(image, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
 
-                u_id = self.user_generated_identities[i]
-                u_cent_x = self.user_generated_centroids[i][0]
-                if (u_id is not None and u_id > 0) or (u_cent_x is not None and u_cent_x > 0):
-                    idroot = 'u-'
-                elif self.identity_corrected_closing_gaps[i] is not None and not self.is_an_individual:
+                if self.user_generated_identities is not None and self.user_generated_centroids is not None:
+                    u_id = self.user_generated_identities[i]
+                    u_cent_x = self.user_generated_centroids[i][0]
+                    if (u_id is not None and u_id > 0) or (u_cent_x is not None and u_cent_x > 0):
+                        idroot = 'u-'
+                elif self.identities_corrected_closing_gaps is not None and not self.is_an_individual:
                     idroot = 'c-'
                 else:
                     idroot = ''
@@ -900,7 +901,7 @@ class Blob(object):
 
         video.is_centroid_updated = True
 
-    def update_identity(self, new_id, old_id=None):
+    def update_identity(self, new_id, old_id, centroid):
         """ Updates identity. If the blob has multiple identities already assigned
         the old_id to be modified must be specified.
 
@@ -915,42 +916,54 @@ class Blob(object):
         if not(isinstance(new_id, int) and new_id > 0 and new_id <= self.number_of_animals):
             raise Exception('The new identity must be an integer between 1 and the number of animals in the video')
 
+        if not (isinstance(old_id, int) and old_id > 0 and old_id <= self.number_of_animals):
+            raise Exception("The old identity must be an integer between 1 and the number of animals in the video")
+
         if self.user_generated_identities is None:
             self._user_generated_identities = [None]*len(self.user_generated_identities)
 
-        if not isinstance(self.final_identity, list):
-            self._user_generated_identity = new_id
-        else:
-            if old_id is None:
-                raise Exception("The old identity cannot be None")
-            if not (isinstance(old_id, int) and old_id > 0 and old_id <= self.number_of_animals):
-                raise Exception("The old identity must be an integer between 1 and the number of animals in the video")
-            try:
-                index = self.user_generated_identity.index(old_id)
-                self.user_generated_identity[index] = new_id
-            except ValueError:
-                print('Identity cannot be updated because there is no centroid with old_id')
+        centroid_index = self.final_centroids.index(centroid)
+
+        try:
+            centroid_index = self.final_centroids.index(centroid)
+            self.user_generated_identities[centroid_index] = new_id
+        except ValueError:
+            print('Identity cannot be updated because there is no centroid with old_id')
 
 
-    def propagate_identity(self, new_blob_identity, old_id=None):
-        """Propagates the identity specified by new_blob_identity. If the blob has
-        multiple identities (e.g. is a crossing). The old_id needs to be specified.
+    def propagate_identity(self, new_blob_identity, old_id, centroid):
+        """Propagates the identity specified by new_blob_identity.
         """
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
 
         current = self
+        current_centroid = np.asarray(centroid)
 
         while len(current.next) == 1 and current.next[0].fragment_identifier == self.fragment_identifier:
-            current.next[0].update_identity(new_blob_identity, old_id)
+            if len(current.next[0].final_centroids) > 1:
+                next_centroids = np.asarray(current.next[0].centroids)
+                index_centroid = np.argmin(np.sqrt(np.sum((current_centroid-next_centroids)**2)))
+                next_centroid = current.next[0].final_centroids[index_centroid]
+            else:
+                next_centroid = current.next[0].final_centroids[0]
+            current.next[0].update_identity(new_blob_identity, old_id, next_centroid)
             current = current.next[0]
+            current_centroid = np.asarray(next_centroid)
             count_future_corrections += 1
 
         current = self
 
         while len(current.previous) == 1 and current.previous[0].fragment_identifier == self.fragment_identifier:
-            current.previous[0].update_identity(new_blob_identity, old_id)
+            if len(current.previous[0].final_centroids) > 1:
+                previous_centroids = np.asarray(current.previous[0].centroids)
+                index_centroid = np.argmin(np.sqrt(np.sum((current_centroid-previous_centroids)**2)))
+                previous_centroid = current.previous[0].final_centroids[index_centroid]
+            else:
+                previous_centroid = current.previous[0].final_centroids[0]
+            current.previous[0].update_identity(new_blob_identity, old_id, previous_centroid)
             current = current.previous[0]
+            current_centroid = np.asarray(previous_centroid)
             count_past_corrections += 1
 
 

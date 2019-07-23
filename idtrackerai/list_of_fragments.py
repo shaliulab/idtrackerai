@@ -185,7 +185,7 @@ class ListOfFragments(object):
             an instance of the class :class:`~fragment.Fragment`
 
         """
-        fragments = [fragment for fragment in self.fragments if fragment.assigned_identity is None and fragment.is_an_individual]
+        fragments = [fragment for fragment in self.fragments if fragment.is_an_individual and fragment.assigned_identities[0] is None]
         fragments.sort(key=lambda x: x.certainty_P2, reverse=True)
         return fragments[0]
 
@@ -609,7 +609,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     blob.is_an_individual,
                                     blob.is_a_crossing,
                                     number_of_animals,
-                                    user_generated_identity = blob.user_generated_identity)
+                                    user_generated_identities = blob.user_generated_identities)
                 used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
 

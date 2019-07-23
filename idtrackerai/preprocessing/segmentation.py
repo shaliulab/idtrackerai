@@ -359,7 +359,7 @@ def segment(video):
                                         for i in range(0,len(video.episodes_start_end),num_jobs)]
 
         for episodes_start_end_sublist in tqdm(episodes_start_end_sublists, desc='Segmentation progress'):
-            OupPutParallel = Parallel(n_jobs=NUMBER_OF_JOBS_FOR_SEGMENTATION)(
+            OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
                                 delayed(segment_episode)(video, segmentation_thresholds, None, episode_start_end_frames,
                                                          conf.SAVE_PIXELS, conf.SAVE_SEGMENTATION_IMAGE)
                                 for episode_start_end_frames in episodes_start_end_sublist)
@@ -375,7 +375,7 @@ def segment(video):
 
         for pathsSubList, episodes_start_end_sublist in tqdm(list(zip(pathsSubLists, episodes_start_end_sublists)), desc='Segmentation progress'):
             print(pathsSubList)
-            OupPutParallel = Parallel(n_jobs=NUMBER_OF_JOBS_FOR_SEGMENTATION)(
+            OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
                                 delayed(segment_episode)(video, segmentation_thresholds, path, episode_start_end_frames,
                                                          conf.SAVE_PIXELS, conf.SAVE_SEGMENTATION_IMAGE)
                                 for path, episode_start_end_frames in zip(pathsSubList, episodes_start_end_sublist))

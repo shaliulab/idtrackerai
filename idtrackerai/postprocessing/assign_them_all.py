@@ -270,12 +270,8 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
                 list_of_occluded_identities[original_blob.frame_number].append(identity)
             elif original_blob.is_a_crossing:
                 if original_blob.final_identities is not None:
-                    if isinstance(original_blob.final_identity, list):
-                        identity = original_blob.final_identity + [identity]
-                        centroid = original_blob.interpolated_centroids + [centroid]
-                    else:
-                        identity = [original_blob.final_identity, identity]
-                        centroid = [original_blob.centroid, centroid]
+                    identity = original_blob.identities_corrected_closing_gaps + [identity]
+                    centroid = original_blob.interpolated_centroids + [centroid]
                 else:
                     identity = [identity]
                     centroid = [centroid]
