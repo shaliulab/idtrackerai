@@ -53,11 +53,11 @@ The background should be as uniform as possible. To facilitate the detection of 
 the background colour has to be chosen in order to maximise the contrast with the animals.
 Small background inhomogeneity or noise are acceptable and can be removed by the user during the selection of the preprocessing parameters:
 
-  * Static or moving objects much smaller or much larger than the animals can be removed by setting the appropriate maximum and minimum pixels size thresholds.
+* Static or moving objects much smaller or much larger than the animals can be removed by setting the appropriate maximum and minimum pixels size thresholds.
 
-  * Static objects of the same size and intensity of the animals can be removed by selecting the option “subtract background” in the preprocessing tab.
+* Static objects of the same size and intensity of the animals can be removed by selecting the option “subtract background” in the preprocessing tab.
 
-  * Regions of the frame can be also excluded by selecting a region of interest.
+* Regions of the frame can be also excluded by selecting a region of interest.
 
 Shadows
 *******

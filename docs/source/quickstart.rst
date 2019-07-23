@@ -15,8 +15,8 @@ parameters.
 Step 0. Install idtracker.ai
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If you haven't installed the software yet, go to
-the `gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
-where you will find the instructions to install it.
+the `gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_ or to the
+:doc:`how_to_install` page  where you will find the installation instructions.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1. Test the installation
@@ -24,15 +24,21 @@ Step 1. Test the installation
 Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment
 where you installed idtracker.ai.
 
+.. code-block::
+
     conda activate name_of_the_environment
 
 If you don't remember the name of the environment, you can type:
+
+.. code-block::
 
     conda info --envs
 
 to list all the environment in your computer.
 
 Run the command:
+
+.. code-block::
 
     idtrackerai_test
 
@@ -43,6 +49,8 @@ By default this command will download an example video in a subfolder called
 */data* in the same folder where idtracker.ai is installed. If you want to
 download the video and save the results of the tracking
 in a different folder you can run the command:
+
+.. code-block::
 
     idtrackerai_test -o absolute/path/to/the/save_folder
 
@@ -62,6 +70,8 @@ At the end of the test, the terminal should have an output similar to this one:
 
 If you installed idtracker.ai without GPU support and you don't want to wait
 so long, you can run the following command:
+
+.. code-block::
 
     idtrackerai_test -o absolute/path/to/the/save_folder --no_identities
 
@@ -109,6 +119,8 @@ for the installation istructions.
 
 To launch the GUI open a terminal, activate the Conda environment where you
 installed idtracker.ai and run the command
+
+.. code-block::
 
   idtrackerai
 
@@ -250,13 +262,19 @@ of the tracking in the terminal.
 
 In Linux you use the commands
 
+.. code-block::
+
     top
 
 or
 
+.. code-block::
+
     htop
 
-if installed to monitor the CPU and memory usage. And the command
+to monitor the CPU and memory usage. And the command
+
+.. code-block::
 
     watch -n -1 nvidia-smi
 

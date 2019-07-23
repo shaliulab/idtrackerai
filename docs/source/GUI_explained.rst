@@ -29,10 +29,10 @@ are not consecutive frames of the same video sequence, we recommend create multi
 tracking intervals with 1 frame gaps using the *multiple tracking intervals*
 feature (see item 11. and IDENTITY MATCHING tutorial).
 
-3. **Session name**: Type here the name of the tracking session (e.g. *my_test*).
-A folder with the name *session_mytest* will be created in the same folder where
+3. **Session name**: Type here the name of the tracking session (e.g. *test*).
+A folder with the name *session_test* will be created in the same folder where
 the video is. All the data generated for the tracking of the video and the tracking
-results will be outputed in this folder.
+results will be output in this folder.
 
 4. **Save parameters**: Click *Save parameters* to save the preprocessing parameters
 of the main panel into a *.json* file. You can use this *.json* file to track the video
@@ -62,13 +62,62 @@ bar indicate the time of the video.
 9. **Maximize Preview**: Click this button to pop out the preview windows and place it wherever
 in the screen that suites better your work flow.
 
-10. **Select a tracking interval**: You can select a frames range for which the tracking will
+10. **Number of animals**: Type the number of animals in the video or scroll up/down to change
+the value of the number iside of the box.
+
+11. **Segmented blobs info**: Check the box *Graph* to open a windows that will show the number
+of blobs segmented and their area in pixels.
+
+.. figure:: ./_static/gui_pyforms/areas_graph.png
+  :scale: 80 %
+  :align: center
+  :alt: areas graph
+
+The x-axis indicates the blob index and the y-axis the number of pixels of the given blob.
+
+12. **Check segmentation**: Check this box to be warned if there are some frames in the videos contain
+more segmented blobs that animals. The warning will appear after pressing the *Track video* button and after
+the segmentation process id finished.
+
+.. figure:: ./_static/gui_pyforms/segmentation_check.png
+  :scale: 80 %
+  :align: center
+  :alt: segmentation check
+
+You will be shown a message with the path where a *.csv* file containing the
+frame numbers with more blobs than animals. You can use this *.csv* to explore
+your video again and readjust the preprocessing parameters.
+
+NOTE: In the previous version a re-segmentation with the new preprocessing parameters
+would be performed only for those frames. In the current version, the segmentation will
+be run for the whole video again. We might implement this feature back in the future.
+
+13. **Intensity thresholds**: Change the minimum and maximum values of the
+intensity thresholds to select the intensity range where the animals to be segmented
+are. Values closer to 0 correspond to darker pixels and values closer to 255 correspond
+to brighter pixels. You can change the values either by typing them inside of the box,
+scrolling up/down with your cursor on top of the box, or by gliding the extremes
+of the blue bar.
+
+14. **Subtract background**: Check this box if you want to apply a background subtraction
+processing. Checking this box will compute a model of the background as the average of
+multiple equally spaced frames in the video. This can be used to remove static objects
+that are of the same size and color as the animals you are trying to track.
+
+15. **Area thresholds**: Change the minimum and maximum values of the blobs area threshold to
+discard blobs which intensity is in the same intensity range as the animals you want to track.
+Blobs with a number of pixels inside of the range will be considered for tracking.
+
+16. **Resolution reduction**: Type a value between 0 and 1 to reduce the resolution of the
+video by that factor. You can change the value of the box by scrolling up/down or by clicking the arrows.
+
+17. **Select a tracking interval**: You can select a frames range for which the tracking will
 be performed. You can change the minimum and maxinum values either by typing them inside of the box,
 scrolling up/down with your cursor on top of the box, or by gliding the extremes
 of the blue bar. The frames outside of this range will be ignored. This can be useful if, for example,
 you want to ignore certain parts of the video.
 
-11. **Multiple tracking intervals**: Check the box *Multiple ranges* to add multiple tracking intervals.
+18. **Multiple tracking intervals**: Check the box *Multiple ranges* to add multiple tracking intervals.
 The blue bar will disappear and instead a text box with a *Add ragne* button will appear.
 
 .. figure:: ./_static/gui_pyforms/multiple_range.png
@@ -89,38 +138,7 @@ Tracking intervals should be expressed with square brackets and separated by com
 Adding tracking intervals can be useful to separated multiple no-consecutive videos,
 or to discard parts of the video that don't have to be considered for tracking.
 
-12. **Intensity thresholds**: Change the minimum and maximum values of the
-intensity thresholds to select the intensity range where the animals to be segmented
-are. Values closer to 0 correspond to darker pixels and values closer to 255 correspond
-to brighter pixels. You can change the values either by typing them inside of the box,
-scrolling up/down with your cursor on top of the box, or by gliding the extremes
-of the blue bar.
-
-13. **Blobs area**: Change the minimum and maximum values of the blobs area threshold to
-discard blobs which intensity is in the same intensity range as the animals you want to track.
-Blobs with a number of pixels inside of the range will be considered for tracking.
-
-
-14. **Blobs area graph**: Check the box *Graph* to open a windows that will show the number
-of blobs segmented and their area in pixels.
-
-.. figure:: ./_static/gui_pyforms/areas_graph.png
-  :scale: 80 %
-  :align: center
-  :alt: areas graph
-
-The x-axis indicates the blob index and the y-axis the number of pixels of the given blob.
-
-
-15. **Number of animals**: Type the number of animals in the video or scroll up/down to change
-the value of the number iside of the box.
-
-
-16. **Resolution reduction**: Type a value between 0 and 1 to reduce the resolution of the
-video by that factor. You can change the value of the box by scrolling up/down or by clicking the arrows.
-
-
-17. **Region of interest (ROI)**: To select one or more ROIs check the box Apply ROI. New buttons and a
+19. **Region of interest (ROI)**: To select one or more ROIs check the box Apply ROI. New buttons and a
 text box will appear in the main window.
 
 .. figure:: ./_static/gui_pyforms/ROI-1.png
@@ -138,29 +156,6 @@ To draw an ellipse.......
 
 To delete and ROI click on the set of number representing a given ROI. They will be highligthed in blue.
 Then press the top right minus (-) sign to delete it.
-
-
-18. **Check segmentation**: Check this box to be warned if there are some frames in the videos contain
-more segmented blobs that animals. The warning will appear after pressing the *Track video* button and after
-the segmentation process id finished.
-
-.. figure:: ./_static/gui_pyforms/segmentation_check.png
-  :scale: 80 %
-  :align: center
-  :alt: segmentation check
-
-You will be shown a message with the path where a *.csv* file containing the
-frame numbers with more blobs than animals. You can use this *.csv* to explore
-your video again and readjust the preprocessing parameters.
-
-NOTE: In the previous version a re-segmentation with the new preprocessing parameters
-would be performed only for those frames. In the current version, the segmentation will
-be run for the whole video again. We might implement this feature back in the future.
-
-19. **Subtract background**: Check this box if you want to apply a background subtraction
-processing. Checking this box will compute a model of the background as the average of
-multiple equally spaced frames in the video. This can be used to remove static objects
-that are of the same size and color as the animals you are trying to track.
 
 20. **Track without identities**: Check this box if you want to obtain trajectories of the
 animals for which the identities do not necessarily correspond to a given animal. The algorithm
