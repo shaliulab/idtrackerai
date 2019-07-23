@@ -38,7 +38,7 @@ def update_json(video_path, args):
 
     json_content['_video']['value'] = video_path
     if args.no_identities:
-        json_content['_no_ids']['value'] = True
+        json_content['_no_ids']['value'] = "True"
 
     with open(json_file_path, 'w') as json_file:
         json.dump(json_content, json_file)
