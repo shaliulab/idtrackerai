@@ -9,7 +9,7 @@ Tracking from the terminal
 **************************
 You can track a video using only the terminal running the following command
 
-.. code-block::
+.. code-block:: bash
 
     idtrackerai terminal_mode --_video "absolute_video_folder/video.avi" --exec track_video
 
@@ -18,7 +18,7 @@ This will track the video with the default parameters.
 To change the value of the different preprocessing parameters you just need
 to add them to the same line in the following way.
 
-.. code-block::
+.. code-block:: bash
 
     idtrackerai terminal_mode --_video "absolute_video_folder/video.avi" --_session session0 --_resreduct 0.3 --_intensity [0,135] --_area [5,50] --_range [0,508] --_nblobs 8 --_roi "[[(10,10),(200,10),(10,200)]]" --exec track_video
 
@@ -70,7 +70,7 @@ However, you can set the parameters using the GUI and them save them into a
 page). Then you can track the video from the terminal using the parameters
 saved in the .json file using the following command.
 
-.. code-block::
+.. code-block::  bash
 
     idtrackerai terminal_mode --load absolute_path_to_json_file --exec track_video
 
@@ -90,7 +90,7 @@ following.
 5. Without closing the GUI, repeat 2-4 for as many videos as you want.
 6. Prepare a Python script or a Shell script that executes the command for every .json file that you have created.
 
-.. code-block::
+.. code-block:: bash
 
     idtrackerai terminal_mode --load absolute_path_to_json_file --exec track_video
 

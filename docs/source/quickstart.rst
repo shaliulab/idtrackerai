@@ -24,13 +24,13 @@ Step 1. Test the installation
 Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment
 where you installed idtracker.ai.
 
-.. code-block::
+.. code-block:: bash
 
     conda activate name_of_the_environment
 
 If you don't remember the name of the environment, you can type:
 
-.. code-block::
+.. code-block:: bash
 
     conda info --envs
 
@@ -38,7 +38,7 @@ to list all the environment in your computer.
 
 Run the command:
 
-.. code-block::
+.. code-block:: bash
 
     idtrackerai_test
 
@@ -50,7 +50,7 @@ By default this command will download an example video in a subfolder called
 download the video and save the results of the tracking
 in a different folder you can run the command:
 
-.. code-block::
+.. code-block:: bash
 
     idtrackerai_test -o absolute/path/to/the/save_folder
 
@@ -71,7 +71,7 @@ At the end of the test, the terminal should have an output similar to this one:
 If you installed idtracker.ai without GPU support and you don't want to wait
 so long, you can run the following command:
 
-.. code-block::
+.. code-block:: bash
 
     idtrackerai_test -o absolute/path/to/the/save_folder --no_identities
 
@@ -120,7 +120,7 @@ for the installation istructions.
 To launch the GUI open a terminal, activate the Conda environment where you
 installed idtracker.ai and run the command
 
-.. code-block::
+.. code-block:: bash
 
   idtrackerai
 
@@ -142,7 +142,7 @@ frame number. You can explore any frame by typing the number inside of the box.
 Drag the gray square in the track bar to move to different frames in the video.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 4. Set the preprocessing parameters
+Step 5. Set the preprocessing parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *NOTE: The default values of the parameters that appear in the window ensure a
@@ -197,7 +197,7 @@ Check the :doc:`./GUI_explained` section to get more information about the
 **Multiple** box that will allow you to set multiple tracking intervals.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 5. Set a region of interest
+Step 6. Set a region of interest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the example video, the animals can be easily separated from the
@@ -239,7 +239,7 @@ draw **Polygons** and **Ellipses**.
 to set any ROI*
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 6. Set the session name and start tracking the video
+Step 7. Set the session name and start tracking the video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before pressing the **Track video** button, add the name of the tracking
@@ -262,19 +262,19 @@ of the tracking in the terminal.
 
 In Linux you use the commands
 
-.. code-block::
+.. code-block:: bash
 
     top
 
 or
 
-.. code-block::
+.. code-block:: bash
 
     htop
 
 to monitor the CPU and memory usage. And the command
 
-.. code-block::
+.. code-block:: bash
 
     watch -n -1 nvidia-smi
 
@@ -297,7 +297,7 @@ Check the :doc:`./advanced_parameters` section to get more information about
 how to change some advanced parameters of the algorithm.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 7. Validate the trajectories
+Step 8. Validate the trajectories
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once the tracking has finished, the button **Validate trajectories** will
@@ -310,7 +310,7 @@ Check the instructions of the validation GUI in :doc:`./validation_GUI.rst`
 page.
 
 ^^^^^^^^^^^^^^^^^^^^
-Step 8. Output files
+Step 9. Output files
 ^^^^^^^^^^^^^^^^^^^^
 The data generated during the tracking process and the trajectories files are
 stored in the session folder. If the name of the session was "quickstart"
@@ -354,14 +354,3 @@ might block your computer.
 
 Due to the higher frame size of this video (3500x3584) you might notice a
 decrease of speed when adjusting the preprocessing parameters.
-
-*NOTE 2: We recommend the following set of parameters for a good tracking
-performance on the sample video of 100 zebrafish:*
-
-- *apply ROI: ON (circular ROI)*
-- *background subtraction: ON*
-- *check segmentation consistency: OFF*
-- *Max intensity: 215*
-- *Min intensity: 0*
-- *Max area: 60000*
-- *Min area: 100*
