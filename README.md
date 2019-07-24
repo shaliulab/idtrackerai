@@ -1,10 +1,10 @@
-# idtracker.ai (v3.0.5-alpha)
+# idtracker.ai (v3)
 
 This is the **NEW VERSION** of the tracking software [idtracker.ai](https://idtrackerai.readthedocs.io/en/latest/index.html).
 
 idtracker.ai is a multi-animal tracking software for laboratory conditions. This work has been published in [Nature Methods](https://www.nature.com/articles/s41592-018-0295-5?WT.feed_name=subjects_software) [1] ([pdf here](https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n/view?usp=sharing))
 
-## What is new in version 3.0.5?
+## What is new in idtrackerai v3?
 
 - New Graphical User Interface (GUI) based on [Pyforms](https://pyforms.readthedocs.io/en/v4/).
 - Track videos from the command line with the *terminal_mode*.
