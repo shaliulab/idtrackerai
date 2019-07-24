@@ -66,30 +66,30 @@ If you fail to get this output, you can check the `installation instructions for
 
 It is good practice to install python packages in virtual environments. In particular,
 we recommend using Conda virtual environments. Find here the `Conda installation
-instructions for Linux, Windows and MacOS <https://docs.conda.io/projects/conda/en/latest/user-guide/install/)>`_/
+instructions for Linux, Windows and MacOS <https://docs.conda.io/projects/conda/en/latest/user-guide/install/)>`_.
 
-When deciding whether to install Anaconda or Miniconda, you can find some information about the difference
+When deciding whether to install Anaconda or Miniconda, you can find some information about the differences
 `here <https://stackoverflow.com/questions/45421163/anaconda-vs-miniconda>`_. For simplicity, we recommend
 installing Miniconda.
 
 To check whether the Conda package manager is installed, you can open your terminal (Anaconda prompt in Windows)
 and type
 
-.. code-block::
+.. code-block:: bash
 
     conda
 
 if you get the following output
 
-.. code-block::
+.. code-block:: bash
 
     conda: command not found
 
-miniconda is not installed in your system. Follow the instructions in the link above to install it.
+Miniconda is not installed in your system. Follow the instructions in the link above to install it.
 
 Create a Conda environment where idtarcker.ai will be installed.
 
-.. code-block::
+.. code-block:: bash
 
     conda create -n idtrackerai python=3.6
 
@@ -97,13 +97,13 @@ You can learn more about managing Conda environments in `this link <https://docs
 
 Once the Conda environment has been create you should be able to activate doing
 
-.. code-block::
+.. code-block:: bash
 
     conda activate idtrackerai
 
 or
 
-.. code-block::
+.. code-block:: bash
 
     source activate idtrackerai.
 
@@ -118,13 +118,13 @@ Installation
 
 You can install idtracker.ai with GUI support with the following command (run inside the conda environment)
 
-.. code-block::
+.. code-block:: bash
 
     pip instal idtrackerai[gui]
 
 To get GPU support without having to manually install the CUDA 10.0 and the cuDNN 7.6, you can install Tensorflow with GPU support with the Conda package manager with the following command:
 
-.. code-block::
+.. code-block:: bash
 
     conda install tensorflow-gpu=1.13
 
@@ -137,7 +137,7 @@ If you prefer to install the CUDA 10.0 and the cuDNN 7.6 in your system, you can
 
 Then, you can install idtracker.ai with GUI an GPU support running the command:
 
-.. code-block::
+.. code-block:: bash
 
     pip install idtrackerai[gui,gpu]
 
@@ -150,13 +150,13 @@ In some cases, users might want to use idtracker.ai from the command line and re
 
 If the CUDA 10.0 and the cuDNN are already installed in your computer, you only need to run the following command
 
-.. code-block::
+.. code-block:: bash
 
     pip install idtrackerai[gpu]
 
 if you want that Conda installs the CUDA 10.0 and cuDNN 7.6 in your Conda environment, then run
 
-.. code-block::
+.. code-block:: bash
 
     pip install idtrackerai
     conda install tensorflow-gpu=1.13
@@ -168,7 +168,7 @@ In some cases, the user might not need the GPU support for idtracker.ai. For exa
 
 In this case, you only need to install idtracker.ai with GUI support with the command
 
-.. code-block::
+.. code-block:: bash
 
     pip install idtrackerai[gui]
 
@@ -190,12 +190,12 @@ Uninstall and remove software
 
 As idtracker.ai can be now installed using a PyPI, to uninstall it you just need to execute
 
-.. code-block::
+.. code-block:: bash
 
     pip uninstall idtrackerai
 
 If you installed idtracker.ai inside of a Conda environment, you can also remove the environment by doing
 
-.. code-block::
+.. code-block:: bash
 
     conda remove -n name-of-the-environment --all
