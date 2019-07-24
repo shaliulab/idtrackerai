@@ -84,7 +84,7 @@ latex_elements = {
 }
 latex_documents = [
     (master_doc, 'idtrackerai.tex', u'idtrackerai Documentation',
-     u'Mattia G. Bergomi, Francisco Romero-Ferrero', 'manual'),
+     u' Francisco Romero-Ferrero, Mattia G. Bergomi', 'manual'),
 ]
 man_pages = [
     (master_doc, 'idtrackerai', u'idtrackerai Documentation',
