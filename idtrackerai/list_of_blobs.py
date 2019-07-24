@@ -522,7 +522,8 @@ class ListOfBlobs(object):
         video._is_centroid_updated = any([any([cent[0] is not None
                                                for cent in blob.user_generated_centroids])
                                           for blobs_in_frame in self.blobs_in_video
-                                          for blob in blobs_in_frame])
+                                          for blob in blobs_in_frame
+                                          if blob.user_generated_centroids is not None])
 
 
 def check_tracking(blobs_in_frame):
