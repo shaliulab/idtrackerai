@@ -12,3 +12,9 @@ you install idtracker.ai with GUI support.
 
 Check the `idtrackerai validator GUI documentation <https://pythonvideoannotator.readthedocs.io/en/master/modules/idtrackerai.html>`_ to learn how to launch it,
 correct identities and save new trajectories files.
+
+
+.. figure:: ./_static/validation_gui/validation_gui.png
+  :scale: 80 %
+  :align: center
+  :alt: validation gui
