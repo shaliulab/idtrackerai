@@ -30,7 +30,7 @@ NOTE: If the last frame of one clip and the first frame of the next clip are not
 3. **Session name**
 -------------------
 
-Type here the name of the tracking session (e.g. *test*). A folder with the name *session_test* will be created in the same folder where the video is. All the data generated for the tracking of the video and the tracking results will be output in this folder.
+Type here the name of the tracking session (e.g. *test*, avoid using spaces in the session name). A folder with the name *session_test* will be created in the same folder where the video is. All the data generated for the tracking of the video and the tracking results will be output in this folder.
 
 4. **Save parameters**
 ----------------------
@@ -151,11 +151,12 @@ To select one or more ROIs check the box Apply ROI. New buttons and a text box w
 
 Click on the buttons *Polygon*, *Rectangle* or *Ellipse* to select the type of ROI that you want to draw.
 
-To draw a polygon......
+To draw a rectanlge, click in one of the corners of the rectangle, a drag the cursor to the opposite (diagonally) corner of the rectangle that you want to draw.
 
-To draw a rectange.......
+To draw a polygon, click on every vertex of the polygon. Note that you should always click on consecutive vertices of the polygon.
 
-To draw an ellipse.......
+
+To draw an ellipse, click in 5 different parts on the perimeter of the ellipse that you want to draw. 
 
 To delete and ROI click on the set of number representing a given ROI. They will be highligthed in blue. Then press the top right minus (-) sign to delete it.
 
