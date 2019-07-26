@@ -338,10 +338,10 @@ def segment(video):
     num_cpus = int(multiprocessing.cpu_count())
     num_jobs = conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
     # num_jobs = 1
-    if conf.NUMBER_OF_JOBS_FOR_SEGMENTATION is not None:
+    if conf.NUMBER_OF_JOBS_FOR_SEGMENTATION is None:
         num_jobs = 1
     elif conf.NUMBER_OF_JOBS_FOR_SEGMENTATION < 0:
-        num_jobs = (n_cpus + 1 + n_jobs)
+        num_jobs = (num_cpus + 1 + num_jobs)
 
     #init variables to store data
     blobs_in_video = []

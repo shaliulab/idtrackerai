@@ -516,8 +516,10 @@ class ListOfBlobs(object):
                     indices = [i for i, final_id in enumerate(blob.final_identities)
                                if final_id == identity]
                     for index in indices:
-                        blob._user_generated_centroids[index] = (None, None)
-                        blob._user_generated_identities[index] = None
+                        if blob._user_generated_centroids is not None:
+                            blob._user_generated_centroids[index] = (None, None)
+                        if blob._user_generated_identities is not None:
+                            blob._user_generated_identities[index] = None
 
         video._is_centroid_updated = any([any([cent[0] is not None
                                                for cent in blob.user_generated_centroids])
