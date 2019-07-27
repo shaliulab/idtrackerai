@@ -75,21 +75,26 @@ version = ''
 with open('idtrackerai/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE).group(1)
 
+with open('README.md', 'r') as fd:
+    long_description = fd.read()
+
 setup(
     name='idtrackerai',
     version=version,
     python_requires='>={}.{}'.format(*REQUIRED_PYTHON),
-    url='https://www.idtracker.ai/',
+    url='https://idtrackerai.readthedocs.io/en/latest/',
     author='Francisco Romero Ferrero, Mattia G. Bergomi, Francisco J.H. Heras, Ricardo Ribeiro',
     author_email='idtracker@gmail.com',
     description=('A multi-animal tracking algorithm based on convolutional neural networks'),
+    long_description = long_description,
+    long_description_content_type = 'text/markdown',
     license='GPLv3+',
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
     install_requires=requirements,
     extras_require={
-        'gui':['idtrackerai-app[gui]'],
-        'gpu':['tensorflow-gpu==1.13.1']
+        'gui': ['pyforms-gui'],
+        'gpu': ['tensorflow-gpu==1.13.1']
     },
     zip_safe=False,
     classifiers=[

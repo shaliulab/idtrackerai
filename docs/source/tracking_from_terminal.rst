@@ -6,7 +6,7 @@ This feature is particularly useful to track multiple videos sequentially
 without having to interact with the GUI.
 
 Tracking from the terminal
-**************************
+--------------------------
 You can track a video using only the terminal running the following command
 
 .. code-block:: bash
@@ -61,7 +61,7 @@ corresponding parameter of the GUI.
 
 
 Tracking from the terminal using a .json file
-*******************************************************
+---------------------------------------------
 
 We recommend to check how the preprocessing parameters affect the detection
 of the animals in the video. The previous method does not allow to do this.
@@ -78,7 +78,7 @@ We find this method more simple and more reliable as the user is forced to
 check the preprocessing parameters in the GUI.
 
 Tracking multiple videos sequentially using multiple .json files
-****************************************************************
+----------------------------------------------------------------
 
 A good set of steps to track multiple videos sequentially could be the
 following.
@@ -96,11 +96,36 @@ following.
 
 7. Execute the Python script or the Shell script.
 
-You can download two example Python scripts and Shell scripts for multiple video
-tracking from THIS LINK.
+Example batch tracking script in Python
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We recommend checking how match data is generated after tracking one of the videos
-and checking that you have enough space in your hardrive to save all the data
-that will be generated after tracking all the videos. You can change the
-amount of data stored for every tracking session changing the DATA_POLICY
-advanced parameter (see :doc:`advanced_parameters`).
+There are multiple ways of writing an script in Python that scans you folders and track the videos if they contain a .json file. This example script assumes the following.
+
+1. A main folder contains all the videos to be tracked.
+
+2. Inside of the main folder the videos are placed in subfolders that contain the video and the a file named "params.json" with the preprocessing parameters that should be used to track it.
+
+Copy the following code in a file a name it "idtrackerai_batch_tracking.py".
+
+.. code-block:: python
+
+    import os
+    import sys
+
+    project_directory = sys.argv[1]
+    for root, subdirs, files in os.walk(project_directory):
+        json_file = os.path.join(root, 'params.json')
+    if os.path.isfile(json_file):
+        os.system('idtrackerai terminal_mode --load {} --exec track_video'.format(json_file))
+
+Execute the script using the following command.
+
+.. code-blob:: bash
+
+    python idtrackerai_batch_tracking.py /path/to/mainFolder/with/all/videos
+
+Note that you will need to substitute the '/path/to/mainFolder/with/all/videos' with the path to your folder that contains all the videos.
+
+We recommend checking how match data is generated after tracking one of the videos and checking that you have enough space in your hard-drive to save all the data that will be generated after tracking all the videos. You can change the amount of data stored for every tracking session changing the DATA_POLICY advanced parameter (see how to do this in the :doc:`advanced_parameters` page).
+
+Note that if you want to use a "local_settings.py" file to modify some :doc:`advanced_parameters`, this file should be in the same directory frome where you execute the script "idtrackerai_batch_tracking.py".

@@ -111,7 +111,7 @@ Change the minimum and maximum values of the blobs area threshold to discard blo
 16. **Resolution reduction**
 ----------------------------
 
-Type a value between 0 and 1 to reduce the resolution of the video by that factor. You can change the value of the box by scrolling up/down or by clicking the arrows.
+Type a value between 0 and 1 to reduce the resolution of the video by that factor. You can change the value of the box by scrolling up/down or by clicking the arrows. Note that the output trajectories will be in full-frame resolution
 
 17. **Select a tracking interval**
 ----------------------------------
@@ -156,7 +156,7 @@ To draw a rectanlge, click in one of the corners of the rectangle, a drag the cu
 To draw a polygon, click on every vertex of the polygon. Note that you should always click on consecutive vertices of the polygon.
 
 
-To draw an ellipse, click in 5 different parts on the perimeter of the ellipse that you want to draw. 
+To draw an ellipse, click in 5 different parts on the perimeter of the ellipse that you want to draw.
 
 To delete and ROI click on the set of number representing a given ROI. They will be highligthed in blue. Then press the top right minus (-) sign to delete it.
 

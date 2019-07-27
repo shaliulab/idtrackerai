@@ -46,7 +46,7 @@ Contents
    validation_GUI_explained
    tracking_from_terminal
    advanced_parameters
-   identity_matching
+   tutorials
    trajectories_analysis
    gallery
    FAQs
