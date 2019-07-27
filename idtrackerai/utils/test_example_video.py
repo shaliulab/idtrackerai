@@ -31,7 +31,7 @@ def download_example_video(output_folder=''):
 
 
 def update_json(video_path, args):
-    json_file_path = os.path.join(IDTRACKERAI_FOLDER, 'tests', 'test.json')
+    json_file_path = os.path.join(IDTRACKERAI_FOLDER, 'utils', 'test.json')
 
     with open(json_file_path) as json_file:
         json_content = json.load(json_file)
