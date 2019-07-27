@@ -30,7 +30,7 @@ What is new in idtracker.ai v3?
 - Improved data storage management. Use the parameter *DATA_POLICY* in the *local_settings.py* file to decide which files to save after the tracking. For example, this will prevent you from storing heavy unnecessary files if what you only need are the trajectories.
 - Improved validation and correction of trajectories with a new GUI based on `Python Video Annotator <https://pythonvideoannotator.readthedocs.io/en/master/modules/idtrackerai.html>`_.
 - Overall improvements in the internal structure of the code. Algorithm and GUI are now completely separated. The idtrackerai module and API are stored in the `idtrackerai repository <https://gitlab.com/polavieja_lab/idtrackerai>`_. The new `Pyforms based GUI has its how repository <https://gitlab.com/polavieja_lab/idtrackerai-app>`_.
-- The `old Kivy based GUI has its own repository <https://gitlab.com/polavieja_lab/idtrackerai-gui-kivy>`_. You can in download it and install it from the repository, however we did not upload it to PyPI. Although, we tried to make the new version compatible with the Kivy based GUI, this won't be supported in the future.
+- The `old Kivy-based GUI has its own repository <https://gitlab.com/polavieja_lab/idtrackerai-gui-kivy>`_. You can download it and install it from the repository. We made some changes in the code of the old GUI to make it compatible with the new idtracker.ai v3. However, the Kivy-based GUI won't be supported in the future.
 - Multiple bugs fixed.
 
 Contents
