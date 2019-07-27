@@ -47,7 +47,7 @@ class GroundTruthBlob(object):
         centroid
         pixels (pixels is stored to check the groundtruth in crossings)
     """
-    def __init__(self, attributes_to_get = ['identity', 'assigned_identity',
+    def __init__(self, attributes_to_get = ['identity', 'assigned_identities',
                                             'used_for_training', 'accumulation_step',
                                             'centroid', 'pixels',
                                             'frame_number',
@@ -59,7 +59,9 @@ class GroundTruthBlob(object):
     def get_attribute(self, blob):
         for attribute in self.attributes:
             if attribute == 'identity':
-                setattr(self, attribute, getattr(blob, 'final_identity'))
+                setattr(self, attribute, getattr(blob, 'final_identities')[0])
+            if attribute == 'assigned_identities':
+                setattr(self, attribute, getattr(blob, 'assigned_identities')[0])
             else:
                 setattr(self, attribute, getattr(blob, attribute))
 
