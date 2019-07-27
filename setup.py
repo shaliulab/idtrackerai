@@ -67,9 +67,7 @@ requirements = ['numpy >= 1.13.0',
                 ]
 
 
-EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*",
-                        "test", "test.*",
-                        "docs", "docs.*"]
+EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*", "docs", "docs.*"]
 
 version = ''
 with open('idtrackerai/__init__.py', 'r') as fd:
@@ -112,7 +110,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'idtrackerai_test=idtrackerai.tests.test_example_video:test',
+            'idtrackerai_test=idtrackerai.utils.test_example_video:test',
         ],
     }
 )
