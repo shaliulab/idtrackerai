@@ -63,19 +63,19 @@ corresponding parameter of the GUI.
 Tracking from the terminal using a .json file
 ---------------------------------------------
 
-We recommend to check how the preprocessing parameters affect the detection
-of the animals in the video. The previous method does not allow to do this.
-However, you can set the parameters using the GUI and them save them into a
-.json file using the **Save parameters** button (see the :doc:`GUI_explained`
-page). Then you can track the video from the terminal using the parameters
-saved in the .json file using the following command.
+We recommend to check how the preprocessing parameters affect the detection of the animals in the video. The previous method does not allow to do this. However, you can set the parameters using the GUI and them save them into a .json file using the **Save parameters** button (see the :doc:`GUI_explained` page). Then you can track the video from the terminal using the parameters saved in the .json file using the following command.
 
-.. code-block::  bash
+.. code-block:: bash
 
     idtrackerai terminal_mode --load absolute_path_to_json_file --exec track_video
 
-We find this method more simple and more reliable as the user is forced to
-check the preprocessing parameters in the GUI.
+We find this method more simple and more reliable as the user is forced to check the preprocessing parameters in the GUI.
+
+If you have saved the .json file in a computer and you are going to track the video in a different computer, you can overwrite the path of the in the json file by running the following command:
+
+.. code-block:: bash
+
+    idtrackerai terminal_mode --load absolute_path_to_json_file --_video_path new_path_to_video --exec track_video
 
 Tracking multiple videos sequentially using multiple .json files
 ----------------------------------------------------------------
@@ -115,8 +115,8 @@ Copy the following code in a file a name it "idtrackerai_batch_tracking.py".
     project_directory = sys.argv[1]
     for root, subdirs, files in os.walk(project_directory):
         json_file = os.path.join(root, 'params.json')
-    if os.path.isfile(json_file):
-        os.system('idtrackerai terminal_mode --load {} --exec track_video'.format(json_file))
+        if os.path.isfile(json_file):
+            os.system('idtrackerai terminal_mode --load {} --exec track_video'.format(json_file))
 
 Execute the script using the following command.
 

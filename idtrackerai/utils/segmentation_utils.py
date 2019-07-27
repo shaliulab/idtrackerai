@@ -159,14 +159,14 @@ def cumpute_background(video):
     set_mkl_to_single_thread()
     if video.paths_to_video_segments is None: # one single file
         logger.debug('one single video, computing bkg in parallel from single video')
-        output = Parallel(n_jobs=NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
+        output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
                     sum_frames_for_bkg_per_episode_in_single_file_video)(
                     starting_frame, ending_frame, video.video_path, bkg)
                     for (starting_frame, ending_frame) in video.episodes_start_end)
         logger.debug('Finished parallel loop for bkg subtraction')
     else: # multiple video files
         logger.debug('multiple videos, computing bkg in parallel from every episode')
-        output = Parallel(n_jobs=NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
+        output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
                     sum_frames_for_bkg_per_episode_in_multiple_files_video)(
                     videoPath,bkg) for videoPath in video.paths_to_video_segments)
         logger.debug('Finished parallel loop for bkg subtraction')
