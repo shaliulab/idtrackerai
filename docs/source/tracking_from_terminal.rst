@@ -128,4 +128,22 @@ Note that you will need to substitute the '/path/to/mainFolder/with/all/videos' 
 
 We recommend checking how match data is generated after tracking one of the videos and checking that you have enough space in your hard-drive to save all the data that will be generated after tracking all the videos. You can change the amount of data stored for every tracking session changing the DATA_POLICY advanced parameter (see how to do this in the :doc:`advanced_parameters` page).
 
-Note that if you want to use a "local_settings.py" file to modify some :doc:`advanced_parameters`, this file should be in the same directory frome where you execute the script "idtrackerai_batch_tracking.py".
+Note that if you want to use a "local_settings.py" file to modify some :doc:`advanced_parameters`, this file should be in the same directory from where you execute the script "idtrackerai_batch_tracking.py".
+
+In some situations, the user might be saving the .json files in a computer and tracking the videos in a different one. For that, the path of the video that is saved in the .json file needs to be overwritten. An example script for single files videos would be the following
+
+.. code-block:: python
+
+    import os
+    import sys
+    import glob
+
+    project_directory = sys.argv[1]
+    for root, subdirs, files in os.walk(project_directory):
+    json_file = os.path.join(root, 'params.json')
+    path_to_video = glob.glob(os.path.join(root, '*.avi'))
+    if os.path.isfile(json_file) and len(path_to_video) == 1:
+        path_to_video = path_to_video[0]
+        os.system('idtrackerai terminal_mode --load {} --_video_path {} --exec track_video'.format(json_file, path_to_video))
+
+Note that we have added the option --_video_path. This will overwrite the _video parameter inside of the .json file. 
