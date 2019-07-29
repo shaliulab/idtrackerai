@@ -542,7 +542,7 @@ def check_tracking(blobs_in_frame):
 
 
     """
-    there_are_crossings = any([b.is_a_crossing for b in blobs_in_frame]) #check whether there is a crossing in the frame
-    missing_identity = any([len(b.final_identities) == 1 and b.final_identities[0] == 0
-                            for b in blobs_in_frame]) # Check whether there is some missing identities (0 or None)
+    there_are_crossings = any([blob.is_a_crossing for blob in blobs_in_frame]) #check whether there is a crossing in the frame
+    missing_identity = any([None in blob.final_identities or 0 in blob.final_identities
+                            for blob in blobs_in_frame]) # Check whether there is some missing identities (0 or None)
     return there_are_crossings or missing_identity
