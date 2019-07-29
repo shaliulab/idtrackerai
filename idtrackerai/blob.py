@@ -520,7 +520,7 @@ class Blob(object):
             for i, user_generated_identity in enumerate(self.user_generated_identities):
                 if user_generated_identity is None:
                     final_identities.append(self.assigned_identities[i])
-                elif user_generated_identity > 0:
+                elif user_generated_identity >= 0:
                     final_identities.append(user_generated_identity)
 
             return final_identities
@@ -774,9 +774,9 @@ class Blob(object):
                     cv2.circle(image, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
 
                 idroot = ''
-                if self.user_generated_identities is not None and (self.user_generated_identities[i] is not None and self.user_generated_identities[i] > 0):
+                if self.user_generated_identities is not None and (self.user_generated_identities[i] is not None and self.user_generated_identities[i] >= 0):
                     idroot = 'u-'
-                elif self.user_generated_centroids is not None and (self.user_generated_centroids[i][0] is not None and self.user_generated_centroids[i][0] > 0):
+                elif self.user_generated_centroids is not None and (self.user_generated_centroids[i][0] is not None and self.user_generated_centroids[i][0] >= 0):
                     idroot = 'u-'
                 elif self.identities_corrected_closing_gaps is not None and not self.is_an_individual:
                     idroot = 'c-'
@@ -913,8 +913,8 @@ class Blob(object):
             old value of the identity of the blob. It must be specified when the
             blob has multiple identities already assigned.
         """
-        if not(isinstance(new_id, int) and new_id > 0 and new_id <= self.number_of_animals):
-            raise Exception('The new identity must be an integer between 1 and the number of animals in the video')
+        if not (isinstance(new_id, int) and new_id >= 0 and new_id <= self.number_of_animals):
+            raise Exception('The new identity must be an integer between 0 and the number of animals in the video. Blobs with 0 identity will be ommited for the generation of the trajectories')
 
         if self.user_generated_identities is None:
             self._user_generated_identities = [None]*len(self.final_identities)
