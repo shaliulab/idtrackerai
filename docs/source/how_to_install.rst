@@ -86,7 +86,7 @@ If you fail to get this output or your version is smaller than 410.38, then foll
 
 .. code-block:: bash
 
-    sudo apt-get install nvidia-XXX
+    sudo apt-get install nvidia-driver-XXX
 
 6. Reboot the system.
 
