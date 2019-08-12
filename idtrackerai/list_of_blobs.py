@@ -42,6 +42,7 @@ else:
     import logging
     logger = logging.getLogger("__main__.list_of_blobs")
 
+
 class ListOfBlobs(object):
     """ Collects all the instances of the class :class:`~blob.Blob` generated
     from the blobs extracted from the video during segmentation
@@ -59,7 +60,8 @@ class ListOfBlobs(object):
         True if the blobs have already being organised in fragments (see
         :class:`~fragment.Fragment`). False otherwise
     """
-    def __init__(self, blobs_in_video = None, number_of_frames = None):
+
+    def __init__(self, blobs_in_video=None, number_of_frames=None):
         self.blobs_in_video = blobs_in_video
         self.number_of_frames = len(self.blobs_in_video)
         self.blobs_are_connected = False
@@ -76,7 +78,7 @@ class ListOfBlobs(object):
         """Connects blobs in subsequent frames by computing their overlapping
         """
         logger.info("Connecting list of blob objects")
-        for frame_i in tqdm(range(1,self.number_of_frames), desc='connecting blobs'):
+        for frame_i in tqdm(range(1, self.number_of_frames), desc='connecting blobs'):
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                 if blob_0.overlaps_with(blob_1):
                     blob_0.now_points_to(blob_1)
@@ -86,16 +88,16 @@ class ListOfBlobs(object):
         and sets blobs_are_connected to True
         """
         logger.info("re-Connecting list of blob objects")
-        for frame_i in tqdm(range(1, self.number_of_frames), desc = 're-connecting blobs'):
+        for frame_i in tqdm(range(1, self.number_of_frames), desc='re-connecting blobs'):
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                 if blob_0.fragment_identifier == blob_1.fragment_identifier:
                     blob_0.now_points_to(blob_1)
         self.blobs_are_connected = True
 
-    def save(self, video, path_to_save = None, number_of_chunks = 1):
+    def save(self, video, path_to_save=None, number_of_chunks=1):
         """save instance"""
         self.disconnect()
-        logger.info("saving blobs list at %s" %path_to_save)
+        logger.info("saving blobs list at %s" % path_to_save)
         np.save(path_to_save, self)
         if video.has_been_segmented and not video.has_been_preprocessed:
             self.connect()
@@ -118,7 +120,7 @@ class ListOfBlobs(object):
             an instance of ListOfBlobs
 
         """
-        logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
+        logger.info("loading blobs list from %s" % path_to_load_blob_list_file)
         list_of_blobs = np.load(path_to_load_blob_list_file, allow_pickle=True).item()
         list_of_blobs.blobs_are_connected = False
         return list_of_blobs
@@ -138,9 +140,9 @@ class ListOfBlobs(object):
         counter = 0
         possible_blob_indices = range(number_of_animals)
 
-        for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'assigning fragment identifier'):
+        for blobs_in_frame in tqdm(self.blobs_in_video, desc='assigning fragment identifier'):
             used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
-            missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
+            missing_blob_indices = list(set(possible_blob_indices).difference(set(used_blob_indices)))
             for blob in blobs_in_frame:
                 if blob.fragment_identifier is None and blob.is_an_individual:
                     blob._fragment_identifier = counter
@@ -206,8 +208,8 @@ class ListOfBlobs(object):
                 if blob.is_a_crossing and blob.fragment_identifier is None:
                     propagate_crossing_identifier(blob, fragment_identifier)
                     fragment_identifier += 1
-        logger.info("number_of_crossing_fragments: %i" %(fragment_identifier - self.number_of_individual_fragments))
-        logger.info("total number of fragments: %i" %fragment_identifier)
+        logger.info("number_of_crossing_fragments: %i" % (fragment_identifier - self.number_of_individual_fragments))
+        logger.info("total number of fragments: %i" % fragment_identifier)
 
     def compute_overlapping_between_subsequent_frames(self):
         """Computes overlapping between self and the blobs generated during
@@ -229,7 +231,7 @@ class ListOfBlobs(object):
                 blob.frame_number = frame_number
         self.disconnect()
 
-        for frame_i in tqdm(range(1, self.number_of_frames), desc = 'Connecting blobs '):
+        for frame_i in tqdm(range(1, self.number_of_frames), desc='Connecting blobs '):
             set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i-1], frame_i-1)
 
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
@@ -245,9 +247,10 @@ class ListOfBlobs(object):
         belong to a crossing.
         """
         #areas are collected throughout the entire video in the cores of the global fragments
-        areas_and_body_length = np.asarray([(blob.area,blob.estimated_body_length) for blobs_in_frame in self.blobs_in_video
-                                                                                    for blob in blobs_in_frame
-                                                                                    if len(blobs_in_frame) == number_of_animals])
+        areas_and_body_length = np.asarray([(blob.area,blob.estimated_body_length)
+                                            for blobs_in_frame in self.blobs_in_video
+                                            for blob in blobs_in_frame
+                                            if len(blobs_in_frame) == number_of_animals])
         if areas_and_body_length.shape[0] == 0:
             raise ValueError('There is not part in the video where all the animals are visible. Try a different segmentation or check the number of animals in the video.')
         median_area = np.median(areas_and_body_length[:,0])
@@ -403,9 +406,10 @@ class ListOfBlobs(object):
                 if check_tracking(blobs_in_frame):
                     return blob.frame_number
 
-    def interpolate_from_user_generated_centroids(self, video, id, start_frame, end_frame):
+    def interpolate_from_user_generated_centroids(self, video, identity,
+                                                  start_frame, end_frame):
         """
-        Interpolates linearly the centroids of the blobs of identity id between
+        Interpolates linearly the centroids of the blobs of identity identity between
         start_frame and end_frame. The interpolation is done using the
         user_generated_centroids. The centroid of the blobs without
         user_generated_centroids are assumed to be nan and are interpolated
@@ -413,7 +417,7 @@ class ListOfBlobs(object):
 
         Parameters
         ----------
-        id : int
+        identity : int
             Identity of the blobs to be interpolated
         start_frame : int
             Frame from which to start interpolation
@@ -424,64 +428,62 @@ class ListOfBlobs(object):
         if start_frame >= end_frame:
             raise Exception('The initial frame has to be higher than the last frame.')
 
-        # Collect centroids of blobs with identity id that were modified by the user
-        user_generated_centroids = []
+        # Collect centroids of blobs with identity identity that were modified by the user
+        centroids_to_interpolate = []
         blobs_of_id = []
         for blobs_in_frame in self.blobs_in_video[start_frame:end_frame]:
-            no_blob_found=False
-            for blob in blobs_in_frame:
-                if not isinstance(blob.final_identity, list) and blob.final_identity == id:
-                    blobs_of_id.append(blob)
-                    if blob.user_generated_centroid is not None or blob.user_generated_identity is not None:
-                        user_generated_centroids.append(blob.final_centroid)
-                    else:
-                        user_generated_centroids.append((np.nan, np.nan))
-                    no_blob_found=False
-                    break
-                elif isinstance(blob.final_identity, list) and id in blob.final_identity:
-                    blobs_of_id.append(blob)
-                    index = blob.final_identity.index(id)
-                    if blob.user_generated_centroid is not None or blob.user_generated_identity is not None:
-                        user_generated_centroids.append(blob.final_centroid[index])
-                    else:
-                        user_generated_centroids.append((np.nan, np.nan))
-                    no_blob_found=False
-                    break
+            possible_blobs = [blob for blob in blobs_in_frame if identity in blob.final_identities]
+
+            if len(possible_blobs) == 1:
+                blobs_of_id.append(possible_blobs[0])
+                identity_index = possible_blobs[0].final_identities.index(identity)
+                fixed_centroid = (None, None)
+                if possible_blobs[0].user_generated_centroids is not None:
+                    fixed_centroid = possible_blobs[0].user_generated_centroids[identity_index]
+                if (fixed_centroid[0] is not None and fixed_centroid[0] > 0):
+                    centroids_to_interpolate.append(fixed_centroid)
+                elif possible_blobs[0].user_generated_identities is not None and possible_blobs[0].user_generated_identities[identity_index] is not None:
+                    centroids_to_interpolate.append(possible_blobs[0].final_centroids[identity_index])
                 else:
-                    no_blob_found = True
-            if no_blob_found:
+                    centroids_to_interpolate.append((np.nan, np.nan))
+            elif not possible_blobs:
                 blobs_of_id.append(None)
-                user_generated_centroids.append((np.nan, np.nan))
-
-        if not (len(user_generated_centroids) == len(blobs_of_id) == end_frame-start_frame):
-            raise Exception("The number of user generated centroids before interpolation does \
-                            not match the number of frames interpolated.")
-        if np.isnan(user_generated_centroids[0][0]) or np.isnan(user_generated_centroids[-1][0]):
-            raise Exception("The first and last frame of the interpolation interval must contain a \
-                            user generated centroid marked with the 'u-' prefix")
-        user_generated_centroids = np.asarray(user_generated_centroids)
-        # interpolate linearlry the centroids not generated by the user
-        interpolate_nans(user_generated_centroids)
-        # assign the new centroids to the blobs with identity id.
-        frames = range(start_frame, end_frame)
-        for i, (blob, frame) in enumerate(zip(blobs_of_id, frames)):
-            if blob is not None:
-                if not isinstance(blob.final_centroid, list):
-                    blob._user_generated_centroid = tuple(user_generated_centroids[i, :])
-                else:
-                    index = blob.final_identity.index(id)
-                    blob._user_generated_centroid = blob.final_centroid
-                    blob.user_generated_centroid[index] = tuple(user_generated_centroids[i, :])
+                centroids_to_interpolate.append((np.nan, np.nan))
             else:
-                blob_index = np.argmin([candidate_blob.distance_from_countour_to(tuple(user_generated_centroids[i,:]))
-                                        for candidate_blob in self.blobs_in_video[frame]
-                                        if candidate_blob.is_a_crossing])
-                nearest_blob = self.blobs_in_video[frame][blob_index]
-                nearest_blob.add_centroid(video, tuple(user_generated_centroids[i,:]), id,
-                                          apply_resolution_reduction=False)
+                raise Exception('Make sure that the identnties of the user \
+                                generated centroids (marked with u-) are unique \
+                                in the interpolation interval.')
 
+        try:
+            if not (len(centroids_to_interpolate) == len(blobs_of_id) == end_frame - start_frame):
+                raise Exception("The number of user generated centroids before interpolation does \
+                                not match the number of frames interpolated.")
+            if np.isnan(centroids_to_interpolate[0][0]) or np.isnan(centroids_to_interpolate[-1][0]):
+                raise Exception("The first and last frame of the interpolation interval must contain a \
+                                user generated centroid marked with the 'u-' prefix")
+            centroids_to_interpolate = np.asarray(centroids_to_interpolate)
+            # interpolate linearlry the centroids not generated by the user
+            interpolate_nans(centroids_to_interpolate)
+            # assign the new centroids to the blobs with identity identity.
+            frames = range(start_frame, end_frame)
+            for i, (blob, frame) in enumerate(zip(blobs_of_id, frames)):
+                if blob is not None:
+                    identity_index = blob.final_identities.index(identity)
+                    if blob._user_generated_centroids is None:
+                        blob._user_generated_centroids = [(None, None)]*len(blob.final_centroids)
+                    blob.user_generated_centroids[identity_index] = tuple(centroids_to_interpolate[i, :])
+                else:
+                    blob_index = np.argmin([candidate_blob.distance_from_countour_to(tuple(centroids_to_interpolate[i,:]))
+                                            for candidate_blob in self.blobs_in_video[frame]
+                                            if candidate_blob.is_a_crossing])
+                    nearest_blob = self.blobs_in_video[frame][blob_index]
+                    nearest_blob.add_centroid(video, tuple(centroids_to_interpolate[i,:]), identity,
+                                              apply_resolution_reduction=False)
+        except:
+            raise Exception('Something went wrong during the interpolation')
 
-    def reset_user_generated_identities_and_centroids(self, video, start_frame, end_frame, id=None):
+    def reset_user_generated_identities_and_centroids(self, video, start_frame,
+                                                      end_frame, identity=None):
         """
         Resets the identities and centroids generetad by the user to the ones assigned by the software
 
@@ -491,44 +493,39 @@ class ListOfBlobs(object):
             Frame from which to start reseting identities and centroids
         end_frame : int
             Frame where to end reseting identities and centroids
-        id : int, optional
+        identity : int, optional
             Identity of the blobs to be reseted (default None). If None,
             all the blobs are reseted
         """
         if start_frame > end_frame:
             raise Exception("Initial frame number must be smaller than the final frame number")
-        if not (id is None or id > 0):
-            raise Exception("Identity must be None or a positive integer") # missing id <= self.number_of_animals but the attribute does not exist
+        if not (identity is None or identity > 0):
+            # missing identity <= self.number_of_animals but the attribute does not exist
+            raise Exception("Identity must be None or a positive integer")
+
         for blobs_in_frame in self.blobs_in_video[start_frame:end_frame]:
-            if id is None:
+            if identity is None:
                 # Reset all user generated identities and centroids
-                [setattr(blob, '_user_generated_identity', None) for blob in blobs_in_frame]
-                [setattr(blob, '_user_generated_centroid', None) for blob in blobs_in_frame]
-            else:
                 for blob in blobs_in_frame:
-                    if not isinstance(blob.final_identity, list) and blob.final_identity == id:
-                        # Single identity in blob
-                        blob._user_generated_identity = None
-                        blob._user_generated_centroid = None
-                    elif isinstance(blob.final_identity, list) and id in blob.final_identity:
-                        # Multiple identities in blob
-                        index = blob.final_identity.index(id)
-                        try:
-                            # The identity already existed in the assigned ones
-                            index_assigned = blob.assigned_identity.index(id)
-                            if blob.user_generated_identity is not None:
-                                blob.user_generated_identity[index] = blob.assigned_identity[index_assigned]
-                            if blob.user_generated_centroid is not None:
-                                blob.user_generated_centroid[index] = blob.assigned_centroid[index_assigned]
-                        except ValueError:
-                            # The identity didn't exist in the modified ones
-                            if blob.user_generated_identity is not None:
-                                blob.user_generated_identity.pop(index)
-                            if blob.user_generated_centroid is not None:
-                                blob.user_generated_centroid.pop(index)
-        video._is_centroid_updated = any([blob.user_generated_centroid is not None
+                    blob._user_generated_identities = None
+                    blob._user_generated_centroids = None
+            else:
+                possible_blobs = [blob for blob in blobs_in_frame
+                                  if identity in blob.final_identities]
+                for blob in possible_blobs:
+                    indices = [i for i, final_id in enumerate(blob.final_identities)
+                               if final_id == identity]
+                    for index in indices:
+                        if blob._user_generated_centroids is not None:
+                            blob._user_generated_centroids[index] = (None, None)
+                        if blob._user_generated_identities is not None:
+                            blob._user_generated_identities[index] = None
+
+        video._is_centroid_updated = any([any([cent[0] is not None
+                                               for cent in blob.user_generated_centroids])
                                           for blobs_in_frame in self.blobs_in_video
-                                          for blob in blobs_in_frame])
+                                          for blob in blobs_in_frame
+                                          if blob.user_generated_centroids is not None])
 
 
 def check_tracking(blobs_in_frame):
@@ -545,7 +542,7 @@ def check_tracking(blobs_in_frame):
 
 
     """
-    there_are_crossings = any([b.is_a_crossing for b in blobs_in_frame]) #check whether there is a crossing in the frame
-    missing_identity = any([(isinstance(b.final_identity, int) or isinstance(b.final_identity, np.integer)) and b.final_identity==0
-                       for b in blobs_in_frame]) # Check whether there is some missing identities (0 or None)
+    there_are_crossings = any([blob.is_a_crossing for blob in blobs_in_frame]) #check whether there is a crossing in the frame
+    missing_identity = any([None in blob.final_identities or 0 in blob.final_identities
+                            for blob in blobs_in_frame]) # Check whether there is some missing identities (0 or None)
     return there_are_crossings or missing_identity

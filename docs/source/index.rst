@@ -1,5 +1,5 @@
-Welcome to idtracker.ai's documentation!
-========================================
+Welcome to idtracker.ai's v3 documentation!
+===========================================
 
 `idtracker.ai <http://idtracker.ai/>`_ allows to track groups of up to 100 unmarked animals from videos.
 
@@ -19,42 +19,39 @@ Welcome to idtracker.ai's documentation!
     :width: 150
     :target: https://www.youtube.com/watch?v=dT28-VcXaCc
 
-
-
-`Installation and git repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
+What is new in idtracker.ai v3?
 *******************************
-The source code and installation instructions can be found at https://gitlab.com/polavieja_lab/idtrackerai.git.
 
+- idtracker.ai v3 can be installed from the PyPI python package manager (see :doc:`how_to_install`)
+- New Graphical User Interface (GUI) based on `Pyforms <https://pyforms.readthedocs.io/en/v4/>`_.
+- Track videos from the command line with the *terminal_mode*. Save the preprocessing parameters for a video and load them with the *terminal_mode*. This will allow you to track batches of videos sequentially without having to interact with the GUI. (see :doc:`tracking_from_terminal`)
+- Change advance tracking parameters using a *local_settings.py* file (see :doc:`advanced_parameters`).
+- Improved memory management during tracking. Segmentation images and sets of pixels can be now saved in RAM or DISK. Segmentation images and pixels are saved in the disk by default. Set these parameters using the *local_settings.py* file. Saving images and pixels in the diks will make the tracking slower, but it will allow you to track longer videos with less RAM memory.
+- Improved data storage management. Use the parameter *DATA_POLICY* in the *local_settings.py* file to decide which files to save after the tracking. For example, this will prevent you from storing heavy unnecessary files if what you only need are the trajectories.
+- Improved validation and correction of trajectories with a new GUI based on `Python Video Annotator <https://pythonvideoannotator.readthedocs.io/en/master/modules/idtrackerai.html>`_.
+- Overall improvements in the internal structure of the code. Algorithm and GUI are now completely separated. The idtrackerai module and API are stored in the `idtrackerai repository <https://gitlab.com/polavieja_lab/idtrackerai>`_. The new `Pyforms based GUI has its how repository <https://gitlab.com/polavieja_lab/idtrackerai-app>`_.
+- The `old Kivy-based GUI has its own repository <https://gitlab.com/polavieja_lab/idtrackerai-gui-kivy>`_. You can download it and install it from the repository. We made some changes in the code of the old GUI to make it compatible with the new idtracker.ai v3. However, the Kivy-based GUI won't be supported in the future.
+- Multiple bugs fixed.
 
-:doc:`Quickstart <./quickstart>`
-********************************
-Check out the :doc:`./quickstart` to learn how to use the software.
+Contents
+********
 
-:doc:`Video conditions <./video_conditions>`
-********************************************
-Check out the :doc:`./video_conditions` to get some advice in how to create videos
-that will give you the best tracking results with idtracker.ai.
+.. toctree::
+   :maxdepth: 1
 
-:doc:`Gallery <./gallery>`
-**************************
-Send us your videos using `idtracker.ai <http://idtracker.ai/>`_ and we will add them to our gallery with proper attribution.
-
-:doc:`Frequently Asked Questions (FAQs) <./FAQs>`
-*************************************************
-We have summarized in the :doc:`./FAQs` some of the questions that we get more often.
-
-:doc:`Trajectory analysis <./trajectories_analysis>`
-****************************************************
-We provide a set of :doc:`./trajectories_analysis` of the trajectories that idtracker.ai outputs.
-
-:doc:`Code documentation <./modules>`
-*************************************
-`idtracker.ai <http://idtracker.ai/>`_ is opensource and free software (both as in freedom and as in free beer).
-We have documented the code so that it is easier for developers to modify it to their needs.
-
-`idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_ matches identities between videos
-************************************************************************************************
-We have also developed a toolbox to match identities between videos, called `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_.
+   how_to_install
+   video_conditions
+   quickstart
+   GUI_explained
+   validation_GUI_explained
+   tracking_from_terminal
+   advanced_parameters
+   tutorials
+   trajectories_analysis
+   gallery
+   FAQs
+   modules
+   data
 
 Research using idtracker.ai
 ***************************
@@ -69,7 +66,7 @@ References
 When using information from this web page please reference
 
   `Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-  idtracker.ai: tracking all individuals in small or large collectives of unmarked animals <https://rdcu.be/bgN2R>`_
+  idtracker.ai: tracking all individuals in small or large collectives of unmarked animals <https://drive.google.com/open?id=1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_
   (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 .. code-block:: bibtex
@@ -91,22 +88,6 @@ Find `here the preprint <https://arxiv.org/abs/1803.04351>`_ version of the manu
 Data
 ****
 The data used in the article can be found in the :doc:`./data` section of this webpage.
-
-
-Contents
-********
-
-.. toctree::
-   :maxdepth: 1
-
-   video_conditions
-   quickstart
-   GUI_explained
-   gallery
-   FAQs
-   trajectories_analysis
-   modules
-   data
 
 
 Documentation index and search

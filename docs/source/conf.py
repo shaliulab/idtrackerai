@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.abspath('../../idtrackerai/plots'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/plots/old_plots'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/postprocessing'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/groundtruth_utils'))
-sys.path.insert(0, os.path.abspath('../../idtrackerai/tf_cnnvisualisation'))
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
@@ -24,16 +23,15 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'numpydoc',
-    'sphinxcontrib.googleanalytics']
+    'numpydoc']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
 project = u'idtrackerai'
 copyright = u'2018, Champalimaud Center for the Unknown'
-author = u'Mattia G. Bergomi, Francisco Romero Ferrero'
-version = u'2.0.0-alpha'
-release = u'2.0.0-alpha'
+author = u'Francisco Romero Ferrero, Mattia G. Bergomi'
+version = u'3.0.5-alpha'
+release = u'3.0.5-alpha'
 language = 'en'
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'
@@ -86,7 +84,7 @@ latex_elements = {
 }
 latex_documents = [
     (master_doc, 'idtrackerai.tex', u'idtrackerai Documentation',
-     u'Mattia G. Bergomi, Francisco Romero-Ferrero', 'manual'),
+     u' Francisco Romero-Ferrero, Mattia G. Bergomi', 'manual'),
 ]
 man_pages = [
     (master_doc, 'idtrackerai', u'idtrackerai Documentation',

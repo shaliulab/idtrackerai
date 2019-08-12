@@ -155,27 +155,18 @@ def cumpute_background(video):
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
     bkg = np.zeros((video.original_height, video.original_width))
-    num_cores = multiprocessing.cpu_count()
-    if conf.NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION is not None:
-        try:
-            logger.info('NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION set to a value different than the default')
-            assert conf.NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION <= multiprocessing.cpu_count()
-            num_cores = conf.NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION
-        except:
-            logger.info('NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION > multiprocessing.cpu_count(). Setting NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION set to 1')
-            num_cores = 1
 
     set_mkl_to_single_thread()
     if video.paths_to_video_segments is None: # one single file
         logger.debug('one single video, computing bkg in parallel from single video')
-        output = Parallel(n_jobs=num_cores)(delayed(
+        output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
                     sum_frames_for_bkg_per_episode_in_single_file_video)(
                     starting_frame, ending_frame, video.video_path, bkg)
                     for (starting_frame, ending_frame) in video.episodes_start_end)
         logger.debug('Finished parallel loop for bkg subtraction')
     else: # multiple video files
         logger.debug('multiple videos, computing bkg in parallel from every episode')
-        output = Parallel(n_jobs=num_cores)(delayed(
+        output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
                     sum_frames_for_bkg_per_episode_in_multiple_files_video)(
                     videoPath,bkg) for videoPath in video.paths_to_video_segments)
         logger.debug('Finished parallel loop for bkg subtraction')
@@ -402,7 +393,7 @@ def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
     if save_segmentation_image == 'RAM' or save_segmentation_image == 'DISK':
         bounding_box_image = frame[bounding_box[0][1]:bounding_box[1][1],
                                 bounding_box[0][0]:bounding_box[1][0]]
-    elif save_segmentation_image == 'NOT':
+    elif save_segmentation_image == 'NONE':
         bounding_box_image = None
     contour_in_bounding_box = cnt2BoundingBox(cnt, bounding_box)
     if save_pixels == 'RAM' or save_pixels == 'DISK':
@@ -414,7 +405,7 @@ def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
         pixels_in_full_frame_ravelled = np.ravel_multi_index(
                                         [pixels_in_full_frame[:,0], pixels_in_full_frame[:,1]],
                                         (height,width))
-    elif save_pixels == 'NOT':
+    elif save_pixels == 'NONE':
         pixels_in_full_frame_ravelled = None
 
     return bounding_box, bounding_box_image, pixels_in_full_frame_ravelled, estimated_body_length

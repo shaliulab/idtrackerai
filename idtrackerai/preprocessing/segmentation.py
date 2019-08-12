@@ -335,16 +335,13 @@ def segment(video):
     segment_episode
     """
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    num_cores = int(multiprocessing.cpu_count())
-    # num_cores = 1
-    if conf.NUMBER_OF_CORES_FOR_SEGMENTATION is not None:
-        try:
-            logger.info('conf.NUMBER_OF_CORES_FOR_SEGMENTATION set to a value different than the default')
-            assert conf.NUMBER_OF_CORES_FOR_SEGMENTATION <= multiprocessing.cpu_count()
-            num_cores = conf.NUMBER_OF_CORES_FOR_SEGMENTATION
-        except:
-            logger.info('conf.NUMBER_OF_CORES_FOR_SEGMENTATION > multiprocessing.cpu_count(). Setting conf.NUMBER_OF_CORES_FOR_SEGMENTATION set to 1')
-            num_cores = 1
+    num_cpus = int(multiprocessing.cpu_count())
+    num_jobs = conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
+    # num_jobs = 1
+    if conf.NUMBER_OF_JOBS_FOR_SEGMENTATION is None:
+        num_jobs = 1
+    elif conf.NUMBER_OF_JOBS_FOR_SEGMENTATION < 0:
+        num_jobs = (num_cpus + 1 + num_jobs)
 
     #init variables to store data
     blobs_in_video = []
@@ -358,11 +355,11 @@ def segment(video):
     if not video.paths_to_video_segments:
         logger.info('There is only one path, segmenting by frame indices')
         #Spliting episodes_start_end in sublists for parallel processing
-        episodes_start_end_sublists = [video.episodes_start_end[i:i+num_cores]
-                                        for i in range(0,len(video.episodes_start_end),num_cores)]
+        episodes_start_end_sublists = [video.episodes_start_end[i:i+num_jobs]
+                                        for i in range(0,len(video.episodes_start_end),num_jobs)]
 
         for episodes_start_end_sublist in tqdm(episodes_start_end_sublists, desc='Segmentation progress'):
-            OupPutParallel = Parallel(n_jobs=num_cores)(
+            OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
                                 delayed(segment_episode)(video, segmentation_thresholds, None, episode_start_end_frames,
                                                          conf.SAVE_PIXELS, conf.SAVE_SEGMENTATION_IMAGE)
                                 for episode_start_end_frames in episodes_start_end_sublist)
@@ -371,14 +368,13 @@ def segment(video):
             blobs_in_video.append(blobs_in_episode)
     else:
         #splitting videoPaths list into sublists
-        pathsSubLists = [video.paths_to_video_segments[i: i + num_cores]
-                         for i in range(0,len(video.paths_to_video_segments), num_cores)]
-        episodes_start_end_sublists = [video.episodes_start_end[i:i+num_cores]
-                                       for i in range(0,len(video.episodes_start_end), num_cores)]
+        pathsSubLists = [video.paths_to_video_segments[i: i + num_jobs]
+                         for i in range(0,len(video.paths_to_video_segments), num_jobs)]
+        episodes_start_end_sublists = [video.episodes_start_end[i:i+num_jobs]
+                                       for i in range(0,len(video.episodes_start_end), num_jobs)]
 
         for pathsSubList, episodes_start_end_sublist in tqdm(list(zip(pathsSubLists, episodes_start_end_sublists)), desc='Segmentation progress'):
-            print(pathsSubList)
-            OupPutParallel = Parallel(n_jobs=num_cores)(
+            OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
                                 delayed(segment_episode)(video, segmentation_thresholds, path, episode_start_end_frames,
                                                          conf.SAVE_PIXELS, conf.SAVE_SEGMENTATION_IMAGE)
                                 for path, episode_start_end_frames in zip(pathsSubList, episodes_start_end_sublist))
@@ -386,7 +382,6 @@ def segment(video):
             maximum_number_of_blobs_in_episode.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
     set_mkl_to_multi_thread()
-    print(maximum_number_of_blobs_in_episode)
     video._maximum_number_of_blobs = max(flatten(maximum_number_of_blobs_in_episode))
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))

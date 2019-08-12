@@ -19,6 +19,8 @@
 !*.less
 !*.css_t
 !*.conf
+!*.txt
+!*.json
 
 *.pyc
 
@@ -26,6 +28,7 @@
 !*.gitignore
 
 #except docs folder and subfolders
+docs/build/*
 !docs/scipy-sphinx-theme/*
 !docs/source/*
 !docs/make.bat
@@ -50,3 +53,9 @@ local_settings\.py
 dist/*
 build/*
 .eggs/*
+
+data/
+
+out-parameters\.txt
+
+docs/idtrackerai-app\.log

@@ -6,4 +6,4 @@
 	url = https://gitlab.com/polavieja_lab/idtrackerai-gui-kivy.git
 [submodule "idtrackerai-app"]
 	path = idtrackerai-app
-	url = git@gitlab.com:polavieja_lab/idtrackerai-app.git
+	url = https://gitlab.com/polavieja_lab/idtrackerai-app.git

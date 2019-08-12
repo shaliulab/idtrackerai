@@ -32,6 +32,9 @@ import os
 MIN_FLOAT = sys.float_info[3]
 MAX_FLOAT = sys.float_info[0]
 
+IDTRACKERAI_FOLDER = os.path.dirname(os.path.abspath(__file__))
+TEST_VIDEO_URL='https://drive.google.com/uc?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC'
+
 PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
             'protocol3_accumulation', 'residual_identification',
             'post_processing']
@@ -66,11 +69,11 @@ RES_REDUCTION_DEFAULT = float(os.environ.get('RES_REDUCTION_DEFAULT', 1.0))
 Default value for min area in preprocessing
 """
 MIN_AREA_DEFAULT, MAX_AREA_DEFAULT = 150, 60000
-"""***MAX_AREA_LOWER, MAX_AREA_UPPER***
+"""***AREA_LOWER, AREA_UPPER***
 Lower and upper bounds for the maximum area slider
 """
-MAX_AREA_LOWER, MAX_AREA_UPPER = 0, 60000
-"""***MIN_THRESHOLD, MAX_AREA_UPPER***
+AREA_LOWER, AREA_UPPER = 0, 60000
+"""***MIN_THRESHOLD, AREA_UPPER***
 Lower and upper bounds for the maximum area slider
 """
 MIN_THRESHOLD, MAX_THRESHOLD = 0, 255
@@ -91,14 +94,14 @@ STD_TOLERANCE = int(os.environ.get('STD_TOLERANCE', 4))
 Period used to sample the video to compute the background model
 """
 BACKGROUND_SUBTRACTION_PERIOD = int(os.environ.get('BACKGROUND_SUBTRACTION_PERIOD', 500))
-"""***NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION***
+"""***NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION***
 Number of jobs used to compute the background model
 """
-NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION = None # Set None to use the default mode of the system. (see segmentation_utils.py module for details)
-"""***NUMBER_OF_CORES_FOR_SEGMENTATION***
+NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION = -2 # Set None to use the default mode of the system. (see segmentation_utils.py module for details)
+"""***NUMBER_OF_JOBS_FOR_SEGMENTATION***
 Number of jobs used to perform the segmentation
 """
-NUMBER_OF_CORES_FOR_SEGMENTATION = None # Set None to use the default mode of the system. (see segmentation.py module for details)
+NUMBER_OF_JOBS_FOR_SEGMENTATION = -2 # Set None to use the default mode of the system. (see segmentation.py module for details)
 """***SIGMA_GAUSSIAN_BLURRING***
 sigma for gaussian blurring tests
 """
@@ -109,14 +112,14 @@ DISK: pixels are stored in hdf5 files in the disk
 RAM: pixels are stored in the blob object in the ram
 NOT: pixels are not stored and are computed from the contour everytime
 """
-SAVE_PIXELS = 'DISK' # 'RAM' or 'NOT'
+SAVE_PIXELS = 'DISK' # 'RAM' or 'NONE'
 """***SAVE_SEGMENTATION_IMAGE***
 Where to store the segmentation image of every blob
 DISK: image is stored in hdf5 files in the disk
 RAM: image is stored in the blob object in the ram
 NOT: image is not stored and are computed from the contour everytime
 """
-SAVE_SEGMENTATION_IMAGE = 'DISK' # 'RAM' or 'NOT'
+SAVE_SEGMENTATION_IMAGE = 'DISK' # 'RAM' or 'NONE'
 """***PLOT_CROSSING_DETECTOR***
 """
 PLOT_CROSSING_DETECTOR=False

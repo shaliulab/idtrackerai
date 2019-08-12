@@ -90,7 +90,7 @@ def compare_tracking_against_groundtruth_no_gaps(number_of_animals,
                 logger.debug('***************************************unidentified blobs')
 
             if blob_gt.is_an_individual and not blob_gt.was_a_crossing:
-                if gt_identity != blob.assigned_identity:
+                if gt_identity != blob.assigned_identities:
                     results['number_of_individuals_badly_assigned'][gt_identity] += 1
 
     results['number_of_errors_in_all_blobs'] = {i: results['number_of_individuals_badly_assigned'][i] +
@@ -161,20 +161,20 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
                     results['frames_with_zeros_in_groundtruth'].append(groundtruth_blob.frame_number)
                 else:
                     try:
-                        if blob.assigned_identity != 0 and blob.identity_corrected_closing_gaps is None: # we only consider P2 for non interpolated blobs
+                        if blob.assigned_identities[0] != 0 and blob.identities_corrected_closing_gaps is None: # we only consider P2 for non interpolated blobs
                             results['sum_individual_P2'][gt_identity] += blob._P2_vector[gt_identity - 1]
                     except:
                         logger.debug("P2_vector %s" %str(blob._P2_vector))
                         logger.debug("individual %s" %str(blob.is_an_individual))
-                        logger.debug("fragment identifier ", blob.fragment_identifier)
+                        logger.debug("fragment identifier %s" %str(blob.fragment_identifier))
                     results['number_of_blobs_per_identity'][gt_identity] += 1
-                    results['number_of_assigned_blobs_per_identity'][gt_identity] += 1 if blob.assigned_identity != 0 else 0
+                    results['number_of_assigned_blobs_per_identity'][gt_identity] += 1 if blob.assigned_identities[0] != 0 else 0
                     results['number_of_blobs_assigned_during_accumulation_per_identity'][gt_identity] += 1 if blob.used_for_training else 0
                     results['number_of_blobs_after_accumulation_per_identity'][gt_identity] += 1 if not blob.used_for_training else 0
-                    if gt_identity != blob.assigned_identity:
+                    if gt_identity != blob.assigned_identities[0]:
                         results['number_of_errors_in_all_blobs'][gt_identity] += 1
                         results['number_of_errors_in_blobs_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0
-                        if blob.assigned_identity != 0:
+                        if blob.assigned_identities[0] != 0:
                             results['number_of_errors_in_assigned_blobs'][gt_identity] += 1
                             results['number_of_errors_in_blobs_assigned_during_accumulation'][gt_identity] += 1 if blob.used_for_training else 0
                             results['number_of_errors_in_blobs_assigned_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0

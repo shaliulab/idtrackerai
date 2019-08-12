@@ -79,20 +79,20 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
         Fragment
 
         """
-        non_available_identities = set([coexisting_fragment.assigned_identity
+        non_available_identities = set([coexisting_fragment.assigned_identities[0]
                             for coexisting_fragment in fragment.coexisting_individual_fragments])
         available_identities = set(range(1, fragment.number_of_animals + 1)) - \
                             non_available_identities
-        if fragment.assigned_identity is not None and fragment.assigned_identity != 0:
-            available_identities = available_identities | set([fragment.assigned_identity])
+        if fragment.assigned_identities[0] is not None and fragment.assigned_identities[0] != 0:
+            available_identities = available_identities | set([fragment.assigned_identities[0]])
         if 0 in non_available_identities: non_available_identities.remove(0)
         non_available_identities = np.array(list(non_available_identities))
         return non_available_identities, available_identities
 
     def get_candidate_identities_by_minimum_speed(fragment,
-                                                fragments,
-                                                available_identities,
-                                                impossible_velocity_threshold):
+                                                  fragments,
+                                                  available_identities,
+                                                  impossible_velocity_threshold):
         """Computes the candidate identities for a given `fragment` taking into
         consideration the velocities needed to join the `fragment` with its neighbour
         fragments in the past and in the future
@@ -149,9 +149,9 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
         return np.asarray(list(available_identities))[argsort_identities_by_speed], np.asarray(speed_of_candidate_identities)[argsort_identities_by_speed]
 
     def get_candidate_identities_above_random_P2(fragment, fragments,
-                                            non_available_identities,
-                                            available_identities,
-                                            impossible_velocity_threshold):
+                                                 non_available_identities,
+                                                 available_identities,
+                                                 impossible_velocity_threshold):
         """Computes the candidate identities of a `fragment` taking into consideration
         the probability of identification given by its `fragment.P2_vector`. An identity
         is a potential candidate if the probability of identification is above random.
@@ -408,7 +408,7 @@ def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = Non
     impossible_velocity_threshold = video.velocity_threshold
 
     for fragment in tqdm(fragments_in_direction, desc = 'Correcting impossible velocity jumps ' + scope):
-        if fragment.is_an_individual and fragment.assigned_identity != 0:
+        if fragment.is_an_individual and fragment.assigned_identities[0] != 0:
             neighbour_fragment_past, \
             neighbour_fragment_future, \
             velocities_between_fragments = compute_neighbour_fragments_and_velocities(video, list_of_fragments, fragment)

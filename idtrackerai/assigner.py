@@ -137,7 +137,6 @@ def assign_remaining_fragments(list_of_fragments, video, net):
 
     See Also
     --------
-    ListOfFragments.reset(roll_back_to = 'accumulation')
     ListOfFragments.get_images_from_fragments_to_assign
     assign
     compute_identification_statistics_for_non_accumulated_fragments
