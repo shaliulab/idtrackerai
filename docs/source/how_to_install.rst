@@ -86,7 +86,7 @@ If you fail to get this output or your version is smaller than 410.38, then foll
 
 .. code-block:: bash
 
-    sudo apt-get install nvidia-XXX
+    sudo apt-get install nvidia-driver-XXX
 
 6. Reboot the system.
 
@@ -179,14 +179,14 @@ The following commands are to be run inside of the *idtrackerai* conda environme
    :align: center
    :alt: conda environment
 
-**Option 1 (GUI, GPU support) (NVIDIA drivers 410 already installed for Linux)**
+**Option 1 (GUI, GPU support) (NVIDIA drivers >=410.38 already installed for Linux)**
 ********************************************************************************
 
 You can install idtracker.ai with GUI support with the following command
 
 .. code-block:: bash
 
-    pip instal idtrackerai[gui]
+    pip install idtrackerai[gui]
 
 To get GPU support without having to manually install the CUDA 10.0 and the cuDNN 7.6, you can install Tensorflow with GPU support with the Conda package manager with the following command:
 
@@ -196,7 +196,7 @@ To get GPU support without having to manually install the CUDA 10.0 and the cuDN
 
 Conda will install the CUDA 10.0 and cuDNN 7.6 in your Conda environment for you.
 
-**Option 2 (GUI, GPU support) (NVIDIA drivers 410, CUDA 10.0 and cuDNN 7.5.0 already installed)**
+**Option 2 (GUI, GPU support) (NVIDIA drivers >=410.38, CUDA 10.0 and cuDNN 7.5.0 already installed)**
 *************************************************************************************************
 
 If you prefer to install the CUDA 10.0 and the cuDNN 7.6 in your system, you can [follow these instructions](https://medium.com/better-programming/install-tensorflow-1-13-on-ubuntu-18-04-with-gpu-support-239b36d29070) until step 6.
