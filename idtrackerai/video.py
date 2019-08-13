@@ -158,6 +158,8 @@ class Video(object):
         # Flag to decide which type of interpolation is done. This flag is updated when we update a blob centroid
         self._is_centroid_updated = False
 
+        logger.debug(f'Video(open_multiple_files={self.open_multiple_files})' )
+
     @property
     def is_centroid_updated(self):
         return self._is_centroid_updated
@@ -384,6 +386,7 @@ class Video(object):
     def save(self):
         """save class"""
         logger.info("saving video object in %s" %self.path_to_video_object)
+        logger.debug(f'Video.save(open_multiple_files={self.open_multiple_files})')
         np.save(self.path_to_video_object, self)
 
     @property
