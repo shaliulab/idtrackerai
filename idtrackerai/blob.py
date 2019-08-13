@@ -91,8 +91,8 @@ class Blob(object):
         Accumulation step in which the image associated to the blob has been accumulated
     _generated_while_closing_the_gap : bool
         If True the blob has been generated while solving the crossings
-    _user_generated_identity : int
-        The identity corrected manually by the user during validation
+    _user_generated_identities : tuple
+        The identities corrected during validation
     _identities_corrected_closing_gaps : list
         The identity given to the blob during in postprocessing
     _identity_corrected_solving_jumps : int
@@ -251,6 +251,10 @@ class Blob(object):
     @property
     def was_a_crossing(self):
         return self._was_a_crossing
+
+    @property
+    def is_a_generated_blob(self):
+        return self.contour is None
 
     def check_for_multiple_next_or_previous(self, direction = None):
         """Return True if self has multiple blobs in its past or future overlapping
@@ -697,7 +701,10 @@ class Blob(object):
     of trajectories with the pythonvideoannotator after the video is tracked """
     @property
     def contour_full_resolution(self):
-        return (self.contour/self.resolution_reduction).astype(np.int32)
+        if self.contour is not None:
+            return (self.contour/self.resolution_reduction).astype(np.int32)
+        else:
+            return None
 
 
     @property
@@ -763,7 +770,8 @@ class Blob(object):
             else:
                 color = (0, 0, 255)
 
-            cv2.polylines(image, np.array([contour]), True, (0, 255, 0), 1)
+            if contour is not None:
+                cv2.polylines(image, np.array([contour]), True, (0, 255, 0), 1)
 
             cv2.circle(image, pos, 8, (255, 255, 255), -1, lineType=cv2.LINE_AA)
             cv2.circle(image, pos, 6, color, -1, lineType=cv2.LINE_AA)
