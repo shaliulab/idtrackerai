@@ -1,6 +1,6 @@
 # idtracker.ai (v3)
 
-This is the **NEW VERSION** of the tracking software [idtracker.ai](https://idtrackerai.readthedocs.io/en/latest/index.html).
+This is the **NEW VERSION** of the tracking software [idtracker.ai](https://idtracker.ai).
 
 idtracker.ai is a multi-animal tracking software for laboratory conditions. This work has been published in [Nature Methods](https://www.nature.com/articles/s41592-018-0295-5?WT.feed_name=subjects_software) [1] ([pdf here](https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n/view?usp=sharing))
 
