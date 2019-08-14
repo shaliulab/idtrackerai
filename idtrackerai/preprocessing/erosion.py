@@ -31,6 +31,7 @@ import os
 import numpy as np
 import cv2
 import h5py
+from confapp import conf
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.segmentation_utils import blob_extractor
