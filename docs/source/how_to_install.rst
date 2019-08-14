@@ -8,7 +8,7 @@ idtracker.ai v3 has been tested in computers with the following specifications:
 - Operating system: 64bit GNU/linux Mint 19.1 and Ubuntu 18.4
 - CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
 - GPU: Nvidia TITAN X or GeForce GTX 1080 Ti
-- RAM: 32Gb-128Gb (depending on the needs of the video).
+- RAM: 32Gb-128Gb.
 - Disk: 1TB SSD
 
 idtracker.ai is coded in python 3.6 and uses Tensorflow libraries
@@ -21,14 +21,12 @@ Pre-installation checks
 **Install NVIDIA drivers +410.38 (for the installation with GPU support)**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You want to install idtracker.ai with GPU support in your computer if you want to track videos keepeing the identities of each animal. Note that idtracker.ai allows users to track single animals and to tracks groups of animals without keeping the identity. For these cases you do not need GPU support (see the Option 3 in the installation instructions).
+Install idtracker.ai with GPU support in your computer if you want to track videos keeping the identities of each animal. Note that idtracker.ai allows users to track single animals and to track groups of animals without keeping the identity. For these cases you do not need GPU support (see the Option 3 in the installation instructions below).
 
-idtracker.ai has been currently tested on Tensorflow 1.13. This version of Tensorflow requires the CUDA 10.0 which requires an NVIDIA driver version >= 410.38 (see https://docs.nvidia.com/deploy/cuda-compatibility/). Below we give instructions about how to check your NVIDIA driver version and how to install a compatible version with Cuda 10.0.
+idtracker.ai has been currently tested on Tensorflow 1.13. This version of Tensorflow requires the CUDA 10.0 which requires an NVIDIA driver version >= 410.38 (see `cuda compatiblity <https://docs.nvidia.com/deploy/cuda-compatibility/>`). Below we give instructions to check your NVIDIA driver version and how to install a compatible version with Cuda 10.0.
 
 **For Linux users**
 *******************
-
-This new version of idtracker.ai runs on Tensorflow 1.13.1 which requires CUDA toolkit 10 and cuDNN 7.6. In Linux, the CUDA toolkit 10.0 requires that at least the NVIDIA drivers version 410.48 are installed. You can check the CUDA compatibilities `here <https://docs.nvidia.com/deploy/cuda-compatibility/>`_
 
 To check whether the NVIDIA drivers are correctly installed in your computer, open a terminal and type
 
@@ -70,7 +68,7 @@ If you fail to get this output or your version is smaller than 410.38, then foll
 
     sudo apt-get purge nvidia*
 
-2. Check the latest driver version for our Nvidia GPU in `this link <https://www.nvidia.com/object/unix.html>`_.
+2. Check the latest driver version for your NVIDIA GPU in `this link <https://www.nvidia.com/object/unix.html>`_.
 
 3. Check if your graphic card is compatible with the `drivers present in the PPA homepage <https://launchpad.net/~graphics-drivers/+archive/ubuntu/ppa>`_.
 
@@ -82,7 +80,7 @@ If you fail to get this output or your version is smaller than 410.38, then foll
     sudo apt-get install screen
     screen
 
-5. Install the Nvidia GPU driver. In the following command, substitute the XXX by the number of the driver you want to install.
+5. Install the NVIDIA GPU driver. In the following command, substitute the XXX by the number of the driver you want to install (e.g. *nvidia-driver-410*).
 
 .. code-block:: bash
 
@@ -115,7 +113,6 @@ You can download the latest driver available for your GPU from `the NVIDIA webpa
 
 After downloading the *.exe* file, execute it and follow the instructions. After the installation you will be asked to reboot the computer, please do so for the installation to be complete.
 
-
 **Preparing a Conda environment (for Linux and Windows)**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -127,7 +124,7 @@ When deciding whether to install Anaconda or Miniconda, you can find some inform
 `here <https://stackoverflow.com/questions/45421163/anaconda-vs-miniconda>`_. For simplicity, we recommend
 installing Miniconda.
 
-From now on, every time we refer to the terminal, Linux users are meant to use the command line and Windows user are meant to use the Anaconda Prompt that it is installed when installing Miniconda or Anaconda.
+From now on, every time we refer to the *terminal*, Linux users are meant to use the command line and Windows user are meant to use the Anaconda Powershell Prompt that it is installed when installing Miniconda or Anaconda.
 
 To check whether the Conda package manager is installed, you can open a terminal and type
 
@@ -167,7 +164,7 @@ or
 **Installation**
 ~~~~~~~~~~~~~~~~
 
-This version can be installed using the Python package manager PyPI. For an easy
+This version can be installed using the Python package manager, PyPI. For an easy
 installation in clusters, the application and the graphical user interface (GUI)
 can be installed separately. Below we give installation instructions
 for the different usage scenarios.
@@ -188,7 +185,7 @@ You can install idtracker.ai with GUI support with the following command
 
     pip install idtrackerai[gui]
 
-To get GPU support without having to manually install the CUDA 10.0 and the cuDNN 7.6, you can install Tensorflow with GPU support with the Conda package manager with the following command:
+To get GPU support without having to manually install the CUDA 10.0 and the cuDNN 7.6, you can install Tensorflow with GPU support from the Conda package manager with the following command:
 
 .. code-block:: bash
 
@@ -207,7 +204,7 @@ Then, you can install idtracker.ai with GUI an GPU support running the command:
 
     pip install idtrackerai[gui,gpu]
 
-This command will install Tensorflow 1.13.1 with GPU support for you.
+This command will install Tensorflow 1.13.1 with GPU support.
 
 **Option 3 (GUI, no-GPU support)**
 **********************************
@@ -223,7 +220,7 @@ In this case, you only need to install idtracker.ai with GUI support with the co
 **Option 4 (no-GUI, GPU support)**
 **********************************
 
-You might want to use idtracker.ai from the command line and read the pre-processing parameters from a *.json* file (see instructions to generate a *.json* file below). This can be useful if you have a dedicated computer for tracking multiple videos in a batch and you access it with SSH, or if your are going to install idtracker.ai in a cluster.
+You might want to use idtracker.ai from the command line and read the pre-processing parameters from a *.json* file (see instructions to generate a *.json* file in the :doc:`tracking_from_terminal` section). This can be useful if you have a dedicated computer for tracking multiple videos in batches and you access it with SSH, or if your are going to install idtracker.ai in a cluster.
 
 If the CUDA 10.0 and the cuDNN 7.6 are already installed in your computer, you only need to run the following command
 

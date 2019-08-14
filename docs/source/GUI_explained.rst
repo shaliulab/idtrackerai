@@ -16,31 +16,31 @@ The absolute path to the video that you are going to track will appera in this b
 2. **Browse the video**
 -----------------------
 
-Click *Open* and browse in your folders to find the video. If you are tracking a video that consist on multiple smaller clips, or you want to track multiple videos at once (see IDENTITY MATCHING tutorial).
+Click *Open* and browse in your folders to find the video. If you are tracking a video that consist on multiple smaller clips and all of them are in the same folder, you will get a windows similar to this one.
 
 .. figure:: ./_static/gui_pyforms/multiple_videos.png
    :scale: 80 %
    :align: center
    :alt: main pan
 
-| Click *YES* if you want to combine the videos in the proposed order.
+Click *YES* if you want to combine the videos in the proposed order.
 
-NOTE: If the last frame of one clip and the first frame of the next clip are not consecutive frames of the same video sequence, we recommend create multiple tracking intervals with 1 frame gaps using the *multiple tracking intervals* feature (see item 11. and IDENTITY MATCHING tutorial).
+NOTE: If the last frame of one clip and the first frame of the next clip are not consecutive frames of the same video sequence, we recommend create multiple tracking intervals with 1 frame gaps using the *multiple tracking intervals* feature (see item 18).
 
 3. **Session name**
 -------------------
 
-Type here the name of the tracking session (e.g. *test*, avoid using spaces in the session name). A folder with the name *session_test* will be created in the same folder where the video is. All the data generated for the tracking of the video and the tracking results will be output in this folder.
+Type here the name of the tracking session (e.g. *test*, avoid using spaces in the session name, use underscores instead). A folder with the name *session_test* will be created in the same folder where the video is. All the data generated for the tracking of the video and the tracking results will be output in this folder.
 
 4. **Save parameters**
 ----------------------
 
-Click *Save parameters* to save the preprocessing parameters of the main panel into a *.json* file. You can use this *.json* file to track the video from the command line (see TRACKING MULTIPLE VIDEOS tutorial). After saving the parameters, you can open a new video and continue setting parameters and saving them for as many videos as you want.
+Click *Save parameters* to save the preprocessing parameters of the main panel into a *.json* file. You can use this *.json* file to track the video from the command line (see :doc:`tracking_from_terminal`). After saving the parameters, you can open a new video and continue setting parameters and saving them for as many videos as you want.
 
 5. **Video preview**
 --------------------
 
-This window will show the video that you are going to track and the effects of the different preprocessing parameters. Segmented blobs of pixels will be marked in red color. Regions of interest (ROIs) will be marked in light green (see the point 17 to learn how to set ROIs). You zoom in/out by scrolling down/up on tope of the video image. Click the wheel button (central button on most mice) on top of the frame to drag the frame around in the preview window.
+This window will show the video that you are going to track and the effects of the different preprocessing parameters. Segmented blobs of pixels will be marked in red color. Regions of interest (ROIs) will be marked in light green (see the point 19 to learn how to set ROIs). Zoom in/out by scrolling down/up on top of the video image. Click the wheel button (central button on most mice) on top of the frame to drag the frame around in the preview window.
 
 6. **Play**
 -----------
@@ -65,7 +65,7 @@ Click this button to pop out the preview windows and place it wherever in the sc
 10. **Number of animals**
 -------------------------
 
-Type the number of animals in the video or scroll up/down to change the value of the number iside of the box.
+Type the number of animals in the video or scroll up/down to change the value of the number inside of the box.
 
 11. **Segmented blobs info**
 ----------------------------
@@ -91,17 +91,17 @@ Check this box to be warned if there are some frames in the videos contain more 
 
 You will be shown a message with the path where a *.csv* file containing the frame numbers with more blobs than animals. You can use this *.csv* to explore your video again and readjust the preprocessing parameters.
 
-NOTE: In the previous version a re-segmentation with the new preprocessing parameters would be performed only for those frames. In the current version, the segmentation will be run for the whole video again. We might implement this feature back in the future.
+NOTE: In the previous version a re-segmentation with the new preprocessing parameters would be performed only for those frames. In the current version, the segmentation will be run for the whole video again. We might implement this feature in the future.
 
 13. **Intensity thresholds**
 ----------------------------
 
-Change the minimum and maximum values of the intensity thresholds to select the intensity range where the animals to be segmented are. Values closer to 0 correspond to darker pixels and values closer to 255 correspond to brighter pixels. You can change the values either by typing them inside of the box, scrolling up/down with your cursor on top of the box, or by gliding the extremes of the blue bar.
+Change the minimum and maximum values of the intensity thresholds to select the intensity range of the pixels representing the animals to be segmented. Values closer to 0 correspond to darker pixels and values closer to 255 correspond to brighter pixels. You can change the values either by typing them inside of the box, scrolling up/down with your cursor on top of the box, or by gliding the extremes of the blue bar.
 
 14. **Subtract background**
 ---------------------------
 
-Check this box if you want to apply a background subtraction processing. Checking this box will compute a model of the background as the average of multiple equally spaced frames in the video. This can be used to remove static objects that are of the same size and color as the animals you are trying to track.
+Check this box if you want to apply a background subtraction processing. Checking this box will compute a model of the background as the average of multiple equally spaced frames in the video. This can be used to remove static objects that are of the same size and color as the animals you are trying to track. If the video is very long, after clicking on the check box, it might take a while until the box is actually checked. This happens because while the background is being computed, the GUI is held on standby.
 
 15. **Area thresholds**
 -----------------------
@@ -116,12 +116,12 @@ Type a value between 0 and 1 to reduce the resolution of the video by that facto
 17. **Select a tracking interval**
 ----------------------------------
 
-You can select a frames range for which the tracking will be performed. You can change the minimum and maxinum values either by typing them inside of the box, scrolling up/down with your cursor on top of the box, or by gliding the extremes of the blue bar. The frames outside of this range will be ignored. This can be useful if, for example, you want to ignore certain parts of the video.
+You can select a frames range for which the tracking will be performed. You can change the minimum and maximum values either by typing them inside of the box, scrolling up/down with your cursor on top of the box, or by gliding the extremes of the blue bar. The frames outside of this range will be ignored. This can be useful if, for example, you want to ignore certain parts of the video.
 
 18. **Multiple tracking intervals**
 -----------------------------------
 
-Check the box *Multiple ranges* to add multiple tracking intervals. The blue bar will disappear and instead a text box with a *Add ragne* button will appear.
+Check the box *Multiple ranges* to add multiple tracking intervals. The blue bar will disappear and instead a text box with a *Add range* button will appear.
 
 .. figure:: ./_static/gui_pyforms/multiple_range.png
    :scale: 80 %
@@ -151,19 +151,20 @@ To select one or more ROIs check the box Apply ROI. New buttons and a text box w
 
 Click on the buttons *Polygon*, *Rectangle* or *Ellipse* to select the type of ROI that you want to draw.
 
-To draw a rectanlge, click in one of the corners of the rectangle, a drag the cursor to the opposite (diagonally) corner of the rectangle that you want to draw.
+To draw a rectangle, click in one of the corners of the rectangle, a drag the cursor to the opposite (diagonally) corner of the rectangle that you want to draw.
 
-To draw a polygon, click on every vertex of the polygon. Note that you should always click on consecutive vertices of the polygon.
-
+To draw a polygon, click on every vertex of the polygon.
 
 To draw an ellipse, click in 5 different parts on the perimeter of the ellipse that you want to draw.
 
 To delete and ROI click on the set of number representing a given ROI. They will be highligthed in blue. Then press the top right minus (-) sign to delete it.
 
+To modify the vertices of an ROI, on the set of number representing a given ROI. Then, on the preview window, drag and drop one of the vertices to change its position. You can also add new vertices by double clicking on one of the sides of the polygon.
+
 20. **Track without identities**:
 ---------------------------------
 
-Check this box if you want to obtain trajectories of the animals for which the identities do not necessarily correspond to a given animal. The algorithm will skip the core of the tracking where the convolutional neural networks are trained to identify the animals. Also, be aware that the algorithm also skips the interpolation step where the trajectories of the blobs belonging to multiple animals (crossings, touches, ...) are assigned.
+Check this box if you want to obtain trajectories of the animals for which the identities (columns in the trajectories array) do not necessarily correspond to the same animal. The algorithm will skip the core of the tracking where the convolutional neural network is trained to identify the animals. Also, be aware that the algorithm also skips the interpolation step where the trajectories of the individuals in blobs belonging to multiple animals (crossings, touches, ...) are assigned.
 
 
 21. **Track video**

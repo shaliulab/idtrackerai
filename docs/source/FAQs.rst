@@ -20,18 +20,15 @@ Yes, in the :doc:`host_to_install`_ we provide instructions to install idtracker
 Can I run idtracker.ai in a laptop?
 ***********************************
 
-Yes. We are running idtracker.ai with all its features in high-end performance
-gaming laptops from `Obsidian <https://shop.obsidian-pc.com/en/workstation.html>`_.
-If your laptop does not have a GPU you can still use idtracker.ai, see the next FAQ.
+Yes. We are running idtracker.ai with all its features in high-end performance gaming laptops from `Obsidian <https://shop.obsidian-pc.com/en/workstation.html>`_. If your laptop does not have a GPU you can still use idtracker.ai, see the next FAQ.
 
 
 Can I use idtracker.ai if my computer does not have a good GPU?
 ***************************************************************
 
-Yes, you can still use idtracker.ai if you don't have a GPU. However, the parts of the tracking that use the GPU will be up to 100x slower. However, if you are tracking a single animal, or if you are tracking
-groups of animals but you do not want ot keep their identities, you can use idtracker.ai and track animals at a faster speed.
+Yes, you can still use idtracker.ai if you don't have a GPU. However, the parts of the tracking that use the GPU will be up to 100x slower. However, if you are tracking a single animal, or if you are tracking groups of animals but you do not want to keep their identities, you can use idtracker.ai and track animals at a faster speed.
 
-To track animals without keeping their identity, just check the box *Track without identities* in the bottom left corner of the GUI.
+To track animals without keeping their identity, just check the box *Track without identities* in the bottom left corner of the GUI (see :doc:`GUI_explained`).
 
 Can I use idtracker.ai in an AMD GPU?
 *************************************
@@ -72,8 +69,7 @@ As explained before, you can `generate a small video for every animal <https://g
 Does idtracker.ai track single animals?
 ***************************************
 
-Yes. Although idtracker.ai is designed to track multiple animals keeping their
-identities along the video, you can also track videos with a single animal. Just indicate that the number of animals to track is 1 in the corresponding text box in the GUI. The system will automatically skip the GPU intensive parts that are not necessary in this case. This means that you can use idtracker.ai to track single animals in a desktop or a laptop computer even if it does not have a GPU. In this case, idtracker.ai will perform very fast as it will only need to segment the video to extract the position of yoru animal.
+Yes. Although idtracker.ai is designed to track multiple animals keeping their identities along the video, you can also track videos with a single animal. Just indicate that the number of animals to track is 1 in the corresponding text box in the GUI. The system will automatically skip the GPU intensive parts that are not necessary in this case. This means that you can use idtracker.ai to track single animals in a desktop or a laptop computer even if it does not have a GPU. In this case, idtracker.ai will run faster as it will only need to segment the video to extract the position of the animal.
 
 Can I track humans with idtracker.ai?
 *************************************
@@ -83,14 +79,11 @@ We haven't tried to track people with idtracker.ai. We think that idtracker.ai c
 Common installation problems
 ----------------------------
 
-Some of the errors that you might encounter might have been already reported by other users and
-fixed. Please update your idtracker.ai to make sure you are using the latest version. To update
-idtracker.ai follow the indtructions at the end of the :doc:`how_to_install`_ page.
+Some of the errors that you might encounter might have been already reported by other users and fixed. Please update your idtracker.ai to make sure you are using the latest version. To update idtracker.ai follow the indtructions at the end of the :doc:`how_to_install`_ page.
 
-If the error persists, please report the issue in the `idtracker.ai gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
-or send us an email to idtrackerai@gmail.com. We will try to fix it as soon as possible.
+If the error persists, please report the issue in the `idtracker.ai gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_ or send us an email to idtrackerai@gmail.com. We will try to fix it as soon as possible.
 
 Common GUI (Graphical User Interface) bugs and questions
 --------------------------------------------------------
 
-We are constantly improving the GUI. However, you might still find some bugs, please report them. The following bugs that we describe do not affect the tracking performance, and you can still use idtracker.ai is you learn how to avoid them.
+*comming soon*

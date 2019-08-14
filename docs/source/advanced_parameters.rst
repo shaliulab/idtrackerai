@@ -12,7 +12,7 @@ This file needs to be placed in the same folder where you execute the command "i
    :align: center
    :alt: running from home
 
-The file will need to be stored in the directory "/home/polaviejalab" where you will need to change "polaviejalab" by your username.
+the file will need to be stored in the directory "/home/polaviejalab" where you will need to change "polaviejalab" by your username.
 
 If you save the file "local_settings.py" in some folder in your desktop. You will need to use the command "cd" the move to that directory.
 
@@ -164,7 +164,7 @@ Data management policy
 File example
 ************
 
-Copy the following code in your local_settings.py and modify the different parameters according to your needs:
+Copy the following code in your **local_settings.py** and modify the different parameters according to your needs:
 
 .. code-block:: python
 

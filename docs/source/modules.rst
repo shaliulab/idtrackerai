@@ -10,5 +10,5 @@ Contents:
   crossing_detector
   fragmentation
   idCNN
-  fingerprint_protocol_cascade
+  identification_protocol_cascade
   postprocessing
