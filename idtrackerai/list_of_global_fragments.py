@@ -196,7 +196,7 @@ class ListOfGlobalFragments(object):
         """
         images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels(video.identification_images_file_path, scope='identity_transfer')
         images = np.asarray(images)
-        assigner = assign(net, images, False)
+        assigner = assign(net, images)
         compute_identification_statistics_for_non_accumulated_fragments(
             self.first_global_fragment_for_accumulation.individual_fragments,
             assigner, net.params.number_of_animals)
