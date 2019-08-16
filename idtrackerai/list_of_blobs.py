@@ -501,8 +501,7 @@ class ListOfBlobs(object):
                 else:
                     if both_existed_blobs:
                         blob_index = np.argmin([candidate_blob.distance_from_countour_to(tuple(centroids_to_interpolate[i, :]))
-                                                for candidate_blob in self.blobs_in_video[frame]
-                                                if candidate_blob.is_a_crossing])
+                                                for candidate_blob in self.blobs_in_video[frame]])
                         nearest_blob = self.blobs_in_video[frame][blob_index]
                         nearest_blob.add_centroid(video, tuple(centroids_to_interpolate[i, :]), identity,
                                                   apply_resolution_reduction=False)
@@ -511,7 +510,7 @@ class ListOfBlobs(object):
                                       centroids_to_interpolate[i, :],
                                       identity)
         except Exception as e:
-            logger.debug(str(e), exc_info=True)
+            logger.info(str(e), exc_info=True)
             raise Exception('Something went wrong during the interpolation')
 
     def reset_user_generated_identities_and_centroids(self, video, start_frame,
@@ -535,7 +534,7 @@ class ListOfBlobs(object):
             # missing identity <= self.number_of_animals but the attribute does not exist
             raise Exception("Identity must be None, zero or a positive integer")
 
-        for blobs_in_frame in self.blobs_in_video[start_frame:end_frame]:
+        for blobs_in_frame in self.blobs_in_video[start_frame:end_frame+1]:
             if identity is None:
                 # Reset all user generated identities and centroids
                 for blob in blobs_in_frame:
