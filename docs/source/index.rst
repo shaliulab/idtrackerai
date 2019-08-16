@@ -40,20 +40,21 @@ If you are unsure whether idtracker.ai will work on your videos, check the :doc:
 
 Our research using idtracker.ai
 *******************************
-Let us know if you are using `idtracker.ai <http://idtracker.ai/>`_ in your research.
+Let us know if you are using idtracker.ai in your research.
 
   - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Deep attention networks reveal the rules of collective motion in zebrafish. bioRxiv, 400747. <https://www.biorxiv.org/content/early/2018/12/21/400747>`_
   - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`_
 
-Code documentation index and search
-***********************************
+Source code
+***********
 
 The source code can be found at the `idtracker.ai Gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_.
 
-Check the code documentaion :ref:`genindex` for more information about different classes, functions and methods of idtracker.ai
+Check the code documentation :ref:`genindex` for more information about different classes, functions and methods of idtracker.ai
 
 Data
 ****
+
 The data used in the idtracker.ai article can be found in the :doc:`./data` section of this web page.
 
 Reference
