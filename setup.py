@@ -91,7 +91,9 @@ setup(
     include_package_data=True,
     install_requires=requirements,
     extras_require={
-        'gui': ['pyforms-gui', 'python-video-annotator'],
+        'gui': ['pyforms-gui',
+                'python-video-annotator',
+                "python-video-annotator-module-idtrackerai==0.6.50"],
         'gpu': ['tensorflow-gpu==1.13.1']
     },
     zip_safe=False,
