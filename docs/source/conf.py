@@ -12,18 +12,15 @@ sys.path.insert(0, os.path.abspath('../../idtrackerai/preprocessing'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/network'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/network/crossings_detector_model'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/network/identification_model'))
-sys.path.insert(0, os.path.abspath('../../idtrackerai/plots'))
-sys.path.insert(0, os.path.abspath('../../idtrackerai/plots/old_plots'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/postprocessing'))
-sys.path.insert(0, os.path.abspath('../../idtrackerai/groundtruth_utils'))
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'numpydoc']
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.coverage',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.githubpages',
+              'numpydoc']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
@@ -43,13 +40,11 @@ html_theme_options = {
         "edit_link": False,
         "sidebar": "left",
         "scipy_org_logo": True,
-        "navigation_links" : True,
+        "navigation_links" : False,
         "rootlinks": [("https://gitlab.com/polavieja_lab/idtrackerai.git", "GitLab repo")]
     }
 html_sidebars = {
-            '**': [
-                    'localtoc.html',
-                    'globaltoc.html',
+            '**': [ 'globaltoc.html',
                     'sourcelink.html',
                     'searchbox.html'
                     ]

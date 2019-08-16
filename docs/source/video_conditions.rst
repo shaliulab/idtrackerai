@@ -1,5 +1,5 @@
-General video conditions
-========================
+Guidelines for good videos
+==========================
 
 We recommend to follow some guidelines during the realization of videos of freely-moving animals.
 Here follows a list of conditions that allow to maximize the probability of success and the accuracy of the tracking.
