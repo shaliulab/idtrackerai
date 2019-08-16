@@ -38,16 +38,26 @@ Follow the instructions in the :doc:`quickstart` to track the example video and 
 If you are unsure whether idtracker.ai will work on your videos, check the :doc:`video_conditions` and the :doc:`gallery` to see how our videos look like.
 
 
-Research using idtracker.ai
-***************************
+Our research using idtracker.ai
+*******************************
 Let us know if you are using `idtracker.ai <http://idtracker.ai/>`_ in your research.
 
   - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Deep attention networks reveal the rules of collective motion in zebrafish. bioRxiv, 400747. <https://www.biorxiv.org/content/early/2018/12/21/400747>`_
   - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`_
 
+Code documentation index and search
+***********************************
 
-References
-**********
+The source code can be found at the `idtracker.ai Gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_.
+
+Check the code documentaion :ref:`genindex` for more information about different classes, functions and methods of idtracker.ai
+
+Data
+****
+The data used in the idtracker.ai article can be found in the :doc:`./data` section of this web page.
+
+Reference
+*********
 When using information from this web page please reference
 
   Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
@@ -67,21 +77,10 @@ When using information from this web page please reference
   publisher={Nature Publishing Group}
   }
 
-
-Find `here the preprint <https://arxiv.org/abs/1803.04351>`_ version of the manuscript.
-
-Data
-****
-The data used in the article can be found in the :doc:`./data` section of this web page.
-
-
-Documentation index and search
-******************************
-
-* :ref:`genindex`
+Search in this webpage
+**********************
 * :ref:`search`
 .. * :ref:`modindex`
-
 
 Contents
 ********
