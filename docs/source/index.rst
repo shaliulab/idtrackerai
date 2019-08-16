@@ -3,6 +3,8 @@ Welcome to idtracker.ai's v3 documentation!
 
 `idtracker.ai <http://idtracker.ai/>`_ allows to track groups of up to 100 unmarked animals from videos recorded in laboratory conditions.
 
+Join the `idtracker.ai users group <https://groups.google.com/forum/#!forum/idtrackerai_users>`_ to get announcements about new releases. 
+
 .. image:: /_static/fish_tracked.png
     :width: 150
     :target: https://www.youtube.com/watch?v=Imz3xvPsaEw

@@ -531,9 +531,9 @@ class ListOfBlobs(object):
         """
         if start_frame > end_frame:
             raise Exception("Initial frame number must be smaller than the final frame number")
-        if not (identity is None or identity > 0):
+        if not (identity is None or identity >= 0):
             # missing identity <= self.number_of_animals but the attribute does not exist
-            raise Exception("Identity must be None or a positive integer")
+            raise Exception("Identity must be None, zero or a positive integer")
 
         for blobs_in_frame in self.blobs_in_video[start_frame:end_frame]:
             if identity is None:
