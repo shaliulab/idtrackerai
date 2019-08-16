@@ -1,8 +1,9 @@
 Guidelines for good videos
 ==========================
 
-We recommend to follow some guidelines during the realization of videos of freely-moving animals.
-Here follows a list of conditions that allow to maximize the probability of success and the accuracy of the tracking.
+In the idtracker.ai paper we checked that the algorithm can perform well even if the videos are compressed (Supplementary Table 10), they are low resolution (Supplementary Figure 7), or are slightly out of focus or blurred (Supplementary Figure 8), or the illumination conditions are not completely homogeneous (Supplementary Figure 9).
+
+Still, we recommend to follow some guidelines during the realization of videos to maximize the probability of success and the accuracy of the tracking.
 
 Resolution
 **********
