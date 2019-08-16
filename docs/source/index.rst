@@ -68,7 +68,7 @@ References
 When using information from this web page please reference
 
   Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-  idtracker.ai: tracking all individuals in small or large collectives of unmarked animals `[pdf]<https://drive.google.com/open?id=1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_
+  idtracker.ai: tracking all individuals in small or large collectives of unmarked animals `[pdf] <https://drive.google.com/open?id=1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_
   (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 .. code-block:: bibtex
