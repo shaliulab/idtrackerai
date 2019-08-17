@@ -751,58 +751,6 @@ class Blob(object):
         return [(centroid[0]/self.resolution_reduction,
                  centroid[1]/self.resolution_reduction) for centroid in self.final_centroids]
 
-
-    def draw(self, image, colors_lst=None, selected_id=None):
-        """
-        Draw the blob representation in an image
-        :param numpy.array image: Image where the blob should be draw.
-        :param str selected_id: Identity of the selected blob.
-        :param colors_lst: List of colors used to draw the blobs.
-        """
-        contour = self.contour_full_resolution
-
-        for i, (identity, centroid) in enumerate(zip(self.final_identities, self.final_centroids_full_resolution)):
-
-            pos = int(round(centroid[0], 0)), int(round(centroid[1], 0))
-
-            if colors_lst:
-                color = colors_lst[identity] if identity is not None else colors_lst[0]
-            else:
-                color = (0, 0, 255)
-
-            if contour is not None:
-                cv2.polylines(image, np.array([contour]), True, (0, 255, 0), 1)
-
-            cv2.circle(image, pos, 8, (255, 255, 255), -1, lineType=cv2.LINE_AA)
-            cv2.circle(image, pos, 6, color, -1, lineType=cv2.LINE_AA)
-
-            if identity is not None:
-
-                if identity == selected_id:
-                    cv2.circle(image, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
-
-                idroot = ''
-                if self.user_generated_identities is not None and (self.user_generated_identities[i] is not None and self.user_generated_identities[i] >= 0):
-                    idroot = 'u-'
-                elif self.user_generated_centroids is not None and (self.user_generated_centroids[i][0] is not None and self.user_generated_centroids[i][0] >= 0):
-                    idroot = 'u-'
-                elif self.identities_corrected_closing_gaps is not None and not self.is_an_individual:
-                    idroot = 'c-'
-
-
-                idstr = idroot + str(identity)
-                text_size = cv2.getTextSize(idstr, cv2.FONT_HERSHEY_SIMPLEX, 1.0, thickness=2)
-                text_width = text_size[0][0]
-                str_pos = pos[0] - text_width // 2, pos[1] - 12
-
-                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), thickness=3,
-                            lineType=cv2.LINE_AA)
-                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, thickness=2, lineType=cv2.LINE_AA)
-            else:
-                bounding_box = self.bounding_box_full_resolution
-                rect_color   = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
-                cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
-
     def removable_identity(self, identity_to_remove, blobs_in_frame):
         for blob in blobs_in_frame:
             if blob != self:
@@ -823,7 +771,7 @@ class Blob(object):
         new_centroid : tuple
             len(new_centroid) must be 2
         """
-
+        logger.info("Calling update_centroid")
         video.is_centroid_updated = True
         old_centroid = (old_centroid[0]*self.resolution_reduction,
                         old_centroid[1]*self.resolution_reduction)
@@ -844,7 +792,7 @@ class Blob(object):
         except ValueError:
             raise Exception("There is no centroid with the values of old_centroid")
 
-    def remove_centroid(self, video, identity, centroid, blobs_in_frame,
+    def delete_centroid(self, video, identity, centroid, blobs_in_frame,
                         apply_resolution_reduction=True):
         """ Remove the centroid and the identity from the blob if it exist.
 
@@ -854,6 +802,7 @@ class Blob(object):
             centroid to be removed in full frame coordinates,
             without the application of the resolution reduction
         """
+        logger.info("Calling delete_centroid")
         if apply_resolution_reduction:
             centroid = (centroid[0]*self.resolution_reduction, centroid[1]*self.resolution_reduction)
         if not (isinstance(centroid, tuple) and len(centroid) == 2):
@@ -869,12 +818,12 @@ class Blob(object):
             raise Exception("Cannot find the centroid in the selected blob")
 
         if len(self.final_centroids) > 1:
-            if self.user_generated_centroids is None:
+            if self.user_generated_centroids is None: #removing a centroid from a crossing
                 self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
-            self._user_generated_centroids[centroid_index] = (-1, -1)
+            self._user_generated_centroids.pop(centroid_index)
             if self.user_generated_identities is None:
                 self._user_generated_identities = [None]*len(self.final_identities)
-            self._user_generated_identities[centroid_index] = -1
+            self._user_generated_identities.pop(centroid_index)
             video.is_centroid_updated = True
         else:
             raise Exception("Cannot remove the centroid of the blob, \
@@ -891,6 +840,7 @@ class Blob(object):
         identity : int
             identity of the centroid. identity must be > 0 and <= number_of_animals
         """
+        logger.info("Calling add_centroid")
         if apply_resolution_reduction:
             centroid = (centroid[0]*self.resolution_reduction,
                         centroid[1]*self.resolution_reduction)
@@ -905,7 +855,7 @@ class Blob(object):
             self._user_generated_identities = [None]*len(self.final_identities)
 
         self._user_generated_centroids.append(centroid)
-        self.user_generated_identities.append(identity)
+        self._user_generated_identities.append(identity)
 
         video.is_centroid_updated = True
 
@@ -936,7 +886,7 @@ class Blob(object):
             raise Exception('Identity cannot be updated because there is no such centroid in the blob')
 
 
-    def propagate_identity(self, new_blob_identity, centroid):
+    def propagate_identity(self, old_identity, new_blob_identity, centroid):
         """Propagates the identity specified by new_blob_identity.
         """
         count_past_corrections = 1 #to take into account the modification already done in the current frame
@@ -947,9 +897,13 @@ class Blob(object):
 
         while len(current.next) == 1 and current.next[0].fragment_identifier == self.fragment_identifier:
             if len(current.next[0].final_centroids) > 1:
-                next_centroids = np.asarray(current.next[0].centroids)
-                index_centroid = np.argmin(np.sqrt(np.sum((current_centroid-next_centroids)**2)))
-                next_centroid = current.next[0].final_centroids[index_centroid]
+                index_same_identities = np.where(np.asarray(current.next[0].final_identities) == old_identity)[0]
+                if index_same_identities.size == 1: # there is only one centroid with the old identity
+                    next_centroid = current.next[0].final_centroids[index_same_identities[0]]
+                else: # there are several centroids in the blob with the same identity
+                    next_centroids = np.asarray(current.next[0].final_centroids)
+                    index_centroid = np.argmin(np.sqrt(np.sum((current_centroid-next_centroids)**2)))
+                    next_centroid = current.next[0].final_centroids[index_centroid]
             else:
                 next_centroid = current.next[0].final_centroids[0]
             current.next[0].update_identity(new_blob_identity, next_centroid)
@@ -961,15 +915,73 @@ class Blob(object):
 
         while len(current.previous) == 1 and current.previous[0].fragment_identifier == self.fragment_identifier:
             if len(current.previous[0].final_centroids) > 1:
-                previous_centroids = np.asarray(current.previous[0].centroids)
-                index_centroid = np.argmin(np.sqrt(np.sum((current_centroid-previous_centroids)**2)))
-                previous_centroid = current.previous[0].final_centroids[index_centroid]
+                index_same_identities = np.where(np.asarray(current.previous[0].final_identities) == old_identity)[0]
+                if index_same_identities.size == 1: # there is only one centroid with the old identity
+                    previous_centroid = current.previous[0].final_centroids[index_same_identities[0]]
+                else: # there are several centroids in the blob with the same identity
+                    previous_centroids = np.asarray(current.previous[0].final_centroids)
+                    index_centroid = np.argmin(np.sqrt(np.sum((current_centroid-previous_centroids)**2)))
+                    previous_centroid = current.previous[0].final_centroids[index_centroid]
             else:
                 previous_centroid = current.previous[0].final_centroids[0]
             current.previous[0].update_identity(new_blob_identity, previous_centroid)
             current = current.previous[0]
             current_centroid = np.asarray(previous_centroid)
             count_past_corrections += 1
+
+    def draw(self, image, colors_lst=None, selected_id=None, is_selected=False):
+        """
+        Draw the blob representation in an image
+        :param numpy.array image: Image where the blob should be draw.
+        :param str selected_id: Identity of the selected blob.
+        :param colors_lst: List of colors used to draw the blobs.
+        """
+        contour = self.contour_full_resolution
+
+        for i, (identity, centroid) in enumerate(zip(self.final_identities, self.final_centroids_full_resolution)):
+
+            pos = int(round(centroid[0], 0)), int(round(centroid[1], 0))
+
+            if colors_lst:
+                color = colors_lst[identity] if identity is not None else colors_lst[0]
+            else:
+                color = (0, 0, 255)
+
+            if contour is not None:
+                if not is_selected:
+                    cv2.polylines(image, np.array([contour]), True, (0, 255, 0), 1)
+                else:
+                    cv2.polylines(image, np.array([contour]), True, (0, 255, 0), 2)
+
+            cv2.circle(image, pos, 8, (255, 255, 255), -1, lineType=cv2.LINE_AA)
+            cv2.circle(image, pos, 6, color, -1, lineType=cv2.LINE_AA)
+
+            if identity is not None:
+
+                if identity == selected_id:
+                    cv2.circle(image, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
+
+                idroot = ''
+                if self.user_generated_identities is not None and (self.user_generated_identities[i] is not None and self.user_generated_identities[i] >= 0):
+                    idroot = 'u-'
+                elif self.user_generated_centroids is not None and (self.user_generated_centroids[i][0] is not None and self.user_generated_centroids[i][0] >= 0):
+                    idroot = 'u-'
+                elif self.identities_corrected_closing_gaps is not None and not self.is_an_individual:
+                    idroot = 'c-'
+
+
+                idstr = idroot + str(identity)
+                text_size = cv2.getTextSize(idstr, cv2.FONT_HERSHEY_SIMPLEX, 1.0, thickness=2)
+                text_width = text_size[0][0]
+                str_pos = pos[0] - text_width // 2, pos[1] - 12
+
+                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), thickness=3,
+                            lineType=cv2.LINE_AA)
+                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, thickness=2, lineType=cv2.LINE_AA)
+            else:
+                bounding_box = self.bounding_box_full_resolution
+                rect_color   = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
+                cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
 
 
 def remove_background_pixels(height, width, bounding_box_image, pixels,
