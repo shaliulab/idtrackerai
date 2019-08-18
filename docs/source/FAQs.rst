@@ -50,7 +50,7 @@ Is there a Docker image for idtracker.ai?
 Can idtracker.ai track multiple videos in batch?
 ************************************************
 
-Yes, check the :doc:`tracking_from_terminal`_.
+Yes, check the :doc:`tracking_from_terminal`.
 
 Does idtracker.ai give orientation and posture information?
 ***********************************************************

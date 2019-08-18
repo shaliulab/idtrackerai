@@ -152,6 +152,7 @@ class Video(object):
         self._there_are_crossings = True
         self._track_wo_identities = False # Track without identities
         self._number_of_channels = 1
+        self.individual_videos_folder = None
         if conf.SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
 
@@ -829,6 +830,13 @@ class Video(object):
             rmtree(self.accumulation_folder)
             os.makedirs(self.accumulation_folder)
 
+    def create_individual_videos_folder(self):
+        """Create folder where to save the individual videos
+        """
+        self.individual_videos_folder = os.path.join(self.session_folder, 'individual_videos')
+        if not os.path.exists(self.individual_videos_folder):
+            os.makedirs(self.individual_videos_folder)
+
     def init_accumulation_statistics_attributes(self, attributes = None):
         if attributes is None:
             attributes = ['number_of_accumulated_global_fragments',
@@ -850,17 +858,6 @@ class Video(object):
         if not hasattr(self, 'accumulation_statistics'): self.accumulation_statistics = [None] * number_of_possible_accumulation
         self.accumulation_statistics[accumulation_trial] = [getattr(self, stat_attr)
                                                             for stat_attr in self.accumulation_statistics_attributes_list]
-
-    # @property
-    # def final_training_folder(self):
-    #     return self._final_training_folder
-    #
-    # def create_training_folder(self):
-    #     """Folder in which the last model is stored (after accumulation)
-    #     """
-    #     self._final_training_folder = os.path.join(self.session_folder, 'training')
-    #     if not os.path.isdir(self.final_training_folder):
-    #         os.makedirs(self.final_training_folder)
 
     def create_trajectories_folder(self):
         """Folder in which trajectories files are stored
