@@ -787,10 +787,16 @@ class Blob(object):
             self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
 
         try:
-            centroid_index = self.final_centroids.index(old_centroid)
-            self.user_generated_centroids[centroid_index] = new_centroid
+            if centroid in self.user_generated_centroids:
+                centroid_index = self.user_generated_centroids.index(old_centroid)
+            elif centroid in self.assigned_centroids:
+                centroid_index = self.assigned_centroids.index(old_centroid)
+            else:
+                raise Exception("There is no centroid with the values of old_centroid")
         except ValueError:
             raise Exception("There is no centroid with the values of old_centroid")
+
+        self.user_generated_centroids[centroid_index] = new_centroid
 
     def delete_centroid(self, video, identity, centroid, blobs_in_frame,
                         apply_resolution_reduction=True):
@@ -812,22 +818,28 @@ class Blob(object):
             raise Exception("The centroid cannot be remove beucase it belongs to a unique identity. \
                             Only centroids of duplicated identities can be deleted")
 
-        try:
-            centroid_index = self.final_centroids.index(centroid)
-        except ValueError:
-            raise Exception("Cannot find the centroid in the selected blob")
+        if len(self.final_centroids) == 1:
+            raise Exception("The centroid cannot be removed because if the last centrod of the blob")
 
-        if len(self.final_centroids) > 1:
-            if self.user_generated_centroids is None: #removing a centroid from a crossing
-                self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
-            self._user_generated_centroids.pop(centroid_index)
-            if self.user_generated_identities is None:
-                self._user_generated_identities = [None]*len(self.final_identities)
-            self._user_generated_identities.pop(centroid_index)
-            video.is_centroid_updated = True
-        else:
-            raise Exception("Cannot remove the centroid of the blob, \
-                  because it is the only centroid")
+        if self.user_generated_centroids is None: #removing a centroid from a crossing
+            self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
+        if self.user_generated_identities is None:
+            self._user_generated_identities = [None]*len(self.final_identities)
+
+        try:
+            if centroid in self.user_generated_centroids:
+                centroid_index = self.user_generated_centroids.index(centroid)
+            elif centroid in self.assigned_centroids:
+                centroid_index = self.assigned_centroids.index(centroid)
+            else:
+                raise Exception("There is no centroid with the values of centroid")
+        except ValueError:
+            raise Exception("There is no centroid with the values of centroid")
+
+        self._user_generated_centroids.pop(centroid_index)
+        self._user_generated_identities.pop(centroid_index)
+        video.is_centroid_updated = True
+
 
     def add_centroid(self, video, centroid, identity,
                      apply_resolution_reduction=True):
@@ -874,16 +886,22 @@ class Blob(object):
         if not (isinstance(new_id, int) and new_id >= 0 and new_id <= self.number_of_animals):
             raise Exception('The new identity must be an integer between 0 and the number of animals in the video. Blobs with 0 identity will be ommited for the generation of the trajectories')
 
+        if self.user_generated_centroids is None:
+            self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
         if self.user_generated_identities is None:
             self._user_generated_identities = [None]*len(self.final_identities)
 
-        centroid_index = self.final_centroids.index(centroid)
-
         try:
-            centroid_index = self.final_centroids.index(centroid)
-            self.user_generated_identities[centroid_index] = new_id
+            if centroid in self.user_generated_centroids:
+                centroid_index = self.user_generated_centroids.index(centroid)
+            elif centroid in self.assigned_centroids:
+                centroid_index = self.assigned_centroids.index(centroid)
+            else:
+                raise Exception("There is no centroid with the values of centroid")
         except ValueError:
-            raise Exception('Identity cannot be updated because there is no such centroid in the blob')
+            raise Exception("There is no centroid with the values of centroid")
+
+        self.user_generated_identities[centroid_index] = new_id
 
 
     def propagate_identity(self, old_identity, new_blob_identity, centroid):
@@ -962,9 +980,8 @@ class Blob(object):
                     cv2.circle(image, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
 
                 idroot = ''
-                if self.user_generated_identities is not None and (self.user_generated_identities[i] is not None and self.user_generated_identities[i] >= 0):
-                    idroot = 'u-'
-                elif self.user_generated_centroids is not None and (self.user_generated_centroids[i][0] is not None and self.user_generated_centroids[i][0] >= 0):
+                if self.user_generated_identities is not None and identity in self.user_generated_identities \
+                    and self.user_generated_centroids is not None and centroid in self.user_generated_centroids:
                     idroot = 'u-'
                 elif self.identities_corrected_closing_gaps is not None and not self.is_an_individual:
                     idroot = 'c-'
