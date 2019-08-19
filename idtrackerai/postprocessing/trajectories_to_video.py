@@ -26,51 +26,37 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from __future__ import absolute_import, print_function, division
+import os
 import numpy as np
 import cv2
 from tqdm import tqdm
 from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
-def init(video_path, trajectories_dict_path):
-    video_object = np.load(video_path, allow_pickle=True, encoding='latin1').item()
-    video_object.update_paths(video_path)
-    trajectories  = np.load(trajectories_dict_path, allow_pickle=True, encoding='latin1').item()['trajectories']
-    colors = get_spaced_colors_util(video_object.number_of_animals, black = False)
-    path_to_save_video = video_object._session_folder +'/tracked.avi'
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    video_writer = cv2.VideoWriter(path_to_save_video, fourcc, video_object.frames_per_second,
-                                    (video_object.width, video_object.height))
-    print("The video will be saved at ", path_to_save_video)
-    return video_object, trajectories, video_writer, colors
 
-def generate_video(video_object,
-                trajectories,
-                video_writer,
-                colors,
-                func = None,
-                centroid_trace_length = 10,
-                starting_frame = 0,
-                ending_frame = None):
-    if video_object.paths_to_video_segments is None:
-        cap = cv2.VideoCapture(video_object.video_path)
-    else:
-        cap = None
+def writeIds(video_object, frame, frame_number, trajectories, centroid_trace_length, colors):
+    ordered_centroid = trajectories[frame_number]
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_size = 1 * video_object.resolution_reduction
+    font_width = int(3 * video_object.resolution_reduction)
+    font_width = 1 if font_width == 0 else font_width
+    circle_size = int(2 * video_object.resolution_reduction)
 
-    if ending_frame is None:
-        ending_frame = len(trajectories)
+    for cur_id, centroid in enumerate(ordered_centroid):
+        if sum(np.isnan(centroid)) == 0:
+            if frame_number > centroid_trace_length:
+                centroids_trace = trajectories[frame_number - centroid_trace_length : frame_number, cur_id]
+            else:
+                centroids_trace = trajectories[: frame_number, cur_id]
+            cur_id_str = str(cur_id + 1)
+            int_centroid = np.asarray(centroid).astype('int')
+            cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
+            cv2.putText(frame, cur_id_str,tuple(int_centroid), font, font_size, colors[cur_id], font_width)
+            for centroid_trace in centroids_trace:
+                if sum(np.isnan(centroid_trace)) == 0:
+                    int_centroid = np.asarray(centroid_trace).astype('int')
+                    cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
+    return frame
 
-
-    for frame_number in tqdm(range(starting_frame, ending_frame), desc='Adding trajectories to video'):
-        frame = apply_func_on_frame(video_object,
-                            trajectories,
-                            frame_number,
-                            video_writer,
-                            colors,
-                            cap = cap,
-                            func = writeIds,
-                            centroid_trace_length  = centroid_trace_length)
-        video_writer.write(frame)
 
 def apply_func_on_frame(video_object,
                         trajectories,
@@ -100,44 +86,51 @@ def apply_func_on_frame(video_object,
         return frame
 
 
-def writeIds(video_object, frame, frame_number, trajectories, centroid_trace_length, colors):
-    ordered_centroid = trajectories[frame_number]
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_size = 1 * video_object.resolution_reduction
-    font_width = int(3 * video_object.resolution_reduction)
-    font_width = 1 if font_width == 0 else font_width
-    circle_size = int(2 * video_object.resolution_reduction)
+def generate_trajectories_video(video_object,
+                                trajectories,
+                                func = writeIds,
+                                centroid_trace_length = 10,
+                                starting_frame = 0,
+                                ending_frame = None):
 
-    for cur_id, centroid in enumerate(ordered_centroid):
-        if sum(np.isnan(centroid)) == 0:
-            if frame_number > centroid_trace_length:
-                centroids_trace = trajectories[frame_number - centroid_trace_length : frame_number, cur_id]
-            else:
-                centroids_trace = trajectories[: frame_number, cur_id]
-            cur_id_str = str(cur_id + 1)
-            int_centroid = np.asarray(centroid).astype('int')
-            cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
-            cv2.putText(frame, cur_id_str,tuple(int_centroid), font, font_size, colors[cur_id], font_width)
-            for centroid_trace in centroids_trace:
-                if sum(np.isnan(centroid_trace)) == 0:
-                    int_centroid = np.asarray(centroid_trace).astype('int')
-                    cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
-    return frame
+    video_name = os.path.split(video_object.video_path)[-1].split('.')[0] + '_tracked.avi'
+    colors = get_spaced_colors_util(video_object.number_of_animals, black = False)
+    path_to_save_video = os.path.join(video_object._session_folder, video_name)
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    video_writer = cv2.VideoWriter(path_to_save_video, fourcc, video_object.frames_per_second,
+                                    (video_object.width, video_object.height))
+
+    if video_object.paths_to_video_segments is None:
+        cap = cv2.VideoCapture(video_object.video_path)
+    else:
+        cap = None
+
+    if ending_frame is None:
+        ending_frame = len(trajectories)
+
+
+    for frame_number in tqdm(range(starting_frame, ending_frame), desc='Generating video with trajectories...'):
+        frame = apply_func_on_frame(video_object,
+                            trajectories,
+                            frame_number,
+                            video_writer,
+                            colors,
+                            cap = cap,
+                            func = writeIds,
+                            centroid_trace_length  = centroid_trace_length)
+        video_writer.write(frame)
+
 
 def main(args):
-    video_object_path = args.video_object_path
-    trajectories_dict_path = args.trajectories_path
-    number_of_points_in_past_trace = args.number_of_ghost_points
-    video_object, trajectories, video_writer, colors = init(video_object_path,
-                                                    trajectories_dict_path)
-    generate_video(video_object,
-                    trajectories,
-                    video_writer,
-                    colors,
-                    func = writeIds,
-                    centroid_trace_length = number_of_points_in_past_trace,
-                    starting_frame = args.starting_frame,
-                    ending_frame = args.ending_frame)
+    video_object = np.load(args.video_object_path, allow_pickle=True, encoding='latin1').item()
+    video_object.update_paths(args.video_object_path)
+    trajectories  = np.load(args.trajectories_path, allow_pickle=True, encoding='latin1').item()['trajectories']
+
+    generate_trajectories_video(video_object,
+                   trajectories,
+                   centroid_trace_length = args.number_of_ghost_points,
+                   starting_frame = args.starting_frame,
+                   ending_frame = args.ending_frame)
 
 if __name__ == "__main__":
     import argparse
