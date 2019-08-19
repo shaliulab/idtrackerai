@@ -496,7 +496,10 @@ class ListOfBlobs(object):
                 identity_index = blob.final_identities.index(identity)
                 if blob._user_generated_centroids is None:
                     blob._user_generated_centroids = [(None, None)]*len(blob.final_centroids)
-                blob.user_generated_centroids[identity_index] = tuple(centroids_to_interpolate[i, :])
+                if blob._user_generated_identities is None:
+                    blob._user_generated_identities = [None]*len(blob.final_centroids)
+                blob._user_generated_centroids[identity_index] = tuple(centroids_to_interpolate[i, :])
+                blob._user_generated_identities[identity_index] = identity
             else:
                 if both_existed_blobs:
                     blob_index = np.argmin([candidate_blob.distance_from_countour_to(tuple(centroids_to_interpolate[i, :]))
@@ -508,6 +511,8 @@ class ListOfBlobs(object):
                     self.add_blob(video, frame,
                                   centroids_to_interpolate[i, :],
                                   identity)
+
+        video.is_centroid_updated = True
 
 
     def reset_user_generated_identities_and_centroids(self, video, start_frame,
@@ -561,7 +566,7 @@ class ListOfBlobs(object):
                                           for blob in blobs_in_frame
                                           if blob.user_generated_centroids is not None])
 
-    def add_blob(self, video, frame_number, centroid, identity):
+    def add_blob(self, video, frame_number, centroid, identity, apply_resolution_reduction=True):
         """
         Adds a Blob object the frame number.
 
@@ -581,10 +586,18 @@ class ListOfBlobs(object):
             video.
 
         """
-
+        logger.info("Calling add_blob")
+        if apply_resolution_reduction:
+            centroid = (centroid[0]*video.resolution_reduction,
+                        centroid[1]*video.resolution_reduction)
+        if not (isinstance(centroid, tuple) and len(centroid) == 2):
+            raise Exception("The centroid must be a tuple of length 2")
+        if not (isinstance(identity, int) and identity > 0 and identity <= video.number_of_animals):
+            raise Exception("The identity must be an integer between 1 and the number of animals in the video")
+			
         new_blob = Blob(centroid=None, contour=None, area=None,
                         bounding_box_in_frame_coordinates=None)
-        new_blob._user_generated_centroids = [centroid]
+        new_blob._user_generated_centroids = [(centroid[0], centroid[1])]
         new_blob._user_generated_identities = [identity]
         new_blob.frame_number = frame_number
         new_blob._is_an_individual = True

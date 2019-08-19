@@ -1000,8 +1000,6 @@ class Video(object):
 
             close_trajectories_gaps(self, list_of_blobs, list_of_fragments)
 
-        self._is_centroid_updated = False
-
 
     def get_first_frame(self, list_of_blobs):
         if self.number_of_animals != 1:
