@@ -182,4 +182,14 @@ The progress bar will advance as the different steps of the algorithm are comput
 23. **Validate trajectories**
 -----------------------------
 
-If the session name correspond to a tracking session already finished, the *Validate trajectories* button will activate and a new windows will pop up where you will be able to explore the outcome of the tracking and correct the possible errors (see VALIDATION GUI for more information)
+If the session name corresponds to a tracking session already finished, the *Validate trajectories* button will activate. Click on this button to open the trajectories validation. A new window will pop up where you will be able to explore the outcome of the tracking and correct the possible errors (see :doc:`validation_GUI_explained` for more information).
+
+24. **Generate individual videos**
+----------------------------------
+
+If the session name corresponds to a tracking session already finished, the *Generated individual videos* button will activate. Click on this button if you want to generate videos centered on each individual. These videos can be used to annotate body parts and train posture anlysis softwares like `LEAP <https://github.com/talmo/leap/wiki>`_ or `DeepLabCut <http://www.mousemotorlab.org/deeplabcut>`_. The videos will be saved in a folder called "individual videos". Note that if you have modified the identities or the centroids using the *Validate trajectories* button, the last trajectories file generated will be used to generate the individual videos.
+
+25. **Generate video with trajectories**
+----------------------------------------
+
+If the session name corrsponds to a tracking session already finished, the *Generate video with trajectories* button will activate. Click on this butotn if you want to generate a video with the trajectories overlayed with the original video. Note that if you have modified the identities or the centroids using the *Validate trajectories* button, the last trajectories file generated will be used to generate the video with trajectories. 
