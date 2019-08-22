@@ -50,7 +50,7 @@ class ConvNetwork_crossings(object):
         logger.info("Building graph....")
         self._build_graph()
         self.ops_list = [self.loss, self.accuracy, self.individual_accuracy]
-        self.saver = tf.train.Saver()
+        self.set_savers()
         self.sesh = tf.Session()
         self.sesh.run(tf.global_variables_initializer())
 
@@ -146,7 +146,49 @@ class ConvNetwork_crossings(object):
         except:
             logger.info('\nWarning: no checkpoints found in the folder %s' %self.params._restore_folder)
 
+    # Create savers for the convolutions and the fully conected and softmax separately
+    def set_savers(self):
+        """Create or retrieves the paths where the checkpoint files will be saved and
+        initialize the objects to save them
+
+        See Also
+        --------
+        :func:`createSaver`
+        """
+        self.saver_conv = createSaver('saver_conv', exclude_fc_and_softmax = True)
+        self.saver_fc_softmax = createSaver('saver_fc_softmax', exclude_fc_and_softmax = False)
+        # Create subfolders where we will save the checkpoints of the trainig
+        [self.save_folder_conv,self.save_folder_fc_softmax] = get_checkpoint_subfolders( self.params._save_folder, ['conv', 'softmax'])
+
     def save(self, global_step):
-        logger.info("(in save) self.params._save_folder %s" %self.params._save_folder)
-        save_path = self.saver.save(self.sesh, os.path.join(self.params._save_folder,'.ckpt'), global_step=global_step)
-        logger.info("Model saved in file: %s" %save_path)
+        """Saves the models in the correspoding :attr:`save_folder_conv` and :attr:`save_folder_fc_softmax` folders
+        using the saver :attr:`saver_conv` and :attr:`saver_fc_softmax`
+        """
+        self.saver_conv.save(self.sesh, os.path.join(self.save_folder_conv, "conv.ckpt"), global_step = global_step)
+        self.saver_fc_softmax.save(self.sesh, os.path.join(self.save_folder_fc_softmax, "softmax.ckpt"), global_step = global_step)
+
+
+def createSaver(name, exclude_fc_and_softmax):
+    """Returns a tensorflow `saver` with a given `name` which will only save the
+    convolutional layers if `exclude_fc_and_softmax` is True, and it will only save
+    the fully connected layers if `exclude_fc_and_softmax` is False
+    """
+    saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name], name = name, max_to_keep = 1000000)
+
+    return saver
+
+def get_checkpoint_subfolders(folder_name, sub_folders_names):
+    """
+    Create if it does not exist the folder `folder_name` and the subfolders
+    `sub_folders_names`. It returns the list of `sub_paths` created or
+    """
+    sub_paths = []
+    for name in sub_folders_names:
+        subPath = folder_name + '/' + name
+        if not os.path.exists(subPath):
+            os.makedirs(subPath)
+            logger.debug('%s has been created' %subPath)
+        else:
+            logger.debug('%s already exists' %subPath)
+        sub_paths.append(subPath)
+    return sub_paths
