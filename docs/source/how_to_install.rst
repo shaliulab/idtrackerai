@@ -176,7 +176,7 @@ The following commands are to be run inside of the *idtrackerai* conda environme
    :align: center
    :alt: conda environment
 
-**Option 1 (GUI, GPU support) (NVIDIA drivers >=410.38 already installed for Linux)**
+**Option 1 (GUI, GPU support) (NVIDIA drivers >=410.38 already installed)**
 ********************************************************************************
 
 You can install idtracker.ai with GUI support with the following command

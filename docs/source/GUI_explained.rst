@@ -11,7 +11,7 @@ The idtracker.ai graphical user interface consists on a main panel and different
 1. **Path to the video**
 -------------------------
 
-The absolute path to the video that you are going to track will appera in this box.
+The absolute path to the video that you are going to track will appear in this box.
 
 2. **Browse the video**
 -----------------------
@@ -21,7 +21,7 @@ Click *Open* and browse in your folders to find the video. If you are tracking a
 .. figure:: ./_static/gui_pyforms/multiple_videos.png
    :scale: 80 %
    :align: center
-   :alt: main pan
+   :alt: multiple videos
 
 Click *YES* if you want to combine the videos in the proposed order.
 
@@ -192,4 +192,4 @@ If the session name corresponds to a tracking session already finished, the *Gen
 25. **Generate video with trajectories**
 ----------------------------------------
 
-If the session name corrsponds to a tracking session already finished, the *Generate video with trajectories* button will activate. Click on this butotn if you want to generate a video with the trajectories overlayed with the original video. Note that if you have modified the identities or the centroids using the *Validate trajectories* button, the last trajectories file generated will be used to generate the video with trajectories. 
+If the session name corrsponds to a tracking session already finished, the *Generate video with trajectories* button will activate. Click on this butotn if you want to generate a video with the trajectories overlayed with the original video. Note that if you have modified the identities or the centroids using the *Validate trajectories* button, the last trajectories file generated will be used to generate the video with trajectories.
