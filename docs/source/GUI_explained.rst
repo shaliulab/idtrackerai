@@ -4,7 +4,6 @@ Graphical user interface (GUI)
 The idtracker.ai graphical user interface consists on a main panel and different secondary windows. Here, we explain the different features of the GUI and how to interact with them.
 
 .. figure:: ./_static/gui_pyforms/main_window.png
-   :scale: 80 %
    :align: center
    :alt: main panel
 
