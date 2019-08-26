@@ -103,3 +103,4 @@ Contents
    FAQs
    modules
    data
+   contact
