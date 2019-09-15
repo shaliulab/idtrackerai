@@ -144,15 +144,22 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds,
                                fx=video.resolution_reduction,
                                fy=video.resolution_reduction,
                                interpolation=cv2.INTER_AREA)
-        frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if len(frame.shape)>2 else frame
         avIntensity = np.float32(np.mean(np.ma.array(frameGray,
                                                      mask=video.ROI==0)))
         segmentedFrame = segment_frame(frameGray / avIntensity,
                                        segmentation_thresholds['min_threshold'],
                                        segmentation_thresholds['max_threshold'],
                                        video.bkg, video.ROI, video.subtract_bkg)
+        # import matplotlib.pyplot as plt
+        # fig, ax = plt.subplots(1,4)
+        # ax[0].imshow(frameGray)
+        # ax[1].imshow(video.bkg)
+        # ax[2].imshow(segmentedFrame)
         # Fill holes in the segmented frame to avoid duplication of contours
-        segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
+        # segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
+        # plt.show()
+        # input("Press Enter to continue...")
         # Find contours in the segmented image
         bounding_boxes, miniframes, centroids, \
             areas, pixels, contours, estimated_body_lengths = \
