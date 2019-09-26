@@ -167,7 +167,7 @@ class CrossingDataset(object):
         logger.debug("resampling factor individual: %s" %str(self.resampling_factor))
 
         for individual_blobs in self.individual_blobs_sliced:
-            _, _, _, individual_blobs_image = individual_blobs.get_image_for_identification(self.video, image_size = self.image_size)
+            _, _, _, individual_blobs_image = individual_blobs.get_image_for_identification(self.video, image_size=self.image_size)
             individual_blobs_image = cv2.resize(individual_blobs_image, None,
                                                 fx = self.resampling_factor,
                                                 fy = self.resampling_factor,
