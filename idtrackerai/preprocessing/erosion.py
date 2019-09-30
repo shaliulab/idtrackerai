@@ -32,6 +32,7 @@ import numpy as np
 import cv2
 import h5py
 from confapp import conf
+import matplotlib.pyplot as plt
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.segmentation_utils import blob_extractor
@@ -72,6 +73,7 @@ def erode(image, kernel_size):
     kernel = np.ones(kernel_size, np.uint8)
     return cv2.erode(image,kernel,iterations = 1)
 
+
 def get_eroded_blobs(video, blobs_in_frame, frame_number):
     episode = video.in_which_episode(frame_number)
     pixels_path = None
@@ -87,31 +89,31 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
         pxs = np.array(np.unravel_index(pixels,(video.height, video.width))).T
         segmented_frame[pxs[:,0], pxs[:,1]] = 255
 
+    plt.imshow(segmented_frame)
+    plt.show()
+
     segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
     boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(segmented_eroded_frame, segmented_eroded_frame, 0, np.inf)
     # logger.debug('Finished getting eroded blobse')
     eroded_blobs_in_frame = []
     for i, (centroid, contour, pixels, bounding_box) in enumerate(zip(centroids, contours, pixels_all, boundingBoxes)):
-        if conf.SAVE_PIXELS == 'DISK':
-            with h5py.File(pixels_path, 'a') as f:
-                f.create_dataset(str(frame_number) + '-' + str(i) + '-eroded',
-                                  data=pixels)
-            pixels=None
+        eroded_blob = Blob(centroid,
+                           contour,
+                           None,
+                           bounding_box,
+                           bounding_box_image=None,
+                           number_of_animals=video.number_of_animals,
+                           frame_number=frame_number,
+                           pixels=None,
+                           pixels_path=pixels_path,
+                           in_frame_index=i,
+                           video_height=video.height,
+                           video_width=video.width,
+                           video_path=video.video_path,
+                           pixels_are_from_eroded_blob=True,
+                           resolution_reduction=video.resolution_reduction)
+        eroded_blob.eroded_pixels = pixels
+        eroded_blobs_in_frame.append(eroded_blob)
 
-        eroded_blobs_in_frame.append(Blob(centroid,
-                                          contour,
-                                          None,
-                                          bounding_box,
-                                          bounding_box_image=None,
-                                          number_of_animals=video.number_of_animals,
-                                          frame_number=frame_number,
-                                          pixels=pixels,
-                                          pixels_path=pixels_path,
-                                          in_frame_index=i,
-                                          video_height=video.height,
-                                          video_width=video.width,
-                                          video_path=video.video_path,
-                                          has_eroded_pixels=True,
-                                          resolution_reduction=video.resolution_reduction))
 
     return eroded_blobs_in_frame
