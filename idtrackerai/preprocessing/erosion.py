@@ -94,9 +94,15 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
     for i, (centroid, contour, pixels, bounding_box) in enumerate(zip(centroids, contours, pixels_all, boundingBoxes)):
         if conf.SAVE_PIXELS == 'DISK':
             with h5py.File(pixels_path, 'a') as f:
-                f.create_dataset(str(frame_number) + '-' + str(i) + '-eroded',
-                                  data=pixels)
-            pixels=None
+                try:
+                    dset_name = str(frame_number) + '-' + str(i) + '-eroded'
+                    if dset_name in f:
+                        del f[dset_name]
+                    f.create_dataset(str(frame_number) + '-' + str(i) + '-eroded',
+                                     data=pixels)
+                    pixels=None
+                except:
+                    print("Could not update pixels in blob")
 
         eroded_blobs_in_frame.append(Blob(centroid,
                                           contour,

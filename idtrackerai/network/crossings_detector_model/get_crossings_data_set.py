@@ -97,7 +97,8 @@ class CrossingDataset(object):
                 self.there_are_crossings = True
                 np.random.seed(0)
                 np.random.shuffle(self.crossing_blobs)
-                self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
+                # self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
+                self.image_size = self.video.identification_image_size
         else:
             self.crossing_blobs = crossings
             self.image_size = image_size
@@ -141,57 +142,63 @@ class CrossingDataset(object):
         self.images = self.images[permutation]
         self.labels = self.labels[permutation]
 
-    def compute_resampling_factor(self):
-        if not hasattr(self, 'resampling_factor'):
-            self.resampling_factor = self.dataset_image_size / self.image_size
+    # def compute_resampling_factor(self):
+    #     if not hasattr(self, 'resampling_factor'):
+    #         self.resampling_factor = self.dataset_image_size / self.image_size
 
     def generate_crossing_images(self):
         crossing_images = []
-        self.compute_resampling_factor()
-        logger.debug("resampling factor crossings: %s" %str(self.resampling_factor))
+        # self.compute_resampling_factor()
+        # logger.debug("resampling factor crossings: %s" %str(self.resampling_factor))
 
+        print("Crossing blobs training", len(self.crossings_sliced))
         for crossing in self.crossings_sliced:
-            _, _, _, crossing_image = crossing.get_image_for_identification(self.video, image_size = self.image_size)
-            crossing_image = cv2.resize(crossing_image, None,
-                                        fx = self.resampling_factor,
-                                        fy = self.resampling_factor,
-                                        interpolation = cv2.INTER_CUBIC)
-            crossing_image = ((crossing_image - np.mean(crossing_image))/np.std(crossing_image)).astype('float32')
+            crossing_image = crossing.set_image_for_identification(self.video)
+            # _, _, _, crossing_image = crossing.get_image_for_identification(self.video, image_size = self.image_size)
+            # crossing_image = cv2.resize(crossing_image, None,
+            #                             fx = self.resampling_factor,
+            #                             fy = self.resampling_factor,
+            #                             interpolation = cv2.INTER_CUBIC)
+            # crossing_image = ((crossing_image - np.mean(crossing_image))/np.std(crossing_image)).astype('float32')
             crossing_images.append(crossing_image)
 
         return crossing_images
 
     def generate_individual_blobs_images(self):
         individual_blobs_images = []
-        self.compute_resampling_factor()
-        logger.debug("resampling factor individual: %s" %str(self.resampling_factor))
+        # self.compute_resampling_factor()
+        # logger.debug("resampling factor individual: %s" %str(self.resampling_factor))
 
+        print("Individual blobs training", len(self.individual_blobs_sliced))
         for individual_blobs in self.individual_blobs_sliced:
-            _, _, _, individual_blobs_image = individual_blobs.get_image_for_identification(self.video, image_size=self.image_size)
-            individual_blobs_image = cv2.resize(individual_blobs_image, None,
-                                                fx = self.resampling_factor,
-                                                fy = self.resampling_factor,
-                                                interpolation = cv2.INTER_CUBIC)
-            individual_blobs_image = ((individual_blobs_image - np.mean(individual_blobs_image))/np.std(individual_blobs_image)).astype('float32')
+            individual_blobs_image = individual_blobs.set_image_for_identification(self.video)
+            # _, _, _, individual_blobs_image = individual_blobs.get_image_for_identification(self.video, image_size=self.image_size)
+            # individual_blobs_image = cv2.resize(individual_blobs_image, None,
+            #                                     fx = self.resampling_factor,
+            #                                     fy = self.resampling_factor,
+            #                                     interpolation = cv2.INTER_CUBIC)
+            # individual_blobs_image = ((individual_blobs_image - np.mean(individual_blobs_image))/np.std(individual_blobs_image)).astype('float32')
             individual_blobs_images.append(individual_blobs_image)
 
         return individual_blobs_images
 
     def generate_test_images(self, interval = None):
         test_images = []
-        self.compute_resampling_factor()
-        logger.debug("resampling factor test: %s" %str(self.resampling_factor))
+        # self.compute_resampling_factor()
+        # logger.debug("resampling factor test: %s" %str(self.resampling_factor))
         if interval is None:
             blobs = self.test
         else:
             blobs = self.test[interval[0]:interval[1]]
+        print("Blobs for test", len(blobs))
         for blob in blobs:
-            _, _, _, test_image = blob.get_image_for_identification(self.video, image_size = self.image_size)
-            test_image = cv2.resize(test_image, None,
-                                    fx = self.resampling_factor,
-                                    fy = self.resampling_factor,
-                                    interpolation = cv2.INTER_CUBIC)
-            test_image = ((test_image - np.mean(test_image))/np.std(test_image)).astype('float32')
+            test_image = blob.set_image_for_identification(self.video)
+            # _, _, _, test_image = blob.get_image_for_identification(self.video, image_size = self.image_size)
+            # test_image = cv2.resize(test_image, None,
+            #                         fx = self.resampling_factor,
+            #                         fy = self.resampling_factor,
+            #                         interpolation = cv2.INTER_CUBIC)
+            # test_image = ((test_image - np.mean(test_image))/np.std(test_image)).astype('float32')
             test_images.append(test_image)
 
         return np.expand_dims(np.asarray(test_images), axis = 3)

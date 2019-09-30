@@ -28,13 +28,12 @@
 
 import sys
 
-import numpy as np
+from tqdm import tqdm
 import h5py
 import tensorflow as tf
 
 from confapp import conf
 
-from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.network.cnn_architectures import cnn_model_crossing_detector
 from idtrackerai.network.crossings_detector_model.get_crossings_data_set import CrossingDataset
 from idtrackerai.network.crossings_detector_model.network_params_crossings import NetworkParams_crossings
@@ -51,6 +50,25 @@ else:
 
 # FIXME: This function returns either a TrainDeepCrossing object or a
 # ListOfBlobs. Not good practice.
+
+def get_train_validation_and_test_blobs(list_of_blobs, ratio_validation):
+
+    training_blobs = {'individuals':[], 'crossings':[]}
+    for blobs_in_frame in list_of_blobs.blobs_in_video:
+        for blob in blobs_in_frame:
+            if blob.is_a_sure_individual() or blob.in_a_global_fragment_core(blobs_in_frame):
+                training_blobs['individuals'].append(blob)
+            elif blob.is_a_sure_crossing():
+                training_blobs['crossings'].append(blob)
+
+    self.individual_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
+                             if blob.is_a_sure_individual()
+                             or blob.in_a_global_fragment_core(blobs_in_frame)]
+    logger.debug("number of individual blobs (before cut): %i" % len(self.individual_blobs))
+    np.random.shuffle(self.individual_blobs)
+    ratio = 1
+    if len(self.individual_blobs) > ratio * len(self.crossing_blobs):
+        self.individual_blobs = self.individual_blobs[:ratio * len(self.crossing_blobs)]
 
 
 def detect_crossings(list_of_blobs,
@@ -100,6 +118,8 @@ def detect_crossings(list_of_blobs,
     if use_network:
         tf.reset_default_graph()
         video.create_crossings_detector_folder()
+        logger.info("Get list of blobs for training, validation and test")
+
         logger.info("Get individual and crossing images labelled data")
         training_set = CrossingDataset(list_of_blobs.blobs_in_video,
                                        video,
@@ -142,8 +162,8 @@ def detect_crossings(list_of_blobs,
             video.save()
             # ind_blob_images = np.asarray(validation_set.generate_individual_blobs_images())
             # crossing_images = validation_set.generate_crossing_images()
-            validation_set = None
-            training_set = None
+            del validation_set
+            del training_set
             logger.debug("Freeing memory. Validation and training crossings sets deleted")
             test_set = CrossingDataset(list_of_blobs.blobs_in_video, video,
                                        scope='test',
@@ -158,7 +178,12 @@ def detect_crossings(list_of_blobs,
                 else:
                     blob._is_a_crossing = False
                     blob._is_an_individual = True
-                    blob.set_image_for_identification(video)
+                    # blob.set_image_for_identification(video)
+
+            for blobs_in_frame in tqdm(list_of_blobs.blobs_in_video, desc='setting images for identification'):
+                for blob in blobs_in_frame:
+                    if blob.identification_image_index is None and blob.is_an_individual:
+                        blob.set_image_for_identification(video)
             # [(setattr(blob, '_is_a_crossing', True), setattr(blob, '_is_an_individual', False)) if prediction == 1
             #     else (setattr(blob, '_is_a_crossing', False), setattr(blob, '_is_an_individual', True), blob.set_image_for_identification(video))
             #     for blob, prediction in zip(test_set.test, predictions)]

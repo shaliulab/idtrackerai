@@ -566,7 +566,7 @@ class Blob(object):
 
         """
         if model_area(self.area) or number_of_blobs == number_of_animals or video.number_of_animals == 1: #Checks if area is compatible with the model area we built
-            self.set_image_for_identification(video)
+            # self.set_image_for_identification(video)
             self._is_an_individual = True
         else:
             self._is_a_crossing = True
@@ -593,6 +593,7 @@ class Blob(object):
                          image_for_identification.shape[1]))
             dset[i, ...] = image_for_identification
         self.identification_image_index = i
+        return image_for_identification
 
     def get_image_for_identification(self, video, folder_to_save_for_paper_figure = '', image_size = None):
         """Compute the image that will be used to identify the animal with the idCNN
