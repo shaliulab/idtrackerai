@@ -129,7 +129,6 @@ class Blob(object):
                  in_frame_index=None, pixels_path=None,
                  video_height=None, video_width=None,
                  video_path=None, pixels_are_from_eroded_blob=False,
-                 has_eroded_pixels=False,
                  resolution_reduction=1.):
         self.frame_number = frame_number
         self.in_frame_index = in_frame_index
@@ -226,15 +225,15 @@ class Blob(object):
 
     @eroded_pixels.setter
     def eroded_pixels(self, eroded_pixels):
-        if self._pixels_path is not None:
+        if self._pixels_path is not None: # is saving in disk
             with h5py.File(self._pixels_path, 'a') as f:
                 dataset_name = str(self.frame_number) + '-' + str(self.in_frame_index) + '-eroded'
                 if dataset_name in f:
                     del f[dataset_name]
                 f.create_dataset(dataset_name, data=eroded_pixels)
-                self.has_eroded_pixels = True
         else:
             self._eroded_pixels = eroded_pixels
+        self.has_eroded_pixels = True
 
     @property
     def fragment_identifier(self):
