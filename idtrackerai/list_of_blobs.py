@@ -317,6 +317,11 @@ class ListOfBlobs(object):
     #     """
     #     return [blob.area for blobs_in_frame in self.blobs_in_video for blob in blobs_in_frame]
 
+    def set_images_for_identification(self, video):
+        for blobs_in_frame in tqdm(self.blobs_in_video, desc='setting images for identification'):
+            for blob in blobs_in_frame:
+                blob.set_image_for_identification(video)
+
 
     def check_maximal_number_of_blob(self, number_of_animals, return_maximum_number_of_blobs = False):
         """Checks that the amount of blobs per frame is not greater than the

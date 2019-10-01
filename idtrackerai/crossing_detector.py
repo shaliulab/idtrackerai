@@ -29,6 +29,7 @@
 import sys
 
 from tqdm import tqdm
+import numpy as np
 import h5py
 import tensorflow as tf
 
@@ -48,28 +49,57 @@ else:
     import logging
     logger = logging.getLogger("__main__.crossing_detector")
 
-# FIXME: This function returns either a TrainDeepCrossing object or a
-# ListOfBlobs. Not good practice.
+# FIXME: This function returns either a TrainDeepCrossing object or a ListOfBlobs. Not good practice.
 
-def get_train_validation_and_test_blobs(list_of_blobs, ratio_validation):
+def get_train_validation_and_toassign_blobs(list_of_blobs, ratio_validation=.1):
 
-    training_blobs = {'individuals':[], 'crossings':[]}
+    training_blobs = {'individuals': [], 'crossings': []}
+    validation_blobs = {}
+    toassign_blobs = []
     for blobs_in_frame in list_of_blobs.blobs_in_video:
         for blob in blobs_in_frame:
             if blob.is_a_sure_individual() or blob.in_a_global_fragment_core(blobs_in_frame):
                 training_blobs['individuals'].append(blob)
             elif blob.is_a_sure_crossing():
                 training_blobs['crossings'].append(blob)
+            elif (blob.is_an_individual and not blob.in_a_global_fragment_core(blobs_in_frame) and not blob.is_a_sure_individual())\
+                or (blob.is_a_crossing and not blob.is_a_sure_crossing()):
+                toassign_blobs.append(blob)
 
-    self.individual_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
-                             if blob.is_a_sure_individual()
-                             or blob.in_a_global_fragment_core(blobs_in_frame)]
-    logger.debug("number of individual blobs (before cut): %i" % len(self.individual_blobs))
-    np.random.shuffle(self.individual_blobs)
-    ratio = 1
-    if len(self.individual_blobs) > ratio * len(self.crossing_blobs):
-        self.individual_blobs = self.individual_blobs[:ratio * len(self.crossing_blobs)]
+    n_blobs_crossings = len(training_blobs['crossings'])
+    n_blobs_individuals = len(training_blobs['individuals'])
+    logger.debug("number of individual blobs (before cut): {}".format(n_blobs_individuals))
+    logger.debug("number of crossing blobs: {}".format(n_blobs_crossings))
 
+    # Shuffle and make crossings and individuals even
+    np.random.shuffle(training_blobs['individuals'])
+    np.random.shuffle(training_blobs['crossings'])
+    if n_blobs_individuals > n_blobs_crossings:
+        training_blobs['individuals'] = training_blobs['individuals'][:n_blobs_crossings]
+    n_blobs_validation = int(n_blobs_crossings * ratio_validation)
+
+    # split training and validation
+    validation_blobs['individuals'] = training_blobs['individuals'][:n_blobs_validation]
+    validation_blobs['crossings'] = training_blobs['crossings'][:n_blobs_validation]
+    training_blobs['individuals'] = training_blobs['individuals'][n_blobs_validation:]
+    training_blobs['crossings'] = training_blobs['crossings'][n_blobs_validation:]
+
+    logger.info("{} individual blobs and {} crossing blobs for training".format(n_blobs_crossings, n_blobs_crossings))
+    logger.info("{} individual blobs and {} crossing blobs for validation".format(n_blobs_validation, n_blobs_validation))
+    logger.info("{} blobs to test".format(len(toassign_blobs)))
+
+    return training_blobs, validation_blobs, toassign_blobs
+
+
+def initialize_identification_images_file(video):
+    image_shape = video.identification_image_size[0]
+    with h5py.File(video.identification_images_file_path, 'w') as f:
+        f.create_dataset("identification_images", ((0, image_shape, image_shape)),
+                         chunks=(1, image_shape, image_shape),
+                         maxshape=(video.number_of_animals * video.number_of_frames * 5,
+                                   image_shape, image_shape))
+        f.attrs['number_of_animals'] = video.number_of_animals
+        f.attrs['video_path'] = video.video_path
 
 def detect_crossings(list_of_blobs,
                      video,
@@ -102,95 +132,82 @@ def detect_crossings(list_of_blobs,
 
     trainer or list_of_blobs : TrainDeepCrossing or ListOfBlobs()
     """
-    logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
 
-    image_shape = video.identification_image_size[0]
-    with h5py.File(video.identification_images_file_path, 'w') as f:
-        f.create_dataset("identification_images", ((0, image_shape, image_shape)),
-                         chunks=(1, image_shape, image_shape),
-                         maxshape=(video.number_of_animals * video.number_of_frames * 5,
-                                   image_shape, image_shape))
-        f.attrs['number_of_animals'] = video.number_of_animals
-        f.attrs['video_path'] = video.video_path
+    if video.number_of_animals > 1:
+        logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
+        list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0],
+                                                video.number_of_animals)
+        initialize_identification_images_file(video)
+        logger.info("Computing identification images")
+        list_of_blobs.set_images_for_identification(video)
 
-    list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
+        if use_network:
+            tf.reset_default_graph()
+            video.create_crossings_detector_folder()
+            logger.info("Get list of blobs for training, validation and test")
+            train_blobs, val_blobs, toassign_blobs = get_train_validation_and_toassign_blobs(list_of_blobs)
 
-    if use_network:
-        tf.reset_default_graph()
-        video.create_crossings_detector_folder()
-        logger.info("Get list of blobs for training, validation and test")
+            if len(train_blobs['crossings']) > conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR:
+                video._there_are_crossings = True
+                logger.info("There are enough crossings to train the crossing detector")
 
-        logger.info("Get individual and crossing images labelled data")
-        training_set = CrossingDataset(list_of_blobs.blobs_in_video,
-                                       video,
-                                       scope='training')
-        if not training_set.there_are_crossings:
-            logger.debug("There are not enough crossings to train the crossing detector")
-            video._there_are_crossings = False
-            return list_of_blobs
-        else:
-            training_set.get_data(sampling_ratio_start=0,
-                                  sampling_ratio_end=.9)
-            validation_set = CrossingDataset(list_of_blobs.blobs_in_video,
-                                             video,
-                                             scope='validation',
-                                             crossings=training_set.crossing_blobs,
-                                             individual_blobs=training_set.individual_blobs,
-                                            image_size=training_set.image_size)
-            validation_set.get_data(sampling_ratio_start=.9, sampling_ratio_end=1.)
-            logger.info("Start crossing detector training")
-            logger.info("Crossing detector training finished")
-            crossing_image_size = training_set.image_size
-            crossing_image_shape = training_set.images.shape[1:]
-            logger.info("crossing image shape %s" %str(crossing_image_shape))
-            crossings_detector_network_params = \
-                NetworkParams_crossings(number_of_classes=2,
-                                        learning_rate=conf.LEARNING_RATE_DCD,
-                                        architecture=cnn_model_crossing_detector,
-                                        keep_prob=conf.KEEP_PROB_IDCNN_PRETRAINING,
-                                        save_folder=video._crossings_detector_folder,
-                                        image_size=crossing_image_shape)
-            net = ConvNetwork_crossings(crossings_detector_network_params)
-            trainer = TrainDeepCrossing(net, training_set, validation_set,
-                                        num_epochs=95,
-                                        plot_flag=plot_flag,
-                                        return_store_objects=return_store_objects)
-        if not trainer.model_diverged:
-            logger.debug("crossing image size %s" %str(crossing_image_size))
-            video.crossing_image_shape = crossing_image_shape
-            video.crossing_image_size = crossing_image_size
-            video.save()
-            # ind_blob_images = np.asarray(validation_set.generate_individual_blobs_images())
-            # crossing_images = validation_set.generate_crossing_images()
-            del validation_set
-            del training_set
-            logger.debug("Freeing memory. Validation and training crossings sets deleted")
-            test_set = CrossingDataset(list_of_blobs.blobs_in_video, video,
-                                       scope='test',
-                                       image_size=video.crossing_image_size)
-            logger.debug("Classify individuals and crossings")
-            crossings_predictor = GetPredictionCrossigns(net)
-            predictions = crossings_predictor.get_all_predictions(test_set)
-            for blob, prediction in zip(test_set.test, predictions):
-                if prediction == 1:
-                    blob._is_a_crossing = True
-                    blob._is_an_individual = False
-                else:
-                    blob._is_a_crossing = False
-                    blob._is_an_individual = True
-                    # blob.set_image_for_identification(video)
+                logger.info("Creating training CrossingDataset")
+                training_set = CrossingDataset(train_blobs,
+                                               video,
+                                               scope='training')
+                training_set.get_data()
 
-            for blobs_in_frame in tqdm(list_of_blobs.blobs_in_video, desc='setting images for identification'):
-                for blob in blobs_in_frame:
-                    if blob.identification_image_index is None and blob.is_an_individual:
-                        blob.set_image_for_identification(video)
-            # [(setattr(blob, '_is_a_crossing', True), setattr(blob, '_is_an_individual', False)) if prediction == 1
-            #     else (setattr(blob, '_is_a_crossing', False), setattr(blob, '_is_an_individual', True), blob.set_image_for_identification(video))
-            #     for blob, prediction in zip(test_set.test, predictions)]
-            logger.debug("Freeing memory. Test crossings set deleted")
-            test_set = None
-            if return_store_objects:
-                return trainer
-    if video.number_of_animals == 1:
+                logger.info("Creating validation CrossingDataset")
+                validation_set = CrossingDataset(val_blobs,
+                                                 video,
+                                                 scope='validation')
+                validation_set.get_data()
+
+                logger.info("Start crossing detector training")
+
+                crossings_detector_network_params = \
+                    NetworkParams_crossings(number_of_classes=2,
+                                            learning_rate=conf.LEARNING_RATE_DCD,
+                                            architecture=cnn_model_crossing_detector,
+                                            keep_prob=conf.KEEP_PROB_IDCNN_PRETRAINING,
+                                            save_folder=video.crossings_detector_folder,
+                                            image_size=video.identification_image_size)
+
+                net = ConvNetwork_crossings(crossings_detector_network_params)
+                trainer = TrainDeepCrossing(net, training_set, validation_set,
+                                            num_epochs=95,
+                                            plot_flag=plot_flag,
+                                            return_store_objects=return_store_objects)
+
+                logger.info("Crossing detector training finished")
+
+                if not trainer.model_diverged:
+                    del validation_set
+                    del training_set
+                    logger.info("Freeing memory. Validation and training crossings sets deleted")
+                    test_set = CrossingDataset(toassign_blobs,
+                                               video,
+                                               scope='test')
+                    test_set.get_data()
+                    logger.info("Classify individuals and crossings")
+                    crossings_predictor = GetPredictionCrossigns(net)
+                    predictions = crossings_predictor.get_all_predictions(test_set)
+                    for blob, prediction in zip(toassign_blobs, predictions):
+                        if prediction == 1:
+                            blob._is_a_crossing = True
+                            blob._is_an_individual = False
+                        else:
+                            blob._is_a_crossing = False
+                            blob._is_an_individual = True
+                    logger.debug("Freeing memory. Test crossings set deleted")
+                    del test_set
+                    if return_store_objects:
+                        return trainer
+            else:
+                logger.debug("There are not enough crossings to train the crossing detector")
+                video._there_are_crossings = False
+                return list_of_blobs
+
+    elif video.number_of_animals == 1:
         video._there_are_crossings = False
         return list_of_blobs
