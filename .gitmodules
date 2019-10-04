@@ -1,9 +1,6 @@
 [submodule "python-video-annotator"]
 	path = python-video-annotator
 	url = https://github.com/UmSenhorQualquer/pythonVideoAnnotator.git
-[submodule "idtrackerai-gui-kivy"]
-	path = idtrackerai-gui-kivy
-	url = https://gitlab.com/polavieja_lab/idtrackerai-gui-kivy.git
 [submodule "idtrackerai-app"]
 	path = idtrackerai-app
 	url = https://gitlab.com/polavieja_lab/idtrackerai-app.git
