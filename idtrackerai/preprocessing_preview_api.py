@@ -141,20 +141,10 @@ class PreprocessingPreviewAPI(object):
             self.chosen_video.video._number_of_frames        = self.chosen_video.list_of_blobs.number_of_frames
 
         self.chosen_video.video.save()
-        # NOTE: The name of this functions should be changed. We do not need to save
-        # the list_of_blobs after segmentation as we are not restoring the segmentation anymore
-        # Even if we restore, we restore the whole preprocessing, not only the segmentation
-
-        # self.chosen_video.list_of_blobs.save(
-        #     self.chosen_video.video,
-        #     self.chosen_video.video.blobs_path_segmented,
-        #     number_of_chunks = self.chosen_video.video.number_of_frames
-        # )
-
         self.chosen_video.video._segmentation_time = time.time() - self.chosen_video.video.segmentation_time
 
 
-    def model_area_and_crossing_detector(self):
+    def compute_model_area_and_connect(self):
         self.chosen_video.video._crossing_detector_time = time.time()
 
         self.chosen_video.video._model_area, self.chosen_video.video._median_body_length = self.chosen_video.list_of_blobs.compute_model_area_and_body_length(
@@ -162,6 +152,9 @@ class PreprocessingPreviewAPI(object):
         )
         self.chosen_video.video.compute_identification_image_size(self.chosen_video.video.median_body_length)
 
+        start = time.time()
+        self.chosen_video.list_of_blobs.set_images_for_identification(self.chosen_video.video)
+        print("Setting images for identification took {}".format(time.time()-start))
         if not self.chosen_video.list_of_blobs.blobs_are_connected:
             self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
 
@@ -205,7 +198,7 @@ class PreprocessingPreviewAPI(object):
             fragments = create_list_of_fragments(self.chosen_video.list_of_blobs.blobs_in_video,
                                                 self.chosen_video.video.number_of_animals)
             self.list_of_fragments = ListOfFragments(fragments,
-                                                     self.chosen_video.video.identification_images_file_path)
+                                                     self.chosen_video.video.identification_images_file_paths)
             self.chosen_video.video._fragment_identifier_to_index = self.list_of_fragments.get_fragment_identifier_to_index_list()
             global_fragments = create_list_of_global_fragments(self.chosen_video.list_of_blobs.blobs_in_video,
                                                                 self.list_of_fragments.fragments,

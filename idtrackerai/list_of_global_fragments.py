@@ -194,7 +194,7 @@ class ListOfGlobalFragments(object):
             network used to assign the identities of the first global fragment.
 
         """
-        images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels(video.identification_images_file_path, scope='identity_transfer')
+        images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels(video.identification_images_file_paths, scope='identity_transfer')
         images = np.asarray(images)
         assigner = assign(net, images)
         compute_identification_statistics_for_non_accumulated_fragments(

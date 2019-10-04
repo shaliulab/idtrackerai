@@ -243,7 +243,7 @@ class GlobalFragment(object):
             self.total_number_of_images = sum([fragment.number_of_images for fragment in self.individual_fragments])
         return self.total_number_of_images
 
-    def get_images_and_labels(self, identification_images_file_path, scope='pretraining'):
+    def get_images_and_labels(self, identification_images_file_paths, scope='pretraining'):
         """Arrange the images and identities in the global fragment as a
         labelled dataset in order to train the idCNN
         """
@@ -256,7 +256,7 @@ class GlobalFragment(object):
             if scope=='pretraining':
                 fragment._temporary_id_for_pretraining = temporary_id
 
-        return np.asarray(load_identification_images(identification_images_file_path, images)), labels
+        return np.asarray(load_identification_images(identification_images_file_paths, images)), labels
 
     # def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
     #     """

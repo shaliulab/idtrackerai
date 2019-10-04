@@ -778,7 +778,8 @@ class Video(object):
         ## for RAM optimization
         self._segmentation_data_folder = os.path.join(self.session_folder, 'segmentation_data')
         self._identification_images_folder = os.path.join(self.session_folder, 'identification_images')
-        self.identification_images_file_path = os.path.join(self._identification_images_folder, 'i_images.hdf5')
+        self.identification_images_file_paths = [os.path.join(self._identification_images_folder, 'id_images_{}.hdf5'.format(e))
+                                                 for e in range(self.number_of_episodes)]
         if not os.path.isdir(self._segmentation_data_folder):
             os.makedirs(self._segmentation_data_folder)
             logger.info("the folder %s has been created" %self._segmentation_data_folder)

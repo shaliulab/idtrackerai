@@ -37,7 +37,7 @@ logger = logging.getLogger("__main__.get_crossing_data_set")
 
 class CrossingDataset(object):
     def __init__(self, blobs_list, video, scope):
-        self.identification_images_file_path = video.identification_images_file_path
+        self.identification_images_file_paths = video.identification_images_file_paths
         self.blobs = blobs_list
         self.scope = scope
         self.images = None
@@ -48,7 +48,7 @@ class CrossingDataset(object):
 
         if isinstance(self.blobs, dict):
             logger.info("Generating crossing {} set.".format(self.scope))
-            crossings_images =  self.get_images_indices(image_type='crossings')
+            crossings_images = self.get_images_indices(image_type='crossings')
             crossing_labels = np.ones(len(crossings_images))
 
             logger.info("Generating single individual {} set".format(self.scope))
@@ -57,8 +57,7 @@ class CrossingDataset(object):
 
             logger.info("Preparing images and labels")
             images_indices = crossings_images + individual_images
-            print(images_indices)
-            self.images = load_identification_images(self.identification_images_file_path, images_indices)
+            self.images = load_identification_images(self.identification_images_file_paths, images_indices)
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
 
             self.labels = np.concatenate([crossing_labels, individual_labels], axis = 0)
@@ -69,14 +68,12 @@ class CrossingDataset(object):
 
             np.random.seed(0)
             permutation = np.random.permutation(len(self.labels)).astype(np.int)
-            print(permutation)
-            print(self.images.shape)
             self.images = self.images[permutation]
             self.labels = self.labels[permutation]
 
         elif isinstance(self.blobs, list):
             images_indices = self.get_images_indices()
-            self.images = load_identification_images(self.identification_images_file_path, images_indices)
+            self.images = load_identification_images(self.identification_images_file_paths, images_indices)
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
 
     def get_images_indices(self, image_type=None):
@@ -88,7 +85,7 @@ class CrossingDataset(object):
             blobs = self.blobs
 
         for blob in blobs:
-            images.append(blob.identification_image_index)
+            images.append((blob.identification_image_index, blob.episode))
 
         return images
 

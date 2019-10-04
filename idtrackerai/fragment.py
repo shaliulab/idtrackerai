@@ -129,7 +129,7 @@ class Fragment(object):
     def __init__(self, fragment_identifier = None, start_end = None,
                         blob_hierarchy_in_starting_frame = None, images = None,
                         bounding_box_in_frame_coordinates = None,
-                        centroids = None, areas = None,
+                        centroids = None, areas = None, episodes = None,
                         is_an_individual = None, is_a_crossing = None,
                         number_of_animals = None,
                         user_generated_identities = None):
@@ -142,6 +142,7 @@ class Fragment(object):
         if centroids is not None:
             self.set_distance_travelled()
         self.areas = np.asarray(areas)
+        self.episodes = episodes
         self.is_an_individual = is_an_individual
         self.is_a_crossing = is_a_crossing
         self.number_of_animals = number_of_animals

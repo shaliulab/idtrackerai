@@ -102,6 +102,10 @@ NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION = -2 # Set None to use the default mod
 Number of jobs used to perform the segmentation
 """
 NUMBER_OF_JOBS_FOR_SEGMENTATION = -2 # Set None to use the default mode of the system. (see segmentation.py module for details)
+"""***NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES***
+Number of jobs used to set images for identification
+"""
+NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES = -2 # Set None to use the default mode of the system. (see segmentation.py module for details)
 """***SIGMA_GAUSSIAN_BLURRING***
 sigma for gaussian blurring tests
 """

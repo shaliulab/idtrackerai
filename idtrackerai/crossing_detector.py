@@ -91,16 +91,6 @@ def get_train_validation_and_toassign_blobs(list_of_blobs, ratio_validation=.1):
     return training_blobs, validation_blobs, toassign_blobs
 
 
-def initialize_identification_images_file(video):
-    image_shape = video.identification_image_size[0]
-    with h5py.File(video.identification_images_file_path, 'w') as f:
-        f.create_dataset("identification_images", ((0, image_shape, image_shape)),
-                         chunks=(1, image_shape, image_shape),
-                         maxshape=(video.number_of_animals * video.number_of_frames * 5,
-                                   image_shape, image_shape))
-        f.attrs['number_of_animals'] = video.number_of_animals
-        f.attrs['video_path'] = video.video_path
-
 def detect_crossings(list_of_blobs,
                      video,
                      model_area,
@@ -137,9 +127,6 @@ def detect_crossings(list_of_blobs,
         logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
         list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0],
                                                 video.number_of_animals)
-        initialize_identification_images_file(video)
-        logger.info("Computing identification images")
-        list_of_blobs.set_images_for_identification(video)
 
         if use_network:
             tf.reset_default_graph()

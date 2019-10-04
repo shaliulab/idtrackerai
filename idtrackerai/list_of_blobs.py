@@ -26,21 +26,19 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import sys
 import itertools
 import numpy as np
 from tqdm import tqdm
+from joblib import Parallel, delayed
+from confapp import conf
+import h5py
 
 from idtrackerai.blob import Blob
 from idtrackerai.preprocessing.model_area import ModelArea
 from idtrackerai.utils.py_utils import interpolate_nans
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.list_of_blobs")
+import logging
+logger = logging.getLogger("__main__.list_of_blobs")
 
 
 class ListOfBlobs(object):
@@ -233,7 +231,6 @@ class ListOfBlobs(object):
 
         for frame_i in tqdm(range(1, self.number_of_frames), desc='Connecting blobs '):
             set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i-1], frame_i-1)
-
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                 if blob_0.overlaps_with(blob_1):
                     blob_0.now_points_to(blob_1)
@@ -318,10 +315,18 @@ class ListOfBlobs(object):
     #     return [blob.area for blobs_in_frame in self.blobs_in_video for blob in blobs_in_frame]
 
     def set_images_for_identification(self, video):
-        for blobs_in_frame in tqdm(self.blobs_in_video, desc='setting images for identification'):
-            for blob in blobs_in_frame:
-                blob.set_image_for_identification(video)
+        Output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
+            delayed(self.set_id_images_episode)(video, file, self.blobs_in_video[start:end+1])
+            for file, (start, end) in zip(video.identification_images_file_paths, video.episodes_start_end))
+        self.blobs_in_video = [blobs_in_frame for blobs_in_episode in Output for blobs_in_frame in blobs_in_episode]
 
+    @staticmethod
+    def set_id_images_episode(video, file, blobs_in_episode):
+        initialize_identification_images_file(video, file)
+        for blobs_in_frame in blobs_in_episode:
+            for blob in blobs_in_frame:
+                blob.set_image_for_identification(video, file)
+        return blobs_in_episode
 
     def check_maximal_number_of_blob(self, number_of_animals, return_maximum_number_of_blobs = False):
         """Checks that the amount of blobs per frame is not greater than the
@@ -610,6 +615,16 @@ class ListOfBlobs(object):
         self.blobs_in_video[frame_number].append(new_blob)
         video._is_centroid_updated=True
 
+
+def initialize_identification_images_file(video, file):
+    image_shape = video.identification_image_size[0]
+    with h5py.File(file, 'w') as f:
+        f.create_dataset("identification_images", ((0, image_shape, image_shape)),
+                         chunks=(1, image_shape, image_shape),
+                         maxshape=(video.number_of_animals * video.number_of_frames * 5,
+                                   image_shape, image_shape))
+        f.attrs['number_of_animals'] = video.number_of_animals
+        f.attrs['video_path'] = video.video_path
 
 
 def check_tracking(blobs_in_frame):

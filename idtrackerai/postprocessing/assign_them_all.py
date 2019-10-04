@@ -341,7 +341,7 @@ def get_forward_backward_list_of_frames(gap_interval):
 def interpolate_trajectories_during_gaps(video, list_of_blobs, list_of_fragments, list_of_occluded_identities, possible_identities, erosion_counter):
     # logger.debug('In interpolate_trajectories_during_gaps')
     blobs_in_video = list_of_blobs.blobs_in_video
-    for frame_number, (blobs_in_frame, occluded_identities_in_frame) in enumerate(tqdm(zip(blobs_in_video, list_of_occluded_identities), desc = "closing gaps")):
+    for frame_number, (blobs_in_frame, occluded_identities_in_frame) in tqdm(enumerate(zip(blobs_in_video, list_of_occluded_identities)), desc = "closing gaps"):
         if frame_number != 0:
             # logger.debug('-Main frame number %i' %frame_number)
             # logger.debug('Getting missing identities')

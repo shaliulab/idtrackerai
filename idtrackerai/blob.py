@@ -31,7 +31,7 @@ import sys
 import cv2
 import h5py
 import numpy as np
-import copy
+
 from sklearn.decomposition import PCA
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -570,13 +570,15 @@ class Blob(object):
         else:
             self._is_a_crossing = True
 
-    def set_image_for_identification(self, video):
+    def set_image_for_identification(self, video, file_path):
         """Set the image that will be used to identitfy the animal with the idCNN
 
         Parameters
         ----------
-        video : <Video object>
+        :param video : <Video object>
             Object containing all the parameters of the video.
+        :param file_path: string
+            Path to the file where to save the identification images
 
         """
         image_for_identification, \
@@ -584,7 +586,7 @@ class Blob(object):
             self._extreme2_coordinates, _ = self.get_image_for_identification(video)
 
         # For RAM optimization
-        with h5py.File(video.identification_images_file_path, 'a') as f:
+        with h5py.File(file_path, 'a') as f:
             dset = f['identification_images']
             i = dset.shape[0]
             dset.resize((i + 1,
@@ -592,9 +594,10 @@ class Blob(object):
                          image_for_identification.shape[1]))
             dset[i, ...] = image_for_identification
         self.identification_image_index = i
+        self.episode = int(os.path.basename(file_path).split('.')[0].split('_')[-1])
         return image_for_identification
 
-    def get_image_for_identification(self, video, folder_to_save_for_paper_figure = '', image_size = None):
+    def get_image_for_identification(self, video, folder_to_save_for_paper_figure='', image_size=None):
         """Compute the image that will be used to identify the animal with the idCNN
 
         Parameters
