@@ -200,5 +200,7 @@ def produce_output_dict(blobs_in_video, video):
                    'git_commit': video.git_commit,
                    'video_path': video.video_path,
                    'frames_per_second': video.frames_per_second,
-                   'body_length': video.median_body_length_full_resolution}
+                   'body_length': video.median_body_length_full_resolution,
+                   'setup_points': video.setup_points,
+                   'identities_groups': video.identities_groups}
     return output_dict

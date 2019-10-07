@@ -153,6 +153,8 @@ class Video(object):
         self._track_wo_identities = False # Track without identities
         self._number_of_channels = 1
         self.individual_videos_folder = None
+        self._setup_points= []
+        self._identities_groups = {}
         if conf.SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
 
@@ -284,6 +286,14 @@ class Video(object):
     @property
     def resolution_reduction(self):
         return self._resolution_reduction
+
+    @property
+    def setup_points(self):
+        return self._setup_points
+
+    @property
+    def identities_groups(self):
+        return self._identities_groups
 
     @resolution_reduction.setter
     def resolution_reduction(self, value):
