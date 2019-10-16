@@ -187,8 +187,8 @@ class GlobalFragment(object):
         if np.min(self.number_of_images_per_individual_fragment) < conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION:
             self._candidate_for_accumulation = False
 
-    def get_total_number_of_images(self):
-        return sum([fragment.number_of_images for fragment in self.individual_fragments])
+    # def get_total_number_of_images(self):
+    #     return sum([fragment.number_of_images for fragment in self.individual_fragments])
 
     def acceptable_for_training(self, accumulation_strategy):
         """Returns True if the global fragment is acceptable for training.

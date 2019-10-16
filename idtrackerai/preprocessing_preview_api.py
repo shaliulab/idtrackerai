@@ -156,7 +156,9 @@ class PreprocessingPreviewAPI(object):
         self.chosen_video.list_of_blobs.set_images_for_identification(self.chosen_video.video)
         print("Setting images for identification took {}".format(time.time()-start))
         if not self.chosen_video.list_of_blobs.blobs_are_connected:
+            start = time.time()
             self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
+            print("Connecting blobs took {}".format(time.time() - start))
 
 
     def train_and_apply_crossing_detector(self):
@@ -192,22 +194,24 @@ class PreprocessingPreviewAPI(object):
         self.chosen_video.video._fragmentation_time = time.time()
 
         if self.chosen_video.video.number_of_animals != 1:
-            self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
+            if not self.chosen_video.list_of_blobs.blobs_are_connected:
+                self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
             self.chosen_video.list_of_blobs.compute_fragment_identifier_and_blob_index(max(self.chosen_video.video.number_of_animals, self.chosen_video.video.maximum_number_of_blobs))
             self.chosen_video.list_of_blobs.compute_crossing_fragment_identifier()
             fragments = create_list_of_fragments(self.chosen_video.list_of_blobs.blobs_in_video,
-                                                self.chosen_video.video.number_of_animals)
+                                                 self.chosen_video.video.number_of_animals)
             self.list_of_fragments = ListOfFragments(fragments,
                                                      self.chosen_video.video.identification_images_file_paths)
             self.chosen_video.video._fragment_identifier_to_index = self.list_of_fragments.get_fragment_identifier_to_index_list()
             global_fragments = create_list_of_global_fragments(self.chosen_video.list_of_blobs.blobs_in_video,
                                                                 self.list_of_fragments.fragments,
                                                                 self.chosen_video.video.number_of_animals)
+            # Create list of global fragments
             self.list_of_global_fragments = ListOfGlobalFragments(global_fragments)
             self.chosen_video.video.number_of_global_fragments = self.list_of_global_fragments.number_of_global_fragments
+            # Filter candidates global fragments for accumulation
             self.list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
             self.chosen_video.video.number_of_global_fragments_candidates_for_accumulation = self.list_of_global_fragments.number_of_global_fragments
-            #XXX I skip the fit of the gamma ...
             self.list_of_global_fragments.relink_fragments_to_global_fragments(self.list_of_fragments.fragments)
             self.list_of_global_fragments.compute_maximum_number_of_images()
             self.chosen_video.video._maximum_number_of_images_in_global_fragments = self.list_of_global_fragments.maximum_number_of_images

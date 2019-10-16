@@ -64,6 +64,17 @@ class ListOfBlobs(object):
         self.number_of_frames = len(self.blobs_in_video)
         self.blobs_are_connected = False
 
+    def compute_overlapping_between_subsequent_frames(self):
+        """Computes overlapping between self and the blobs generated during
+        segmentation in the next frames
+        """
+        self.disconnect()
+        for frame_i in tqdm(range(1, self.number_of_frames), desc='Connecting blobs '):
+            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
+                if blob_0.overlaps_with(blob_1):
+                    blob_0.now_points_to(blob_1)
+        self.blobs_are_connected = True
+
     def disconnect(self):
         """Reinitialise the previous and next list of blobs
         (see :attr:`~blob.Blob.next` and :attr:`~blob.Blob.previous`)
@@ -71,26 +82,20 @@ class ListOfBlobs(object):
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
+        self.blobs_are_connected = False
 
     def connect(self):
         """Connects blobs in subsequent frames by computing their overlapping
         """
         logger.info("Connecting list of blob objects")
-        for frame_i in tqdm(range(1, self.number_of_frames), desc='connecting blobs'):
-            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
-                if blob_0.overlaps_with(blob_1):
-                    blob_0.now_points_to(blob_1)
+        self.compute_overlapping_between_subsequent_frames()
 
     def reconnect(self):
         """Connects blobs in subsequent frames by computing their overlapping
         and sets blobs_are_connected to True
         """
         logger.info("re-Connecting list of blob objects")
-        for frame_i in tqdm(range(1, self.number_of_frames), desc='re-connecting blobs'):
-            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
-                if blob_0.fragment_identifier == blob_1.fragment_identifier:
-                    blob_0.now_points_to(blob_1)
-        self.blobs_are_connected = True
+        self.compute_overlapping_between_subsequent_frames()
 
     def save(self, video, path_to_save=None, number_of_chunks=1):
         """save instance"""
@@ -146,7 +151,6 @@ class ListOfBlobs(object):
                     blob._fragment_identifier = counter
                     blob_index = missing_blob_indices.pop(0)
                     blob._blob_index = blob_index
-                    blob.non_shared_information_with_previous = 1.
                     if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_an_individual:
                         blob.next[0]._fragment_identifier = counter
                         blob.next[0]._blob_index = blob_index
@@ -209,33 +213,6 @@ class ListOfBlobs(object):
         logger.info("number_of_crossing_fragments: %i" % (fragment_identifier - self.number_of_individual_fragments))
         logger.info("total number of fragments: %i" % fragment_identifier)
 
-    def compute_overlapping_between_subsequent_frames(self):
-        """Computes overlapping between self and the blobs generated during
-        segmentation in the next frames
-        """
-        def set_frame_number_to_blobs_in_frame(blobs_in_frame, frame_number):
-            """Sets the attribute frame number to the instances of
-            :class:`~blob.Blob` collected in `blobs_in_frame`
-
-            Parameters
-            ----------
-            blobs_in_frame : list
-                list of instances of :class:`~blob.Blob`
-            frame_number : int
-                number of the frame from which `blobs_in_frame` has been
-                generated
-            """
-            for blob in blobs_in_frame:
-                blob.frame_number = frame_number
-        self.disconnect()
-
-        for frame_i in tqdm(range(1, self.number_of_frames), desc='Connecting blobs '):
-            set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i-1], frame_i-1)
-            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
-                if blob_0.overlaps_with(blob_1):
-                    blob_0.now_points_to(blob_1)
-
-        set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i], frame_i)
 
     def compute_model_area_and_body_length(self, number_of_animals):
         """computes the median and standard deviation of all the blobs of the video

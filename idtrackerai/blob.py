@@ -354,11 +354,11 @@ class Blob(object):
             True if the lists of pixels have non-empty intersection
         """
         overlaps = False
-        intersection = np.intersect1d(self.pixels, other.pixels,
-                                      assume_unique=True)
-        if len(intersection) > 0:
+        intersection = np.isin(self.pixels, other.pixels, assume_unique=True)
+        if any(intersection):
             overlaps = True
         return overlaps
+
 
     def now_points_to(self, other):
         """Given two consecutive blob objects updates their respective overlapping

@@ -264,7 +264,7 @@ class ListOfGlobalFragments(object):
         self.non_accumulable_global_fragments = [global_fragment for global_fragment in self.global_fragments
                     if not global_fragment.candidate_for_accumulation]
         self.global_fragments = [global_fragment for global_fragment in self.global_fragments
-                    if global_fragment.candidate_for_accumulation]
+                                 if global_fragment.candidate_for_accumulation]
         self.number_of_global_fragments = len(self.global_fragments)
 
     # def get_data_plot(self):
@@ -398,5 +398,6 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
     """
     global_fragments_boolean_array = check_global_fragments(blobs_in_video, num_animals)
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
-    return [GlobalFragment(blobs_in_video, fragments, i, num_animals)
-            for i in indices_beginning_of_fragment]
+    global_fragments = [GlobalFragment(blobs_in_video, fragments, i, num_animals)
+                        for i in indices_beginning_of_fragment]
+    return global_fragments
