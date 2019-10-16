@@ -534,4 +534,9 @@ def load_identification_images(identification_images_file_paths, images_indices)
         with h5py.File(identification_images_file_paths[episode], 'r') as f:
             dataset = f['identification_images']
             images.append(dataset[image, ...])
+
+    images = np.asarray(images)
+    mean = np.mean(images, axis=(1, 2))[:, np.newaxis, np.newaxis]
+    std = np.std(images, axis=(1, 2))[:, np.newaxis, np.newaxis]
+    images = ((images - mean)/std).astype('float32')
     return images

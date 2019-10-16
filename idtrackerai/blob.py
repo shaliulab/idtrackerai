@@ -583,7 +583,7 @@ class Blob(object):
         """
         image_for_identification, \
             self._extreme1_coordinates, \
-            self._extreme2_coordinates, _ = self.get_image_for_identification(video)
+            self._extreme2_coordinates = self.get_image_for_identification(video)
 
         # For RAM optimization
         with h5py.File(file_path, 'a') as f:
@@ -595,7 +595,6 @@ class Blob(object):
             dset[i, ...] = image_for_identification
         self.identification_image_index = i
         self.episode = int(os.path.basename(file_path).split('.')[0].split('_')[-1])
-        return image_for_identification
 
     def get_image_for_identification(self, video, folder_to_save_for_paper_figure='', image_size=None):
         """Compute the image that will be used to identify the animal with the idCNN
@@ -665,16 +664,6 @@ class Blob(object):
         center = full2miniframe(center, bounding_box_in_frame_coordinates)
         center = np.array([int(center[0]), int(center[1])])
 
-        if folder_to_save_for_paper_figure:
-            pxs_for_plot = np.array(pxs).T
-            pxs_for_plot = np.array([pxs_for_plot[:, 0] - bounding_box_in_frame_coordinates[0][1], pxs_for_plot[:, 1] - bounding_box_in_frame_coordinates[0][0]])
-            temp_image = np.zeros_like(bounding_box_image).astype('uint8')
-            temp_image[pxs_for_plot[0,:], pxs_for_plot[1,:]] = 255
-            slope = np.tan((rot_ang - 45) * np.pi / 180)
-            X = [0, temp_image.shape[1]]
-            Y = [-slope * center[0] + center[1], slope * (X[1] - center[0]) + center[1]]
-            save_preprocessing_step_image(temp_image/255, folder_to_save_for_paper_figure, name = '4_blob_with_PCA_axes', min_max = [0, 1], draw_line = (X, Y))
-
         #rotate
         diag = np.sqrt(np.sum(np.asarray(bounding_box_image.shape)**2)).astype(int)
         diag = (diag, diag)
@@ -686,18 +675,12 @@ class Blob(object):
         x_range = range(center[0] - crop_distance, center[0] + crop_distance)
         y_range = range(center[1] - crop_distance, center[1] + crop_distance)
         image_for_identification = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
-        height, width = image_for_identification.shape
 
         rot_ang_rad = rot_ang * np.pi / 180
         h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
         h_or_t_2 = - h_or_t_1
-        if folder_to_save_for_paper_figure:
-            save_preprocessing_step_image(image_for_identification/255, folder_to_save_for_paper_figure, name = '5_blob_dilated_rotated', min_max = [0, 1])
-        image_for_identification_standarised = ((image_for_identification - np.mean(image_for_identification))/np.std(image_for_identification)).astype('float32')
-        if folder_to_save_for_paper_figure:
-            save_preprocessing_step_image(image_for_identification_standarised, folder_to_save_for_paper_figure, name = '6_blob_dilated_rotated_normalized', min_max = [np.min(image_for_identification), np.max(image_for_identification)])
 
-        return image_for_identification_standarised, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int')), image_for_identification
+        return image_for_identification, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
 
 
     """ The following methods are only to be used for the validation and modification

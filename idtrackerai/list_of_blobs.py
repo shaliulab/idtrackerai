@@ -599,7 +599,8 @@ def initialize_identification_images_file(video, file):
         f.create_dataset("identification_images", ((0, image_shape, image_shape)),
                          chunks=(1, image_shape, image_shape),
                          maxshape=(video.number_of_animals * video.number_of_frames * 5,
-                                   image_shape, image_shape))
+                                   image_shape, image_shape),
+                         dtype='uint8')
         f.attrs['number_of_animals'] = video.number_of_animals
         f.attrs['video_path'] = video.video_path
 
