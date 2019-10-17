@@ -42,26 +42,28 @@ class Stop_Training(object):
     """Stops the training of the network according to the conditions specified
     in __call__
     """
-    def __init__(self, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True):
-        self.num_epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD #maximal num of epochs
+    def __init__(self, epochs_before_checking_stopping_conditions = 20, check_for_loss_plateau = True, num_epochs=10):
+        self.num_epochs = num_epochs#maximal num of epochs
         self.number_of_classes = 2
         self.epochs_before_checking_stopping_conditions = epochs_before_checking_stopping_conditions
         self.overfitting_counter = 0 #number of epochs in which the network is overfitting before stopping the training
         self.check_for_loss_plateau = check_for_loss_plateau #bool: if true the training is stopped if the loss is not decreasing enough
+        self.epochs_completed = -1
 
-    def __call__(self, loss_accuracy_training, loss_accuracy_validation, epochs_completed):
+    def __call__(self, loss_training, loss_validation, accuracy_validation):
+        self.epochs_completed += 1
         #check that the model did not diverged (nan loss).
-        if epochs_completed > 0 and (np.isnan(loss_accuracy_training.loss[-1]) or np.isnan(loss_accuracy_validation.loss[-1])):
-            logger.warn('The model diverged with loss NaN, falling back to detecting crossings with the model area')
+        if self.epochs_completed > 0 and (np.isnan(loss_training.values[-1]) or np.isnan(loss_validation.values[-1])):
+            logger.info('The model diverged with loss NaN, falling back to detecting crossings with the model area')
             return True
         #check if it did not reached the epochs limit
-        if epochs_completed > self.num_epochs-1:
-            logger.warn('The number of epochs completed is larger than the number of epochs set for training, we stop the training')
+        if self.epochs_completed > self.num_epochs-1:
+            logger.info('The number of epochs completed is larger than the number of epochs set for training, we stop the training')
             return True
         #check that the model is not overfitting or if it reached a stable saddle (minimum)
-        if epochs_completed > self.epochs_before_checking_stopping_conditions:
-            current_loss = loss_accuracy_validation.loss[-1]
-            previous_loss = np.nanmean(loss_accuracy_validation.loss[-self.epochs_before_checking_stopping_conditions:-1])
+        if self.epochs_completed > self.epochs_before_checking_stopping_conditions:
+            current_loss = loss_validation.values[-1]
+            previous_loss = np.nanmean(loss_validation.values[-self.epochs_before_checking_stopping_conditions:-1])
             #The validation loss in the first 10 epochs could have exploded but being decreasing.
             if np.isnan(previous_loss): previous_loss = conf.MAX_FLOAT
             losses_difference = (previous_loss-current_loss)
@@ -79,8 +81,8 @@ class Stop_Training(object):
                     logger.info('The losses difference is very small, we stop the training\n')
                     return True
             # if the individual accuracies in validation are 1. for all the animals
-            if list(loss_accuracy_validation.individual_accuracy[-1]) == list(np.ones(self.number_of_classes)):
-                logger.info('The individual accuracies in validation is 1. for all the classes, we stop the training\n')
+            if accuracy_validation.values[-1] == 1.0:
+                logger.info('The accuracy in validation is 1., we stop the training\n')
                 return True
             # if the validation loss is 0.
             if previous_loss == 0. or current_loss == 0.:

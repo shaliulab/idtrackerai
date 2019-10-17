@@ -86,8 +86,7 @@ class TrainDeepCrossing(object):
         stop_training = Stop_Training(check_for_loss_plateau=check_for_loss_plateau)
         logger.debug("entering the epochs loop...")
         while not stop_training(store_training_accuracy_and_loss_data,
-                                store_validation_accuracy_and_loss_data,
-                                trainer._epochs_completed):
+                                store_validation_accuracy_and_loss_data):
             # --- Training
             trainer.run_epoch('Training',
                               store_training_accuracy_and_loss_data,

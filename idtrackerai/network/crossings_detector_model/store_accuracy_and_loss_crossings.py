@@ -44,8 +44,8 @@ class Store_Accuracy_and_Loss(object):
     """Store the loss, accuracy and individual accuracy values computed during
     training and validation
     """
-    def __init__(self, network, name):
-        self._path_to_accuracy_error_data = network.params.save_folder
+    def __init__(self, save_folder, name):
+        self._path_to_accuracy_error_data = save_folder
         self.name = name
         self.loss = []
         self.accuracy = []

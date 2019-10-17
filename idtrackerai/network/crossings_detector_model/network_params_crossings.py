@@ -29,30 +29,59 @@
 import os
 import sys
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.network_params_crossings")
+
+import logging
+logger = logging.getLogger("__main__.network_params_crossings")
 
 class NetworkParams_crossings(object):
-    def __init__(self,number_of_classes,
-                architecture = None,
-                learning_rate = None, keep_prob = None,
-                use_adam_optimiser = False, scopes_layers_to_optimize = None,
-                restore_folder = None, save_folder = None, knowledge_transfer_folder = None,
-                image_size = None):
+    def __init__(self,
+                 number_of_classes,
+                 architecture=None,
+                 use_adam_optimiser=False,
+                 restore_folder=None,
+                 save_folder=None,
+                 knowledge_transfer_folder=None,
+                 image_size=None,
+                 loss='CE',
+                 print_freq=2,
+                 use_gpu=True,
+                 optimizer='SGD',
+                 schedule=None,
+                 optim_args=None,
+                 apply_mask=False,
+                 dataset=None,
+                 skip_eval=False,
+                 epochs=50,
+                 plot_flag=True,
+                 return_store_objects=False,
+                 saveid='',
+                 model_name='',
+                 ):
 
         self.number_of_classes = number_of_classes
-        self.learning_rate = learning_rate
         self.architecture = architecture
-        self.keep_prob = keep_prob
         self._restore_folder = restore_folder
         self._save_folder = save_folder
         self._knowledge_transfer_folder = knowledge_transfer_folder
         self.use_adam_optimiser = use_adam_optimiser
         self.image_size = image_size
+        self.loss = loss
+        self.use_gpu = use_gpu
+        self.print_freq = print_freq
+        self.optimizer = optimizer
+        self.schedule = schedule
+        self.optim_args = optim_args
+        self.apply_mask = apply_mask
+        self.dataset = dataset
+        self.skip_eval = skip_eval
+        self.epochs = epochs
+        self.plot_flag = plot_flag
+        self.return_store_objects = return_store_objects
+        self.saveid = saveid
+        self.model_name = model_name
+
+        if self.optimizer == 'SGD':
+            self.optim_args['momentum'] = 0.9
 
     @property
     def restore_folder(self):

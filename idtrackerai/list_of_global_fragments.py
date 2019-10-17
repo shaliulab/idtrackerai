@@ -400,4 +400,6 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
     global_fragments = [GlobalFragment(blobs_in_video, fragments, i, num_animals)
                         for i in indices_beginning_of_fragment]
+    logger.info("total number of global_fragments: %i" % len(global_fragments))
+    logger.info([gf.number_of_images_per_individual_fragment for gf in global_fragments])
     return global_fragments
