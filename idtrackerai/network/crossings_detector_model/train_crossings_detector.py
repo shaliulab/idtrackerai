@@ -36,12 +36,8 @@ from idtrackerai.network.crossings_detector_model.stop_training_criteria_crossin
 from idtrackerai.network.crossings_detector_model.store_accuracy_and_loss_crossings import Store_Accuracy_and_Loss
 from idtrackerai.network.crossings_detector_model.epoch_runner_crossings import EpochRunner
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.train_crossing_detector")
+import logging
+logger = logging.getLogger("__main__.train_crossing_detector")
 
 
 class TrainDeepCrossing(object):

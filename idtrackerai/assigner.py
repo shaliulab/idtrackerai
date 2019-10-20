@@ -34,12 +34,8 @@ from idtrackerai.network.identification_model.get_predictions import GetPredicti
 from idtrackerai.network.identification_model.id_CNN import ConvNetwork # for documentation
 from idtrackerai.list_of_fragments import ListOfFragments # for documentation
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.assigner")
+import logging
+logger = logging.getLogger("__main__.assigner")
 
 """
 Identification of individual fragments given the predictions generate by the idCNN

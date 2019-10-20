@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 
-from carp_torch.utils.metric import Confusion, AverageMeter
-from carp_torch.utils.task import prepare_task_target
+from idtrackerai.network.metric import Confusion, AverageMeter
+from idtrackerai.network.task import prepare_task_target
 
 def evaluate(eval_loader, model, label, args, learner=None):
 

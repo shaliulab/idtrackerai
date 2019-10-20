@@ -226,7 +226,7 @@ OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM = int(os.environ.get('OVERFITTIN
 '''***MAXIMUM_NUMBER_OF_EPOCHS ***
 Maximum number of epochs before forcing the training to stop
 '''
-MAXIMUM_NUMBER_OF_EPOCHS_DCD = int(os.environ.get('MAXIMUM_NUMBER_OF_EPOCHS_DCD', 100))
+MAXIMUM_NUMBER_OF_EPOCHS_DCD = int(os.environ.get('MAXIMUM_NUMBER_OF_EPOCHS_DCD', 30))
 MAXIMUM_NUMBER_OF_EPOCHS_IDCNN = int(os.environ.get('MAXIMUM_NUMBER_OF_EPOCHS_IDCNN', 10000))
 '''***KEEP_PROB***
 Default dropout in fully-connected layers if the CNN models (can be changed

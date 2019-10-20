@@ -251,7 +251,7 @@ class GlobalFragment(object):
         labels = []
 
         for temporary_id, fragment in enumerate(self.individual_fragments):
-            images.extend(fragment.images)
+            images.extend(list(zip(fragment.images, fragment.episodes)))
             labels.extend([temporary_id] * fragment.number_of_images)
             if scope=='pretraining':
                 fragment._temporary_id_for_pretraining = temporary_id

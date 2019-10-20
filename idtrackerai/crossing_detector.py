@@ -128,7 +128,7 @@ def detect_crossings(list_of_blobs,
                                             return_store_objects=False
                                             )
                 logger.info("Setting training criterion")
-                criterion = nn.CrossEntropyLoss()
+                criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_blobs['weights']))
                 logger.info("Setting learner class")
                 learner_class = Learner_Classification
                 logger.info("Creating model")

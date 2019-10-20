@@ -156,18 +156,24 @@ def get_train_validation_and_toassign_blobs(list_of_blobs, ratio_validation=.1):
     # Shuffle and make crossings and individuals even
     np.random.shuffle(training_blobs['individuals'])
     np.random.shuffle(training_blobs['crossings'])
-    if n_blobs_individuals > n_blobs_crossings:
-        training_blobs['individuals'] = training_blobs['individuals'][:n_blobs_crossings]
-    n_blobs_validation = int(n_blobs_crossings * ratio_validation)
+    # if n_blobs_individuals > n_blobs_crossings:
+    #     training_blobs['individuals'] = training_blobs['individuals'][:n_blobs_crossings]
+    n_individual_blobs_validation = int(n_blobs_individuals * ratio_validation)
+    n_crossing_blobs_validation = int(n_blobs_crossings * ratio_validation)
 
     # split training and validation
-    validation_blobs['individuals'] = training_blobs['individuals'][:n_blobs_validation]
-    validation_blobs['crossings'] = training_blobs['crossings'][:n_blobs_validation]
-    training_blobs['individuals'] = training_blobs['individuals'][n_blobs_validation:]
-    training_blobs['crossings'] = training_blobs['crossings'][n_blobs_validation:]
+    validation_blobs['individuals'] = training_blobs['individuals'][:n_individual_blobs_validation]
+    validation_blobs['crossings'] = training_blobs['crossings'][:n_crossing_blobs_validation]
+    training_blobs['individuals'] = training_blobs['individuals'][n_individual_blobs_validation:]
+    training_blobs['crossings'] = training_blobs['crossings'][n_crossing_blobs_validation:]
 
-    logger.info("{} individual blobs and {} crossing blobs for training".format(n_blobs_crossings, n_blobs_crossings))
-    logger.info("{} individual blobs and {} crossing blobs for validation".format(n_blobs_validation, n_blobs_validation))
+    ratio_crossings = n_blobs_crossings/(n_blobs_crossings + n_blobs_individuals)
+    training_blobs['weights'] = [ratio_crossings, 1-ratio_crossings]
+
+    logger.info("{} individual blobs and {} crossing blobs for training".format(len(training_blobs['individuals']),
+                                                                                len(training_blobs['crossings'])))
+    logger.info("{} individual blobs and {} crossing blobs for validation".format(len(validation_blobs['individuals']),
+                                                                                  len(validation_blobs['crossings'])))
     logger.info("{} blobs to test".format(len(toassign_blobs)))
 
     return training_blobs, validation_blobs, toassign_blobs
