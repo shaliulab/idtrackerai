@@ -178,30 +178,11 @@ def detect_crossings(list_of_blobs,
                             blob._is_a_crossing = False
                             blob._is_an_individual = True
                     logger.debug("Freeing memory. Test crossings set deleted")
+
+                    list_of_blobs.update_identification_image_dataset_with_crossings(video)
+
                     if return_store_objects:
                         return trainer
-
-
-
-                    # logger.info("Freeing memory. Validation and training crossings sets deleted")
-                    # test_set = CrossingDataset(toassign_blobs,
-                    #                            video,
-                    #                            scope='test')
-                    # test_set.get_data()
-                    # logger.info("Classify individuals and crossings")
-                    # crossings_predictor = GetPredictionCrossigns(net)
-                    # predictions = crossings_predictor.get_all_predictions(test_set)
-                    # for blob, prediction in zip(toassign_blobs, predictions):
-                    #     if prediction == 1:
-                    #         blob._is_a_crossing = True
-                    #         blob._is_an_individual = False
-                    #     else:
-                    #         blob._is_a_crossing = False
-                    #         blob._is_an_individual = True
-                    # logger.debug("Freeing memory. Test crossings set deleted")
-                    # del test_set
-                    # if return_store_objects:
-                    #     return trainer
             else:
                 logger.debug("There are not enough crossings to train the crossing detector")
                 video._there_are_crossings = False

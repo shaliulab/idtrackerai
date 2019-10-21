@@ -337,6 +337,18 @@ class ListOfBlobs(object):
         else:
             return frames_with_more_blobs_than_animals
 
+    def update_identification_image_dataset_with_crossings(self, video):
+        for file in video.identification_images_file_paths:
+            with h5py.File(file, 'a') as f:
+                f.create_dataset("crossings", (f['identification_images'].shape[0], 1),
+                                 fillvalue=np.nan)
+
+        for blobs_in_frame in tqdm(self.blobs_in_video, desc='Updating hdf5'):
+            for blob in blobs_in_frame:
+                episode = video.in_which_episode(blob.frame_number)
+                image = blob.identification_image_index
+                with h5py.File(video.identification_images_file_paths[episode], 'a') as f:
+                    f['crossings'][image] = int(blob.is_a_crossing)
 
     def update_from_list_of_fragments(self, fragments, fragment_identifier_to_index):
         """Updates the blobs objects generated from the video with the attributes
