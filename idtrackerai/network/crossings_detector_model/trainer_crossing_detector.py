@@ -31,12 +31,10 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from idtrackerai.network.crossings_detector_model.stop_training_criteria_crossings import Stop_Training
-from idtrackerai.network.crossings_detector_model.store_accuracy_and_loss_crossings import Store_Accuracy_and_Loss
 from idtrackerai.network.train import train
 from idtrackerai.network.evaluate import evaluate
 
-from idtrackerai.network.metric import Metric
+from idtrackerai.network.utils.metric import Metric
 
 
 import logging
@@ -44,18 +42,16 @@ logger = logging.getLogger("__main__.train_crossing_detector")
 
 
 class TrainDeepCrossing(object):
-    def __init__(self, learner, model, train_loader, val_loader, network_params=None):
+    def __init__(self, learner, train_loader, val_loader, network_params, stop_training):
 
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.learner = learner
-        self.model = model
         self.network_params = network_params
+        self.stop_training = stop_training
         self.train_model()
 
-    def train_model(self, global_step=0,
-                    check_for_loss_plateau=None,
-                    store_accuracy_and_error=False):
+    def train_model(self):
 
         logger.info("\nTraining Deep Crossing Detector")
         # store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(self.network_params.save_folder,
@@ -71,9 +67,6 @@ class TrainDeepCrossing(object):
             fig.canvas.set_window_title(title)
             fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
-        # set criteria to stop the training
-        stop_training = Stop_Training(check_for_loss_plateau=check_for_loss_plateau,
-                                      num_epochs=self.network_params.epochs)
 
         # Initialize metric storage
         train_losses = Metric()
@@ -89,10 +82,10 @@ class TrainDeepCrossing(object):
         best_train_acc = -1
         best_val_acc = -1
         logger.debug("entering the epochs loop...")
-        while not stop_training(train_losses,
+        while not self.stop_training(train_losses,
                                 val_losses,
                                 val_accs):
-            epoch = stop_training.epochs_completed
+            epoch = self.stop_training.epochs_completed
             losses, train_acc = train(epoch,
                                       self.train_loader,
                                       self.learner,
@@ -105,7 +98,7 @@ class TrainDeepCrossing(object):
             train_accs.update(train_acc)
 
             if self.val_loader is not None and ((not self.network_params.skip_eval) or (epoch == self.network_params.epochs - 1)):
-                losses, val_acc = evaluate(self.val_loader, self.model, 'Validation', self.network_params, self.learner)
+                losses, val_acc = evaluate(self.val_loader, None, 'Validation', self.network_params, self.learner)
                 val_losses.update(losses[0].avg)
                 if self.network_params.loss in ['CEMCL', 'CEMCL_weighted']:
                     val_losses_CE.update(losses[1].avg)

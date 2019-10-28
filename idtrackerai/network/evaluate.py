@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 
-from idtrackerai.network.metric import Confusion, AverageMeter
-from idtrackerai.network.task import prepare_task_target
+from idtrackerai.network.utils.metric import Confusion, AverageMeter
+from idtrackerai.network.utils.task import prepare_task_target
 
 def evaluate(eval_loader, model, label, args, learner=None):
 
@@ -17,7 +17,8 @@ def evaluate(eval_loader, model, label, args, learner=None):
     print('---- Evaluation ----')
     if learner is not None:
         learner.eval()
-    model.eval()
+    if model is not None:
+        model.eval()
     for i, (input_, target) in enumerate(eval_loader):
 
         # mask
@@ -47,7 +48,8 @@ def evaluate(eval_loader, model, label, args, learner=None):
                     losses_MCL.update(output[2], input_.size(0))
 
         # Inference
-        output = model(input_)
+        if model is not None:
+            output = model(input_)
 
         # Update the performance meter
         with torch.no_grad():

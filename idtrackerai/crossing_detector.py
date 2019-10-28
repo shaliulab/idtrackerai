@@ -28,8 +28,6 @@
 
 import sys
 
-
-import numpy as np
 import tensorflow as tf
 
 import torch
@@ -39,24 +37,18 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 from confapp import conf
 
-from idtrackerai.network.crossings_detector_model.get_crossings_data_set import get_train_validation_and_toassign_blobs, \
-                                                                                get_training_data_loaders
+from idtrackerai.network.data_sets.crossings_dataset import get_train_validation_and_toassign_blobs
+from idtrackerai.network.data_loaders.crossings_dataloader import get_training_data_loaders
 from idtrackerai.network.crossings_detector_model.network_params_crossings import NetworkParams_crossings
 from idtrackerai.network.crossings_detector_model.trainer_crossing_detector import TrainDeepCrossing
 from idtrackerai.network.crossings_detector_model.predictor_crossing_detector import GetPredictionCrossigns
-
-from idtrackerai.network.learners import Learner_Classification
-
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.crossing_detector")
-
-# FIXME: This function returns either a TrainDeepCrossing object or a ListOfBlobs. Not good practice.
+from idtrackerai.network.crossings_detector_model.stop_training_criteria_crossings import Stop_Training
 
 
+from idtrackerai.network.learners.learners import Learner_Classification
+
+import logging
+logger = logging.getLogger("__main__.crossing_detector")
 
 
 def detect_crossings(list_of_blobs,
@@ -150,8 +142,13 @@ def detect_crossings(list_of_blobs,
                                         gamma=0.1)
                 logger.info("Setting the learner")
                 learner = learner_class(crossing_detector_model, criterion, optimizer, scheduler)
+                logger.info("Setting the stopping criteria")
+                # set criteria to stop the training
+                stop_training = Stop_Training(check_for_loss_plateau=True,
+                                              num_epochs=network_params.epochs)
                 logger.info("Training crossing detector")
-                trainer = TrainDeepCrossing(learner, crossing_detector_model, train_loader, val_loader, network_params)
+                trainer = TrainDeepCrossing(learner, train_loader, val_loader,
+                                            network_params, stop_training)
                 logger.info("Crossing detector training finished")
 
                 if not trainer.model_diverged:

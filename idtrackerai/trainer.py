@@ -27,7 +27,6 @@
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import os
-import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,12 +37,9 @@ from idtrackerai.network.identification_model.epoch_runner import EpochRunner
 from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
 from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.trainer")
+
+import logging
+logger = logging.getLogger("__main__.trainer")
 
 
 def train(video,

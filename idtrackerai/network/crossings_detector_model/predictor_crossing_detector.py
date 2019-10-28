@@ -26,12 +26,9 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from confapp import conf
-
 import torch
-import numpy as np
 
-from idtrackerai.network.crossings_detector_model.get_crossings_data_set import get_test_data_loader
+from idtrackerai.network.data_loaders.crossings_dataloader import get_test_data_loader
 
 import logging
 logger = logging.getLogger("__main__.get_predictions_crossings")

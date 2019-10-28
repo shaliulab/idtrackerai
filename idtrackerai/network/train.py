@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 
-from idtrackerai.network.metric import Confusion, Timer, AverageMeter
-from idtrackerai.network.prepare_task_target import prepare_task_target
+from idtrackerai.network.utils.metric import Confusion, Timer, AverageMeter
+from idtrackerai.network.utils.task import prepare_task_target
 
 
 def train(epoch, train_loader, learner, network_params):

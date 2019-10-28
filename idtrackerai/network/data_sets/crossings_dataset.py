@@ -29,18 +29,14 @@
 
 import numpy as np
 import logging
-from confapp import conf
 
-
-import torch
-from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai.list_of_fragments import load_identification_images
 from idtrackerai.network.identification_model.get_data import duplicate_PCA_images
 
+logger = logging.getLogger("__main__.crossings_data_set")
 
-logger = logging.getLogger("__main__.get_crossing_data_set")
 
 class CrossingDataset(VisionDataset):
     def __init__(self, blobs_list, video, scope, transform=None):
@@ -177,82 +173,3 @@ def get_train_validation_and_toassign_blobs(list_of_blobs, ratio_validation=.1):
     logger.info("{} blobs to test".format(len(toassign_blobs)))
 
     return training_blobs, validation_blobs, toassign_blobs
-
-
-def get_training_data_loaders(video, train_blobs, val_blobs):
-    logger.info("Creating training and validation data loaders")
-    training_set = CrossingDataset(train_blobs,
-                                   video,
-                                   scope='training',
-                                   transform=transforms.Compose(
-                                       [transforms.ToTensor(),
-                                        Normalize()])
-                                   )
-    train_loader = torch.utils.data.DataLoader(training_set,
-                                               batch_size=conf.BATCH_SIZE_DCD,
-                                               shuffle=False,
-                                               num_workers=2)
-    train_loader.num_classes = 2
-    train_loader.image_shape = training_set[0][0].shape
-
-    logger.info("Creating validation CrossingDataset")
-    validation_set = CrossingDataset(val_blobs,
-                                     video,
-                                     scope='validation',
-                                     transform=transforms.Compose(
-                                         [transforms.ToTensor(),
-                                          Normalize()])
-                                     )
-    val_loader = torch.utils.data.DataLoader(validation_set,
-                                             batch_size=conf.BATCH_SIZE_DCD,
-                                             shuffle=False,
-                                             num_workers=2)
-    val_loader.num_classes = 2
-    val_loader.image_shape = validation_set[0][0].shape
-    return train_loader, val_loader
-
-
-def get_test_data_loader(video, test_blobs):
-    logger.info("Creating test CrossingDataset")
-    test_set = CrossingDataset(test_blobs,
-                               video,
-                               scope='test',
-                               transform=transforms.Compose(
-                                         [transforms.ToTensor(),
-                                          Normalize()]))
-    test_loader = torch.utils.data.DataLoader(test_set,
-                                              batch_size=conf.BATCH_SIZE_DCD,
-                                              shuffle=False,
-                                              num_workers=2)
-    test_loader.num_classes = 2
-    test_loader.image_shape = test_set[0][0].shape
-    return test_loader
-
-
-class Normalize(object):
-    """Normalize a tensor image with mean and standard deviation.
-    Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, this transform
-    will normalize each channel of the input ``torch.*Tensor`` i.e.
-    ``input[channel] = (input[channel] - mean[channel]) / std[channel]``
-    .. note::
-        This transform acts out of place, i.e., it does not mutates the input tensor.
-    Args:
-        mean (sequence): Sequence of means for each channel.
-        std (sequence): Sequence of standard deviations for each channel.
-        inplace(bool,optional): Bool to make this operation in-place.
-    """
-
-    def __init__(self,inplace=False):
-        self.inplace = inplace
-
-    def __call__(self, tensor):
-        """
-        Args:
-            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
-        Returns:
-            Tensor: Normalized Tensor image.
-        """
-        mean = torch.tensor([tensor.mean()])
-        std = torch.tensor([tensor.std()])
-        return tensor.sub_(mean[:, None, None]).div_(std[:, None, None])
-        # return F.normalize(tensor, tensor.mean(), tensor.std(), self.inplace)

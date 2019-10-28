@@ -252,7 +252,8 @@ class TrackerAPI(object):
         create_trajectories()
 
     def init_accumulation_network(self):
-        self.accumulation_network_params = NetworkParams(self.number_of_animals,
+        self.accumulation_network_params = NetworkParams(
+            self.number_of_animals,
             learning_rate = conf.LEARNING_RATE_IDCNN_ACCUMULATION,
             keep_prob = conf.KEEP_PROB_IDCNN_ACCUMULATION,
             scopes_layers_to_optimize = conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
@@ -274,9 +275,14 @@ class TrackerAPI(object):
 
     def protocol1(self, create_popup=None):
         logger.debug("****** setting protocol1 time")
+        # set timer
         self.chosen_video.video._protocol1_time = time.time()
-        self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
-        self.chosen_video.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
+
+        # reset list of fragments and global fragments to fragmentation
+        self.chosen_video.list_of_fragments.reset(roll_back_to='fragmentation')
+        self.chosen_video.list_of_global_fragments.reset(roll_back_to='fragmentation')
+
+        # Initialize network and restore if knowledge transfer or identity transfer
         self.net = ConvNetwork(self.accumulation_network_params)
         if self.chosen_video.video.identity_transfer:
             self.accumulation_network_params._restore_folder = self.chosen_video.video.knowledge_transfer_model_folder
@@ -286,15 +292,23 @@ class TrackerAPI(object):
             self.net = ConvNetwork(self.accumulation_network_params)
             self.net.restore()
 
-        self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(self.chosen_video.video, net=self.net, accumulation_trial=0))
+        # Set first global fragment to start accumulation. If the network is passed in case of identity transfer.
+        self.chosen_video.video._first_frame_first_global_fragment.append(
+            self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(
+                self.chosen_video.video, net=self.net, accumulation_trial=0
+            )
+        )
+        # Order global fragments by distance to the first global fragment for the accumulation
         self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = 0)
+        # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(self.chosen_video.video, self.chosen_video.list_of_fragments,
                                                         self.chosen_video.list_of_global_fragments,
                                                         threshold_acceptable_accumulation = conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)
+        # General counter for training
         self.global_step = 0
 
-        if create_popup: create_popup()
-        #self.create_one_shot_accumulation_popup()
+        # if create_popup: create_popup()
+        # #self.create_one_shot_accumulation_popup()
 
         self.accumulation_step_finished = True
         self.accumulation_loop()
@@ -371,7 +385,7 @@ class TrackerAPI(object):
 
             self.save_after_first_accumulation()
 
-            if self.accumulation_manager.ratio_accumulated_images > conf.THRESHOLD_ACCEPTABLE_ACCUMULATION:
+            if self.accumulation_manager.ratio_accumulated_images >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION:
                 logger.info("Protocol 2 successful")
                 logger.warning("------------------------ dismissing one shot accumulation popup")
                 if one_shot_accumulation_popup_dismiss: one_shot_accumulation_popup_dismiss() # UPDATE GUI

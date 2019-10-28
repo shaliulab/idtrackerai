@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from idtrackerai.network.models_utils import compute_output_width
+from idtrackerai.network.models.models_utils import compute_output_width
 
 
 class DCD(nn.Module):

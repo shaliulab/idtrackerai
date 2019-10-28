@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-import idtrackerai.network.pytorch_architectures as models
+import idtrackerai.network.models.pytorch_architectures as models
 
 # This file provides the template Learner. The Learner is used in training/evaluation loop
 # The Learner implements the training procedure for specific task.
