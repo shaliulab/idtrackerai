@@ -26,13 +26,9 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import sys
 import numpy as np
 
-from idtrackerai.network.identification_model.get_data import DataSet
-from idtrackerai.network.identification_model.get_predictions import GetPrediction
-from idtrackerai.network.identification_model.id_CNN import ConvNetwork # for documentation
-from idtrackerai.list_of_fragments import ListOfFragments # for documentation
+from idtrackerai.network.identification_model.get_predictions import GetPredictionsIdentities
 
 import logging
 logger = logging.getLogger("__main__.assigner")
@@ -41,7 +37,7 @@ logger = logging.getLogger("__main__.assigner")
 Identification of individual fragments given the predictions generate by the idCNN
 """
 
-def assign(net, images):
+def assign(video, identification_model, images, network_params):
     """Gathers the predictions relative to the images contained in `images`.
     Such predictions are returned as attributes of `assigner`.
 
@@ -62,13 +58,9 @@ def assign(net, images):
     --------
     GetPrediction
     """
-    logger.info("assigning identities to images...")
-    images = np.expand_dims(np.asarray(images), axis=3)
-    logger.info("generating data set. Images shape %s" %str(images.shape))
-    data = DataSet(net.params.number_of_animals, images)
-    logger.info("getting predictions")
-    assigner = GetPrediction(data)
-    assigner.get_predictions_softmax(net.predict)
+    logger.info("generating data set. Images shape %s"  % str(images.shape))
+    assigner = GetPredictionsIdentities(video, identification_model, images, network_params)
+    assigner.get_all_predictions()
     logger.info("done")
     return assigner
 
@@ -92,8 +84,8 @@ def compute_identification_statistics_for_non_accumulated_fragments(fragments, a
     for fragment in fragments:
         if not fragment.used_for_training and fragment.is_an_individual:
             next_counter_value = counter + fragment.number_of_images
-            predictions = assigner.predictions[counter : next_counter_value]
-            softmax_probs = assigner.softmax_probs[counter : next_counter_value]
+            predictions = assigner._predictions[counter : next_counter_value]
+            softmax_probs = assigner._softmax_probs[counter : next_counter_value]
             fragment.compute_identification_statistics(predictions, softmax_probs, number_of_animals=number_of_animals)
             counter = next_counter_value
 
@@ -115,7 +107,7 @@ def assign_identity(list_of_fragments):
         number_of_unidentified_individual_fragments -= 1
 
 
-def assign_remaining_fragments(list_of_fragments, video, net):
+def assign_remaining_fragments(list_of_fragments, video, identification_model, network_params):
     """This is the main function of this module: given a list_of_fragments it
     puts in place the routine to identify, if possible, each of the individual
     fragments. The starting point for the identification is given by the
@@ -148,7 +140,7 @@ def assign_remaining_fragments(list_of_fragments, video, net):
         images = list_of_fragments.get_images_from_fragments_to_assign()
         logger.debug("Images shape before assignment %s" %str(images.shape))
         logger.info("Getting predictions")
-        assigner = assign(net, images)
+        assigner = assign(video, identification_model, images, network_params)
         logger.debug("Number of generated predictions: %s" %str(len(assigner._predictions)))
         logger.debug("Predictions range: %s" %str(np.unique(assigner._predictions)))
         compute_identification_statistics_for_non_accumulated_fragments(list_of_fragments.fragments, assigner)

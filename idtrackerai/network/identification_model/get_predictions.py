@@ -26,89 +26,129 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import sys
 
+import torch
 import numpy as np
-from confapp import conf
+
+from idtrackerai.network.data_loaders.identification_dataloader import get_test_data_loader
+
+import logging
+logger = logging.getLogger("__main__.get_predictions_crossings")
 
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.get_predictions")
-
-class GetPrediction(object):
-    """Manages the inference of the identities of a set of images
-
-    Attributes
-    ----------
-
-    data_set : <DataSet object>
-        Object containing the images whose labels has to be predicted
-        (see :class:`~get_data.DataSet`)
-    softmax_probs : ndarray
-        Array of shape [number of images, number of animals] with the softmax vectors
-        for every image in the `data_set`
-    predictions : ndarray
-        Array of shape [number of images, 1] with the predictions computed as the argmax
-        of the softmax vector of every image (in dense format).
-    _fc_vectors : ndarray
-        Array of shape [number of images, number of neurons in second to last fully connected layer]
-    batch_size : int
-        Size of the batch to send the images through the network to get the predictions
-
-    """
-    def __init__(self, data_set):
+class GetPredictionsIdentities(object):
+    def __init__(self, video, model, images, network_params):
         # Data set
-        self.data_set = data_set
-        self._softmax_probs = []
+        self.model = model
+        self.network_params = network_params
+        self.loader = get_test_data_loader(video, {'images': images})
         self._predictions = []
-        self._predictions_KNN = []
-        self._fc_vectors = []
-        self.batch_size = conf.BATCH_SIZE_PREDICTIONS_IDCNN
+        self._softmax_probs = []
 
-    @property
-    def softmax_probs(self):
-        return self._softmax_probs
+    def get_all_predictions(self):
+        self.model.eval()
+        for i, (input_, target) in enumerate(self.loader):
+            # Prepare the inputs
+            if self.network_params.use_gpu:
+                with torch.no_grad():
+                    input_ = input_.cuda()
 
-    @property
-    def predictions(self):
-        return self._predictions
+            # Inference
+            with torch.no_grad():
+                softmax = self.model.softmax_probs(input_)
+                pred = softmax.argmax(1)  # find the predicted class
 
-    def next_batch(self, batch_size):
-        """Return the next `batch_size` examples from this data set.
+                self._predictions.extend(pred.cpu().numpy())
+                self._softmax_probs.extend(softmax.cpu().numpy())
 
-        Parameters
-        ----------
-        batch_size : int
-            Number of images to get for the next batch
+        self._predictions = np.asarray(self._predictions) + 1
+        self._softmax_probs = np.asarray(self._softmax_probs)
 
-        Returns
-        -------
-        images : ndarray
-            Array of shape [batch_size, height, width, channels] with the images
-            of the batch
-        """
-        start = self._index_in_epoch
-        self._index_in_epoch += batch_size
-        end = self._index_in_epoch
-        return self.data_set.images[start:end]
+        del self.loader
 
-    def get_predictions_softmax(self, batch_operation):
-        """Runs a `batch_operation` (typically :meth:`~id_CNN.predict`)
-
-        Parameters
-        ----------
-        batch_operation : func
-            Function to be run in the epoch
-
-        """
-        self._index_in_epoch = 0
-        while self._index_in_epoch < self.data_set._num_images:
-            softmax_probs_batch, predictions_batch = batch_operation(self.next_batch(self.batch_size))
-            self._softmax_probs.append(softmax_probs_batch)
-            self._predictions.append(predictions_batch)
-        self._softmax_probs = np.concatenate(self._softmax_probs, axis = 0)
-        self._predictions = np.concatenate(self._predictions, axis = 0)
+# import sys
+#
+# import numpy as np
+# from confapp import conf
+#
+#
+# if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+#     from kivy.logger import Logger
+#     logger = Logger
+# else:
+#     import logging
+#     logger = logging.getLogger("__main__.get_predictions")
+#
+# class GetPrediction(object):
+#     """Manages the inference of the identities of a set of images
+#
+#     Attributes
+#     ----------
+#
+#     data_set : <DataSet object>
+#         Object containing the images whose labels has to be predicted
+#         (see :class:`~get_data.DataSet`)
+#     softmax_probs : ndarray
+#         Array of shape [number of images, number of animals] with the softmax vectors
+#         for every image in the `data_set`
+#     predictions : ndarray
+#         Array of shape [number of images, 1] with the predictions computed as the argmax
+#         of the softmax vector of every image (in dense format).
+#     _fc_vectors : ndarray
+#         Array of shape [number of images, number of neurons in second to last fully connected layer]
+#     batch_size : int
+#         Size of the batch to send the images through the network to get the predictions
+#
+#     """
+#     def __init__(self, data_set):
+#         # Data set
+#         self.data_set = data_set
+#         self._softmax_probs = []
+#         self._predictions = []
+#         self._predictions_KNN = []
+#         self._fc_vectors = []
+#         self.batch_size = conf.BATCH_SIZE_PREDICTIONS_IDCNN
+#
+#     @property
+#     def softmax_probs(self):
+#         return self._softmax_probs
+#
+#     @property
+#     def predictions(self):
+#         return self._predictions
+#
+#     def next_batch(self, batch_size):
+#         """Return the next `batch_size` examples from this data set.
+#
+#         Parameters
+#         ----------
+#         batch_size : int
+#             Number of images to get for the next batch
+#
+#         Returns
+#         -------
+#         images : ndarray
+#             Array of shape [batch_size, height, width, channels] with the images
+#             of the batch
+#         """
+#         start = self._index_in_epoch
+#         self._index_in_epoch += batch_size
+#         end = self._index_in_epoch
+#         return self.data_set.images[start:end]
+#
+#     def get_predictions_softmax(self, batch_operation):
+#         """Runs a `batch_operation` (typically :meth:`~id_CNN.predict`)
+#
+#         Parameters
+#         ----------
+#         batch_operation : func
+#             Function to be run in the epoch
+#
+#         """
+#         self._index_in_epoch = 0
+#         while self._index_in_epoch < self.data_set._num_images:
+#             softmax_probs_batch, predictions_batch = batch_operation(self.next_batch(self.batch_size))
+#             self._softmax_probs.append(softmax_probs_batch)
+#             self._predictions.append(predictions_batch)
+#         self._softmax_probs = np.concatenate(self._softmax_probs, axis = 0)
+#         self._predictions = np.concatenate(self._predictions, axis = 0)

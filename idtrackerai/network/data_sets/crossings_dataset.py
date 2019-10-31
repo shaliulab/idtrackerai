@@ -66,7 +66,6 @@ class CrossingDataset(VisionDataset):
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
 
             self.labels = np.concatenate([crossing_labels, individual_labels], axis=0)
-            # self.labels = self.dense_to_one_hot(np.expand_dims(self.labels, axis = 1))
 
             if self.scope == "training":
                 self.images, self.labels = duplicate_PCA_images(self.images, self.labels)
@@ -95,12 +94,6 @@ class CrossingDataset(VisionDataset):
 
         return images
 
-    def to_relaxed_one_hot(self, target):
-        target_one_hot = np.zeros(self.num_classes)
-        if target >= 0:
-            target_one_hot[target] = 1.
-        return target_one_hot
-
     def __len__(self):
         return len(self.images)
 
@@ -110,17 +103,6 @@ class CrossingDataset(VisionDataset):
         if self.transform is not None:
             image = self.transform(image)
         return image, target
-
-    @staticmethod
-    def dense_to_one_hot(labels, n_classes=2):
-        """Convert class labels from scalars to one-hot vectors."""
-        labels = np.array(labels)
-        n_labels = labels.shape[0]
-        index_offset = np.arange(n_labels) * n_classes
-        labels_one_hot = np.zeros((n_labels, n_classes), dtype=np.int16)
-        indices = (index_offset + labels.ravel()).astype('int')
-        labels_one_hot.flat[indices] = 1
-        return labels_one_hot
 
 
 def get_train_validation_and_toassign_blobs(list_of_blobs, ratio_validation=.1):

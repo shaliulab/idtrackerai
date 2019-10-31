@@ -83,8 +83,8 @@ class TrainDeepCrossing(object):
         best_val_acc = -1
         logger.debug("entering the epochs loop...")
         while not self.stop_training(train_losses,
-                                val_losses,
-                                val_accs):
+                                     val_losses,
+                                     val_accs):
             epoch = self.stop_training.epochs_completed
             losses, train_acc = train(epoch,
                                       self.train_loader,

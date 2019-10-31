@@ -466,7 +466,9 @@ class Fragment(object):
         self._frequencies = self.compute_identification_frequencies_individual_fragment(predictions, number_of_animals)
         self._P1_vector = self.compute_P1_from_frequencies(self.frequencies)
         median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
-        self._certainty = self.compute_certainty_of_individual_fragment(self._P1_vector,median_softmax)
+        self._certainty = self.compute_certainty_of_individual_fragment(self._P1_vector, median_softmax)
+
+
 
     def set_P1_vector_accumulated(self):
         """If self has been used for training its P1_vector is modified to be
@@ -615,7 +617,7 @@ class Fragment(object):
         argsort_p1_vector = np.argsort(P1_vector)
         sorted_p1_vector = P1_vector[argsort_p1_vector]
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
-        certainty = np.diff(np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
+        certainty = np.diff(np.multiply(sorted_p1_vector, sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
         return certainty[0]
 
     def get_neighbour_fragment(self, fragments, scope, number_of_frames_in_direction = 0):

@@ -253,15 +253,16 @@ class AccumulationManager(object):
         logger.info("number of individual fragments used for training: %i" %sum([fragment.used_for_training for fragment in self.list_of_fragments.fragments]))
 
     def split_predictions_after_network_assignment(self, predictions,
-                                                    softmax_probs,
-                                                    indices_to_split,
-                                                    candidate_individual_fragments_identifiers):
+                                                   softmax_probs,
+                                                   indices_to_split,
+                                                   candidate_individual_fragments_identifiers):
         """Gathers predictions relative to fragment images from the GPU and
         splits them according to their organisation in fragments.
         """
         logger.info("Un-stacking predictions for the CPU")
         individual_fragments_predictions = np.split(predictions, indices_to_split)
         individual_fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
+
         self.frequencies_of_candidate_individual_fragments = []
         self.P1_vector_of_candidate_individual_fragments = []
         self.median_softmax_of_candidate_individual_fragments = [] #used to compute the certainty on the network's assignment
@@ -597,7 +598,7 @@ class AccumulationManager(object):
             global_fragment._accumulation_step = self.counter
         assert all([fragment.temporary_id is not None for fragment in global_fragment.individual_fragments if fragment.acceptable_for_training and fragment.is_an_individual])
 
-def get_predictions_of_candidates_fragments(net, video, fragments):
+def get_predictions_of_candidates_fragments(identification_model, video, network_params, fragments):
     """Get predictions of individual fragments that have been used to train the
     idCNN in an accumulation's iteration
 
@@ -633,6 +634,8 @@ def get_predictions_of_candidates_fragments(net, video, fragments):
 
     if len(images) != 0:
         images = np.asarray(load_identification_images(video.identification_images_file_paths, images))
-        assigner = assign(net, images)
+        assigner = assign(video, identification_model, images, network_params)
 
+    assert np.sum(lengths) == assigner._predictions.shape[0]
+    print(assigner._softmax_probs.min(), assigner._softmax_probs.max())
     return assigner._predictions, assigner._softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers

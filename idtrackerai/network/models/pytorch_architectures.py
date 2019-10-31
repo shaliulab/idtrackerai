@@ -103,7 +103,7 @@ class idCNN(nn.Module):
                                bias=True,
                                padding_mode='zeros')
         self.w = compute_output_width(w, 5, 2, 1)
-        self.fc1 = nn.Linear(64 * w * w , 100)
+        self.fc1 = nn.Linear(100 * w * w, 100)
         self.fc2 = nn.Linear(100, out_dim)
 
         self.conv = nn.Sequential(
@@ -118,6 +118,8 @@ class idCNN(nn.Module):
 
         self.last = self.fc2
 
+        self.softmax = nn.Softmax(dim=1)
+
     def features(self, x):
         x = self.conv(x)
         x = self.linear(x.view(-1, 100 * self.w * self.w))
@@ -130,4 +132,9 @@ class idCNN(nn.Module):
     def forward(self, x):
         x = self.features(x)
         x = self.logits(x)
+        return x
+
+    def softmax_probs(self, x):
+        x = self.forward(x)
+        x = self.softmax(x)
         return x
