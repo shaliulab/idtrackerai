@@ -28,6 +28,11 @@ from idtrackerai.assigner                                                import 
 from confapp                                                             import conf
 
 
+import torch
+from idtrackerai.network.learners.learners import Learner_Classification
+
+
+
 class TrackerAPI(object):
 
 
@@ -252,15 +257,38 @@ class TrackerAPI(object):
         create_trajectories()
 
     def init_accumulation_network(self):
-        self.accumulation_network_params = NetworkParams(
-            self.number_of_animals,
-            learning_rate = conf.LEARNING_RATE_IDCNN_ACCUMULATION,
-            keep_prob = conf.KEEP_PROB_IDCNN_ACCUMULATION,
-            scopes_layers_to_optimize = conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
-            save_folder = self.chosen_video.video.accumulation_folder,
-            image_size = self.chosen_video.video.identification_image_size,
-            video_path = self.chosen_video.video.video_path
-        )
+        # self.accumulation_network_params = NetworkParams(
+        #     self.number_of_animals,
+        #     learning_rate = conf.LEARNING_RATE_IDCNN_ACCUMULATION,
+        #     keep_prob = conf.KEEP_PROB_IDCNN_ACCUMULATION,
+        #     scopes_layers_to_optimize = conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
+        #     save_folder = self.chosen_video.video.accumulation_folder,
+        #     image_size = self.chosen_video.video.identification_image_size,
+        #     video_path = self.chosen_video.video.video_path
+        # )
+        self.accumulation_network_params = \
+            NetworkParams(number_of_classes=self.number_of_animals,
+                          architecture='idCNN',
+                          save_folder=self.chosen_video.video.accumulation_folder,
+                          saveid='',
+                          model_name='identification_network',
+                          image_size=self.chosen_video.video.identification_image_size,
+                          loss='CE',
+                          print_freq=50,
+                          use_gpu=True,
+                          optimizer='SGD',
+                          schedule=[30, 60],
+                          optim_args={'lr': conf.LEARNING_RATE_IDCNN_ACCUMULATION},
+                          apply_mask=False,
+                          dataset='supervised',
+                          skip_eval=False,
+                          epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
+                          plot_flag=False,
+                          return_store_objects=False,
+                          layers_to_optimize=conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
+                          video_path=self.chosen_video.video.video_path
+                          )
+
 
     def track_wo_identities(self, create_trajectories=None):
 
@@ -283,19 +311,27 @@ class TrackerAPI(object):
         self.chosen_video.list_of_global_fragments.reset(roll_back_to='fragmentation')
 
         # Initialize network and restore if knowledge transfer or identity transfer
-        self.net = ConvNetwork(self.accumulation_network_params)
+        logger.info("Setting learner class")
+        self.learner_class = Learner_Classification
+        logger.info("Creating model")
+        self.identification_model = self.learner_class.create_model(self.accumulation_network_params)
+
+        # Load previous model if knowledge transfer or identity transfer
+        # TODO: Not working just a sketch
         if self.chosen_video.video.identity_transfer:
-            self.accumulation_network_params._restore_folder = self.chosen_video.video.knowledge_transfer_model_folder
+            self.accumulation_network_params._pretrained_model = self.chosen_video.video.knowledge_transfer_model
         if self.chosen_video.video.tracking_with_knowledge_transfer:
-            logger.debug('Restoring for knowledge transfer')
-            tf.reset_default_graph()
-            self.net = ConvNetwork(self.accumulation_network_params)
-            self.net.restore()
+            print('=> Load model weights:', self.accumulation_network_params._pretrained_model)  # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
+            model_state = torch.load(self.accumulation_network_params._pretrained_model,
+                                     map_location=lambda storage, loc: storage)  # Load to CPU as the default!
+            self.identification_model.load_state_dict(model_state, strict=True)  # The pretrained state dict doesn't need to fit the model
+            print('=> Load Done')
 
         # Set first global fragment to start accumulation. If the network is passed in case of identity transfer.
+        # TODO: using the identification_model for transfering identities does not work yet. It uses assign()
         self.chosen_video.video._first_frame_first_global_fragment.append(
             self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(
-                self.chosen_video.video, net=self.net, accumulation_trial=0
+                self.chosen_video.video, net=self.identification_model, accumulation_trial=0
             )
         )
         # Order global fragments by distance to the first global fragment for the accumulation
@@ -323,10 +359,11 @@ class TrackerAPI(object):
             self.accumulation_manager,
             self.chosen_video.video,
             self.global_step,
-            self.net,
+            self.identification_model,
+            self.learner_class,
             save_summaries = save_summaries,
             GUI_axes = None,
-            net_properties = None,
+            network_params = self.accumulation_network_params,
             plot_flag = conf.PLOT_ACCUMULATION_STEPS
         )
         self.accumulation_step_finished = True
@@ -740,7 +777,7 @@ class TrackerAPI(object):
         logger.warning("In identify")
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'accumulation')
         logger.warning("Assigning remaining fragments")
-        assign_remaining_fragments(self.chosen_video.list_of_fragments, self.chosen_video.video, self.net)
+        assign_remaining_fragments(self.chosen_video.list_of_fragments, self.chosen_video.video, self.identification_model, self.accumulation_network_params)
         self.chosen_video.video._has_been_assigned = True
         self.chosen_video.video.save()
 

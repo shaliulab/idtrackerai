@@ -27,8 +27,7 @@
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import os
-import sys
-
+from confapp import conf
 
 import logging
 logger = logging.getLogger("__main__.network_params_crossings")
@@ -51,7 +50,7 @@ class NetworkParams_crossings(object):
                  apply_mask=False,
                  dataset=None,
                  skip_eval=False,
-                 epochs=50,
+                 epochs= conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
                  plot_flag=True,
                  return_store_objects=False,
                  saveid='',

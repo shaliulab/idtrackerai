@@ -61,24 +61,3 @@ class GetPredictionCrossigns(object):
         return predictions
 
 
-    # def next_batch_test(self, batch_size):
-    #     """Return the next `batch_size` examples from this data set."""
-    #     start = self.number_of_image_predicted
-    #     self.number_of_image_predicted += batch_size
-    #     end = self.number_of_image_predicted
-    #     return self.test_images[start:end]
-    #
-    # def predict(self, test_images):
-    #     self.test_images = test_images
-    #     self.number_of_image_predicted = 0
-    #     predictions = []
-    #     while self.number_of_image_predicted < len(test_images):
-    #         predictions.extend(self.net.prediction(self.next_batch_test(batch_size = conf.BATCH_SIZE_PREDICTIONS_DCD)))
-    #
-    #     return predictions
-
-    # def get_all_predictions(self, test_set):
-    #     predictions = self.predict(test_set.images)
-    #     return predictions
-
-
