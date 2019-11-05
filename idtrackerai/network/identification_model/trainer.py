@@ -26,16 +26,16 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import os
-
-import matplotlib.pyplot as plt
-import numpy as np
-from confapp import conf
-
-from idtrackerai.network.identification_model.get_data import split_data_train_and_validation
-from idtrackerai.network.identification_model.epoch_runner import EpochRunner
-from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
-from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
+# import os
+#
+# import matplotlib.pyplot as plt
+# import numpy as np
+# from confapp import conf
+#
+# from idtrackerai.network.identification_model.get_data import split_data_train_and_validation
+# from idtrackerai.network.identification_model.epoch_runner import EpochRunner
+# from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
+# from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
 
 
 import logging
@@ -82,11 +82,11 @@ from idtrackerai.network.utils.metric import Metric
 
 
 import logging
-logger = logging.getLogger("__main__.train_crossing_detector")
+logger = logging.getLogger("__main__.train_identification_model")
 
 
 class TrainIdentification(object):
-    def __init__(self, learner, train_loader, val_loader, network_params, stop_training, accumulation_manager):
+    def __init__(self, learner, train_loader, val_loader, network_params, stop_training, accumulation_manager=None):
 
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -108,7 +108,7 @@ class TrainIdentification(object):
             # Initialize pre-trainer plot
             plt.ion()
             fig, ax_arr = plt.subplots(3)
-            title = 'Crossing-detector'
+            title = 'Identification_network'
             fig.canvas.set_window_title(title)
             fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
@@ -172,8 +172,9 @@ class TrainIdentification(object):
         else:
             self.model_diverged = False
             # update used_for_training flag to True for fragments used
-            logger.info("Accumulation step completed. Updating global fragments used for training")
+            logger.info("Step completed.")
             if self.accumulation_manager is not None:
+                logger.info("Updating global fragments used for training")
                 self.accumulation_manager.update_fragments_used_for_training()
 
             # global_step += trainer.epochs_completed

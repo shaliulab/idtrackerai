@@ -33,11 +33,23 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 from confapp import conf
 
-from idtrackerai.network.identification_model.get_data import split_data_train_and_validation
-from idtrackerai.network.identification_model.id_CNN import ConvNetwork
-from idtrackerai.network.identification_model.epoch_runner import EpochRunner
+import torch
+import torch.nn as nn
+import torch.backends.cudnn as cudnn
+from torch.optim.lr_scheduler import MultiStepLR
+
+# from idtrackerai.network.identification_model.get_data import split_data_train_and_validation
+# from idtrackerai.network.identification_model.id_CNN import ConvNetwork
+# from idtrackerai.network.identification_model.epoch_runner import EpochRunner
+
+# from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
+
+from idtrackerai.network.identification_model.trainer import TrainIdentification
 from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
-from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
+from idtrackerai.network.data_sets.identification_dataset import split_data_train_and_validation
+from idtrackerai.network.data_loaders.identification_dataloader import get_training_data_loaders
+
+
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -46,18 +58,19 @@ else:
     import logging
     logger = logging.getLogger("__main__.pre_trainer")
 
-def pre_train_global_fragment(net,
-                                pretraining_global_fragment,
-                                list_of_fragments,
-                                global_epoch,
-                                check_for_loss_plateau,
-                                store_accuracy_and_error,
-                                save_summaries, store_training_accuracy_and_loss_data,
-                                store_validation_accuracy_and_loss_data,
-                                print_flag = False,
-                                plot_flag = False,
-                                batch_size = None,
-                                canvas_from_GUI = None):
+
+def weights_reinit(m):
+    if isinstance(m, nn.Linear):
+        nn.init.xavier_uniform(m.weight.data)
+
+
+def pre_train_global_fragment(video,
+                              identification_model,
+                              learner_class,
+                              network_params,
+                              pretraining_global_fragment,
+                              list_of_fragments,
+                              global_epoch):
     """Performs pretraining on a single global fragments
 
     Parameters
@@ -115,174 +128,198 @@ def pre_train_global_fragment(net,
         list of instances of the class :class:`~fragment.Fragment`
     """
     # Get images and labels from the current global fragment
-    images, labels = pretraining_global_fragment.get_images_and_labels(list_of_fragments.identification_images_file_paths)
-    # Instantiate data_set
-    training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals,
-                                                                            images, labels)
-    training_dataset.convert_labels_to_one_hot()
-    validation_dataset.convert_labels_to_one_hot()
-    # Reinitialize softmax and fully connected
-    # (the fully connected layer and the softmax are initialized since the labels
-    # of the images for each pretraining global fragments are different)
-    net.reinitialize_softmax_and_fully_connected()
-    # Train network
-    #compute weights to be fed to the loss function (weighted cross entropy)
-    net.compute_loss_weights(training_dataset.labels)
-    #instantiate epochs runners for train and validation
-    trainer = EpochRunner(training_dataset,
-                        starting_epoch = global_epoch,
-                        print_flag = print_flag,
-                        batch_size = batch_size)
-    validator = EpochRunner(validation_dataset,
-                        starting_epoch = global_epoch,
-                        print_flag = print_flag,
-                        batch_size = batch_size)
-    #set criteria to stop the training
-    stop_training = Stop_Training(net.params.number_of_animals,
-                                check_for_loss_plateau = check_for_loss_plateau)
+    images, labels = pretraining_global_fragment.get_images_and_labels(list_of_fragments.identification_images_file_paths,
+                                                                       scope='pretraining')
 
-    while not stop_training(store_training_accuracy_and_loss_data,
-                            store_validation_accuracy_and_loss_data,
-                            trainer._epochs_completed):
-        feed_dict_train = trainer.run_epoch('Training', store_training_accuracy_and_loss_data, net.train)
-        feed_dict_val = validator.run_epoch('Validation', store_validation_accuracy_and_loss_data, net.validate)
-        net.session.run(net.global_step.assign(trainer.starting_epoch + trainer._epochs_completed))
-        if save_summaries:
-            net.write_summaries(trainer.starting_epoch + trainer._epochs_completed,feed_dict_train, feed_dict_val)
-        trainer._epochs_completed += 1
-        validator._epochs_completed += 1
+    train_data, val_data = split_data_train_and_validation(images, labels,
+                                                           validation_proportion=conf.VALIDATION_PROPORTION)
+    logger.debug("images: {} {}".format(images.shape, images.dtype))
+    logger.debug("labels: %s" % str(labels.shape))
+
+    # Set data loaders
+    # TODO: Set data loaders and compute weights for classes for the cross entropy
+    train_loader, val_loader = get_training_data_loaders(video, train_data, val_data)
+
+    # Set criterion
+    logger.info("Setting training criterion")
+    criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_data['weights']))
+
+    # Re-initialize fully-connected layers
+    identification_model.apply(weights_reinit)
+
+    # Send model and criterion to GPU
+    if network_params.use_gpu:
+        logger.info("Sending model and criterion to GPU")
+        torch.cuda.set_device(0)
+        cudnn.benchmark = True  # make it train faster
+        identification_model = identification_model.cuda()
+        criterion = criterion.cuda()
+
+    # Set optimizer
+    logger.info("Setting optimizer")
+    optimizer = torch.optim.__dict__[network_params.optimizer](identification_model.parameters(),
+                                                               **network_params.optim_args)
+
+    # Set scheduler
+    logger.info("Setting scheduler")
+    scheduler = MultiStepLR(optimizer,
+                            milestones=network_params.schedule,
+                            gamma=0.1)
+
+    # Set learner
+    logger.info("Setting the learner")
+    learner = learner_class(identification_model, criterion, optimizer, scheduler)
+
+    # Set stopping criteria
+    logger.info("Setting the stopping criteria")
+    # set criteria to stop the training
+    stop_training = Stop_Training(network_params.number_of_classes,
+                                  check_for_loss_plateau=True,
+                                  first_accumulation_flag=video is None or video.accumulation_step == 0)
+
+    logger.info("Training identification network")
+    trainer = TrainIdentification(learner, train_loader, val_loader,
+                                  network_params, stop_training)
+
+    # TODO: replace the storings and plotters
+    store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data = None, None
+
+    logger.info("Identification network trained")
+
     pretraining_global_fragment.update_individual_fragments_attribute('_used_for_pretraining', True)
-    if plot_flag and canvas_from_GUI is None:
-        store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, list_of_fragments.fragments, black = False)
-        ax_arr[2].cla() # clear bars
-        store_training_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'r')
-        store_validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
-        epoch_index_to_plot += trainer._epochs_completed
-    if store_accuracy_and_error:
-        store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
-        store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
-    global_epoch += trainer._epochs_completed
-    net.save()
-    if plot_flag:
-        fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
+    # if plot_flag and canvas_from_GUI is None:
+    #     store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, list_of_fragments.fragments, black = False)
+    #     ax_arr[2].cla() # clear bars
+    #     store_training_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'r')
+    #     store_validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
+    #     epoch_index_to_plot += trainer._epochs_completed
+    # if store_accuracy_and_error:
+    #     store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
+    #     store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
+    global_epoch += stop_training.epochs_completed
+
+    # if plot_flag:
+    #     fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
+
     ratio_of_pretrained_images = list_of_fragments.compute_ratio_of_images_used_for_pretraining()
-    logger.debug("limit ratio of images to be used during pretraining: %.4f (if higher than %.2f we stop)" %(ratio_of_pretrained_images, conf.MAX_RATIO_OF_PRETRAINED_IMAGES))
-    return net, ratio_of_pretrained_images, global_epoch, store_training_accuracy_and_loss_data, store_validation_accuracy_and_loss_data, list_of_fragments
+    logger.debug("limit ratio of images to be used during pretraining: %.4f (if higher than %.2f we stop)" % (ratio_of_pretrained_images, conf.MAX_RATIO_OF_PRETRAINED_IMAGES))
 
-def pre_train(video, list_of_fragments, list_of_global_fragments,
-                params, store_accuracy_and_error,
-                check_for_loss_plateau, save_summaries,
-                print_flag, plot_flag):
-    """Performs pretraining by iterating on the list of global fragments
-    sorted by distance travelled, until the threshold
-    :const:`conf.MAX_RATIO_OF_PRETRAINED_IMAGES` is reached
+    return identification_model, ratio_of_pretrained_images, global_epoch, list_of_fragments, trainer.best_model_path
 
-    Parameters
-    ----------
-    video : <Video object>
-        an instance of the class :class:`~video.Video`
-    list_of_fragments : <ListOfFragments object>
-        an instance of the class :class:`~list_of_fragments.ListOfFragments`
-    list_of_global_fragments : <ListOfGlobalFragments object>
-        an instance of the class
-        :class:`~list_of_global_fragments.ListOfGlobalFragments`
-    params : <NetworkParams object>
-        an instance of the class :class:`~network_params.NetworkParams`
-    store_accuracy_and_error : bool
-        if True the values of the loss function, accuracy and individual
-        accuracy will be stored
-    check_for_loss_plateau : bool
-        if True the stopping criteria (see :mod:`~stop_training_criteria`) will
-        automatically stop the training in case the loss functin computed for
-        the validation set of images reaches a plateau
-    save_summaries : bool
-        if True tensorflow summaries will be generated and stored to allow
-        tensorboard visualisation of both loss and activity histograms
-    print_flag : bool
-        if True additional information are printed in the terminal
-    plot_flag : bool
-        if True training and validation loss, accuracy and individual accuracy
-        are plot in a graph at the end of the training session
-
-
-    Returns
-    -------
-    <ConvNetwork object>
-        an instance of the class :class:`~id_CNN.ConvNetwork`
-
-    """
-    #initialize global epoch counter that takes into account all the steps in the pretraining
-    global_epoch = 0
-    number_of_images_used_during_pretraining = 0
-    #initialize network
-    net = ConvNetwork(params)
-    if video.tracking_with_knowledge_transfer:
-        net.restore()
-    #instantiate objects to store loss and accuracy values for training and validation
-    #(the loss and accuracy of the validation are saved to allow the automatic stopping of the training)
-    store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net,
-                                                                    name = 'training',
-                                                                    scope = 'pretraining')
-    store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net,
-                                                                    name = 'validation',
-                                                                    scope = 'pretraining')
-    if plot_flag:
-        plt.ion()
-        fig, ax_arr = plt.subplots(4)
-        fig.canvas.set_window_title('Pretraining')
-        fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
-        epoch_index_to_plot = 0
-
-    for i, pretraining_global_fragment in enumerate(tqdm(list_of_global_fragments.global_fragments, desc = '\nPretraining network')):
-        net, ratio_of_pretrained_images, global_epoch, _, _, _ = pre_train_global_fragment(net,
-                                                                            pretraining_global_fragment,
-                                                                            list_of_fragments,
-                                                                            global_epoch,
-                                                                            check_for_loss_plateau,
-                                                                            store_accuracy_and_error,
-                                                                            save_summaries, store_training_accuracy_and_loss_data,
-                                                                            store_validation_accuracy_and_loss_data,
-                                                                            print_flag = print_flag,
-                                                                            plot_flag = plot_flag,
-                                                                            batch_size = conf.BATCH_SIZE_IDCNN)
-        if ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
-            logger.info("pre-training ended: The network has been pre-trained on more than %.4f of the images in global fragment" %conf.MAX_RATIO_OF_PRETRAINED_IMAGES)
-            break
-
-    return net
-
-# def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params):
-#     """Initialises and starts the pretraining (3rd fingerprint protocol)
+# def pre_train(video, list_of_fragments, list_of_global_fragments,
+#                 params, store_accuracy_and_error,
+#                 check_for_loss_plateau, save_summaries,
+#                 print_flag, plot_flag):
+#     """Performs pretraining by iterating on the list of global fragments
+#     sorted by distance travelled, until the threshold
+#     :const:`conf.MAX_RATIO_OF_PRETRAINED_IMAGES` is reached
 #
 #     Parameters
 #     ----------
-#     old_video : <Video object>
-#         an instance of the class :class:`~video.Video`
-#     video :<Video object>
+#     video : <Video object>
 #         an instance of the class :class:`~video.Video`
 #     list_of_fragments : <ListOfFragments object>
 #         an instance of the class :class:`~list_of_fragments.ListOfFragments`
 #     list_of_global_fragments : <ListOfGlobalFragments object>
 #         an instance of the class
 #         :class:`~list_of_global_fragments.ListOfGlobalFragments`
-#     pretrain_network_params :  <NetworkParams object>
+#     params : <NetworkParams object>
 #         an instance of the class :class:`~network_params.NetworkParams`
+#     store_accuracy_and_error : bool
+#         if True the values of the loss function, accuracy and individual
+#         accuracy will be stored
+#     check_for_loss_plateau : bool
+#         if True the stopping criteria (see :mod:`~stop_training_criteria`) will
+#         automatically stop the training in case the loss functin computed for
+#         the validation set of images reaches a plateau
+#     save_summaries : bool
+#         if True tensorflow summaries will be generated and stored to allow
+#         tensorboard visualisation of both loss and activity histograms
+#     print_flag : bool
+#         if True additional information are printed in the terminal
+#     plot_flag : bool
+#         if True training and validation loss, accuracy and individual accuracy
+#         are plot in a graph at the end of the training session
+#
+#
+#     Returns
+#     -------
+#     <ConvNetwork object>
+#         an instance of the class :class:`~id_CNN.ConvNetwork`
+#
 #     """
-#     #Reset used_for_training and acceptable_for_training flags
-#     if old_video and old_video.first_accumulation_finished == True:
-#         list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-#         list_of_fragments.reset(roll_back_to = 'fragmentation')
-#     logger.info("Starting pretraining. Checkpoints will be stored in %s" %video.pretraining_folder)
+#     #initialize global epoch counter that takes into account all the steps in the pretraining
+#     global_epoch = 0
+#     number_of_images_used_during_pretraining = 0
+#     #initialize network
+#     net = ConvNetwork(params)
 #     if video.tracking_with_knowledge_transfer:
-#         logger.info("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
-#         pretrain_network_params.knowledge_transfer_folder = video.knowledge_transfer_model_folder
-#     #start pretraining
-#     logger.info("Start pretraining")
-#     net = pre_train(video, list_of_fragments,
-#                     list_of_global_fragments,
-#                     pretrain_network_params,
-#                     store_accuracy_and_error = True,
-#                     check_for_loss_plateau = True,
-#                     save_summaries = False,
-#                     print_flag = False,
-#                     plot_flag = False)
+#         net.restore()
+#     #instantiate objects to store loss and accuracy values for training and validation
+#     #(the loss and accuracy of the validation are saved to allow the automatic stopping of the training)
+#     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net,
+#                                                                     name = 'training',
+#                                                                     scope = 'pretraining')
+#     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net,
+#                                                                     name = 'validation',
+#                                                                     scope = 'pretraining')
+#     if plot_flag:
+#         plt.ion()
+#         fig, ax_arr = plt.subplots(4)
+#         fig.canvas.set_window_title('Pretraining')
+#         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
+#         epoch_index_to_plot = 0
+#
+#     for i, pretraining_global_fragment in enumerate(tqdm(list_of_global_fragments.global_fragments, desc = '\nPretraining network')):
+#         net, ratio_of_pretrained_images, global_epoch, _, _, _ = pre_train_global_fragment(net,
+#                                                                             pretraining_global_fragment,
+#                                                                             list_of_fragments,
+#                                                                             global_epoch,
+#                                                                             check_for_loss_plateau,
+#                                                                             store_accuracy_and_error,
+#                                                                             save_summaries, store_training_accuracy_and_loss_data,
+#                                                                             store_validation_accuracy_and_loss_data,
+#                                                                             print_flag = print_flag,
+#                                                                             plot_flag = plot_flag,
+#                                                                             batch_size = conf.BATCH_SIZE_IDCNN)
+#         if ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
+#             logger.info("pre-training ended: The network has been pre-trained on more than %.4f of the images in global fragment" %conf.MAX_RATIO_OF_PRETRAINED_IMAGES)
+#             break
+#
+#     return net
+#
+# # def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params):
+# #     """Initialises and starts the pretraining (3rd fingerprint protocol)
+# #
+# #     Parameters
+# #     ----------
+# #     old_video : <Video object>
+# #         an instance of the class :class:`~video.Video`
+# #     video :<Video object>
+# #         an instance of the class :class:`~video.Video`
+# #     list_of_fragments : <ListOfFragments object>
+# #         an instance of the class :class:`~list_of_fragments.ListOfFragments`
+# #     list_of_global_fragments : <ListOfGlobalFragments object>
+# #         an instance of the class
+# #         :class:`~list_of_global_fragments.ListOfGlobalFragments`
+# #     pretrain_network_params :  <NetworkParams object>
+# #         an instance of the class :class:`~network_params.NetworkParams`
+# #     """
+# #     #Reset used_for_training and acceptable_for_training flags
+# #     if old_video and old_video.first_accumulation_finished == True:
+# #         list_of_global_fragments.reset(roll_back_to = 'fragmentation')
+# #         list_of_fragments.reset(roll_back_to = 'fragmentation')
+# #     logger.info("Starting pretraining. Checkpoints will be stored in %s" %video.pretraining_folder)
+# #     if video.tracking_with_knowledge_transfer:
+# #         logger.info("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
+# #         pretrain_network_params.knowledge_transfer_folder = video.knowledge_transfer_model_folder
+# #     #start pretraining
+# #     logger.info("Start pretraining")
+# #     net = pre_train(video, list_of_fragments,
+# #                     list_of_global_fragments,
+# #                     pretrain_network_params,
+# #                     store_accuracy_and_error = True,
+# #                     check_for_loss_plateau = True,
+# #                     save_summaries = False,
+# #                     print_flag = False,
+# #                     plot_flag = False)

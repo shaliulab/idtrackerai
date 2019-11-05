@@ -76,6 +76,7 @@ class NetworkParams(object):
                  restore_folder=None,
                  save_folder=None,
                  knowledge_transfer_folder=None,
+                 scopes_layers_to_optimize=None,
                  image_size=None,
                  loss='CE',
                  print_freq=2,
@@ -118,6 +119,7 @@ class NetworkParams(object):
         self.model_name = model_name
         self.layers_to_optimize = layers_to_optimize,
         self.video_path = video_path
+        self.scopes_layers_to_optimize = scopes_layers_to_optimize
 
         if self.optimizer == 'SGD':
             self.optim_args['momentum'] = 0.9

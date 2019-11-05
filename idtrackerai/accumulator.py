@@ -26,10 +26,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import sys
-
-import numpy as np
-
 
 from idtrackerai.accumulation_manager import get_predictions_of_candidates_fragments
 from confapp import conf
@@ -39,7 +35,7 @@ import torch.nn as nn
 import torch.backends.cudnn as cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
-from idtrackerai.trainer import TrainIdentification
+from idtrackerai.network.identification_model.trainer import TrainIdentification
 from idtrackerai.network.data_loaders.identification_dataloader import get_training_data_loaders
 from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
 from idtrackerai.network.data_sets.identification_dataset import split_data_train_and_validation
@@ -70,6 +66,9 @@ def perform_one_accumulation_step(accumulation_manager,
     logger.debug("images: {} {}".format(images.shape, images.dtype))
     logger.debug("labels: %s" % str(labels.shape))
 
+    logger.info("Training with {} images".format(len(train_data)))
+    logger.info("Validating with {} images".format(len(val_data)))
+
     # Set data loaders
     # TODO: Set data loaders and compute weights for classes for the cross entropy
     train_loader, val_loader = get_training_data_loaders(video, train_data, val_data)
@@ -83,12 +82,12 @@ def perform_one_accumulation_step(accumulation_manager,
         logger.info("Sending model and criterion to GPU")
         torch.cuda.set_device(0)
         cudnn.benchmark = True  # make it train faster
-        crossing_detector_model = identification_model.cuda()
+        identification_model = identification_model.cuda()
         criterion = criterion.cuda()
 
     # Set optimizer
     logger.info("Setting optimizer")
-    optimizer = torch.optim.__dict__[network_params.optimizer](crossing_detector_model.parameters(),
+    optimizer = torch.optim.__dict__[network_params.optimizer](identification_model.parameters(),
                                                                **network_params.optim_args)
 
     # Set scheduler
@@ -99,7 +98,7 @@ def perform_one_accumulation_step(accumulation_manager,
 
     # Set learner
     logger.info("Setting the learner")
-    learner = learner_class(crossing_detector_model, criterion, optimizer, scheduler)
+    learner = learner_class(identification_model, criterion, optimizer, scheduler)
 
     # Set stopping criteria
     logger.info("Setting the stopping criteria")
@@ -110,7 +109,8 @@ def perform_one_accumulation_step(accumulation_manager,
 
     logger.info("Training identification network")
     trainer = TrainIdentification(learner, train_loader, val_loader,
-                                  network_params, stop_training, accumulation_manager)
+                                  network_params, stop_training,
+                                  accumulation_manager=accumulation_manager)
 
     # TODO: replace the storings and plotters
     store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data = None, None

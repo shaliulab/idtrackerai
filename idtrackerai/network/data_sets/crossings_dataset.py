@@ -33,7 +33,7 @@ import logging
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai.list_of_fragments import load_identification_images
-from idtrackerai.network.identification_model.get_data import duplicate_PCA_images
+from idtrackerai.network.data_sets.identification_dataset import duplicate_PCA_images
 
 logger = logging.getLogger("__main__.crossings_data_set")
 

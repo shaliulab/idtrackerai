@@ -256,7 +256,7 @@ class GlobalFragment(object):
             if scope=='pretraining':
                 fragment._temporary_id_for_pretraining = temporary_id
 
-        return np.asarray(load_identification_images(identification_images_file_paths, images)), labels
+        return np.asarray(load_identification_images(identification_images_file_paths, images)), np.asarray(labels)
 
     # def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
     #     """

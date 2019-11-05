@@ -136,7 +136,7 @@ def shuffle_images_and_labels(images, labels):
     """Shuffles images and labels with a random
     permutation, according to the number of examples"""
     np.random.seed(0)
-    perm = np.random.permutation(len(labels))
+    perm = np.random.permutation(len(labels)).astype(int)
     images = images[perm]
     labels = labels[perm]
     return images, labels
