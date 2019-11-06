@@ -28,6 +28,20 @@ class Learner_Classification(nn.Module):
                                                              input_shape=learner_params.image_size)
         return model
 
+    @staticmethod
+    def load_model(learner_params, scope=''):
+        model = Learner_Classification.create_model(learner_params)
+        if scope == 'knowledge_transfer':
+            model_path = learner_params.knowledge_transfer_model_file
+        else:
+            model_path = learner_params.load_model_path
+
+        print('=> Load model weights:', model_path)  # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
+        model_state = torch.load(model_path, map_location=lambda storage, loc: storage)  # Load to CPU as the default!
+        model.load_state_dict(model_state, strict=True)  # The pretrained state dict doesn't need to fit the model
+        print('=> Load Done')
+        return model
+
     def forward(self, x):
         return self.model.forward(x)
 
@@ -51,7 +65,7 @@ class Learner_Classification(nn.Module):
 
     def save_model(self, savename):
         model_state = self.model.state_dict()
-        if isinstance(self.model,torch.nn.DataParallel):
+        if isinstance(self.model, torch.nn.DataParallel):
             # Get rid of 'module' before the name of states
             model_state = self.model.module.state_dict()
         for key in model_state.keys():  # Always save it to cpu
@@ -72,16 +86,12 @@ class Learner_Classification(nn.Module):
         }
         print('=> Saving checkpoint to:', savename+'.checkpoint.pth')
         torch.save(checkpoint, savename+'.checkpoint.pth')
-        print('=> Done')
-        if KPI >= self.KPI:
-            print('=> New KPI:', KPI, 'previous KPI:', self.KPI)
-            self.KPI = KPI
-            self.save_model(savename + '.model')
+        self.save_model(savename + '.model')
         return self.model_path
 
-    def resume(self, resumefile):
-        print('=> Loading checkpoint:', resumefile)
-        checkpoint = torch.load(resumefile, map_location=lambda storage, loc: storage)  # Load to CPU as the default!
+    def resume(self, resume_file):
+        print('=> Loading checkpoint:', resume_file)
+        checkpoint = torch.load(resume_file, map_location=lambda storage, loc: storage)  # Load to CPU as the default!
         self.epoch = checkpoint['epoch']
         print('=> resume epoch:', self.epoch)
         self.model.load_state_dict(checkpoint['model'])

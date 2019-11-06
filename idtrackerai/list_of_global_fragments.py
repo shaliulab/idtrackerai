@@ -34,6 +34,8 @@ from confapp import conf
 from idtrackerai.globalfragment import GlobalFragment
 from idtrackerai.assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
 from idtrackerai.accumulation_manager import AccumulationManager
+from idtrackerai.pre_trainer import weights_reinit
+
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -117,13 +119,14 @@ class ListOfGlobalFragments(object):
         return frequencies
 
     @staticmethod
-    def abort_knowledge_transfer_on_same_animals(video, net):
+    def abort_knowledge_transfer_on_same_animals(video, identification_model):
         identities = range(video.number_of_animals)
-        net.reinitialize_softmax_and_fully_connected()
+        identification_model.apply(weights_reinit)
         logger.info("Identity transfer failed. We proceed by transferring only the convolutional filters.")
         return identities
 
-    def set_first_global_fragment_for_accumulation(self, video, accumulation_trial=0, net=None):
+    def set_first_global_fragment_for_accumulation(self, video, accumulation_trial=0, identification_model=None,
+                                                   network_params=None):
         """Selects the first global fragment to be used for accumulation
 
         Parameters
@@ -148,11 +151,11 @@ class ListOfGlobalFragments(object):
         except:
             return None
 
-        if not video.identity_transfer or net is None:
+        if not video.identity_transfer or identification_model is None:
             identities = range(video.number_of_animals)
         else:
-            logger.info("Transferring identities from {}".format(video.knowledge_transfer_model_folder))
-            identities = self.get_transferred_identities(video, net)
+            logger.info("Transferring identities from {}".format(video.knowledge_transfer_model_file))
+            identities = self.get_transferred_identities(video, identification_model, network_params)
 
 
         [(setattr(fragment, '_acceptable_for_training', True),
@@ -182,7 +185,7 @@ class ListOfGlobalFragments(object):
                                         key = lambda x: np.abs(x.index_beginning_of_fragment - video.first_frame_first_global_fragment[accumulation_trial]),
                                         reverse = False)
 
-    def get_transferred_identities(self, video, net):
+    def get_transferred_identities(self, video, identification_model, network_params):
         """Assigns an identity to the images of the first global fragment using
         a network passed by the user to perform identity transfer
 
@@ -194,12 +197,18 @@ class ListOfGlobalFragments(object):
             network used to assign the identities of the first global fragment.
 
         """
-        images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels(video.identification_images_file_paths, scope='identity_transfer')
+        images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels(
+            video.identification_images_file_paths, scope='identity_transfer'
+        )
         images = np.asarray(images)
-        assigner = assign(net, images)
+
+        assigner = assign(video, identification_model, images, network_params)
+
         compute_identification_statistics_for_non_accumulated_fragments(
             self.first_global_fragment_for_accumulation.individual_fragments,
-            assigner, net.params.number_of_animals)
+            assigner, network_params.number_of_classes
+        )
+
         # Check certainties of the individual fragments in the global fragment
         # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
         [setattr(fragment, '_acceptable_for_training', True) for fragment
@@ -207,9 +216,9 @@ class ListOfGlobalFragments(object):
 
         for fragment in self.first_global_fragment_for_accumulation.individual_fragments:
             if AccumulationManager.is_not_certain(fragment, conf.CERTAINTY_THRESHOLD):
-                logger.debug('Identity transfer failed because a fragment is not cergain enough')
+                logger.debug('Identity transfer failed because a fragment is not certain enough')
                 logger.debug('CERTAINTY_THRESHOLD %.2f, fragment certainty %.2f' %(conf.CERTAINTY_THRESHOLD, fragment.certainty))
-                identities = self.abort_knowledge_transfer_on_same_animals(video, net)
+                identities = self.abort_knowledge_transfer_on_same_animals(video, identification_model)
                 return identities
 
         P1_array, index_individual_fragments_sorted_by_P1_max_to_min = AccumulationManager.get_P1_array_and_argsort(
@@ -221,13 +230,13 @@ class ListOfGlobalFragments(object):
 
             if AccumulationManager.p1_below_random(P1_array, index_individual_fragment, fragment):
                 logger.debug('Identity transfer failed because P1 is below random')
-                identities = self.abort_knowledge_transfer_on_same_animals(video, net)
+                identities = self.abort_knowledge_transfer_on_same_animals(video, identification_model)
                 return identities
             else:
                 temporary_id = np.argmax(P1_array[index_individual_fragment,:])
                 if not fragment.check_consistency_with_coexistent_individual_fragments(temporary_id):
                     logger.debug('Identity transfer failed because the identities are not consistent')
-                    identities = self.abort_knowledge_transfer_on_same_animals(video, net)
+                    identities = self.abort_knowledge_transfer_on_same_animals(video, identification_model)
                     return identities
                 else:
                     P1_array = AccumulationManager.set_fragment_temporary_id(
@@ -242,9 +251,9 @@ class ListOfGlobalFragments(object):
         else:
             video._first_global_fragment_knowledge_transfer_identities = [fragment.temporary_id for fragment
                         in self.first_global_fragment_for_accumulation.individual_fragments]
-            if video.number_of_animals == video.knowledge_transfer_info_dict['number_of_animals']:
+            if video.number_of_animals == video.knowledge_transfer_info_dict['number_of_classes']:
                 identities = video._first_global_fragment_knowledge_transfer_identities
-            elif video.number_of_animals < video.knowledge_transfer_info_dict['number_of_animals']:
+            elif video.number_of_animals < video.knowledge_transfer_info_dict['number_of_classes']:
                 identities = range(video.number_of_animals)
             logger.info("Identities transferred succesfully")
 

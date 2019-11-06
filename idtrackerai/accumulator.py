@@ -29,6 +29,7 @@
 
 from idtrackerai.accumulation_manager import get_predictions_of_candidates_fragments
 from confapp import conf
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -46,13 +47,9 @@ logger = logging.getLogger('__main__.accumulator')
 
 def perform_one_accumulation_step(accumulation_manager,
                                   video,
-                                  global_step,
                                   identification_model,
                                   learner_class,
-                                  GUI_axes=None,
-                                  network_params=None,
-                                  plot_flag=False,
-                                  save_summaries=False):
+                                  network_params=None):
 
     # Set accumulation counter
     logger.info("accumulation step %s" % accumulation_manager.counter)
@@ -63,14 +60,15 @@ def perform_one_accumulation_step(accumulation_manager,
     images, labels = accumulation_manager.get_images_and_labels_for_training()
     train_data, val_data = split_data_train_and_validation(images, labels,
                                                            validation_proportion=conf.VALIDATION_PROPORTION)
+
     logger.debug("images: {} {}".format(images.shape, images.dtype))
     logger.debug("labels: %s" % str(labels.shape))
 
-    logger.info("Training with {} images".format(len(train_data)))
-    logger.info("Validating with {} images".format(len(val_data)))
+    logger.info("Training with {} images".format(len(train_data['images'])))
+    logger.info("Validating with {} images".format(len(val_data['images'])))
+    assert len(val_data['images']) > 0
 
     # Set data loaders
-    # TODO: Set data loaders and compute weights for classes for the cross entropy
     train_loader, val_loader = get_training_data_loaders(video, train_data, val_data)
 
     # Set criterion
@@ -111,29 +109,7 @@ def perform_one_accumulation_step(accumulation_manager,
     trainer = TrainIdentification(learner, train_loader, val_loader,
                                   network_params, stop_training,
                                   accumulation_manager=accumulation_manager)
-
-    # TODO: replace the storings and plotters
-    store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data = None, None
-
     logger.info("Identification network trained")
-
-    # # Train identification model
-    # global_step, identification_model,\
-    #     store_validation_accuracy_and_loss_data,\
-    #     store_training_accuracy_and_loss_data = \
-    #     train(video,
-    #           accumulation_manager.list_of_fragments.fragments,
-    #           identification_model, images, labels,
-    #           store_accuracy_and_error=True,
-    #           check_for_loss_plateau=True,
-    #           save_summaries=save_summaries,
-    #           print_flag=False,
-    #           plot_flag=plot_flag,
-    #           global_step=global_step,
-    #           accumulation_manager=accumulation_manager)
-
-    # if network_params is not None:
-    #     network_params.setter(global_step)
 
     # update the set of images used for training
     logger.info("Update images and labels used for training")
@@ -153,7 +129,7 @@ def perform_one_accumulation_step(accumulation_manager,
     logger.info("The %f percent of the images has been accumulated" %(accumulation_manager.ratio_accumulated_images * 100))
     if accumulation_manager.ratio_accumulated_images > conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
         logger.debug("Stopping accumulation by early stopping criteria")
-        return accumulation_manager.ratio_accumulated_images, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data
+        return accumulation_manager.ratio_accumulated_images
 
     # Set accumulation parameters for rest of the accumulation
     # take images from global fragments not used in training (in the remainder test global fragments)
@@ -187,24 +163,18 @@ def perform_one_accumulation_step(accumulation_manager,
         logger.info("Number of non consistent fragments: %i " %accumulation_manager.number_of_nonconsistent_fragments)
         logger.info("Number of non unique fragments: %i " %accumulation_manager.number_of_nonunique_fragments)
         logger.info("Number of acceptable fragments: %i " %accumulation_manager.number_of_acceptable_fragments)
-        # TODO: decided how to save info
-        # new_values = [len([global_fragment for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments if global_fragment.used_for_training]),
-        #                 accumulation_manager.number_of_noncertain_global_fragments,
-        #                 accumulation_manager.number_of_random_assigned_global_fragments,
-        #                 accumulation_manager.number_of_nonconsistent_global_fragments,
-        #                 accumulation_manager.number_of_nonunique_global_fragments,
-        #                 np.sum([global_fragment.acceptable_for_training(accumulation_manager.accumulation_strategy) for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments]),
-        #                 store_validation_accuracy_and_loss_data.accuracy,
-        #                 store_validation_accuracy_and_loss_data.individual_accuracy,
-        #                 store_training_accuracy_and_loss_data.accuracy,
-        #                 store_training_accuracy_and_loss_data.individual_accuracy,
-        #                 accumulation_manager.ratio_accumulated_images]
-        # video.store_accumulation_step_statistics_data(new_values)
+
+        new_values = [len([global_fragment for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments if global_fragment.used_for_training]),
+                      accumulation_manager.number_of_noncertain_global_fragments,
+                      accumulation_manager.number_of_random_assigned_global_fragments,
+                      accumulation_manager.number_of_nonconsistent_global_fragments,
+                      accumulation_manager.number_of_nonunique_global_fragments,
+                      np.sum([global_fragment.acceptable_for_training(accumulation_manager.accumulation_strategy)
+                              for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments]),
+                      accumulation_manager.ratio_accumulated_images]
+        video.store_accumulation_step_statistics_data(new_values)
         accumulation_manager.update_counter()
-    # else:
-    #     logger.info("All the global fragments have been used for accumulation")
-    #     break
 
     accumulation_manager.ratio_accumulated_images = accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
     video.store_accumulation_statistics_data(video.accumulation_trial)
-    return accumulation_manager.ratio_accumulated_images, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data
+    return accumulation_manager.ratio_accumulated_images

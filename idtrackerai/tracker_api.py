@@ -85,10 +85,10 @@ class TrackerAPI(object):
                 'protocols1_and_2'] if 'protocols1_and_2' in self.chosen_video.processes_to_restore.keys() else True
             self.chosen_video.video.create_accumulation_folder(iteration_number=0, delete=delete)
             self.number_of_animals = self.chosen_video.video.number_of_animals if not self.chosen_video.video.identity_transfer \
-                else self.chosen_video.video.knowledge_transfer_info_dict['number_of_animals']
+                else self.chosen_video.video.knowledge_transfer_info_dict['number_of_classes']
             self.restoring_first_accumulation = False
             self.init_accumulation_network()
-            self.chosen_video.video._tracking_with_knowledge_transfer = False if self.accumulation_network_params.knowledge_transfer_folder is None else True
+            self.chosen_video.video._tracking_with_knowledge_transfer = False if self.accumulation_network_params.knowledge_transfer_model_file is None else True
 
 
 
@@ -192,44 +192,6 @@ class TrackerAPI(object):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def track_single_animal(self, create_trajectories=None):
 
         if create_trajectories is None:
@@ -258,20 +220,22 @@ class TrackerAPI(object):
         self.chosen_video.video._first_frame_first_global_fragment = [0] # in case
         create_trajectories()
 
+    def track_wo_identities(self, create_trajectories=None):
+
+        if create_trajectories is None:
+            create_trajectories = self.create_trajectories
+
+        self.chosen_video.video.accumulation_trial = 0
+        self.chosen_video.video._first_frame_first_global_fragment = [0]
+        self.chosen_video.video._track_wo_identities = True
+        create_trajectories()
+
     def init_accumulation_network(self):
-        # self.accumulation_network_params = NetworkParams(
-        #     self.number_of_animals,
-        #     learning_rate = conf.LEARNING_RATE_IDCNN_ACCUMULATION,
-        #     keep_prob = conf.KEEP_PROB_IDCNN_ACCUMULATION,
-        #     scopes_layers_to_optimize = conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
-        #     save_folder = self.chosen_video.video.accumulation_folder,
-        #     image_size = self.chosen_video.video.identification_image_size,
-        #     video_path = self.chosen_video.video.video_path
-        # )
         self.accumulation_network_params = \
             NetworkParams(number_of_classes=self.number_of_animals,
                           architecture='idCNN',
                           save_folder=self.chosen_video.video.accumulation_folder,
+                          knowledge_transfer_model_file=conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN,
                           saveid='',
                           model_name='identification_network',
                           image_size=self.chosen_video.video.identification_image_size,
@@ -291,20 +255,10 @@ class TrackerAPI(object):
                           layers_to_optimize=conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
                           video_path=self.chosen_video.video.video_path
                           )
+        # Save network params
+        self.accumulation_network_params.save()
 
-
-    def track_wo_identities(self, create_trajectories=None):
-
-        if create_trajectories is None:
-            create_trajectories = self.create_trajectories
-
-        self.chosen_video.video.accumulation_trial = 0
-        self.chosen_video.video._first_frame_first_global_fragment = [0]
-        self.chosen_video.video._track_wo_identities = True
-        create_trajectories()
-
-
-    def protocol1(self, create_popup=None):
+    def protocol1(self):
         logger.debug("****** setting protocol1 time")
         # set timer
         self.chosen_video.video._protocol1_time = time.time()
@@ -317,28 +271,30 @@ class TrackerAPI(object):
         logger.info("Setting learner class")
         self.learner_class = Learner_Classification
         logger.info("Creating model")
-        self.identification_model = self.learner_class.create_model(self.accumulation_network_params)
-
-        # Load previous model if knowledge transfer or identity transfer
-        # TODO: Not working just a sketch
-        if self.chosen_video.video.identity_transfer:
-            self.accumulation_network_params._pretrained_model = self.chosen_video.video.knowledge_transfer_model
         if self.chosen_video.video.tracking_with_knowledge_transfer:
-            print('=> Load model weights:', self.accumulation_network_params._pretrained_model)  # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
-            model_state = torch.load(self.accumulation_network_params._pretrained_model,
-                                     map_location=lambda storage, loc: storage)  # Load to CPU as the default!
-            self.identification_model.load_state_dict(model_state, strict=True)  # The pretrained state dict doesn't need to fit the model
-            print('=> Load Done')
+            logger.info("Tracking with knowledge transfer")
+            self.identification_model = self.learner_class.load_model(self.accumulation_network_params,
+                                                                      scope='knowledge_transfer')
+            if not self.chosen_video.video.identity_transfer:
+                logger.info("Reinitializing fully connected layers")
+                self.identification_model.apply(weights_reinit)
+            else:
+                logger.info("Identity transfer. Not reinitializing the fully connected layers.")
+        else:
+            self.identification_model = self.learner_class.create_model(self.accumulation_network_params)
 
         # Set first global fragment to start accumulation. If the network is passed in case of identity transfer.
-        # TODO: using the identification_model for transfering identities does not work yet. It uses assign()
         self.chosen_video.video._first_frame_first_global_fragment.append(
             self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(
-                self.chosen_video.video, net=self.identification_model, accumulation_trial=0
+                self.chosen_video.video,
+                identification_model=self.identification_model,
+                accumulation_trial=0,
+                network_params=self.accumulation_network_params,
             )
         )
         # Order global fragments by distance to the first global fragment for the accumulation
         self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = 0)
+
         # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(self.chosen_video.video, self.chosen_video.list_of_fragments,
                                                         self.chosen_video.list_of_global_fragments,
@@ -346,35 +302,24 @@ class TrackerAPI(object):
         # General counter for training
         self.global_step = 0
 
-        # if create_popup: create_popup()
-        # #self.create_one_shot_accumulation_popup()
-
         self.accumulation_step_finished = True
         self.accumulation_loop()
-
 
     def one_shot_accumulation(self, save_summaries=True, call_accumulate=True):
         logger.warning('Starting one_shot_accumulation')
         self.accumulation_step_finished = False
-        self.accumulation_manager.ratio_accumulated_images,\
-        self.store_validation_accuracy_and_loss_data,\
-        self.store_training_accuracy_and_loss_data = perform_one_accumulation_step(
+        self.accumulation_manager.ratio_accumulated_images = perform_one_accumulation_step(
             self.accumulation_manager,
             self.chosen_video.video,
-            self.global_step,
             self.identification_model,
             self.learner_class,
-            save_summaries = save_summaries,
-            GUI_axes = None,
             network_params = self.accumulation_network_params,
-            plot_flag = conf.PLOT_ACCUMULATION_STEPS
         )
+
         self.accumulation_step_finished = True
 
         if call_accumulate:
             self.accumulate()
-
-
 
     def __accumulate_handler_call_accumulate(self):
         if self.accumulation_manager.continue_accumulation:
@@ -500,7 +445,6 @@ class TrackerAPI(object):
         if call_accumulate:
             self.__accumulate_handler_call_accumulate()
 
-
     def accumulation_loop(self, do_accumulate=True):
         logger.warning('------------Calling accumulation loop')
         self.chosen_video.video.init_accumulation_statistics_attributes()
@@ -508,74 +452,6 @@ class TrackerAPI(object):
         logger.warning('Calling accumulate from accumulation_loop')
 
         if do_accumulate: self.accumulate()
-
-
-    def accumulation_parachute_init(self,
-                                    iteration_number):
-        logger.debug("------------------------> accumulation_parachute_init")
-        logger.info("Starting accumulation %i" % iteration_number)
-
-
-        delete = not self.chosen_video.processes_to_restore['protocol3_accumulation'] if 'protocol3_accumulation' in self.chosen_video.processes_to_restore.keys() else True
-
-        self.chosen_video.video.create_accumulation_folder(iteration_number=iteration_number, delete=delete)
-        self.chosen_video.video.accumulation_trial = iteration_number
-        self.chosen_video.list_of_fragments.reset(roll_back_to='fragmentation')
-        self.chosen_video.list_of_global_fragments.reset(roll_back_to='fragmentation')
-
-        if self.chosen_video.video.identity_transfer:
-            ## TODO: improve for identity transfer
-            tf.reset_default_graph()
-            self.accumulation_network_params._restore_folder = self.chosen_video.video.knowledge_transfer_model_folder
-            self.net = ConvNetwork(self.accumulation_network_params)
-            self.net.restore()
-        else:
-            self.net = None
-
-        # Choose first global fragment
-        self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(self.chosen_video.video, net=self.net, accumulation_trial = iteration_number - 1))
-
-        # Sort global fragments by distance
-        self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = iteration_number - 1)
-        logger.warning('first_frame_first_global_fragment ' + str(self.chosen_video.video.first_frame_first_global_fragment))
-        logger.info("We will restore the network from a previous pretraining: %s" %self.chosen_video.video.pretraining_folder)
-
-        # Set saving folders
-        self.accumulation_network_params.save_folder = self.chosen_video.video.accumulation_folder
-        self.accumulation_network_params._restore_folder = self.chosen_video.video.pretraining_folder
-        # TODO: allow to train only the fully connected layers
-        self.accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1', 'fully_connected_pre_softmax']
-        logger.info("Initialising accumulation network")
-
-        # Build network
-        # Initialize network and restore if knowledge transfer or identity transfer
-        logger.info("Setting learner class")
-        self.learner_class = Learner_Classification
-        logger.info("Creating model")
-        self.identification_model = self.learner_class.create_model(self.accumulation_network_params)
-
-        # Load pretrained network
-        print('=> Load model weights:',
-              self.pretrained_model_path)  # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
-        model_state = torch.load(self.pretrained_model_path,
-                                 map_location=lambda storage, loc: storage)  # Load to CPU as the default!
-        self.identification_model.load_state_dict(model_state,
-                                                  strict=True)  # The pretrained state dict doesn't need to fit the model
-        print('=> Load Done')
-
-        # Re-initialize fully-connected layers
-        self.identification_model.apply(weights_reinit)
-
-        # Instantiate accumualtion manager
-        logger.info("Initialising accumulation manager")
-        self.accumulation_manager = AccumulationManager(self.chosen_video.video,
-                                                        self.chosen_video.list_of_fragments,
-                                                        self.chosen_video.list_of_global_fragments,
-                                                        threshold_acceptable_accumulation=conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)
-
-        logger.info("Start accumulation")
-        self.global_step = 0
-
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
@@ -591,161 +467,43 @@ class TrackerAPI(object):
             self.chosen_video.list_of_global_fragments.save(self.chosen_video.video.global_fragments_path, self.chosen_video.list_of_fragments.fragments)
             self.chosen_video.list_of_fragments.save_light_list(self.chosen_video.video._accumulation_folder)
 
-    def save_and_update_accumulation_parameters_in_parachute(self):
-        logger.warning("self.accumulation_manager.ratio_accumulated_images %.4f" % self.accumulation_manager.ratio_accumulated_images)
-        self.chosen_video.video._ratio_accumulated_images = self.accumulation_manager.ratio_accumulated_images
-        self.chosen_video.video._percentage_of_accumulated_images.append(self.chosen_video.video.ratio_accumulated_images)
-        self.chosen_video.list_of_fragments.save_light_list(self.chosen_video.video._accumulation_folder)
-
-    def save_after_second_accumulation(self):
-        logger.info("Saving second accumulation parameters")
-        # Save accumulation parameters
-        self.save_and_update_accumulation_parameters_in_parachute()
-
-        # Choose best accummulation
-        self.chosen_video.video.accumulation_trial = np.argmax(self.chosen_video.video.percentage_of_accumulated_images)
-
-        # Update ratio of accumulated images and  accumulation folder
-        self.chosen_video.video._ratio_accumulated_images = self.chosen_video.video.percentage_of_accumulated_images[self.chosen_video.video.accumulation_trial]
-        accumulation_folder_name = 'accumulation_' + str(self.chosen_video.video.accumulation_trial)
-        self.chosen_video.video._accumulation_folder = os.path.join(self.chosen_video.video.session_folder, accumulation_folder_name)
-
-        # Load light list of fragments with identities of the best accumulation
-        self.chosen_video.list_of_fragments.load_light_list(self.chosen_video.video._accumulation_folder)
-
-        # Save objects
-        self.chosen_video.video._second_accumulation_finished = True
-        logger.info("Saving global fragments")
-        self.chosen_video.list_of_fragments.save(self.chosen_video.video.fragments_path)
-        self.chosen_video.list_of_global_fragments.save(self.chosen_video.video.global_fragments_path, self.chosen_video.list_of_fragments.fragments)
-
-        # set restoring folder
-        logger.info("Restoring networks to best second accumulation")
-        self.accumulation_network_params.restore_folder = self.chosen_video.video._accumulation_folder
-
-        # Init and restore network
-        logger.info("Setting learner class")
-        self.learner_class = Learner_Classification
-        logger.info("Creating model")
-        self.identification_model = self.learner_class.create_model(self.accumulation_network_params)
-
-        # Load pretrained network
-        # TODO: make the restoring a method of the learner.
-        # TODO: remove this hard coded string.
-        accumulation_network_path = os.path.join(self.accumulation_network_params.restore_folder,
-                                                 'supervised_identification_network_.model.pth')
-        print('=> Load model weights:',
-              accumulation_network_path)  # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
-        model_state = torch.load(accumulation_network_path,
-                                 map_location=lambda storage, loc: storage)  # Load to CPU as the default!
-        self.identification_model.load_state_dict(model_state,
-                                                  strict=True)  # The pretrained state dict doesn't need to fit the model
-        print('=> Load Done')
-
-        # Send model to GPU
-        # Send model and criterion to GPU
-        if self.accumulation_network_params.use_gpu:
-            logger.info("Sending model and criterion to GPU")
-            torch.cuda.set_device(0)
-            cudnn.benchmark = True  # make it train faster
-            self.identification_model = self.identification_model.cuda()
-
-        self.chosen_video.video._accumulation_network_params = self.accumulation_network_params
-        self.chosen_video.video.save()
 
 
-    def init_pretraining_variables(self):
-        self.init_pretraining_net()
-        self.pretraining_global_step = 0
-        self.ratio_of_pretrained_images = 0
 
-        # Initialize network and restore if knowledge transfer or identity transfer
-        logger.info("Setting learner class")
-        self.learner_class = Learner_Classification
-        logger.info("Creating model")
-        self.identification_model = self.learner_class.create_model(self.accumulation_network_params)
-
-        # Load previous model if knowledge transfer or identity transfer
-        # TODO: Not working just a sketch
-        if self.chosen_video.video.tracking_with_knowledge_transfer:
-            print('=> Load model weights:',
-                  self.pretrain_network_params._pretrained_model)  # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
-            model_state = torch.load(self.pretrain_network_params._pretrained_model,
-                                     map_location=lambda storage, loc: storage)  # Load to CPU as the default!
-            self.identification_model.load_state_dict(model_state,
-                                                      strict=True)  # The pretrained state dict doesn't need to fit the model
-            print('=> Load Done')
-
-        # self.store_training_accuracy_and_loss_data_pretrain = Store_Accuracy_and_Loss(self.net,
-        #                                                                             name = 'training',
-        #                                                                             scope = 'pretraining')
-        # self.store_validation_accuracy_and_loss_data_pretrain = Store_Accuracy_and_Loss(self.net,
-        #                                                                             name = 'validation',
-        #                                                                             scope = 'pretraining')
-
-    def pretraining_loop(self, call_from_gui=False):
-        self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
-        self.chosen_video.list_of_global_fragments.order_by_distance_travelled()
-
-        # ## IT SHOULD NOT BE CALLED BY THE GUI
-        # if not call_from_gui:
-        self.one_shot_pretraining()
-        self.continue_pretraining()
-
-    def continue_pretraining(self, clock_unschedule=None):
-        if self.pretraining_step_finished and self.ratio_of_pretrained_images < conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
-            self.one_shot_pretraining()
-
-            if clock_unschedule is None:
-                self.continue_pretraining()
-
-        elif self.ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
-            self.chosen_video.video._has_been_pretrained = True
-
-            # Call GUI
-            if clock_unschedule: clock_unschedule()
-
-            logger.warning('Calling accumulate from continue_pretraining')
-            logger.debug('****** saving protocol3 pretraining time')
-            self.chosen_video.video._protocol3_pretraining_time = time.time()-self.chosen_video.video.protocol3_pretraining_time
-            self.accumulate()
-
-    def one_shot_pretraining(self, generate_tensorboard=False, gui_graph_canvas=None):
-        self.pretraining_step_finished = False
-        self.pretraining_global_fragment = self.chosen_video.list_of_global_fragments.global_fragments[self.pretraining_counter]
-        self.identification_model,\
-            self.ratio_of_pretrained_images,\
-            pretraining_global_step,\
-            self.chosen_video.list_of_fragments,\
-            self.pretrained_model_path = pre_train_global_fragment(self.chosen_video.video,
-                                                                            self.identification_model,
-                                                                            self.learner_class,
-                                                                            self.pretrain_network_params,
-                                                                            self.pretraining_global_fragment,
-                                                                            self.chosen_video.list_of_fragments,
-                                                                            self.pretraining_global_step)
-        self.pretraining_counter += 1
-        self.pretraining_step_finished = True
+    """ pretraining """
 
     def protocol3(self):
 
         self.init_pretraining_variables()
-        number_of_images_in_global_fragments = self.chosen_video.video.number_of_unique_images_in_global_fragments
+
         if self.chosen_video.old_video and self.chosen_video.old_video.first_accumulation_finished == True:
             self.chosen_video.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
             self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
         logger.info("Starting pretraining. Checkpoints will be stored in %s" %self.chosen_video.video.pretraining_folder)
+
         if self.chosen_video.video.tracking_with_knowledge_transfer:
-            logger.info("Performing knowledge transfer from %s" %self.chosen_video.video.knowledge_transfer_model_folder)
-            self.pretrain_network_params.knowledge_transfer_folder = self.chosen_video.video.knowledge_transfer_model_folder
+            logger.info("Performing knowledge transfer from %s" %self.chosen_video.video.knowledge_transfer_model_file)
+            self.pretrain_network_params.knowledge_transfer_model_file = self.chosen_video.video.knowledge_transfer_model_file
+
         logger.info("Start pretraining")
         self.pretraining_step_finished = True
         self.pretraining_loop()
 
+    def init_pretraining_variables(self):
 
+        self.init_pretraining_net()
+        self.pretraining_global_step = 0
+        self.ratio_of_pretrained_images = 0
 
-
-
+        # Initialize network
+        self.learner_class = Learner_Classification
+        logger.info("Creating model")
+        if self.chosen_video.video.tracking_with_knowledge_transfer:
+            self.identification_model = self.learner_class.load_model(self.pretrain_network_params,
+                                                                      scope='knowledge_transfer')
+            self.identification_model.apply(weights_reinit)
+        else:
+            self.identification_model = self.learner_class.create_model(self.pretrain_network_params)
 
     def init_pretraining_net(self):
         delete = not self.chosen_video.processes_to_restore['protocol3_pretraining'] if 'protocol3_pretraining' in self.chosen_video.processes_to_restore.keys() else True
@@ -775,6 +533,165 @@ class TrackerAPI(object):
                           video_path=self.chosen_video.video.video_path
                           )
         self.chosen_video.video._pretraining_network_params = self.pretrain_network_params
+
+    def pretraining_loop(self, call_from_gui=False):
+        self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
+        self.chosen_video.list_of_global_fragments.order_by_distance_travelled()
+        self.one_shot_pretraining()
+        self.continue_pretraining()
+
+    def one_shot_pretraining(self, generate_tensorboard=False, gui_graph_canvas=None):
+        self.pretraining_step_finished = False
+        self.pretraining_global_fragment = self.chosen_video.list_of_global_fragments.global_fragments[self.pretraining_counter]
+        self.identification_model,\
+            self.ratio_of_pretrained_images,\
+            pretraining_global_step,\
+            self.chosen_video.list_of_fragments,\
+            self.pretrained_model_path = pre_train_global_fragment(self.chosen_video.video,
+                                                                            self.identification_model,
+                                                                            self.learner_class,
+                                                                            self.pretrain_network_params,
+                                                                            self.pretraining_global_fragment,
+                                                                            self.chosen_video.list_of_fragments,
+                                                                            self.pretraining_global_step)
+        self.pretraining_counter += 1
+        self.pretraining_step_finished = True
+
+    def continue_pretraining(self, clock_unschedule=None):
+        if self.pretraining_step_finished and self.ratio_of_pretrained_images < conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
+            self.one_shot_pretraining()
+
+            if clock_unschedule is None:
+                self.continue_pretraining()
+
+        elif self.ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
+            self.chosen_video.video._has_been_pretrained = True
+
+            logger.warning('Calling accumulate from continue_pretraining')
+            logger.debug('****** saving protocol3 pretraining time')
+            self.chosen_video.video._protocol3_pretraining_time = time.time()-self.chosen_video.video.protocol3_pretraining_time
+            self.accumulate()
+
+
+
+
+
+    """ parachute """
+
+    def accumulation_parachute_init(self,
+                                    iteration_number):
+        logger.debug("------------------------> accumulation_parachute_init")
+        logger.info("Starting accumulation %i" % iteration_number)
+
+
+        delete = not self.chosen_video.processes_to_restore['protocol3_accumulation'] if 'protocol3_accumulation' in self.chosen_video.processes_to_restore.keys() else True
+
+        self.chosen_video.video.create_accumulation_folder(iteration_number=iteration_number, delete=delete)
+        self.chosen_video.video.accumulation_trial = iteration_number
+        self.chosen_video.list_of_fragments.reset(roll_back_to='fragmentation')
+        self.chosen_video.list_of_global_fragments.reset(roll_back_to='fragmentation')
+
+        # Initialize network
+        if self.chosen_video.video.identity_transfer:
+            logger.info("Load model for identity transfer")
+            self.identification_model = self.learner_class.load_model(self.accumulation_network_params)
+        else:
+            self.identification_model = None
+
+        # Choose first global fragment
+        self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(
+            self.chosen_video.video, net=self.identification_model, accumulation_trial = iteration_number - 1, network_params=self.accumulation_network_params)
+        )
+
+        # Sort global fragments by distance
+        self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = iteration_number - 1)
+        logger.warning('first_frame_first_global_fragment ' + str(self.chosen_video.video.first_frame_first_global_fragment))
+        logger.info("We will restore the network from a previous pretraining: %s" %self.chosen_video.video.pretraining_folder)
+
+        # Set saving folders
+        self.accumulation_network_params.save_folder = self.chosen_video.video.accumulation_folder
+
+        # Set restoring model_file
+        self.accumulation_network_params.restore_folder = self.chosen_video.video.pretraining_folder
+
+        # TODO: allow to train only the fully connected layers
+        self.accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1', 'fully_connected_pre_softmax']
+        logger.info("Initialising accumulation network")
+
+        # Load pretrained network
+        self.identification_model = self.learner_class.load_model(self.accumulation_network_params)
+
+        # Re-initialize fully-connected layers
+        self.identification_model.apply(weights_reinit)
+
+        # Instantiate accumualtion manager
+        logger.info("Initialising accumulation manager")
+        self.accumulation_manager = AccumulationManager(self.chosen_video.video,
+                                                        self.chosen_video.list_of_fragments,
+                                                        self.chosen_video.list_of_global_fragments,
+                                                        threshold_acceptable_accumulation=conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)
+
+        logger.info("Start accumulation")
+        self.global_step = 0
+
+    def save_and_update_accumulation_parameters_in_parachute(self):
+        logger.warning("self.accumulation_manager.ratio_accumulated_images %.4f" % self.accumulation_manager.ratio_accumulated_images)
+        self.chosen_video.video._ratio_accumulated_images = self.accumulation_manager.ratio_accumulated_images
+        self.chosen_video.video._percentage_of_accumulated_images.append(self.chosen_video.video.ratio_accumulated_images)
+        self.chosen_video.list_of_fragments.save_light_list(self.chosen_video.video._accumulation_folder)
+
+    def save_after_second_accumulation(self):
+        logger.info("Saving second accumulation parameters")
+        # Save accumulation parameters
+        self.save_and_update_accumulation_parameters_in_parachute()
+
+        # Choose best accumulation
+        self.chosen_video.video.accumulation_trial = np.argmax(self.chosen_video.video.percentage_of_accumulated_images)
+
+        # Update ratio of accumulated images and  accumulation folder
+        self.chosen_video.video._ratio_accumulated_images = self.chosen_video.video.percentage_of_accumulated_images[self.chosen_video.video.accumulation_trial]
+        accumulation_folder_name = 'accumulation_' + str(self.chosen_video.video.accumulation_trial)
+        self.chosen_video.video._accumulation_folder = os.path.join(self.chosen_video.video.session_folder, accumulation_folder_name)
+
+        # Load light list of fragments with identities of the best accumulation
+        self.chosen_video.list_of_fragments.load_light_list(self.chosen_video.video._accumulation_folder)
+
+        # Save objects
+        self.chosen_video.video._second_accumulation_finished = True
+        logger.info("Saving global fragments")
+        self.chosen_video.list_of_fragments.save(self.chosen_video.video.fragments_path)
+        self.chosen_video.list_of_global_fragments.save(self.chosen_video.video.global_fragments_path, self.chosen_video.list_of_fragments.fragments)
+
+        # set restoring folder
+        logger.info("Restoring networks to best second accumulation")
+        self.accumulation_network_params.restore_folder = self.chosen_video.video._accumulation_folder
+
+        # TODO: allow to train only the fully connected layers
+        self.accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1', 'fully_connected_pre_softmax']
+        logger.info("Initialising accumulation network")
+
+        # Load pretrained network
+        self.identification_model = self.learner_class.load_model(self.accumulation_network_params)
+
+        # # Re-initialize fully-connected layers
+        # self.identification_model.apply(weights_reinit)
+
+        # Send model and criterion to GPU
+        if self.accumulation_network_params.use_gpu:
+            logger.info("Sending model and criterion to GPU")
+            torch.cuda.set_device(0)
+            cudnn.benchmark = True  # make it train faster
+            self.identification_model = self.identification_model.cuda()
+
+        self.chosen_video.video._accumulation_network_params = self.accumulation_network_params
+        self.chosen_video.video.save()
+
+
+
+
+
+
+
 
 
 
@@ -999,8 +916,6 @@ class TrackerAPI(object):
 
         interpolate_crossings_popups_actions()
 
-
-
     def create_trajectories_wo_gaps(self):
         self.chosen_video.video.create_trajectories_wo_gaps_folder()
         logger.info("Generating trajectories. The trajectories files are stored in %s" %self.chosen_video.video.trajectories_wo_gaps_folder)
@@ -1020,14 +935,3 @@ class TrackerAPI(object):
         if not hasattr(self.chosen_video.video, 'overall_P2'):
             self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
         self.chosen_video.video.save()
-
-    def network_params_to_string(self):
-        self.str_model = str(self.accumulation_network_params.cnn_model)
-        self.str_lr = str(self.accumulation_network_params.learning_rate)
-        self.str_kp = str(self.accumulation_network_params.keep_prob)
-        self.str_optimiser = "SGD" if not self.accumulation_network_params.use_adam_optimiser else "Adam"
-        self.str_layers_to_train = "all" if self.accumulation_network_params.scopes_layers_to_optimize is None else str(self.accumulation_network_params.scopes_layers_to_optimize)
-        self.restore_folder = self.accumulation_network_params.restore_folder if self.accumulation_network_params.restore_folder is not None else 'None'
-        self.save_folder = self.accumulation_network_params.save_folder if self.accumulation_network_params.save_folder is not None else 'None'
-        self.knowledge_transfer_folder = self.accumulation_network_params.knowledge_transfer_folder if self.accumulation_network_params.knowledge_transfer_folder is not None else 'None'
-        # self.kt_conv_layers_to_discard = self.accumulation_network_params.kt_conv_layers_to_discard if self.accumulation_network_params.kt_conv_layers_to_discard is not None else 'None'

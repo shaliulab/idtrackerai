@@ -63,19 +63,22 @@ logger = logging.getLogger("__main__.network_params")
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import os
+import numpy as np
 from confapp import conf
 
 import logging
-logger = logging.getLogger("__main__.network_params_crossings")
+
+logger = logging.getLogger("__main__.network_params_identification")
+
 
 class NetworkParams(object):
     def __init__(self,
                  number_of_classes,
                  architecture=None,
                  use_adam_optimiser=False,
-                 restore_folder=None,
-                 save_folder=None,
-                 knowledge_transfer_folder=None,
+                 restore_folder='',
+                 save_folder='',
+                 knowledge_transfer_model_file=None,
                  scopes_layers_to_optimize=None,
                  image_size=None,
                  loss='CE',
@@ -92,6 +95,7 @@ class NetworkParams(object):
                  return_store_objects=False,
                  saveid='',
                  model_name='',
+                 model_file='',
                  layers_to_optimize=None,
                  video_path=None
                  ):
@@ -100,7 +104,7 @@ class NetworkParams(object):
         self.architecture = architecture
         self._restore_folder = restore_folder
         self._save_folder = save_folder
-        self._knowledge_transfer_folder = knowledge_transfer_folder
+        self._knowledge_transfer_model_file = knowledge_transfer_model_file
         self.use_adam_optimiser = use_adam_optimiser
         self.image_size = image_size
         self.loss = loss
@@ -120,9 +124,23 @@ class NetworkParams(object):
         self.layers_to_optimize = layers_to_optimize,
         self.video_path = video_path
         self.scopes_layers_to_optimize = scopes_layers_to_optimize
+        self.model_file = model_file
 
         if self.optimizer == 'SGD':
             self.optim_args['momentum'] = 0.9
+
+
+    @property
+    def load_model_path(self):
+        return os.path.join(self.restore_folder, self.model_file_name + '.model.pth')
+
+    @property
+    def save_model_path(self):
+        return os.path.join(self.save_folder, self.model_file_name)
+
+    @property
+    def model_file_name(self):
+        return "%s_%s_%s" % (self.dataset, self.model_name, self.saveid)
 
     @property
     def restore_folder(self):
@@ -144,13 +162,16 @@ class NetworkParams(object):
         self._save_folder = path
 
     @property
-    def knowledge_transfer_folder(self):
-        return self._knowledge_transfer_folder
+    def knowledge_transfer_model_file(self):
+        return self._knowledge_transfer_model_file
 
-    @knowledge_transfer_folder.setter
-    def knowledge_transfer_folder(self, path):
+    @knowledge_transfer_model_file.setter
+    def knowledge_transfer_model_file(self, path):
         assert os.path.isdir(path)
-        self._knowledge_transfer_folder = path
+        self._knowledge_transfer_model_file = path
+
+    def save(self):
+        np.save(os.path.join(self.save_folder, 'model_params.npy'), self.__dict__)
 
 
 # class NetworkParams(object):

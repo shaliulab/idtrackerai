@@ -141,13 +141,6 @@ MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = int(os.environ.get
 '''***PLOT_ACCUMULATION_STEPS***
 '''
 PLOT_ACCUMULATION_STEPS = False
-# '''***CNN_MODEL***
-# Architecture for the IDCNN network. By default the model 0 is used, which correspond
-# to the model of the paper. Check the different models in the module cnn_architectures.py
-# in the folder network and how they are map to a single value code in the module
-# id_CNN.pyold in the network/identification_model folder.
-# '''
-# CNN_MODEL = 0
 '''***KNOWLEDGE_TRANSFER_FOLDER_IDCNN***
 Folder for a accumulation folder with a model from another video. Note that if
 the IDENTITY_TRANSFER flag is True, then the IDENTIFICATION_IMAGE_SIZE will be

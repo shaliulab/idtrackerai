@@ -51,6 +51,8 @@ def evaluate(eval_loader, model, label, args, learner=None):
         if model is not None:
             output = model(input_)
 
+        # print(output.shape, eval_target.shape)
+
         # Update the performance meter
         with torch.no_grad():
             confusion.add(output, eval_target)

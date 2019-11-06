@@ -151,15 +151,7 @@ class TrainIdentification(object):
                 val_accs.update(val_acc)
             # Save checkpoint at each LR steps and the end of optimization
 
-            self.best_model_path = self.learner.snapshot(
-                os.path.join(
-                    self.network_params.save_folder,
-                    "%s_%s_%s" % (self.network_params.dataset,
-                                  self.network_params.model_name,
-                                  self.network_params.saveid)
-                ),
-                val_acc
-            )
+            self.best_model_path = self.learner.snapshot(self.network_params.save_model_path, val_acc)
 
             if best_val_acc <= val_acc:
                 best_train_acc = train_acc
@@ -177,22 +169,7 @@ class TrainIdentification(object):
                 logger.info("Updating global fragments used for training")
                 self.accumulation_manager.update_fragments_used_for_training()
 
-            # global_step += trainer.epochs_completed
-            # logger.debug('validation losses: %s' % str(store_validation_accuracy_and_loss_data.loss))
-            # # plot if asked
-            # if self.plot_flag:
-            #     store_training_accuracy_and_loss_data.plot(ax_arr, color='r')
-            #     store_validation_accuracy_and_loss_data.plot(ax_arr, color='b')
-            #     fig.savefig(os.path.join(self.net.params.save_folder, title + '.pdf'))
-            # # store training and validation losses and accuracies
-            # if store_accuracy_and_error:
-            #     store_training_accuracy_and_loss_data.save()
-            #     store_validation_accuracy_and_loss_data.save()
-            # # Save network model
-            # self.net.save(global_step=global_step)
-            # if self.return_store_objects:
-            #     self.store_training_accuracy_and_loss_data = store_training_accuracy_and_loss_data
-            #     self.store_validation_accuracy_and_loss_data = store_validation_accuracy_and_loss_data
+
 
 
 

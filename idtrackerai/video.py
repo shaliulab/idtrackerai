@@ -401,17 +401,13 @@ class Video(object):
         np.save(self.path_to_video_object, self)
 
     @property
-    def knowledge_transfer_model_folder(self):
+    def knowledge_transfer_model_file(self):
         return self._knowledge_transfer_model_folder
 
-    @knowledge_transfer_model_folder.setter
-    def knowledge_transfer_model_folder(self, new_kt_model_path):
-        if new_kt_model_path:
-            subfolders = glob.glob(os.path.join(new_kt_model_path, "*"))
-            if os.path.join(new_kt_model_path, "conv") in subfolders and os.path.join(new_kt_model_path, "softmax") in subfolders:
-                self._knowledge_transfer_model_folder = new_kt_model_path
-            else:
-                raise ValueError("The model folders " + os.path.join(new_kt_model_path, "conv") + " and " + os.path.join(new_kt_model_path, "softmax") + " are missing")
+    @knowledge_transfer_model_file.setter
+    def knowledge_transfer_model_file(self, new_kt_model_path):
+        if new_kt_model_path is not None and os.path.isfile(new_kt_model_path):
+            self._knowledge_transfer_model_folder = new_kt_model_path
         else:
             self._knowledge_transfer_model_folder = None
 
@@ -420,20 +416,30 @@ class Video(object):
         return self._identity_transfer
 
     def is_identity_transfer_possible(self):
-        return self.number_of_animals == self.knowledge_transfer_info_dict['number_of_animals']
+        return self.number_of_animals == self.knowledge_transfer_info_dict['number_of_classes']
 
     def check_and_set_identity_transfer_if_possible(self):
         if conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN is None:
-            raise ValueError("Need to provide a value (path) for the varialbe KNOWLEDGE_TRANSFER_FOLDER_IDCNN in the local_settings.py file")
-        self.knowledge_transfer_model_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
-        self.knowledge_transfer_info_dict = np.load(os.path.join(self.knowledge_transfer_model_folder, 'info.npy'), allow_pickle=True).item()
+            raise ValueError('To perform identity transfer you '
+                             'need to provide a path for the variable KNOWLEDGE_TRANSFER_FOLDER_IDCNN '
+                             'in the local_settings.py file')
+        self.knowledge_transfer_model_file = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
+
+        kt_model_folder = os.path.split(self.knowledge_transfer_model_file)[0]
+        kt_info_dict_path = os.path.join(kt_model_folder, 'model_params.npy')
+        if os.path.isfile(kt_info_dict_path):
+            self.knowledge_transfer_info_dict = np.load(kt_info_dict_path, allow_pickle=True).item()
+        else:
+            raise ValueError('To perform identity transfer the models_params.npy file is needed to check the '
+                             'input_image_size and the number_of_classes of the model to be loaded')
+
         if self.is_identity_transfer_possible():
-            logger.info("Tracking with identity transfer. The IDENTIFICATION_IMAGE_SIZE will be matched\
-                        to the input_image_size of the transferred network")
+            logger.info("Tracking with identity transfer. The IDENTIFICATION_IMAGE_SIZE will be matched "
+                        "to the input_image_size of the transferred network")
             self._identity_transfer = True
             self._tracking_with_knowledge_transfer = True
             self._knowledge_transfer_model_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
-            conf.IDENTIFICATION_IMAGE_SIZE = self.knowledge_transfer_info_dict['input_image_size']
+            conf.IDENTIFICATION_IMAGE_SIZE = self.knowledge_transfer_info_dict['image_size']
         else:
             logger.info("Tracking with identity transfer failed. The number of animals in the video\
                         needs to be the same as the number of animals in the transferred network")
@@ -856,8 +862,6 @@ class Video(object):
                         'number_of_nonconsistent_global_fragments',
                         'number_of_nonunique_global_fragments',
                         'number_of_acceptable_global_fragments',
-                        'validation_accuracy','validation_individual_accuracies',
-                        'training_accuracy','training_individual_accuracies',
                         'ratio_of_accumulated_images']
         self.accumulation_statistics_attributes_list = attributes
         [setattr(self, attribute, []) for attribute in self.accumulation_statistics_attributes_list]

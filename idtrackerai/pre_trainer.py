@@ -137,7 +137,6 @@ def pre_train_global_fragment(video,
     logger.debug("labels: %s" % str(labels.shape))
 
     # Set data loaders
-    # TODO: Set data loaders and compute weights for classes for the cross entropy
     train_loader, val_loader = get_training_data_loaders(video, train_data, val_data)
 
     # Set criterion
@@ -181,25 +180,10 @@ def pre_train_global_fragment(video,
     trainer = TrainIdentification(learner, train_loader, val_loader,
                                   network_params, stop_training)
 
-    # TODO: replace the storings and plotters
-    store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data = None, None
-
     logger.info("Identification network trained")
 
     pretraining_global_fragment.update_individual_fragments_attribute('_used_for_pretraining', True)
-    # if plot_flag and canvas_from_GUI is None:
-    #     store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, list_of_fragments.fragments, black = False)
-    #     ax_arr[2].cla() # clear bars
-    #     store_training_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'r')
-    #     store_validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
-    #     epoch_index_to_plot += trainer._epochs_completed
-    # if store_accuracy_and_error:
-    #     store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
-    #     store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
     global_epoch += stop_training.epochs_completed
-
-    # if plot_flag:
-    #     fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
 
     ratio_of_pretrained_images = list_of_fragments.compute_ratio_of_images_used_for_pretraining()
     logger.debug("limit ratio of images to be used during pretraining: %.4f (if higher than %.2f we stop)" % (ratio_of_pretrained_images, conf.MAX_RATIO_OF_PRETRAINED_IMAGES))
@@ -311,8 +295,8 @@ def pre_train_global_fragment(video,
 # #         list_of_fragments.reset(roll_back_to = 'fragmentation')
 # #     logger.info("Starting pretraining. Checkpoints will be stored in %s" %video.pretraining_folder)
 # #     if video.tracking_with_knowledge_transfer:
-# #         logger.info("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
-# #         pretrain_network_params.knowledge_transfer_folder = video.knowledge_transfer_model_folder
+# #         logger.info("Performing knowledge transfer from %s" %video.knowledge_transfer_model_file)
+# #         pretrain_network_params.knowledge_transfer_folder = video.knowledge_transfer_model_file
 # #     #start pretraining
 # #     logger.info("Start pretraining")
 # #     net = pre_train(video, list_of_fragments,

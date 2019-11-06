@@ -28,6 +28,8 @@
 
 
 import torch
+import torch.backends.cudnn as cudnn
+
 import numpy as np
 
 from idtrackerai.network.data_loaders.identification_dataloader import get_test_data_loader
@@ -46,6 +48,14 @@ class GetPredictionsIdentities(object):
         self._softmax_probs = []
 
     def get_all_predictions(self):
+
+        if self.network_params.use_gpu:
+            if not next(self.model.parameters()).is_cuda:
+                logger.info("Sending model and criterion to GPU")
+                torch.cuda.set_device(0)
+                cudnn.benchmark = True  # make it train faster
+                self.model = self.model.cuda()
+
         self.model.eval()
         for i, (input_, target) in enumerate(self.loader):
             # Prepare the inputs
