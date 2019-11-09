@@ -62,7 +62,7 @@ def get_training_data_loaders(video, train_data, val_data):
                                               Normalize()])
                                         )
     val_loader = torch.utils.data.DataLoader(validation_set,
-                                             batch_size=conf.BATCH_SIZE_IDCNN,
+                                             batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
                                              shuffle=False,
                                              num_workers=2)
     val_loader.num_classes = video.number_of_animals
