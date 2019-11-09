@@ -252,7 +252,10 @@ class ListOfBlobs(object):
                                             for blob in blobs_in_frame
                                             if len(blobs_in_frame) == number_of_animals])
         if areas_and_body_length.shape[0] == 0:
-            raise ValueError('There is not part in the video where all the animals are visible. Try a different segmentation or check the number of animals in the video.')
+            raise ValueError('There is not part in the video where the {} '
+                             'animals are visible. '
+                             'Try a different segmentation or check the '
+                             'number of animals in the video.'.format(number_of_animals))
         median_area = np.median(areas_and_body_length[:,0])
         mean_area = np.mean(areas_and_body_length[:,0])
         std_area = np.std(areas_and_body_length[:,0])
