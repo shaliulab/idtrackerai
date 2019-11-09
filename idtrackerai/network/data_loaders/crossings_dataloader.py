@@ -62,7 +62,7 @@ def get_training_data_loaders(video, train_blobs, val_blobs):
                                           Normalize()])
                                      )
     val_loader = torch.utils.data.DataLoader(validation_set,
-                                             batch_size=conf.BATCH_SIZE_DCD,
+                                             batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
                                              shuffle=False,
                                              num_workers=2)
     val_loader.num_classes = 2
@@ -79,7 +79,7 @@ def get_test_data_loader(video, test_blobs):
                                          [transforms.ToTensor(),
                                           Normalize()]))
     test_loader = torch.utils.data.DataLoader(test_set,
-                                              batch_size=conf.BATCH_SIZE_DCD,
+                                              batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
                                               shuffle=False,
                                               num_workers=2)
     test_loader.num_classes = 2

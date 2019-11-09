@@ -83,10 +83,9 @@ class Confusion(object):
         self.conf = self.conf.cuda()
 
     def add(self, output, target):
-        output = output.squeeze_()
-        target = target.squeeze_()
-        # print(target, output)
-        # TODO: Fix what happens when the length is 1. This can happen if the last batch is only one sample.
+        if target.size(0) > 1:
+            output = output.squeeze_()
+            target = target.squeeze_()
         assert output.size(0) == target.size(0), \
                 'number of targets and outputs do not match'
         if output.ndimension()>1: #it is the raw probabilities over classes
