@@ -946,6 +946,7 @@ class Blob(object):
         :param colors_lst: List of colors used to draw the blobs.
         """
         contour = self.contour_full_resolution
+        bounding_box = self.bounding_box_full_resolution
 
         for i, (identity, centroid) in enumerate(zip(self.final_identities, self.final_centroids_full_resolution)):
 
@@ -962,7 +963,7 @@ class Blob(object):
                 else:
                     cv2.polylines(image, np.array([contour]), True, (0, 255, 0), 2)
 
-            cv2.circle(image, pos, 8, (255, 255, 255), -1, lineType=cv2.LINE_AA)
+            # cv2.circle(image, pos, 8, (255, 255, 255), -1, lineType=cv2.LINE_AA)
             cv2.circle(image, pos, 6, color, -1, lineType=cv2.LINE_AA)
 
             if identity is not None:
@@ -982,11 +983,15 @@ class Blob(object):
                 text_width = text_size[0][0]
                 str_pos = pos[0] - text_width // 2, pos[1] - 12
 
-                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), thickness=3,
-                            lineType=cv2.LINE_AA)
-                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, thickness=2, lineType=cv2.LINE_AA)
+                # cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 0), thickness=3,
+                #             lineType=cv2.LINE_AA)
+                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, thickness=3, lineType=cv2.LINE_AA)
+
+                if idroot == 'c-':
+                    rect_color = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
+                    cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
             else:
-                bounding_box = self.bounding_box_full_resolution
+
                 rect_color   = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
                 cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
 
