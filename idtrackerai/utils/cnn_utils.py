@@ -29,7 +29,6 @@
 import os
 import sys
 from idtrackerai.utils.py_utils import  *
-import tensorflow as tf
 import numpy as np
 import re
 

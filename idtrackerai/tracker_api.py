@@ -10,7 +10,6 @@ else:
 
 import copy
 import numpy as np
-import tensorflow as tf
 
 from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
 # from idtrackerai.network.identification_model.store_accuracy_and_loss    import Store_Accuracy_and_Loss
