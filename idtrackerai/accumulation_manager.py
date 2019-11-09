@@ -634,7 +634,7 @@ def get_predictions_of_candidates_fragments(identification_model, video, network
 
     if len(images) != 0:
         images = np.asarray(load_identification_images(video.identification_images_file_paths, images))
-        assigner = assign(video, identification_model, images, network_params)
+        assigner = assign(identification_model, images, network_params)
 
     assert np.sum(lengths) == assigner._predictions.shape[0]
     print(assigner._softmax_probs.min(), assigner._softmax_probs.max())

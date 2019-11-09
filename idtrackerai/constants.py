@@ -252,6 +252,10 @@ THRESHOLD_ACCEPTABLE_ACCUMULATION = float(os.environ.get('THRESHOLD_ACCEPTABLE_A
 """***MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
 ***"""
 MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS = int(os.environ.get('MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS', 3))
+'''***MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR***
+Maximal number of images per class for the crossing detector.
+'''
+MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR = int(os.environ.get('MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR', 3000))
 '''***MAXIMAL_IMAGES_PER_ANIMAL***
 Maximal number of images per indiviudal to be included in the training dataset
 of the idCNN
@@ -313,3 +317,6 @@ HEAD_DIAMETER = int(os.environ.get('HEAD_DIAMETER', 20))
 'idmatcher.ai': saves the information needed to perform identity_matching between videos
 """
 DATA_POLICY = os.environ.get('DATA_POLICY', 'all')
+"""***SAVE_AREAS***
+Save areas in the trajectories dictionary"""
+SAVE_AREAS = True

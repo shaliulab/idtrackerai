@@ -29,6 +29,7 @@
 
 import numpy as np
 import logging
+from confapp import conf
 
 from torchvision.datasets.folder import VisionDataset
 
@@ -134,8 +135,12 @@ def get_train_validation_and_toassign_blobs(list_of_blobs, ratio_validation=.1):
     # Shuffle and make crossings and individuals even
     np.random.shuffle(training_blobs['individuals'])
     np.random.shuffle(training_blobs['crossings'])
-    # if n_blobs_individuals > n_blobs_crossings:
-    #     training_blobs['individuals'] = training_blobs['individuals'][:n_blobs_crossings]
+    if n_blobs_crossings > conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR:
+        training_blobs['crossings'] = training_blobs['crossings'][:conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
+        n_blobs_crossings = conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
+    if n_blobs_individuals > conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR:
+        training_blobs['individuals'] = training_blobs['individuals'][:conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
+        n_blobs_individuals = conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
     n_individual_blobs_validation = int(n_blobs_individuals * ratio_validation)
     n_crossing_blobs_validation = int(n_blobs_crossings * ratio_validation)
 

@@ -126,7 +126,7 @@ class NetworkParams(object):
         self.scopes_layers_to_optimize = scopes_layers_to_optimize
         self.model_file = model_file
 
-        if self.optimizer == 'SGD':
+        if self.optimizer == 'SGD' and self.optim_args is not None:
             self.optim_args['momentum'] = 0.9
 
 

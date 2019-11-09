@@ -70,7 +70,7 @@ def get_training_data_loaders(video, train_data, val_data):
     return train_loader, val_loader
 
 
-def get_test_data_loader(video, test_data):
+def get_test_data_loader(test_data, number_of_classes):
     logger.info("Creating test IdentificationDataset")
     test_set = IdentificationDataset(test_data,
                                      scope='test',
@@ -81,7 +81,7 @@ def get_test_data_loader(video, test_data):
                                               batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
                                               shuffle=False,
                                               num_workers=2)
-    test_loader.num_classes = video.number_of_animals
+    test_loader.num_classes = number_of_classes
     test_loader.image_shape = test_set[0][0].shape
     return test_loader
 

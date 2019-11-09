@@ -26,20 +26,14 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import os
-import sys
 
 import numpy as np
 from tqdm import tqdm
 
-from idtrackerai.list_of_blobs import ListOfBlobs
+from confapp import conf
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.get_trajectories")
+import logging
+logger = logging.getLogger("__main__.get_trajectories")
 
 """
 Usage: get_trajectories.py
@@ -126,6 +120,9 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
     centroid_trajectories = np.ones((number_of_frames, number_of_animals, 2)) * np.NaN
     id_probabilities = np.ones((number_of_frames, number_of_animals, 1)) * np.NaN
 
+    if conf.SAVE_AREAS:
+        areas = np.ones((number_of_frames, number_of_animals)) * np.NaN
+
     for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video)):
 
         for blob in blobs_in_frame:
@@ -135,12 +132,18 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
                                                                 blob.frame_number,
                                                                 centroid_trajectories)
             if blob.is_an_individual and len(blob.final_identities) == 1 and hasattr(blob, '_P2_vector') and blob._P2_vector is not None:
+                identity = blob.final_identities[0]
                 id_probabilities = assign_P2_to_identity(blob._P2_vector,
-                                                         blob.final_identities[0],
+                                                         identity,
                                                          blob.frame_number,
                                                          id_probabilities)
+                if identity is not None and identity != 0:
+                    areas[frame_number, identity-1] = blob.area
 
-    return centroid_trajectories, id_probabilities
+    trajectories_info_dict = {'centroid_trajectories': centroid_trajectories,
+                              'id_probabilities': id_probabilities,
+                              'areas': areas}
+    return trajectories_info_dict
 
 
 def produce_trajectories_wo_identities(blobs_in_video, number_of_frames, number_of_animals):
@@ -164,7 +167,10 @@ def produce_trajectories_wo_identities(blobs_in_video, number_of_frames, number_
 
                 if blob.fragment_identifier not in identifiers_next:
                     identifiers_prev[column] = np.nan
-    return centroid_trajectories, None
+    trajectories_info_dict = {'centroid_trajectories': centroid_trajectories,
+                              'id_probabilities': id_probabilities,
+                              'areas': areas}
+    return trajectories_info_dict
 
 
 def produce_output_dict(blobs_in_video, video):
@@ -186,21 +192,33 @@ def produce_output_dict(blobs_in_video, video):
 
     """
     if not video.track_wo_identities:
-        centroid_trajectories, id_probabilities = \
+        trajectories_info_dict = \
             produce_trajectories(blobs_in_video, video.number_of_frames,
                                  video.number_of_animals)
     else:
         video._number_of_animals = np.max([len(bf) for bf in blobs_in_video])
-        centroid_trajectories, id_probabilities = \
+        trajectories_info_dict = \
             produce_trajectories_wo_identities(blobs_in_video,
-                                                video.number_of_frames,
-                                                video.number_of_animals)
-    output_dict = {'trajectories': centroid_trajectories,
-                   'id_probabilities': id_probabilities,
+                                               video.number_of_frames,
+                                               video.number_of_animals)
+
+    output_dict = {'trajectories': trajectories_info_dict['centroid_trajectories'],
                    'git_commit': video.git_commit,
                    'video_path': video.video_path,
                    'frames_per_second': video.frames_per_second,
-                   'body_length': video.median_body_length_full_resolution,
-                   'setup_points': video.setup_points,
-                   'identities_groups': video.identities_groups}
+                   'body_length': video.median_body_length_full_resolution}
+
+    if 'id_probabilities' in trajectories_info_dict and trajectories_info_dict['id_probabilities'] is not None:
+        output_dict['id_probabilities'] = trajectories_info_dict['id_probabilities']
+
+    if 'areas' in trajectories_info_dict and trajectories_info_dict['areas'] is not None:
+        output_dict['areas'] = trajectories_info_dict['areas']
+
+    video_variables_to_save = ['setup_points', 'identities_groups']
+
+    for video_variable in video_variables_to_save:
+
+        if hasattr(video, video_variable) and video.setup_points is not None:
+            output_dict[video_variable] = getattr(video, video_variable)
+
     return output_dict

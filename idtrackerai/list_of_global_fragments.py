@@ -202,7 +202,7 @@ class ListOfGlobalFragments(object):
         )
         images = np.asarray(images)
 
-        assigner = assign(video, identification_model, images, network_params)
+        assigner = assign(identification_model, images, network_params)
 
         compute_identification_statistics_for_non_accumulated_fragments(
             self.first_global_fragment_for_accumulation.individual_fragments,

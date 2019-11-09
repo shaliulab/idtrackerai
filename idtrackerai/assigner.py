@@ -37,7 +37,7 @@ logger = logging.getLogger("__main__.assigner")
 Identification of individual fragments given the predictions generate by the idCNN
 """
 
-def assign(video, identification_model, images, network_params):
+def assign(identification_model, images, network_params):
     """Gathers the predictions relative to the images contained in `images`.
     Such predictions are returned as attributes of `assigner`.
 
@@ -59,7 +59,7 @@ def assign(video, identification_model, images, network_params):
     GetPrediction
     """
     logger.info("generating data set. Images shape %s"  % str(images.shape))
-    assigner = GetPredictionsIdentities(video, identification_model, images, network_params)
+    assigner = GetPredictionsIdentities(identification_model, images, network_params)
     assigner.get_all_predictions()
     logger.info("done")
     return assigner
@@ -140,7 +140,7 @@ def assign_remaining_fragments(list_of_fragments, video, identification_model, n
         images = list_of_fragments.get_images_from_fragments_to_assign()
         logger.debug("Images shape before assignment %s" %str(images.shape))
         logger.info("Getting predictions")
-        assigner = assign(video, identification_model, images, network_params)
+        assigner = assign(identification_model, images, network_params)
         logger.debug("Number of generated predictions: %s" %str(len(assigner._predictions)))
         logger.debug("Predictions range: %s" %str(np.unique(assigner._predictions)))
         compute_identification_statistics_for_non_accumulated_fragments(list_of_fragments.fragments, assigner)

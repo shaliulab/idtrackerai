@@ -39,11 +39,11 @@ logger = logging.getLogger("__main__.get_predictions_crossings")
 
 
 class GetPredictionsIdentities(object):
-    def __init__(self, video, model, images, network_params):
+    def __init__(self, model, images, network_params):
         # Data set
         self.model = model
         self.network_params = network_params
-        self.loader = get_test_data_loader(video, {'images': images})
+        self.loader = get_test_data_loader({'images': images}, self.network_params.number_of_classes)
         self._predictions = []
         self._softmax_probs = []
 
