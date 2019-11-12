@@ -78,7 +78,6 @@ class TrackerAPI(object):
                 self.track_single_global_fragment_video()
 
         else:
-            tf.reset_default_graph()
             self.chosen_video.video.accumulation_trial = 0
             delete = not self.chosen_video.processes_to_restore[
                 'protocols1_and_2'] if 'protocols1_and_2' in self.chosen_video.processes_to_restore.keys() else True

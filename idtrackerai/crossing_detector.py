@@ -87,7 +87,6 @@ def detect_crossings(list_of_blobs,
                                                 video.number_of_animals)
 
         if use_network:
-            tf.reset_default_graph()
             video.create_crossings_detector_folder()
             logger.info("Get list of blobs for training, validation and test")
             train_blobs, val_blobs, toassign_blobs = get_train_validation_and_toassign_blobs(list_of_blobs)
