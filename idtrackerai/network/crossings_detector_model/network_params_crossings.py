@@ -42,7 +42,7 @@ class NetworkParams_crossings(object):
                  knowledge_transfer_folder=None,
                  image_size=None,
                  loss='CE',
-                 print_freq=2,
+                 print_freq=-1,
                  use_gpu=True,
                  optimizer='SGD',
                  schedule=None,

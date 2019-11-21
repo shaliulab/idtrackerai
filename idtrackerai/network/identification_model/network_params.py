@@ -82,7 +82,7 @@ class NetworkParams(object):
                  scopes_layers_to_optimize=None,
                  image_size=None,
                  loss='CE',
-                 print_freq=2,
+                 print_freq=-1,
                  use_gpu=True,
                  optimizer='SGD',
                  schedule=None,

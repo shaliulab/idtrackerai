@@ -239,7 +239,7 @@ class TrackerAPI(object):
                           image_size=self.chosen_video.video.identification_image_size,
                           scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
                           loss='CE',
-                          print_freq=50,
+                          print_freq=-1,
                           use_gpu=True,
                           optimizer='SGD',
                           schedule=[30, 60],
@@ -383,6 +383,7 @@ class TrackerAPI(object):
             elif self.accumulation_manager.ratio_accumulated_images < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION:
 
                 logger.info("Protocol 2 failed -> Start protocol 3")
+                raise ValueError('Protocol 3')
                 if 'protocols1_and_2' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['protocols1_and_2']:
                     self.chosen_video.video._protocol1_time = time.time()-self.chosen_video.video.protocol1_time
                     if self.chosen_video.video.protocol2_time != 0:
@@ -516,7 +517,7 @@ class TrackerAPI(object):
                           image_size=self.chosen_video.video.identification_image_size,
                           scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
                           loss='CE',
-                          print_freq=50,
+                          print_freq=-1,
                           use_gpu=True,
                           optimizer='SGD',
                           schedule=[30, 60],
