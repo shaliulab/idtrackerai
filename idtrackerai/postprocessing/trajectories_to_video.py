@@ -36,10 +36,9 @@ from idtrackerai.utils.py_utils import  get_spaced_colors_util
 def writeIds(video_object, frame, frame_number, trajectories, centroid_trace_length, colors):
     ordered_centroid = trajectories[frame_number]
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_size = 1 * video_object.resolution_reduction
-    font_width = int(3 * video_object.resolution_reduction)
-    font_width = 1 if font_width == 0 else font_width
-    circle_size = int(2 * video_object.resolution_reduction)
+    font_size = 1
+    font_width = 3
+    circle_size = 2
 
     for cur_id, centroid in enumerate(ordered_centroid):
         if sum(np.isnan(centroid)) == 0:
@@ -76,11 +75,6 @@ def apply_func_on_frame(video_object,
         cap.set(1, frame_number)
     ret, frame = cap.read()
     if ret:
-        if video_object.resolution_reduction != 1:
-            frame = cv2.resize(frame, None,
-                                fx = video_object.resolution_reduction,
-                                fy = video_object.resolution_reduction,
-                                interpolation = cv2.INTER_AREA)
         frame = func(video_object, frame, frame_number, trajectories, centroid_trace_length,
                     colors)
         return frame
@@ -98,7 +92,7 @@ def generate_trajectories_video(video_object,
     path_to_save_video = os.path.join(video_object._session_folder, video_name)
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     video_writer = cv2.VideoWriter(path_to_save_video, fourcc, video_object.frames_per_second,
-                                    (video_object.width, video_object.height))
+                                    (video_object.original_width, video_object.original_height))
 
     if video_object.paths_to_video_segments is None:
         cap = cv2.VideoCapture(video_object.video_path)
