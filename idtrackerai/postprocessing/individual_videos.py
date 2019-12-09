@@ -34,6 +34,8 @@ from math import sqrt
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
+from confapp import conf
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -100,7 +102,10 @@ def generate_individual_video(video_object, trajectories, identity, width, heigh
 
 
 def compute_width_height_individual_video(video_object):
-    height, width = 2*[int(video_object.median_body_length_full_resolution * 1.5 / 2) * 2]
+    if conf.INDIVIDUAL_VIDEO_WIDTH_HEIGHT is None:
+        height, width = 2*[int(video_object.median_body_length_full_resolution * 1.5 / 2) * 2]
+    else:
+        height, width = 2*[conf.INDIVIDUAL_VIDEO_WIDTH_HEIGHT]
     return height, width
 
 

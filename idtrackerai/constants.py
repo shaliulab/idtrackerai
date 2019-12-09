@@ -316,3 +316,10 @@ HEAD_DIAMETER = int(os.environ.get('HEAD_DIAMETER', 20))
 'idmatcher.ai': saves the information needed to perform identity_matching between videos
 """
 DATA_POLICY = os.environ.get('DATA_POLICY', 'all')
+
+
+################################################
+##########       postprocessing      ###########
+################################################
+
+INDIVIDUAL_VIDEO_WIDTH_HEIGHT = None
