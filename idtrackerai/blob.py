@@ -521,9 +521,9 @@ class Blob(object):
             # Note that sometimes len(user_generated_identities) > len(assigned_identities)
             final_identities = []
             for i, user_generated_identity in enumerate(self.user_generated_identities):
-                if user_generated_identity is None:
+                if user_generated_identity is None and i < len(self.assigned_identities):
                     final_identities.append(self.assigned_identities[i])
-                elif user_generated_identity >= 0:
+                elif user_generated_identity is not None and user_generated_identity >= 0:
                     final_identities.append(user_generated_identity)
 
             return final_identities
@@ -695,8 +695,11 @@ class Blob(object):
 
     @property
     def bounding_box_full_resolution(self):
-        bounding_box_full_resolution = (np.asarray(self.bounding_box_in_frame_coordinates)/self.resolution_reduction).astype(int)
-        return tuple(map(tuple, bounding_box_full_resolution))
+        if self.bounding_box_in_frame_coordinates is not None:
+            bounding_box_full_resolution = (np.asarray(self.bounding_box_in_frame_coordinates)/self.resolution_reduction).astype(int)
+            return tuple(map(tuple, bounding_box_full_resolution))
+        else:
+            return None
 
 
     @property
@@ -987,11 +990,10 @@ class Blob(object):
                 #             lineType=cv2.LINE_AA)
                 cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, thickness=3, lineType=cv2.LINE_AA)
 
-                if idroot == 'c-':
+                if idroot == 'c-' and bounding_box is not None:
                     rect_color = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
                     cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
-            else:
-
+            elif bounding_box is not None:
                 rect_color   = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
                 cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
 

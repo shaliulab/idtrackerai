@@ -327,3 +327,5 @@ SAVE_AREAS = True
 ################################################
 
 INDIVIDUAL_VIDEO_WIDTH_HEIGHT = None
+
+CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON = False
