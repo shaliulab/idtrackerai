@@ -82,8 +82,27 @@ This test will donwload a example video of around 500Mb and will execute idtrack
 
 ## Installation for developers.
 
-*coming soon*
+1.- Clone the repository and give it a name other than *idtrackerai*
 
+    git clone https://gitlab.com/polavieja_lab/idtrackerai.git idtrackerai_dev
+
+2.- Initialize all the submodules 
+    
+    cd idtrackerai_dev 
+    git submodule update --init --recursive
+    
+3.- Create a new conda environment and activate it
+
+    conda create -n idtrackerai_dev python=3.6
+    conda activate idtrackerai_dev 
+       
+4.- Execute the dev_install.sh file
+
+    sh dev_install.sh
+    
+5.- Install tensorflow-gpu if required 
+
+    conda install tensorflow-gpu=1.13
 
 ## Open or run idtracker.ai
 
