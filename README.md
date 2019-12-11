@@ -82,16 +82,16 @@ This test will donwload a example video of around 500Mb and will execute idtrack
 
 ## Installation for developers.
 
-1.- Clone the repository and give it a name other than *idtrackerai*
+1.- Clone the repository and give it a name other than *idtrackerai*. In Windows, run this step in the Git Shell.
 
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git idtrackerai_dev
 
-2.- Initialize all the submodules 
+2.- Initialize all the submodules. In Windows, run this step in the Git Shell.
     
     cd idtrackerai_dev 
     git submodule update --init --recursive
     
-3.- Create a new conda environment and activate it
+3.- Create a new conda environment and activate it. In Windows, run the following steps in the Anaconda Prompt terminal.
 
     conda create -n idtrackerai_dev python=3.6
     conda activate idtrackerai_dev 
