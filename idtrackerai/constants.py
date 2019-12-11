@@ -320,3 +320,10 @@ DATA_POLICY = os.environ.get('DATA_POLICY', 'all')
 """***SAVE_AREAS***
 Save areas in the trajectories dictionary"""
 SAVE_AREAS = True
+
+
+################################################
+##########       postprocessing      ###########
+################################################
+
+INDIVIDUAL_VIDEO_WIDTH_HEIGHT = None
