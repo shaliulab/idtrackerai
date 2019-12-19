@@ -737,13 +737,12 @@ class Blob(object):
             # Note that sometimes len(user_generated_centroids) > len(assigned_centroids)
             final_centroids = []
             for i, user_generated_centroid in enumerate(self.user_generated_centroids):
-                if user_generated_centroid[0] is None:
+                if user_generated_centroid[0] is None and i < len(self.assigned_centroids):
                     final_centroids.append(self.assigned_centroids[i])
-                elif user_generated_centroid[0] > 0:
+                elif user_generated_centroid[0] is not None and user_generated_centroid[0] > 0:
                     final_centroids.append(user_generated_centroid)
             return final_centroids
         return self.assigned_centroids
-
 
     @property
     def final_centroids_full_resolution(self):
