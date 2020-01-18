@@ -59,8 +59,7 @@ requirements = ['numpy >= 1.13.0',
                 'sklearn >= 0.0',
                 'tables >= 3.3.0',
                 'dask >= 0.17.0',
-                'opencv-python == 3.4.5.20',
-                'tensorflow == 1.13.1',
+                'opencv-python == 3.4.8.29',
                 'idtrackerai-app',
                 'confapp',
                 'gdown'
@@ -94,7 +93,7 @@ setup(
         'gui': ['pyforms-gui',
                 'python-video-annotator',
                 "python-video-annotator-module-idtrackerai==0.6.64"],
-        'gpu': ['tensorflow-gpu==1.13.1']
+        'gpu': ['pytorch', 'torchvision']
     },
     zip_safe=False,
     classifiers=[
