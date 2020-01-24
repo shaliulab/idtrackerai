@@ -41,15 +41,29 @@ from idtrackerai.utils.segmentation_utils import blob_extractor
 
 
 def compute_erosion_disk(video, blobs_in_video):
-    return np.ceil(np.nanmedian([compute_min_frame_distance_transform(video, blobs_in_frame)
-                                 for blobs_in_frame in blobs_in_video
-                                 if len(blobs_in_frame) > 0])).astype(np.int)
+    min_frame_distance_transform = []
+    for blobs_in_frame in blobs_in_video:
+        if len(blobs_in_frame) > 0:
+            min_frame_distance_transform.append(compute_min_frame_distance_transform(video, blobs_in_frame))
+
+    return np.ceil(np.nanmedian(min_frame_distance_transform))
+    # return np.ceil(np.nanmedian([compute_min_frame_distance_transform(video, blobs_in_frame)
+    #                              for blobs_in_frame in blobs_in_video
+    #                              if len(blobs_in_frame) > 0])).astype(np.int)
 
 
 def compute_min_frame_distance_transform(video, blobs_in_frame):
-    max_distance_transform = [compute_max_distance_transform(video, blob)
-                              for blob in blobs_in_frame
-                              if blob.is_an_individual]
+    max_distance_transform = []
+    for blob in blobs_in_frame:
+        if blob.is_an_individual:
+            try:
+                max_distance_transform.append(compute_max_distance_transform(video, blob))
+            except:
+                print("WARNING: Could not compute distance transform for this blob")
+
+    # max_distance_transform = [compute_max_distance_transform(video, blob)
+    #                           for blob in blobs_in_frame
+    #                           if blob.is_an_individual]
     return np.min(max_distance_transform) if len(max_distance_transform) > 0 else np.nan
 
 
