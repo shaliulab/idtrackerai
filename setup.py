@@ -67,7 +67,7 @@ requirements = ['numpy >= 1.13.0',
                 ]
 
 
-EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*", "docs", "docs.*"]
+EXCLUDE_FROM_PACKAGES = ["plots", "plots.*", "docs", "docs.*"]
 
 version = ''
 with open('idtrackerai/__init__.py', 'r') as fd:
