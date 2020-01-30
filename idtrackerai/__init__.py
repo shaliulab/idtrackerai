@@ -1,3 +1,3 @@
 from confapp import conf; conf += 'idtrackerai.constants'
 
-__version__ = '3.0.18-alpha'
+__version__ = '3.0.19-alpha'
