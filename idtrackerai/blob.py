@@ -755,14 +755,14 @@ class Blob(object):
     def removable_identity(self, identity_to_remove, blobs_in_frame):
         for blob in blobs_in_frame:
             if blob != self:
-                if identity_to_remove in blob.final_identities:
+                if identity_to_remove in blob.final_identities: # Is duplicated in another blob
                     return True
             else:
-                if blob.final_identities.count(identity_to_remove) > 1:
+                if blob.final_identities.count(identity_to_remove) > 1: # Is duplicated in the same blob
                     return True
         return False
 
-    def update_centroid(self, video, old_centroid, new_centroid):
+    def update_centroid(self, video, old_centroid, new_centroid, identity):
         """ Updates the coordinates of the centrod
 
         Parameters
@@ -794,15 +794,20 @@ class Blob(object):
                 centroid_index = self.user_generated_centroids.index(old_centroid)
                 identity = self.user_generated_identities[centroid_index]
             elif old_centroid in self.assigned_centroids:
-                centroid_index = self.assigned_centroids.index(old_centroid)
+                if self.assigned_centroids.count(old_centroid) > 1:
+                    centroid_index = self.assigned_identities.index(identity)
+                else:
+                    centroid_index = self.assigned_centroids.index(old_centroid)
                 identity = self.assigned_identities[centroid_index]
             else:
                 raise Exception("There is no centroid with the values of old_centroid")
         except ValueError:
             raise Exception("There is no centroid with the values of old_centroid")
 
+
         self.user_generated_centroids[centroid_index] = new_centroid
         self.user_generated_identities[centroid_index] = identity
+
         video.is_centroid_updated = True
 
     def delete_centroid(self, video, identity, centroid, blobs_in_frame,
@@ -826,7 +831,7 @@ class Blob(object):
                             Only centroids of duplicated identities can be deleted")
 
         if len(self.final_centroids) == 1:
-            raise Exception("The centroid cannot be removed because if the last centrod of the blob")
+            raise Exception("The centroid cannot be removed because if the last centroid of the blob")
 
         if self.user_generated_centroids is None: #removing a centroid from a crossing
             self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
@@ -837,7 +842,10 @@ class Blob(object):
             if centroid in self.user_generated_centroids:
                 centroid_index = self.user_generated_centroids.index(centroid)
             elif centroid in self.assigned_centroids:
-                centroid_index = self.assigned_centroids.index(centroid)
+                if self.assigned_centroids.count(centroid) > 1:
+                    centroid_index = self.assigned_identities.index(identity)
+                else:
+                    centroid_index = self.assigned_centroids.index(centroid)
             else:
                 raise Exception("There is no centroid with the values of centroid")
         except ValueError:
@@ -867,6 +875,8 @@ class Blob(object):
             raise Exception("The centroid must be a tuple of length 2")
         if not (isinstance(identity, int) and identity > 0 and identity <= self.number_of_animals):
             raise Exception("The identity must be an integer between 1 and the number of animals in the video")
+        if identity in self.final_identities:
+            raise Exception("The identity of the centroid to be created already exist in this blob")
 
         if self.user_generated_centroids is None:
             self._user_generated_centroids = [(None, None)]*len(self.final_centroids)
@@ -878,7 +888,7 @@ class Blob(object):
 
         video.is_centroid_updated = True
 
-    def update_identity(self, new_id, centroid):
+    def update_identity(self, old_id, new_id, centroid):
         """ Updates identity. If the blob has multiple identities already assigned
         the old_id to be modified must be specified.
 
@@ -902,11 +912,15 @@ class Blob(object):
             if centroid in self.user_generated_centroids:
                 centroid_index = self.user_generated_centroids.index(centroid)
             elif centroid in self.assigned_centroids:
-                centroid_index = self.assigned_centroids.index(centroid)
+                if self.assigned_centroids.count(centroid) > 1:
+                    centroid_index = self.assigned_identities.index(old_id)
+                else:
+                    centroid_index = self.assigned_centroids.index(centroid)
             else:
                 raise Exception("There is no centroid with the values of centroid")
         except ValueError:
             raise Exception("There is no centroid with the values of centroid")
+
         self._user_generated_identities[centroid_index] = new_id
         self._user_generated_centroids[centroid_index] = (centroid[0], centroid[1])
 
@@ -930,7 +944,7 @@ class Blob(object):
                     next_centroid = current.next[0].final_centroids[index_centroid]
             else:
                 next_centroid = current.next[0].final_centroids[0]
-            current.next[0].update_identity(new_blob_identity, next_centroid)
+            current.next[0].update_identity(old_identity, new_blob_identity, next_centroid)
             current = current.next[0]
             current_centroid = np.asarray(next_centroid)
             count_future_corrections += 1
@@ -948,7 +962,7 @@ class Blob(object):
                     previous_centroid = current.previous[0].final_centroids[index_centroid]
             else:
                 previous_centroid = current.previous[0].final_centroids[0]
-            current.previous[0].update_identity(new_blob_identity, previous_centroid)
+            current.previous[0].update_identity(old_identity, new_blob_identity, previous_centroid)
             current = current.previous[0]
             current_centroid = np.asarray(previous_centroid)
             count_past_corrections += 1
@@ -1008,6 +1022,13 @@ class Blob(object):
             elif bounding_box is not None:
                 rect_color   = self.rect_color if hasattr(self, 'rect_color') else (255, 0, 0)
                 cv2.rectangle(image, bounding_box[0], bounding_box[1], rect_color, 2)
+
+                idstr = '0'
+                text_size = cv2.getTextSize(idstr, cv2.FONT_HERSHEY_SIMPLEX, 1.0, thickness=2)
+                text_width = text_size[0][0]
+                str_pos = pos[0] - text_width // 2, pos[1] - 12
+                cv2.putText(image, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 0), thickness=3,
+                            lineType=cv2.LINE_AA)
 
 
 def remove_background_pixels(height, width, bounding_box_image, pixels,
