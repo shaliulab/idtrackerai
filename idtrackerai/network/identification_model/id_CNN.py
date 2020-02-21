@@ -174,6 +174,11 @@ class ConvNetwork():
         # Create list of operations to run during training and validation
         if self.training:
             self.ops_list = [self.loss, self.accuracy, self.individual_accuracy]
+        ## Snippet for CUDNN error
+        config = tf.compat.v1.ConfigProto()
+        config.gpu_options.allow_growth = True
+        self.sesh = tf.compat.v1.Session(config=config)
+        ##
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         if self.is_restoring:

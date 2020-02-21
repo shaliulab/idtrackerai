@@ -51,7 +51,12 @@ class ConvNetwork_crossings(object):
         self._build_graph()
         self.ops_list = [self.loss, self.accuracy, self.individual_accuracy]
         self.set_savers()
-        self.sesh = tf.Session()
+        ## Snippet for CUDNN error
+        config = tf.compat.v1.ConfigProto()
+        config.gpu_options.allow_growth = True
+        self.sesh = tf.compat.v1.Session(config=config)
+        ##
+        # self.sesh = tf.Session()
         self.sesh.run(tf.global_variables_initializer())
 
     def _build_graph(self):
