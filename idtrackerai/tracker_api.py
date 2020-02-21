@@ -210,11 +210,24 @@ class TrackerAPI(object):
         logger.debug("------------------------> track_single_global_fragment_video")
         def get_P2_vector(identity, number_of_animals):
             P2_vector = np.zeros(number_of_animals)
-            P2_vector[identity] = 1.
+            P2_vector[identity-1] = 1.
             return P2_vector
-        [setattr(b, '_identity', b.fragment_identifier+1) for bf in self.chosen_video.list_of_blobs.blobs_in_video for b in bf]
-        [setattr(b, '_P2_vector', get_P2_vector(b.fragment_identifier, self.chosen_video.video.number_of_animals))
-            for bf in self.chosen_video.list_of_blobs.blobs_in_video for b in bf]
+
+        fragment_identifier_to_id = {}
+        identity = 1
+        for fragment in self.chosen_video.list_of_fragments.fragments:
+            if fragment.is_an_individual:
+                fragment_identifier_to_id[fragment.identifier] = identity
+                identity += 1
+            else:
+                fragment_identifier_to_id[fragment.identifier] = None
+
+        [setattr(b, '_identity', fragment_identifier_to_id[b.fragment_identifier])
+         for bf in self.chosen_video.list_of_blobs.blobs_in_video
+         for b in bf if b.is_an_individual]
+        [setattr(b, '_P2_vector', get_P2_vector(fragment_identifier_to_id[b.fragment_identifier], self.chosen_video.video.number_of_animals))
+         for bf in self.chosen_video.list_of_blobs.blobs_in_video
+         for b in bf if b.is_an_individual]
         self.chosen_video.video.accumulation_trial = 0
         self.chosen_video.video._first_frame_first_global_fragment = [0] # in case
         create_trajectories()
