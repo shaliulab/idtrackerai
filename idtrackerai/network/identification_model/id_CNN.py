@@ -162,7 +162,7 @@ class ConvNetwork():
         self.layers_to_optimise = None
         self.training = training_flag
         # Build graph with the network, loss, optimizer and accuracies
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
         self._build_graph()
         knowledge_transfer_info_dict = {'input_image_size': self.params.target_image_size if self.params.target_image_size is not None else self.params.image_size,
                                 'video_path': self.params.video_path,

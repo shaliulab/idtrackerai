@@ -73,7 +73,7 @@ class TrackerAPI(object):
                 self.track_single_global_fragment_video()
 
         else:
-            tf.reset_default_graph()
+            tf.compat.v1.reset_default_graph()
             self.chosen_video.video.accumulation_trial = 0
             delete = not self.chosen_video.processes_to_restore[
                 'protocols1_and_2'] if 'protocols1_and_2' in self.chosen_video.processes_to_restore.keys() else True
@@ -296,7 +296,7 @@ class TrackerAPI(object):
             self.accumulation_network_params._restore_folder = self.chosen_video.video.knowledge_transfer_model_folder
         if self.chosen_video.video.tracking_with_knowledge_transfer:
             logger.debug('Restoring for knowledge transfer')
-            tf.reset_default_graph()
+            tf.compat.v1.reset_default_graph()
             self.net = ConvNetwork(self.accumulation_network_params)
             self.net.restore()
 
@@ -496,7 +496,7 @@ class TrackerAPI(object):
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
         self.chosen_video.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
         if self.chosen_video.video.identity_transfer:
-            tf.reset_default_graph()
+            tf.compat.v1.reset_default_graph()
             self.accumulation_network_params._restore_folder = self.chosen_video.video.knowledge_transfer_model_folder
             self.net = ConvNetwork(self.accumulation_network_params)
             self.net.restore()
@@ -508,7 +508,7 @@ class TrackerAPI(object):
         self.accumulation_network_params._restore_folder = self.chosen_video.video.pretraining_folder
         self.accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
         logger.info("Initialising accumulation network")
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
         self.net = ConvNetwork(self.accumulation_network_params)
         self.net.restore()
         self.net.reinitialize_softmax_and_fully_connected()

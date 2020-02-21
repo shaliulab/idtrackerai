@@ -98,7 +98,7 @@ def detect_crossings(list_of_blobs,
     list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
 
     if use_network:
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
         video.create_crossings_detector_folder()
         logger.info("Get individual and crossing images labelled data")
         training_set = CrossingDataset(list_of_blobs.blobs_in_video,
