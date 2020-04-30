@@ -41,7 +41,7 @@ class IdentificationDataset(VisionDataset):
         super(IdentificationDataset, self).__init__(data_dict, transform=transform)
         self.scope = scope
         self.images = data_dict['images']
-        if self.scope in ['training', 'validation']:
+        if self.scope in ['training', 'validation', 'test']:
             self.labels = data_dict['labels']
         else:
             self.labels = np.zeros((self.images.shape[0]))
@@ -49,9 +49,10 @@ class IdentificationDataset(VisionDataset):
 
     def get_data(self):
 
-       self.images = np.expand_dims(np.asarray(self.images), axis=-1)
+        if self.images.ndim <= 3:
+            self.images = np.expand_dims(np.asarray(self.images), axis=-1)
 
-       if self.scope == "training":
+        if self.scope == "training":
             self.images, self.labels = duplicate_PCA_images(self.images, self.labels)
             self.images, self.labels = shuffle_images_and_labels(self.images, self.labels)
 
