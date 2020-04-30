@@ -100,7 +100,7 @@ class Normalize(object):
         inplace(bool,optional): Bool to make this operation in-place.
     """
 
-    def __init__(self,inplace=False):
+    def __init__(self, inplace=False):
         self.inplace = inplace
 
     def __call__(self, tensor):

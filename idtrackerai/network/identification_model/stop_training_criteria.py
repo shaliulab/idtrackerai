@@ -59,8 +59,15 @@ class Stop_Training(object):
         Flag to indicate that it is the first step of the accumulation
 
     """
-    def __init__(self, number_of_animals, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True, first_accumulation_flag = False):
-        self.num_epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN #maximal num of epochs
+    conf_variables = ['MAXIMUM_NUMBER_OF_EPOCHS_IDCNN', 'MAX_FLOAT', 'OVERFITTING_COUNTER_THRESHOLD_IDCNN',
+                      'OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM', 'LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN',
+                      'LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN']
+
+    def __init__(self, number_of_animals, epochs_before_checking_stopping_conditions=10, check_for_loss_plateau=True,
+                 first_accumulation_flag=False, conf_dict=None):
+
+        self.conf_dict = self.get_conf_dict(conf_dict)
+        self.num_epochs = self.conf_dict['MAXIMUM_NUMBER_OF_EPOCHS_IDCNN'] #maximal num of epochs
         self.number_of_animals = number_of_animals
         self.epochs_before_checking_stopping_conditions = epochs_before_checking_stopping_conditions
         self.overfitting_counter = 0 #number of epochs in which the network is overfitting before stopping the training
@@ -100,16 +107,16 @@ class Stop_Training(object):
 
             # The validation loss in the first 10 epochs could have exploded but being decreasing.
             if np.isnan(previous_loss):
-                previous_loss = conf.MAX_FLOAT
+                previous_loss = self.conf_dict['MAX_FLOAT']
             losses_difference = (previous_loss-current_loss)
 
             # check overfitting
             if losses_difference < 0.:
                 self.overfitting_counter += 1
-                if self.overfitting_counter >= conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN and not self.first_accumulation_flag:
+                if self.overfitting_counter >= self.conf_dict['OVERFITTING_COUNTER_THRESHOLD_IDCNN'] and not self.first_accumulation_flag:
                     logger.info('Overfitting\n')
                     return True
-                elif self.first_accumulation_flag and self.overfitting_counter > conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM:
+                elif self.first_accumulation_flag and self.overfitting_counter > self.conf_dict['OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM']:
                     # print('Overfitting counter, ', self.overfitting_counter)
                     logger.info('Overfitting first accumulation\n')
                     return True
@@ -118,10 +125,10 @@ class Stop_Training(object):
 
             # check if the error is not decreasing much
             if self.check_for_loss_plateau:
-                if self.first_accumulation_flag and np.abs(losses_difference) < conf.LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN*10**(int(np.log10(current_loss))-1):
+                if self.first_accumulation_flag and np.abs(losses_difference) < self.conf_dict['LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN']*10**(int(np.log10(current_loss))-1):
                     logger.info('The losses difference is very small, we stop the training\n')
                     return True
-                elif np.abs(losses_difference) < conf.LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN*10**(int(np.log10(current_loss))-1):
+                elif np.abs(losses_difference) < self.conf_dict['LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN']*10**(int(np.log10(current_loss))-1):
                     logger.info('The losses difference is very small, we stop the training\n')
                     return True
 
@@ -136,3 +143,13 @@ class Stop_Training(object):
                 return True
 
         return False
+
+    def get_conf_dict(self, conf_dict):
+        if conf_dict is not None:
+            # Check that the conf_dict has the variables needed
+            for conf_variable in self.conf_variables:
+                if conf_variable not in conf_dict.keys():
+                    raise Exception(f"The conf_variable {conf_variable} is not in the conf_dict")
+            return conf_dict
+        else:
+            return {conf_var: getattr(conf, conf_var) for conf_var in self.conf_variables}

@@ -73,7 +73,7 @@ def get_training_data_loaders(video, train_data, val_data):
 def get_test_data_loader(test_data, number_of_classes):
     logger.info("Creating test IdentificationDataset")
     test_set = IdentificationDataset(test_data,
-                                     scope='test',
+                                     scope='predict',
                                      transform=transforms.Compose(
                                              [transforms.ToTensor(),
                                               Normalize()]))
@@ -87,19 +87,8 @@ def get_test_data_loader(test_data, number_of_classes):
 
 
 class Normalize(object):
-    """Normalize a tensor image with mean and standard deviation.
-    Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, this transform
-    will normalize each channel of the input ``torch.*Tensor`` i.e.
-    ``input[channel] = (input[channel] - mean[channel]) / std[channel]``
-    .. note::
-        This transform acts out of place, i.e., it does not mutates the input tensor.
-    Args:
-        mean (sequence): Sequence of means for each channel.
-        std (sequence): Sequence of standard deviations for each channel.
-        inplace(bool,optional): Bool to make this operation in-place.
-    """
-
-    def __init__(self,inplace=False):
+    ### TODO: This is kind of a batch normalization but not trained. Explore using real BN in idCNN.
+    def __init__(self, inplace=False):
         self.inplace = inplace
 
     def __call__(self, tensor):
@@ -112,4 +101,3 @@ class Normalize(object):
         mean = torch.tensor([tensor.mean()])
         std = torch.tensor([tensor.std()])
         return tensor.sub_(mean[:, None, None]).div_(std[:, None, None])
-        # return F.normalize(tensor, tensor.mean(), tensor.std(), self.inplace)
