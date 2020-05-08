@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-autodoc_mock_imports = ['_tkinter']
-import matplotlib
+# autodoc_mock_imports = ['_tkinter']
+# import matplotlib
 # if os.name == 'posix':
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai'))
