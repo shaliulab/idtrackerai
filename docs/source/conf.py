@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-# autodoc_mock_imports = ['_tkinter']
+autodoc_mock_imports = ['_tkinter']
 import matplotlib
 # if os.name == 'posix':
 matplotlib.use('TkAgg')
