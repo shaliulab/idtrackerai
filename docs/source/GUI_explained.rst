@@ -101,6 +101,8 @@ Change the minimum and maximum values of the intensity thresholds to select the 
 ---------------------------
 
 Check this box if you want to apply a background subtraction processing. Checking this box will compute a model of the background as the average of multiple equally spaced frames in the video. This can be used to remove static objects that are of the same size and color as the animals you are trying to track. If the video is very long, after clicking on the check box, it might take a while until the box is actually checked. This happens because while the background is being computed, the GUI is held on standby.
+Note that when this checkbox is marked, the segmentation might change and you might need to readjust intensity
+thresholds.
 
 15. **Area thresholds**
 -----------------------
@@ -159,6 +161,10 @@ To draw an ellipse, click in 5 different parts on the perimeter of the ellipse t
 To delete and ROI click on the set of number representing a given ROI. They will be highligthed in blue. Then press the top right minus (-) sign to delete it.
 
 To modify the vertices of an ROI, on the set of number representing a given ROI. Then, on the preview window, drag and drop one of the vertices to change its position. You can also add new vertices by double clicking on one of the sides of the polygon.
+
+Note that each frame is normalized by its average intensity. When an ROI is applied, the average intensity is computed
+only using values inside the ROI. This might cause changes in the segmentation and you might need to reajust the
+values of the intensity and area thresholds.
 
 20. **Track without identities**:
 ---------------------------------

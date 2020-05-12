@@ -52,7 +52,7 @@ The utilities to segment and extract the blob information
 
 def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
                                                         ending_frame,
-                                                        video_path, bkg):
+                                                        video_path, bkg, mask):
     """Computes the sum of frames (1 every 100 frames) for a particular episode of
     the video when the video is a single file.
 
@@ -66,6 +66,10 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
         Path to the single file of the video
     bkg : nd.array
         Zeros array with same width and height as the frame of the video.
+    mask : nd.array
+        Array with 0 or 255 values used mask the frame in order to compute
+        the average intensity only considering the non-zero values of the
+        mask.
 
     Returns
     -------
@@ -87,7 +91,7 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
             frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
-            gray = np.true_divide(gray,np.mean(gray))
+            gray = np.true_divide(gray, get_frame_average_intensity(gray, mask))
             bkg = bkg + gray
             number_of_frames_for_bkg_in_episode += 1
 
@@ -95,7 +99,7 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
     return bkg, number_of_frames_for_bkg_in_episode
 
 
-def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
+def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg, mask):
     """Computes the sum of frames (1 every 100 frames) for a particular episode of
     the video when the video is splitted in several files
 
@@ -105,6 +109,10 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
         Path to the file of the episode to be added to the background
     bkg : nd.array
         Zeros array with same width and height as the frame of the video.
+    mask : nd.array
+        Array with 0 or 255 values used mask the frame in order to compute
+        the average intensity only considering the non-zero values of the
+        mask.
 
     Returns
     -------
@@ -126,7 +134,7 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
             frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
-            gray = np.true_divide(gray,np.mean(gray))
+            gray = np.true_divide(gray, get_frame_average_intensity(gray, mask))
             bkg = bkg + gray
             number_of_frames_for_bkg_in_episode += 1
 
@@ -161,14 +169,14 @@ def cumpute_background(video):
         logger.debug('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
                     sum_frames_for_bkg_per_episode_in_single_file_video)(
-                    starting_frame, ending_frame, video.video_path, bkg)
+                    starting_frame, ending_frame, video.video_path, bkg, video.original_ROI)
                     for (starting_frame, ending_frame) in video.episodes_start_end)
         logger.debug('Finished parallel loop for bkg subtraction')
     else: # multiple video files
         logger.debug('multiple videos, computing bkg in parallel from every episode')
         output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
                     sum_frames_for_bkg_per_episode_in_multiple_files_video)(
-                    videoPath,bkg) for videoPath in video.paths_to_video_segments)
+                    videoPath, bkg, video.original_ROI) for videoPath in video.paths_to_video_segments)
         logger.debug('Finished parallel loop for bkg subtraction')
     set_mkl_to_multi_thread()
 
@@ -177,6 +185,26 @@ def cumpute_background(video):
     bkg = np.sum(np.asarray(partialBkg),axis=0)
     bkg = np.true_divide(bkg, totNumFrame)
     return bkg.astype('float32')
+
+
+def get_frame_average_intensity(frame, mask):
+    """ Computes the average intensity of a given frame considering the maks. Only pixels with values
+    different than zero in the mask are considered to compute the average intensity
+
+    Parameters
+    ----------
+    frame : nd.array
+        Frame from which to compute the average intensity
+    mask : nd.array
+        Mask to be applied. Pixels with value 0 will be ignored to compute the average intensity.
+
+    Returns
+    -------
+
+    """
+    assert frame.shape == mask.shape
+    return np.float32(np.mean(np.ma.array(frame, mask=mask == 0)))
+
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the
