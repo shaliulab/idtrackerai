@@ -41,7 +41,7 @@ from confapp import conf
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import flatten, set_mkl_to_single_thread, set_mkl_to_multi_thread
-from idtrackerai.utils.segmentation_utils import segment_frame, blob_extractor
+from idtrackerai.utils.segmentation_utils import segment_frame, blob_extractor, get_frame_average_intensity
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -145,8 +145,9 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds,
                                fy=video.resolution_reduction,
                                interpolation=cv2.INTER_AREA)
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if len(frame.shape)>2 else frame
-        avIntensity = np.float32(np.mean(np.ma.array(frameGray,
-                                                     mask=video.ROI==0)))
+        avIntensity = get_frame_average_intensity(frameGray, video.ROI)
+        # avIntensity = np.float32(np.mean(np.ma.array(frameGray,
+        #                                              mask=video.ROI==0)))
         segmentedFrame = segment_frame(frameGray / avIntensity,
                                        segmentation_thresholds['min_threshold'],
                                        segmentation_thresholds['max_threshold'],
