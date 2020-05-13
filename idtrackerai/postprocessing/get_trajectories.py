@@ -149,6 +149,10 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
 def produce_trajectories_wo_identities(blobs_in_video, number_of_frames, number_of_animals):
     centroid_trajectories = np.ones((number_of_frames, number_of_animals, 2))*np.nan
     identifiers_prev = np.arange(number_of_animals).astype(np.float32)
+
+    if conf.SAVE_AREAS:
+        areas = np.ones((number_of_frames, number_of_animals)) * np.NaN
+
     for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video, "creating trajectories")):
         if frame_number != len(blobs_in_video)-1:
             identifiers_next = [b.fragment_identifier for b in blobs_in_video[frame_number+1]]
@@ -164,11 +168,12 @@ def produce_trajectories_wo_identities(blobs_in_video, number_of_frames, number_
 
                 blob._identity = int(column+1)
                 centroid_trajectories[frame_number, column, :] = blob.final_centroids_full_resolution[0] # blobs that are individual only have one centroid
+                areas[frame_number, column] = blob.area
 
                 if blob.fragment_identifier not in identifiers_next:
                     identifiers_prev[column] = np.nan
     trajectories_info_dict = {'centroid_trajectories': centroid_trajectories,
-                              'id_probabilities': id_probabilities,
+                              'id_probabilities': None,
                               'areas': areas}
     return trajectories_info_dict
 
