@@ -397,7 +397,7 @@ class TrackerAPI(object):
             elif self.accumulation_manager.ratio_accumulated_images < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION:
 
                 logger.info("Protocol 2 failed -> Start protocol 3")
-                raise ValueError('Protocol 3')
+                # raise ValueError('Protocol 3')
                 if 'protocols1_and_2' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['protocols1_and_2']:
                     self.chosen_video.video._protocol1_time = time.time()-self.chosen_video.video.protocol1_time
                     if self.chosen_video.video.protocol2_time != 0:
@@ -612,12 +612,18 @@ class TrackerAPI(object):
             self.identification_model = None
 
         # Choose first global fragment
-        self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(
-            self.chosen_video.video, net=self.identification_model, accumulation_trial = iteration_number - 1, network_params=self.accumulation_network_params)
+        self.chosen_video.video._first_frame_first_global_fragment.append(
+            self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(
+                self.chosen_video.video,
+                identification_model=self.identification_model,
+                accumulation_trial=iteration_number - 1,
+                network_params=self.accumulation_network_params)
         )
 
         # Sort global fragments by distance
-        self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = iteration_number - 1)
+        self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(
+            self.chosen_video.video,
+            accumulation_trial=iteration_number - 1)
         logger.warning('first_frame_first_global_fragment ' + str(self.chosen_video.video.first_frame_first_global_fragment))
         logger.info("We will restore the network from a previous pretraining: %s" %self.chosen_video.video.pretraining_folder)
 
@@ -826,7 +832,10 @@ class TrackerAPI(object):
         logger.warning("In identify")
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'accumulation')
         logger.warning("Assigning remaining fragments")
-        assign_remaining_fragments(self.chosen_video.list_of_fragments, self.chosen_video.video, self.identification_model, self.accumulation_network_params)
+        assign_remaining_fragments(self.chosen_video.list_of_fragments,
+                                   self.chosen_video.video,
+                                   self.identification_model,
+                                   self.accumulation_network_params)
         self.chosen_video.video._has_been_assigned = True
         self.chosen_video.video.save()
 
