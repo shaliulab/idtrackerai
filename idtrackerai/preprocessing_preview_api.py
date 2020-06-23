@@ -45,10 +45,11 @@ class PreprocessingPreviewAPI(object):
 
 
     def init_preview(self):
-
+        ## TODO: Check how important is this method. Variables in init_segment_zero do not seem to be used
         logger.debug("init_preview")
         self.init_preproc_parameters()
 
+        ## TODO: Check this
         self.bkg = self.chosen_video.video.bkg
         self.ROI = self.chosen_video.video.ROI if self.chosen_video.video.ROI is not None else np.ones((self.chosen_video.video.original_height, self.chosen_video.video.original_width) ,dtype='uint8') * 255
 
@@ -57,6 +58,7 @@ class PreprocessingPreviewAPI(object):
 
 
     def init_segment_zero(self):
+        ## TODO: This seems not to be used
         self.currentSegment = 0
         self.areas_plotted  = False
         self.number_of_detected_blobs = [0]
@@ -88,6 +90,7 @@ class PreprocessingPreviewAPI(object):
 
 
     def compute_list_of_blobs(self, *args):
+        ### TODO: This call should go to the method segment below
         self.blobs = segment(self.chosen_video.video)
         self.chosen_video.list_of_blobs = ListOfBlobs(blobs_in_video = self.blobs)
         self.chosen_video.video.create_preprocessing_folder()
