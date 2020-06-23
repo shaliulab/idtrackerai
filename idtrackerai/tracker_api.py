@@ -44,35 +44,13 @@ class TrackerAPI(object):
         self.accumulation_step_finished   = False # Flag accumulation step finished
 
 
-
-
-    def start_tracking(self,
-        one_animal_call=None,
-        one_global_fragment_call=None,
-        not_been_executed_call=None,
-        post_processing_call=None,
-        residual_identification_wo_ident_call=None,
-        residual_identification_no_wo_ident_call=None,
-        protocol3_accumulation_call=None,
-        protocol3_pretraining_call=None,
-        protocols1_and_2_call=None,
-        not_protocols1_and_2_call=None
-    ):
-
+    def start_tracking(self):
 
         if self.chosen_video.video.number_of_animals == 1:
-            # GUI CALL
-            if one_animal_call:
-                one_animal_call()
-            else:
-                self.track_single_animal()
+            self.track_single_animal()
 
         elif self.chosen_video.list_of_global_fragments.number_of_global_fragments == 1:
-            # GUI CALL
-            if one_global_fragment_call:
-                one_global_fragment_call()
-            else:
-                self.track_single_global_fragment_video()
+            self.track_single_global_fragment_video()
 
         else:
             self.chosen_video.video.accumulation_trial = 0
@@ -87,34 +65,22 @@ class TrackerAPI(object):
 
 
 
-            if not_been_executed_call: not_been_executed_call()
-
-
-
             if 'post_processing' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore[
                 'post_processing']:
                 self.restore_trajectories()
                 self.restore_crossings_solved()
                 self.restore_trajectories_wo_gaps()
-                if post_processing_call: post_processing_call()
 
             elif 'residual_identification' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore[
                 'residual_identification']:
                 if self.chosen_video.video.track_wo_identities:
                     self.restore_trajectories()
-                    if residual_identification_wo_ident_call:
-                        residual_identification_wo_ident_call()
 
                 else:
                     logger.info("Restoring residual identification")
                     self.restore_identification()
                     self.chosen_video.video._has_been_assigned = True
-
-                    # GUI CALL
-                    if residual_identification_no_wo_ident_call:
-                        residual_identification_no_wo_ident_call()
-                    else:
-                        self.create_trajectories()
+                    self.create_trajectories()
 
             elif 'protocol3_accumulation' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore[
                 'protocol3_accumulation']:
@@ -125,11 +91,7 @@ class TrackerAPI(object):
                     'first_frame_first_global_fragment ' + str(self.chosen_video.video.first_frame_first_global_fragment))
                 logger.info("Starting identification")
 
-                #GUI CALL
-                if protocol3_accumulation_call:
-                    protocol3_accumulation_call()
-                else:
-                    self.create_trajectories()
+                self.create_trajectories()
 
             elif 'protocol3_pretraining' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore[
                 'protocol3_pretraining']:
@@ -146,11 +108,8 @@ class TrackerAPI(object):
                 self.chosen_video.video._percentage_of_accumulated_images = [
                     self.chosen_video.video.percentage_of_accumulated_images[0]]
                 logger.info("Start accumulation parachute")
-                # GUI CALL
-                if protocol3_pretraining_call:
-                    protocol3_pretraining_call()
-                else:
-                    self.accumulate()
+
+                self.accumulate()
 
             elif 'protocols1_and_2' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore[
                 'protocols1_and_2']:
@@ -163,22 +122,16 @@ class TrackerAPI(object):
                 self.chosen_video.video._percentage_of_accumulated_images = [
                     self.chosen_video.video.percentage_of_accumulated_images[0]]
                 self.accumulation_step_finished = True
-                # GUI CALL
-                if protocols1_and_2_call:
-                    protocols1_and_2_call()
-                else:
-                    self.accumulate()
+
+                self.accumulate()
 
 
             elif 'protocols1_and_2' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore[
                 'protocols1_and_2']:
                 logger.info("Starting protocol cascade")
-                if not_protocols1_and_2_call:
-                    not_protocols1_and_2_call()
-                else:
-                    self.protocol1()
-                    # TODO: OR
-                    #self.track_wo_identities()
+                self.protocol1()
+                # TODO: OR
+                #self.track_wo_identities()
 
 
 
