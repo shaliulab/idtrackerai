@@ -32,12 +32,9 @@ from confapp import conf
 
 from idtrackerai.list_of_fragments import load_identification_images
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.globalfragment")
+
+import logging
+logger = logging.getLogger("__main__.globalfragment")
 
 class GlobalFragment(object):
     """ A global fragment is a collection of instances of the class

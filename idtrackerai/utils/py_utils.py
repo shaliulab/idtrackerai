@@ -37,12 +37,8 @@ import multiprocessing
 import matplotlib
 from matplotlib import cm
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.py_utils")
+import logging
+logger = logging.getLogger("__main__.py_utils")
 
 ### MKL
 def set_mkl_to_single_thread():

@@ -32,12 +32,8 @@ from idtrackerai.utils.py_utils import  *
 import numpy as np
 import re
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.cnn_utils")
+import logging
+logger = logging.getLogger("__main__.cnn_utils")
 
 # ****************************************************************************
 # Tensorboard

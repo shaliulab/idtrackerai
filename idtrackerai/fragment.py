@@ -32,12 +32,8 @@ from confapp import conf
 
 from idtrackerai.utils.py_utils import delete_attributes_from_object
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.fragment")
+import logging
+logger = logging.getLogger("__main__.fragment")
 
 class Fragment(object):
     """ Collects the Blob objects (:class:`~blob.Blob`) associated to the same individual or crossing.

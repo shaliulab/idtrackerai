@@ -37,12 +37,8 @@ from idtrackerai.accumulation_manager import AccumulationManager
 from idtrackerai.pre_trainer import weights_reinit
 
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.list_of_global_fragments")
+import logging
+logger = logging.getLogger("__main__.list_of_global_fragments")
 
 class ListOfGlobalFragments(object):
     """ Collects all the instances of the class

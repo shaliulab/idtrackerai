@@ -49,14 +49,8 @@ from idtrackerai.network.identification_model.stop_training_criteria import Stop
 from idtrackerai.network.data_sets.identification_dataset import split_data_train_and_validation
 from idtrackerai.network.data_loaders.identification_dataloader import get_training_data_loaders
 
-
-
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.pre_trainer")
+import logging
+logger = logging.getLogger("__main__.pre_trainer")
 
 
 def weights_reinit(m):

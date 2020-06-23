@@ -10,10 +10,7 @@ from idtrackerai.crossing_detector import detect_crossings
 from idtrackerai.list_of_global_fragments import ListOfGlobalFragments, create_list_of_global_fragments
 from idtrackerai.list_of_fragments        import ListOfFragments, create_list_of_fragments
 
-if not hasattr(conf,'PYFORMS_MODE'):
-    from kivy.logger import Logger as logger
-else:
-    import logging; logger = logging.getLogger(__name__)
+import logging; logger = logging.getLogger(__name__)
 
 
 class PreprocessingPreviewAPI(object):

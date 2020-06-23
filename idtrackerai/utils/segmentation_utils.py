@@ -37,12 +37,8 @@ from confapp import conf
 # from idtrackerai.utils.py_utils import *
 from idtrackerai.utils.py_utils import set_mkl_to_single_thread, set_mkl_to_multi_thread
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.segmentation_utils")
+import logging
+logger = logging.getLogger("__main__.segmentation_utils")
 
 
 """

@@ -36,12 +36,9 @@ from tqdm import tqdm
 
 from confapp import conf
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.video")
+
+import logging
+logger = logging.getLogger("__main__.video")
 
 def get_frame(frame, centroid, height, width):
     if not np.all(np.isnan(centroid)):
