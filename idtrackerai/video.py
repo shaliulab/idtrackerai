@@ -43,12 +43,8 @@ from confapp import conf
 
 from idtrackerai.postprocessing.assign_them_all import close_trajectories_gaps
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.video")
+import logging
+logger = logging.getLogger("__main__.video")
 
 class Video(object):
     """

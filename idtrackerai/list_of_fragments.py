@@ -36,12 +36,8 @@ from tqdm import tqdm
 from idtrackerai.fragment import Fragment
 from idtrackerai.utils.py_utils import set_attributes_of_object_to_value, append_values_to_lists
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.list_of_fragments")
+import logging
+logger = logging.getLogger("__main__.list_of_fragments")
 
 class ListOfFragments(object):
     """ Collects all the instances of the class :class:`~fragment.Fragment`

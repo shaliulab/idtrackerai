@@ -33,12 +33,9 @@ import logging
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.list_of_fragments import ListOfFragments
 from idtrackerai.blob import Blob
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
+
+import logging
+logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
 
 class GroundTruthBlob(object):
     """Lighter blob objects.

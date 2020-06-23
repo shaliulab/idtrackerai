@@ -39,12 +39,8 @@ from confapp import conf
 """
 The accumulation manager module
 """
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.accumulation_manager")
+import logging
+logger = logging.getLogger("__main__.accumulation_manager")
 
 class AccumulationManager(object):
     """ Manages the process of accumulating images for training the network.

@@ -44,12 +44,8 @@ from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.postprocessing.compute_velocity_model import compute_model_velocity
 
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.assign_them_all")
+import logging
+logger = logging.getLogger("__main__.assign_them_all")
 
 ''' assign them all '''
 def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):

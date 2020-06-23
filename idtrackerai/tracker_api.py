@@ -2,11 +2,7 @@ import sys, time, os
 
 from confapp import conf
 
-
-if not hasattr(conf,'PYFORMS_MODE'):
-    from kivy.logger import Logger as logger
-else:
-    import logging; logger = logging.getLogger(__name__)
+import logging; logger = logging.getLogger(__name__)
 
 import copy
 import numpy as np

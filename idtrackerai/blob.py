@@ -33,12 +33,9 @@ import h5py
 import numpy as np
 
 from sklearn.decomposition import PCA
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.blob")
+
+import logging
+logger = logging.getLogger("__main__.blob")
 
 
 class Blob(object):

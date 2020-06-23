@@ -33,12 +33,9 @@ from pprint import pprint
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.blob import Blob
 from idtrackerai.groundtruth_utils.generate_individual_groundtruth import IndividualGroundTruth, GroundTruthBlob
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
+
+import logging
+logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
 
 
 def compare_tracked_individual_against_groundtruth(blobs_in_individual_groundtruth,

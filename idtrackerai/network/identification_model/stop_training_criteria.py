@@ -32,12 +32,8 @@ import numpy as np
 from confapp import conf
 
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.stop_training_criteria")
+import logging
+logger = logging.getLogger("__main__.stop_training_criteria")
 
 class Stop_Training(object):
     """Stops the training of the network according to the conditions specified

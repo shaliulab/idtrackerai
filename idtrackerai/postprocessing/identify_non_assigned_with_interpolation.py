@@ -31,12 +31,9 @@ import sys
 import copy
 import numpy as np
 from idtrackerai.list_of_blobs import ListOfBlobs
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
-    from kivy.logger import Logger
-    logger = Logger
-else:
-    import logging
-    logger = logging.getLogger("__main__.identify_non_assigned_with_interpolation")
+
+import logging
+logger = logging.getLogger("__main__.identify_non_assigned_with_interpolation")
 
 def assign_zeros_with_interpolation_identities(list_of_blobs, list_of_blobs_no_gaps):
     logger.debug("creating copy of list_of_blobs")
