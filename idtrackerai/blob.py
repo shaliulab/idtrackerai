@@ -255,7 +255,7 @@ class Blob(object):
     def is_a_generated_blob(self):
         return self.contour is None
 
-    def check_for_multiple_next_or_previous(self, direction = None):
+    def check_for_multiple_next_or_previous(self, direction=None):
         """Return True if self has multiple blobs in its past or future overlapping
         history of the blob
 
@@ -274,16 +274,25 @@ class Blob(object):
             "past" or "future" history, depending on the parameter "direction"
 
         """
+        current = getattr(self, direction)[0]
+
+        while len(getattr(current, direction)) == 1:
+
+            current = getattr(current, direction)[0]
+            if len(getattr(current, direction)) > 1:
+                return True
+
+        return False
+
+    def check_for_crossing_in_next_or_previous(self, direction=None):
         opposite_direction = 'next' if direction == 'previous' else 'previous'
         current = getattr(self, direction)[0]
 
-        while len(getattr(current, direction)) == 1 :
+        while len(getattr(current, direction)) == 1:
 
             current = getattr(current, direction)[0]
-            if len(getattr(current, direction)) > 1:# or\
+            if len(getattr(current, opposite_direction)) > 1 and current.is_a_crossing:
                 return True
-                break
-
         return False
 
     def is_a_sure_individual(self):
@@ -304,9 +313,9 @@ class Blob(object):
         if self.is_an_individual and len(self.previous) == 1 \
             and len(self.next) == 1 and len(self.next[0].previous) == 1 and\
             len(self.previous[0].next) == 1:
-            has_multiple_previous = self.check_for_multiple_next_or_previous('previous')
-            has_multiple_next = self.check_for_multiple_next_or_previous('next')
-            if not has_multiple_previous and not has_multiple_next:
+            has_crossing_in_past = self.check_for_crossing_in_next_or_previous('previous')
+            has_crossing_in_future = self.check_for_crossing_in_next_or_previous('next')
+            if has_crossing_in_past and has_crossing_in_future:
                 return True
         else:
             return False
