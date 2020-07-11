@@ -28,6 +28,7 @@
 
 from confapp import conf
 
+
 class ModelArea(object):
     """Model of the area used to perform a first discrimination between blobs
     representing single individual and multiple touching animals (crossings)
@@ -47,13 +48,14 @@ class ModelArea(object):
     std_tolerance : int
         tolerance factor
     """
+
     def __init__(self, mean, median, std):
         self.median = median
         self.mean = mean
         self.std = std
         self.std_tolerance = conf.STD_TOLERANCE
 
-    def __call__(self, area, std_tolerance = None):
+    def __call__(self, area, std_tolerance=None):
         if std_tolerance is not None:
             self.std_tolerance = std_tolerance
         return (area - self.median) < self.std_tolerance * self.std

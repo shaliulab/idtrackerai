@@ -39,32 +39,34 @@ logger = logging.getLogger("__main__.crossings_dataloader")
 
 def get_training_data_loaders(video, train_blobs, val_blobs):
     logger.info("Creating training and validation data loaders")
-    training_set = CrossingDataset(train_blobs,
-                                   video,
-                                   scope='training',
-                                   transform=transforms.Compose(
-                                       [transforms.ToTensor(),
-                                        Normalize()])
-                                   )
-    train_loader = torch.utils.data.DataLoader(training_set,
-                                               batch_size=conf.BATCH_SIZE_DCD,
-                                               shuffle=False,
-                                               num_workers=2)
+    training_set = CrossingDataset(
+        train_blobs,
+        video,
+        scope="training",
+        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+    )
+    train_loader = torch.utils.data.DataLoader(
+        training_set,
+        batch_size=conf.BATCH_SIZE_DCD,
+        shuffle=False,
+        num_workers=2,
+    )
     train_loader.num_classes = 2
     train_loader.image_shape = training_set[0][0].shape
 
     logger.info("Creating validation CrossingDataset")
-    validation_set = CrossingDataset(val_blobs,
-                                     video,
-                                     scope='validation',
-                                     transform=transforms.Compose(
-                                         [transforms.ToTensor(),
-                                          Normalize()])
-                                     )
-    val_loader = torch.utils.data.DataLoader(validation_set,
-                                             batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
-                                             shuffle=False,
-                                             num_workers=2)
+    validation_set = CrossingDataset(
+        val_blobs,
+        video,
+        scope="validation",
+        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+    )
+    val_loader = torch.utils.data.DataLoader(
+        validation_set,
+        batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
+        shuffle=False,
+        num_workers=2,
+    )
     val_loader.num_classes = 2
     val_loader.image_shape = validation_set[0][0].shape
     return train_loader, val_loader
@@ -72,16 +74,18 @@ def get_training_data_loaders(video, train_blobs, val_blobs):
 
 def get_test_data_loader(video, test_blobs):
     logger.info("Creating test CrossingDataset")
-    test_set = CrossingDataset(test_blobs,
-                               video,
-                               scope='test',
-                               transform=transforms.Compose(
-                                         [transforms.ToTensor(),
-                                          Normalize()]))
-    test_loader = torch.utils.data.DataLoader(test_set,
-                                              batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
-                                              shuffle=False,
-                                              num_workers=2)
+    test_set = CrossingDataset(
+        test_blobs,
+        video,
+        scope="test",
+        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+    )
+    test_loader = torch.utils.data.DataLoader(
+        test_set,
+        batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
+        shuffle=False,
+        num_workers=2,
+    )
     test_loader.num_classes = 2
     test_loader.image_shape = test_set[0][0].shape
     return test_loader

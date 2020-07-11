@@ -28,9 +28,12 @@
 
 import torch
 
-from idtrackerai.network.data_loaders.crossings_dataloader import get_test_data_loader
+from idtrackerai.network.data_loaders.crossings_dataloader import (
+    get_test_data_loader,
+)
 
 import logging
+
 logger = logging.getLogger("__main__.get_predictions_crossings")
 
 
@@ -59,5 +62,3 @@ class GetPredictionCrossigns(object):
 
         del self.loader
         return predictions
-
-

@@ -30,32 +30,35 @@ import os
 from confapp import conf
 
 import logging
+
 logger = logging.getLogger("__main__.network_params_crossings")
 
+
 class NetworkParams_crossings(object):
-    def __init__(self,
-                 number_of_classes,
-                 architecture=None,
-                 use_adam_optimiser=False,
-                 restore_folder=None,
-                 save_folder=None,
-                 knowledge_transfer_folder=None,
-                 image_size=None,
-                 loss='CE',
-                 print_freq=-1,
-                 use_gpu=True,
-                 optimizer='SGD',
-                 schedule=None,
-                 optim_args=None,
-                 apply_mask=False,
-                 dataset=None,
-                 skip_eval=False,
-                 epochs= conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-                 plot_flag=True,
-                 return_store_objects=False,
-                 saveid='',
-                 model_name='',
-                 ):
+    def __init__(
+        self,
+        number_of_classes,
+        architecture=None,
+        use_adam_optimiser=False,
+        restore_folder=None,
+        save_folder=None,
+        knowledge_transfer_folder=None,
+        image_size=None,
+        loss="CE",
+        print_freq=-1,
+        use_gpu=True,
+        optimizer="SGD",
+        schedule=None,
+        optim_args=None,
+        apply_mask=False,
+        dataset=None,
+        skip_eval=False,
+        epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
+        plot_flag=True,
+        return_store_objects=False,
+        saveid="",
+        model_name="",
+    ):
 
         self.number_of_classes = number_of_classes
         self.architecture = architecture
@@ -79,8 +82,8 @@ class NetworkParams_crossings(object):
         self.saveid = saveid
         self.model_name = model_name
 
-        if self.optimizer == 'SGD':
-            self.optim_args['momentum'] = 0.9
+        if self.optimizer == "SGD":
+            self.optim_args["momentum"] = 0.9
 
     @property
     def restore_folder(self):

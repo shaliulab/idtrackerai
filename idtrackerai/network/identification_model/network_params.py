@@ -32,6 +32,7 @@ import sys
 from confapp import conf
 
 import logging
+
 logger = logging.getLogger("__main__.network_params")
 
 # This file is part of idtracker.ai a multiple animals tracking system
@@ -72,33 +73,34 @@ logger = logging.getLogger("__main__.network_params_identification")
 
 
 class NetworkParams(object):
-    def __init__(self,
-                 number_of_classes,
-                 architecture=None,
-                 use_adam_optimiser=False,
-                 restore_folder='',
-                 save_folder='',
-                 knowledge_transfer_model_file=None,
-                 scopes_layers_to_optimize=None,
-                 image_size=None,
-                 loss='CE',
-                 print_freq=-1,
-                 use_gpu=True,
-                 optimizer='SGD',
-                 schedule=None,
-                 optim_args=None,
-                 apply_mask=False,
-                 dataset=None,
-                 skip_eval=False,
-                 epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-                 plot_flag=True,
-                 return_store_objects=False,
-                 saveid='',
-                 model_name='',
-                 model_file='',
-                 layers_to_optimize=None,
-                 video_path=None
-                 ):
+    def __init__(
+        self,
+        number_of_classes,
+        architecture=None,
+        use_adam_optimiser=False,
+        restore_folder="",
+        save_folder="",
+        knowledge_transfer_model_file=None,
+        scopes_layers_to_optimize=None,
+        image_size=None,
+        loss="CE",
+        print_freq=-1,
+        use_gpu=True,
+        optimizer="SGD",
+        schedule=None,
+        optim_args=None,
+        apply_mask=False,
+        dataset=None,
+        skip_eval=False,
+        epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
+        plot_flag=True,
+        return_store_objects=False,
+        saveid="",
+        model_name="",
+        model_file="",
+        layers_to_optimize=None,
+        video_path=None,
+    ):
 
         self.number_of_classes = number_of_classes
         self.architecture = architecture
@@ -121,18 +123,19 @@ class NetworkParams(object):
         self.return_store_objects = return_store_objects
         self.saveid = saveid
         self.model_name = model_name
-        self.layers_to_optimize = layers_to_optimize,
+        self.layers_to_optimize = (layers_to_optimize,)
         self.video_path = video_path
         self.scopes_layers_to_optimize = scopes_layers_to_optimize
         self.model_file = model_file
 
-        if self.optimizer == 'SGD' and self.optim_args is not None:
-            self.optim_args['momentum'] = 0.9
-
+        if self.optimizer == "SGD" and self.optim_args is not None:
+            self.optim_args["momentum"] = 0.9
 
     @property
     def load_model_path(self):
-        return os.path.join(self.restore_folder, self.model_file_name + '.model.pth')
+        return os.path.join(
+            self.restore_folder, self.model_file_name + ".model.pth"
+        )
 
     @property
     def save_model_path(self):
@@ -171,7 +174,9 @@ class NetworkParams(object):
         self._knowledge_transfer_model_file = path
 
     def save(self):
-        np.save(os.path.join(self.save_folder, 'model_params.npy'), self.__dict__)
+        np.save(
+            os.path.join(self.save_folder, "model_params.npy"), self.__dict__
+        )
 
 
 # class NetworkParams(object):

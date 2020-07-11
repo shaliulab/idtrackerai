@@ -32,9 +32,12 @@ import torch.backends.cudnn as cudnn
 
 import numpy as np
 
-from idtrackerai.network.data_loaders.identification_dataloader import get_test_data_loader
+from idtrackerai.network.data_loaders.identification_dataloader import (
+    get_test_data_loader,
+)
 
 import logging
+
 logger = logging.getLogger("__main__.get_predictions_crossings")
 
 
@@ -43,7 +46,9 @@ class GetPredictionsIdentities(object):
         # Data set
         self.model = model
         self.network_params = network_params
-        self.loader = get_test_data_loader({'images': images}, self.network_params.number_of_classes)
+        self.loader = get_test_data_loader(
+            {"images": images}, self.network_params.number_of_classes
+        )
         self._predictions = []
         self._softmax_probs = []
 

@@ -33,7 +33,8 @@ from tqdm import tqdm
 
 from idtrackerai.list_of_fragments import ListOfFragments
 
-def compute_model_velocity(fragments, number_of_animals, percentile = None):
+
+def compute_model_velocity(fragments, number_of_animals, percentile=None):
     """computes the 2 * (percentile) of the distribution of velocities of identified fish.
     params
     -----
@@ -50,8 +51,15 @@ def compute_model_velocity(fragments, number_of_animals, percentile = None):
     """
     distance_travelled_in_individual_fragments = []
 
-    for fragment in tqdm(fragments, desc = "computing velocity model"):
+    for fragment in tqdm(fragments, desc="computing velocity model"):
         if fragment.is_an_individual:
-            distance_travelled_in_individual_fragments.extend(fragment.frame_by_frame_velocity())
+            distance_travelled_in_individual_fragments.extend(
+                fragment.frame_by_frame_velocity()
+            )
 
-    return 2 * np.max(distance_travelled_in_individual_fragments) if percentile is None else 2 * np.percentile(distance_travelled_in_individual_fragments, percentile)
+    return (
+        2 * np.max(distance_travelled_in_individual_fragments)
+        if percentile is None
+        else 2
+        * np.percentile(distance_travelled_in_individual_fragments, percentile)
+    )

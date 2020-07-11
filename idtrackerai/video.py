@@ -27,7 +27,6 @@
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 
-
 import os
 import sys
 import time
@@ -44,7 +43,9 @@ from confapp import conf
 from idtrackerai.postprocessing.assign_them_all import close_trajectories_gaps
 
 import logging
+
 logger = logging.getLogger("__main__.video")
+
 
 class Video(object):
     """
@@ -91,19 +92,21 @@ class Video(object):
         :mod:`~assign_them_all`
     """
 
-    def __init__(self, video_path = None, open_multiple_files=False):
+    def __init__(self, video_path=None, open_multiple_files=False):
         logger.debug("Video object init")
         self._open_multiple_files = open_multiple_files
-        self._video_path = video_path #string: path to the video
-        self._number_of_animals = None #int: number of animals in the video
-        self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
-        self._original_bkg = None #matrix [shape = shape of a frame] background used to do bkg subtraction
+        self._video_path = video_path  # string: path to the video
+        self._number_of_animals = None  # int: number of animals in the video
+        self._episodes_start_end = None  # list of lists: starting and ending frame per chunk [video is split for parallel computation]
+        self._original_bkg = None  # matrix [shape = shape of a frame] background used to do bkg subtraction
         self._bkg = None
-        self._resolution_reduction = 1.
-        self._subtract_bkg = None #boolean: True if the user specifies to subtract the background
-        self._original_ROI = None #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
+        self._resolution_reduction = 1.0
+        self._subtract_bkg = None  # boolean: True if the user specifies to subtract the background
+        self._original_ROI = None  # matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
         self._ROI = None
-        self._apply_ROI = None #boolean: True if the user applies a ROI to the video
+        self._apply_ROI = (
+            None  # boolean: True if the user applies a ROI to the video
+        )
         self._min_threshold = conf.MIN_THRESHOLD_DEFAULT
         self._max_threshold = conf.MAX_THRESHOLD_DEFAULT
         self._min_area = conf.MIN_AREA_DEFAULT
@@ -111,16 +114,22 @@ class Video(object):
         self._resize = 1
         self._resegmentation_parameters = []
         self._tracking_interval = None
-        self._has_preprocessing_parameters = False #boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
-        self._maximum_number_of_blobs = 0 #int: the maximum number of blobs detected in the video
-        self._blobs_path = None #string: path to the saved list of blob objects
+        self._has_preprocessing_parameters = False  # boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
+        self._maximum_number_of_blobs = (
+            0  # int: the maximum number of blobs detected in the video
+        )
+        self._blobs_path = (
+            None  # string: path to the saved list of blob objects
+        )
         self._blobs_path_segmented = None
         self._blobs_path_interpolated = None
         self._has_been_segmented = None
-        self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
+        self._has_been_preprocessed = None  # boolean: True if a video has been fragmented in a past session
         self._preprocessing_folder = None
         self._images_folder = None
-        self._global_fragments_path = None #string: path to saved list of global fragments
+        self._global_fragments_path = (
+            None  # string: path to saved list of global fragments
+        )
         self._has_been_pretrained = None
         self._pretraining_folder = None
         self._knowledge_transfer_model_folder = None
@@ -129,27 +138,29 @@ class Video(object):
         self._percentage_of_accumulated_images = None
         self._first_accumulation_finished = None
         self._second_accumulation_finished = None
-        self._has_been_assigned = None # ?
+        self._has_been_assigned = None  # ?
         self._has_duplications_solved = None
         self._has_crossings_solved = None
         self._has_trajectories = None
         self._has_trajectories_wo_gaps = None
-        self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
+        self._embeddings_folder = (
+            None  # If embeddings are computed, the will be saved in this path
+        )
         self._first_frame_first_global_fragment = []
-        self._segmentation_time = 0.
-        self._crossing_detector_time = 0.
-        self._fragmentation_time = 0.
-        self._protocol1_time = 0.
-        self._protocol2_time = 0.
-        self._protocol3_pretraining_time = 0.
-        self._protocol3_accumulation_time = 0.
-        self._identify_time = 0.
-        self._create_trajectories_time = 0.
+        self._segmentation_time = 0.0
+        self._crossing_detector_time = 0.0
+        self._fragmentation_time = 0.0
+        self._protocol1_time = 0.0
+        self._protocol2_time = 0.0
+        self._protocol3_pretraining_time = 0.0
+        self._protocol3_accumulation_time = 0.0
+        self._identify_time = 0.0
+        self._create_trajectories_time = 0.0
         self._there_are_crossings = True
-        self._track_wo_identities = False # Track without identities
+        self._track_wo_identities = False  # Track without identities
         self._number_of_channels = 1
         self.individual_videos_folder = None
-        self._setup_points= []
+        self._setup_points = []
         self._identities_groups = {}
         if conf.SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
@@ -157,7 +168,7 @@ class Video(object):
         # Flag to decide which type of interpolation is done. This flag is updated when we update a blob centroid
         self._is_centroid_updated = False
 
-        logger.debug(f'Video(open_multiple_files={self.open_multiple_files})' )
+        logger.debug(f"Video(open_multiple_files={self.open_multiple_files})")
 
     @property
     def is_centroid_updated(self):
@@ -294,23 +305,30 @@ class Video(object):
     @resolution_reduction.setter
     def resolution_reduction(self, value):
         self._resolution_reduction = value
-        fake_frame = np.ones((self._original_height, self._original_width)).astype('uint8')
-        fake_frame = cv2.resize(fake_frame, None,
-                                fx = value,
-                                fy = value,
-                                interpolation = cv2.INTER_AREA)
+        fake_frame = np.ones(
+            (self._original_height, self._original_width)
+        ).astype("uint8")
+        fake_frame = cv2.resize(
+            fake_frame, None, fx=value, fy=value, interpolation=cv2.INTER_AREA
+        )
         self._height = fake_frame.shape[0]
         self._width = fake_frame.shape[1]
         if self.subtract_bkg:
-            self._bkg = cv2.resize(self.original_bkg, None,
-                                            fx = value,
-                                            fy = value,
-                                            interpolation = cv2.INTER_AREA)
+            self._bkg = cv2.resize(
+                self.original_bkg,
+                None,
+                fx=value,
+                fy=value,
+                interpolation=cv2.INTER_AREA,
+            )
         if self.apply_ROI or self.original_ROI is not None:
-            self._ROI = cv2.resize(self.original_ROI, None,
-                                            fx = value,
-                                            fy = value,
-                                            interpolation = cv2.INTER_AREA)
+            self._ROI = cv2.resize(
+                self.original_ROI,
+                None,
+                fx=value,
+                fy=value,
+                interpolation=cv2.INTER_AREA,
+            )
 
     @property
     def min_threshold(self):
@@ -347,34 +365,45 @@ class Video(object):
     def blobs_path(self):
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        if self.preprocessing_folder is None: return None
-        self._blobs_path = os.path.join(self.preprocessing_folder, 'blobs_collection.npy')
+        if self.preprocessing_folder is None:
+            return None
+        self._blobs_path = os.path.join(
+            self.preprocessing_folder, "blobs_collection.npy"
+        )
         return self._blobs_path
 
     @property
     def blobs_path_segmented(self):
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        self._blobs_path_segmented = os.path.join(self.preprocessing_folder, 'blobs_collection_segmented.npy')
+        self._blobs_path_segmented = os.path.join(
+            self.preprocessing_folder, "blobs_collection_segmented.npy"
+        )
         return self._blobs_path_segmented
 
     @property
     def blobs_path_interpolated(self):
-        self._blobs_path_interpolated = os.path.join(self.preprocessing_folder, 'blobs_collection_interpolated.npy')
+        self._blobs_path_interpolated = os.path.join(
+            self.preprocessing_folder, "blobs_collection_interpolated.npy"
+        )
         return self._blobs_path_interpolated
 
     @property
     def global_fragments_path(self):
         """get the path to save the list of global fragments after
         fragmentation"""
-        self._global_fragments_path = os.path.join(self.preprocessing_folder, 'global_fragments.npy')
+        self._global_fragments_path = os.path.join(
+            self.preprocessing_folder, "global_fragments.npy"
+        )
         return self._global_fragments_path
 
     @property
     def fragments_path(self):
         """get the path to save the list of global fragments after
         fragmentation"""
-        self._fragments_path = os.path.join(self.preprocessing_folder, 'fragments.npy')
+        self._fragments_path = os.path.join(
+            self.preprocessing_folder, "fragments.npy"
+        )
         return self._fragments_path
 
     @property
@@ -387,13 +416,15 @@ class Video(object):
 
     @property
     def git_commit(self):
-        return '0'
+        return "0"
         return self._git_commit
 
     def save(self):
         """save class"""
-        logger.info("saving video object in %s" %self.path_to_video_object)
-        logger.debug(f'Video.save(open_multiple_files={self.open_multiple_files})')
+        logger.info("saving video object in %s" % self.path_to_video_object)
+        logger.debug(
+            f"Video.save(open_multiple_files={self.open_multiple_files})"
+        )
         np.save(self.path_to_video_object, self)
 
     @property
@@ -412,33 +443,52 @@ class Video(object):
         return self._identity_transfer
 
     def is_identity_transfer_possible(self):
-        return self.number_of_animals == self.knowledge_transfer_info_dict['number_of_classes']
+        return (
+            self.number_of_animals
+            == self.knowledge_transfer_info_dict["number_of_classes"]
+        )
 
     def check_and_set_identity_transfer_if_possible(self):
         if conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN is None:
-            raise ValueError('To perform identity transfer you '
-                             'need to provide a path for the variable KNOWLEDGE_TRANSFER_FOLDER_IDCNN '
-                             'in the local_settings.py file')
-        self.knowledge_transfer_model_file = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
+            raise ValueError(
+                "To perform identity transfer you "
+                "need to provide a path for the variable KNOWLEDGE_TRANSFER_FOLDER_IDCNN "
+                "in the local_settings.py file"
+            )
+        self.knowledge_transfer_model_file = (
+            conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
+        )
 
         kt_model_folder = os.path.split(self.knowledge_transfer_model_file)[0]
-        kt_info_dict_path = os.path.join(kt_model_folder, 'model_params.npy')
+        kt_info_dict_path = os.path.join(kt_model_folder, "model_params.npy")
         if os.path.isfile(kt_info_dict_path):
-            self.knowledge_transfer_info_dict = np.load(kt_info_dict_path, allow_pickle=True).item()
+            self.knowledge_transfer_info_dict = np.load(
+                kt_info_dict_path, allow_pickle=True
+            ).item()
         else:
-            raise ValueError('To perform identity transfer the models_params.npy file is needed to check the '
-                             'input_image_size and the number_of_classes of the model to be loaded')
+            raise ValueError(
+                "To perform identity transfer the models_params.npy file is needed to check the "
+                "input_image_size and the number_of_classes of the model to be loaded"
+            )
 
         if self.is_identity_transfer_possible():
-            logger.info("Tracking with identity transfer. The IDENTIFICATION_IMAGE_SIZE will be matched "
-                        "to the input_image_size of the transferred network")
+            logger.info(
+                "Tracking with identity transfer. The IDENTIFICATION_IMAGE_SIZE will be matched "
+                "to the input_image_size of the transferred network"
+            )
             self._identity_transfer = True
             self._tracking_with_knowledge_transfer = True
-            self._knowledge_transfer_model_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
-            conf.IDENTIFICATION_IMAGE_SIZE = self.knowledge_transfer_info_dict['image_size']
+            self._knowledge_transfer_model_folder = (
+                conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
+            )
+            conf.IDENTIFICATION_IMAGE_SIZE = self.knowledge_transfer_info_dict[
+                "image_size"
+            ]
         else:
-            logger.info("Tracking with identity transfer failed. The number of animals in the video\
-                        needs to be the same as the number of animals in the transferred network")
+            logger.info(
+                "Tracking with identity transfer failed. The number of animals in the video\
+                        needs to be the same as the number of animals in the transferred network"
+            )
             self._identity_transfer = False
             self._tracking_with_knowledge_transfer = False
             conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN = None
@@ -465,14 +515,17 @@ class Video(object):
         video_name, video_extension = os.path.splitext(value)
         if video_extension in conf.AVAILABLE_VIDEO_EXTENSION:
             self._video_path = value
-            #get video folder
+            # get video folder
             self._video_folder = os.path.dirname(self.video_path)
-            #collect some info on the video (resolution, number of frames, ..)
-            if not hasattr(self,'number_of_frames'):
+            # collect some info on the video (resolution, number of frames, ..)
+            if not hasattr(self, "number_of_frames"):
                 self.get_info()
             self.modified = time.strftime("%c")
         else:
-            raise ValueError("Supported video extensions are ", conf.AVAILABLE_VIDEO_EXTENSION)
+            raise ValueError(
+                "Supported video extensions are ",
+                conf.AVAILABLE_VIDEO_EXTENSION,
+            )
 
     @property
     def video_folder(self):
@@ -545,7 +598,7 @@ class Video(object):
 
     @property
     def median_body_length_full_resolution(self):
-        return self.median_body_length/self.resolution_reduction
+        return self.median_body_length / self.resolution_reduction
 
     @property
     def model_area(self):
@@ -608,60 +661,94 @@ class Video(object):
             self.update_paths(new_video_path)
 
     def update_paths(self, new_video_object_path):
-        if new_video_object_path == '': raise ValueError("The path to the video object is an empty string")
+        if new_video_object_path == "":
+            raise ValueError("The path to the video object is an empty string")
         new_session_path = os.path.split(new_video_object_path)[0]
         old_session_path = self.session_folder
         video_name = os.path.split(self._video_path)[1]
         self._video_folder = os.path.split(new_session_path)[0]
-        self.video_path = os.path.join(self.video_folder,video_name)
-        attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
-        if isinstance(getattr(self, key), str)
-        and old_session_path in getattr(self, key) }
+        self.video_path = os.path.join(self.video_folder, video_name)
+        attributes_to_modify = {
+            key: getattr(self, key)
+            for key in self.__dict__
+            if isinstance(getattr(self, key), str)
+            and old_session_path in getattr(self, key)
+        }
 
         for key in attributes_to_modify:
-            new_value = attributes_to_modify[key].replace(old_session_path, new_session_path)
+            new_value = attributes_to_modify[key].replace(
+                old_session_path, new_session_path
+            )
             setattr(self, key, new_value)
 
-        if self.paths_to_video_segments is not None and len(self.paths_to_video_segments) != 0:
+        if (
+            self.paths_to_video_segments is not None
+            and len(self.paths_to_video_segments) != 0
+        ):
             logger.info("Updating paths_to_video_segments")
             new_paths_to_video_segments = []
             for path in self.paths_to_video_segments:
-                new_path = os.path.join(self.video_folder, os.path.split(path)[1])
+                new_path = os.path.join(
+                    self.video_folder, os.path.split(path)[1]
+                )
                 new_paths_to_video_segments.append(new_path)
             self._paths_to_video_segments = new_paths_to_video_segments
 
         logger.info("Updating checkpoint files")
-        folders_to_check = ['crossings_detector_folder', 'pretraining_folder', 'accumulation_folder']
+        folders_to_check = [
+            "crossings_detector_folder",
+            "pretraining_folder",
+            "accumulation_folder",
+        ]
         for folder in folders_to_check:
             if hasattr(self, folder) and getattr(self, folder) is not None:
                 if folder == folders_to_check[0]:
-                    checkpoint_path = os.path.join(self.crossings_detector_folder, 'checkpoint')
+                    checkpoint_path = os.path.join(
+                        self.crossings_detector_folder, "checkpoint"
+                    )
                     if os.path.isfile(checkpoint_path):
-                        self.update_tensorflow_checkpoints_file(checkpoint_path, old_session_path, new_session_path)
+                        self.update_tensorflow_checkpoints_file(
+                            checkpoint_path, old_session_path, new_session_path
+                        )
                     else:
-                        logger.warn('No checkpoint found in %s ' %folder)
+                        logger.warn("No checkpoint found in %s " % folder)
                 else:
-                    for sub_folder in ['conv', 'softmax']:
-                        checkpoint_path = os.path.join(getattr(self, folder), sub_folder, 'checkpoint')
+                    for sub_folder in ["conv", "softmax"]:
+                        checkpoint_path = os.path.join(
+                            getattr(self, folder), sub_folder, "checkpoint"
+                        )
                         if os.path.isfile(checkpoint_path):
-                            self.update_tensorflow_checkpoints_file(checkpoint_path, old_session_path, new_session_path)
+                            self.update_tensorflow_checkpoints_file(
+                                checkpoint_path,
+                                old_session_path,
+                                new_session_path,
+                            )
                         else:
-                            logger.warn('No checkpoint found in %s ' %os.path.join(getattr(self,folder),sub_folder))
+                            logger.warn(
+                                "No checkpoint found in %s "
+                                % os.path.join(
+                                    getattr(self, folder), sub_folder
+                                )
+                            )
 
         logger.info("Saving video object")
         self.save()
         logger.info("Done")
 
     @staticmethod
-    def update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name):
-        #checkpoint_file = open(checkpoint_path, "r")
+    def update_tensorflow_checkpoints_file(
+        checkpoint_path, current_session_name, new_session_name
+    ):
+        # checkpoint_file = open(checkpoint_path, "r")
         fh, abs_path = mkstemp()
-        with os.fdopen(fh,'w') as new_file:
+        with os.fdopen(fh, "w") as new_file:
             with open(checkpoint_path) as old_file:
                 for line in old_file:
                     splitted_line = line.split('"')
                     string_to_replace = splitted_line[1]
-                    new_string = string_to_replace.replace(current_session_name, new_session_name)
+                    new_string = string_to_replace.replace(
+                        current_session_name, new_session_name
+                    )
                     splitted_line[1] = new_string
                     new_line = '"'.join(splitted_line)
                     new_file.write(new_line)
@@ -670,44 +757,72 @@ class Video(object):
         move(abs_path, checkpoint_path)
 
     def rename_session_folder(self, new_session_name):
-        assert new_session_name != ''
-        new_session_name = 'session_' + new_session_name
+        assert new_session_name != ""
+        new_session_name = "session_" + new_session_name
         current_session_name = os.path.split(self.session_folder)[1]
         logger.info("Updating checkpoint files")
-        folders_to_check = ['video_folder',
-                            'preprocessing_folder',
-                            'logs_folder',
-                            'previous_session_folder'
-                            'crossings_detector_folder',
-                            'pretraining_folder',
-                            'accumulation_folder']
+        folders_to_check = [
+            "video_folder",
+            "preprocessing_folder",
+            "logs_folder",
+            "previous_session_folder" "crossings_detector_folder",
+            "pretraining_folder",
+            "accumulation_folder",
+        ]
 
         for folder in folders_to_check:
             if hasattr(self, folder) and getattr(self, folder) is not None:
                 if folder == folders_to_check[0]:
-                    checkpoint_path = os.path.join(self.crossings_detector_folder, 'checkpoint')
+                    checkpoint_path = os.path.join(
+                        self.crossings_detector_folder, "checkpoint"
+                    )
                     if os.path.isfile(checkpoint_path):
-                        self.update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
+                        self.update_tensorflow_checkpoints_file(
+                            checkpoint_path,
+                            current_session_name,
+                            new_session_name,
+                        )
                     else:
-                        logger.warn('No checkpoint found in %s ' %folder)
+                        logger.warn("No checkpoint found in %s " % folder)
                 else:
-                    for sub_folder in ['conv', 'softmax']:
-                        checkpoint_path = os.path.join(getattr(self,folder), sub_folder, 'checkpoint')
+                    for sub_folder in ["conv", "softmax"]:
+                        checkpoint_path = os.path.join(
+                            getattr(self, folder), sub_folder, "checkpoint"
+                        )
                         if os.path.isfile(checkpoint_path):
-                            self.update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
+                            self.update_tensorflow_checkpoints_file(
+                                checkpoint_path,
+                                current_session_name,
+                                new_session_name,
+                            )
                         else:
-                            logger.warn('No checkpoint found in %s ' %os.path.join(getattr(self, folder), sub_folder))
+                            logger.warn(
+                                "No checkpoint found in %s "
+                                % os.path.join(
+                                    getattr(self, folder), sub_folder
+                                )
+                            )
 
-        attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
-        if isinstance(getattr(self, key), str)
-        and current_session_name in getattr(self, key) }
-        logger.info("Modifying folder name from %s to %s "  %(current_session_name, new_session_name))
-        os.rename(self.session_folder,
-                os.path.join(self.video_folder, new_session_name))
+        attributes_to_modify = {
+            key: getattr(self, key)
+            for key in self.__dict__
+            if isinstance(getattr(self, key), str)
+            and current_session_name in getattr(self, key)
+        }
+        logger.info(
+            "Modifying folder name from %s to %s "
+            % (current_session_name, new_session_name)
+        )
+        os.rename(
+            self.session_folder,
+            os.path.join(self.video_folder, new_session_name),
+        )
         logger.info("Updating video object")
 
         for key in attributes_to_modify:
-            new_value = attributes_to_modify[key].replace(current_session_name, new_session_name)
+            new_value = attributes_to_modify[key].replace(
+                current_session_name, new_session_name
+            )
             setattr(self, key, new_value)
 
         logger.info("Saving video object")
@@ -720,7 +835,7 @@ class Video(object):
         """
         self._paths_to_video_segments = self.check_split_video()
         cap = cv2.VideoCapture(self.video_path)
-        self._width  = self._original_width = int(cap.get(3))
+        self._width = self._original_width = int(cap.get(3))
         self._height = self._original_height = int(cap.get(4))
 
         try:
@@ -732,8 +847,17 @@ class Video(object):
             self._number_of_frames = int(cap.get(7))
             self.get_episodes()
         else:
-            chunks_lengths = [int(cv2.VideoCapture(chunk).get(7)) for chunk in self._paths_to_video_segments]
-            self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])-1) for i in range(1,len(chunks_lengths)+1)]
+            chunks_lengths = [
+                int(cv2.VideoCapture(chunk).get(7))
+                for chunk in self._paths_to_video_segments
+            ]
+            self._episodes_start_end = [
+                (
+                    np.sum(chunks_lengths[: i - 1], dtype=np.int),
+                    np.sum(chunks_lengths[:i]) - 1,
+                )
+                for i in range(1, len(chunks_lengths) + 1)
+            ]
             self._number_of_frames = np.sum(chunks_lengths)
             self._number_of_episodes = len(self._paths_to_video_segments)
         cap.release()
@@ -749,8 +873,14 @@ class Video(object):
         """
         if conf.IDENTIFICATION_IMAGE_SIZE is None:
             identification_image_size = int(maximum_body_length / np.sqrt(2))
-            identification_image_size = identification_image_size + identification_image_size % 2
-            self._identification_image_size = (identification_image_size, identification_image_size, self.number_of_channels)
+            identification_image_size = (
+                identification_image_size + identification_image_size % 2
+            )
+            self._identification_image_size = (
+                identification_image_size,
+                identification_image_size,
+                self.number_of_channels,
+            )
         else:
             self._identification_image_size = conf.IDENTIFICATION_IMAGE_SIZE
 
@@ -765,78 +895,107 @@ class Video(object):
         self.first_accumulation_time = 0
         self.preprocessing_time = 0
 
-    def create_session_folder(self, name = ''):
+    def create_session_folder(self, name=""):
         """Creates a folder named training in video_folder and a folder session_num
         where num is the session number and it is created everytime one starts
         training a network for a certain video_path
         """
-        if name == '':
-            self._session_folder = os.path.join(self.video_folder, 'session')
+        if name == "":
+            self._session_folder = os.path.join(self.video_folder, "session")
         else:
-            self._session_folder = os.path.join(self.video_folder, 'session_' + name)
+            self._session_folder = os.path.join(
+                self.video_folder, "session_" + name
+            )
 
         if not os.path.isdir(self._session_folder):
             os.makedirs(self._session_folder)
-            self._previous_session_folder = ''
+            self._previous_session_folder = ""
         else:
             self._previous_session_folder = self.session_folder
 
-        self._path_to_video_object = os.path.join(self.session_folder, 'video_object.npy')
-        logger.info("the folder %s has been created" %self.session_folder)
+        self._path_to_video_object = os.path.join(
+            self.session_folder, "video_object.npy"
+        )
+        logger.info("the folder %s has been created" % self.session_folder)
 
     def create_images_folders(self):
         """Create a folder named images inside of the session_folder
         """
         ## for RAM optimization
-        self._segmentation_data_folder = os.path.join(self.session_folder, 'segmentation_data')
-        self._identification_images_folder = os.path.join(self.session_folder, 'identification_images')
-        self.identification_images_file_paths = [os.path.join(self._identification_images_folder, 'id_images_{}.hdf5'.format(e))
-                                                 for e in range(self.number_of_episodes)]
+        self._segmentation_data_folder = os.path.join(
+            self.session_folder, "segmentation_data"
+        )
+        self._identification_images_folder = os.path.join(
+            self.session_folder, "identification_images"
+        )
+        self.identification_images_file_paths = [
+            os.path.join(
+                self._identification_images_folder,
+                "id_images_{}.hdf5".format(e),
+            )
+            for e in range(self.number_of_episodes)
+        ]
         if not os.path.isdir(self._segmentation_data_folder):
             os.makedirs(self._segmentation_data_folder)
-            logger.info("the folder %s has been created" %self._segmentation_data_folder)
+            logger.info(
+                "the folder %s has been created"
+                % self._segmentation_data_folder
+            )
 
         if not os.path.isdir(self._identification_images_folder):
             os.makedirs(self._identification_images_folder)
-            logger.info("the folder %s has been created" %self._identification_images_folder)
-
+            logger.info(
+                "the folder %s has been created"
+                % self._identification_images_folder
+            )
 
     def create_preprocessing_folder(self):
         """If it does not exist creates a folder called preprocessing
         in the video folder"""
-        self._preprocessing_folder = os.path.join(self.session_folder, 'preprocessing')
+        self._preprocessing_folder = os.path.join(
+            self.session_folder, "preprocessing"
+        )
         if not os.path.isdir(self.preprocessing_folder):
             os.makedirs(self.preprocessing_folder)
-            logger.info("the folder %s has been created" %self._preprocessing_folder)
-
+            logger.info(
+                "the folder %s has been created" % self._preprocessing_folder
+            )
 
     def create_crossings_detector_folder(self):
         """If it does not exist creates a folder called crossing_detector
         in the video folder"""
-        logger.info('setting path to save crossing detector model')
-        self._crossings_detector_folder = os.path.join(self.session_folder, 'crossings_detector')
+        logger.info("setting path to save crossing detector model")
+        self._crossings_detector_folder = os.path.join(
+            self.session_folder, "crossings_detector"
+        )
         if not os.path.isdir(self.crossings_detector_folder):
-            logger.info("the folder %s has been created" %self.crossings_detector_folder)
+            logger.info(
+                "the folder %s has been created"
+                % self.crossings_detector_folder
+            )
             os.makedirs(self.crossings_detector_folder)
 
-    def create_pretraining_folder(self, delete = False):
+    def create_pretraining_folder(self, delete=False):
         """Creates a folder named pretraining in video_folder where the model
         trained during the pretraining is stored
         """
-        self._pretraining_folder = os.path.join(self.session_folder, 'pretraining')
+        self._pretraining_folder = os.path.join(
+            self.session_folder, "pretraining"
+        )
         if not os.path.isdir(self.pretraining_folder):
             os.makedirs(self.pretraining_folder)
         elif delete:
             rmtree(self.pretraining_folder)
             os.makedirs(self.pretraining_folder)
 
-
-    def create_accumulation_folder(self, iteration_number = 0, delete = False):
+    def create_accumulation_folder(self, iteration_number=0, delete=False):
         """Folder in which the model generated while accumulating is stored
         (after pretraining)
         """
-        accumulation_folder_name = 'accumulation_' + str(iteration_number)
-        self._accumulation_folder = os.path.join(self.session_folder, accumulation_folder_name)
+        accumulation_folder_name = "accumulation_" + str(iteration_number)
+        self._accumulation_folder = os.path.join(
+            self.session_folder, accumulation_folder_name
+        )
         if not os.path.isdir(self.accumulation_folder):
             os.makedirs(self.accumulation_folder)
         elif delete:
@@ -846,97 +1005,158 @@ class Video(object):
     def create_individual_videos_folder(self):
         """Create folder where to save the individual videos
         """
-        self.individual_videos_folder = os.path.join(self.session_folder, 'individual_videos')
+        self.individual_videos_folder = os.path.join(
+            self.session_folder, "individual_videos"
+        )
         if not os.path.exists(self.individual_videos_folder):
             os.makedirs(self.individual_videos_folder)
 
-    def init_accumulation_statistics_attributes(self, attributes = None):
+    def init_accumulation_statistics_attributes(self, attributes=None):
         if attributes is None:
-            attributes = ['number_of_accumulated_global_fragments',
-                        'number_of_non_certain_global_fragments',
-                        'number_of_randomly_assigned_global_fragments',
-                        'number_of_nonconsistent_global_fragments',
-                        'number_of_nonunique_global_fragments',
-                        'number_of_acceptable_global_fragments',
-                        'ratio_of_accumulated_images']
+            attributes = [
+                "number_of_accumulated_global_fragments",
+                "number_of_non_certain_global_fragments",
+                "number_of_randomly_assigned_global_fragments",
+                "number_of_nonconsistent_global_fragments",
+                "number_of_nonunique_global_fragments",
+                "number_of_acceptable_global_fragments",
+                "ratio_of_accumulated_images",
+            ]
         self.accumulation_statistics_attributes_list = attributes
-        [setattr(self, attribute, []) for attribute in self.accumulation_statistics_attributes_list]
+        [
+            setattr(self, attribute, [])
+            for attribute in self.accumulation_statistics_attributes_list
+        ]
 
     def store_accumulation_step_statistics_data(self, new_values):
-        [getattr(self, attr).append(value) for attr, value in zip(self.accumulation_statistics_attributes_list, new_values)]
+        [
+            getattr(self, attr).append(value)
+            for attr, value in zip(
+                self.accumulation_statistics_attributes_list, new_values
+            )
+        ]
 
-    def store_accumulation_statistics_data(self, accumulation_trial, number_of_possible_accumulation = conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1):
-        if not hasattr(self, 'accumulation_statistics'): self.accumulation_statistics = [None] * number_of_possible_accumulation
-        self.accumulation_statistics[accumulation_trial] = [getattr(self, stat_attr)
-                                                            for stat_attr in self.accumulation_statistics_attributes_list]
+    def store_accumulation_statistics_data(
+        self,
+        accumulation_trial,
+        number_of_possible_accumulation=conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
+        + 1,
+    ):
+        if not hasattr(self, "accumulation_statistics"):
+            self.accumulation_statistics = [
+                None
+            ] * number_of_possible_accumulation
+        self.accumulation_statistics[accumulation_trial] = [
+            getattr(self, stat_attr)
+            for stat_attr in self.accumulation_statistics_attributes_list
+        ]
 
     def create_trajectories_folder(self):
         """Folder in which trajectories files are stored
         """
-        self.trajectories_folder = os.path.join(self.session_folder,'trajectories')
+        self.trajectories_folder = os.path.join(
+            self.session_folder, "trajectories"
+        )
         if not os.path.isdir(self.trajectories_folder):
             logger.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_folder)
-            logger.info("the folder %s has been created" %self.trajectories_folder)
+            logger.info(
+                "the folder %s has been created" % self.trajectories_folder
+            )
 
     def create_trajectories_wo_identities_folder(self):
         """Folder in which trajectories without identites are stored
         """
-        self.trajectories_wo_identities_folder = os.path.join(self.session_folder,'trajectories_wo_identities')
+        self.trajectories_wo_identities_folder = os.path.join(
+            self.session_folder, "trajectories_wo_identities"
+        )
         if not os.path.isdir(self.trajectories_wo_identities_folder):
             logger.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_wo_identities_folder)
-            logger.info("the folder %s has been created" %self.trajectories_wo_identities_folder)
+            logger.info(
+                "the folder %s has been created"
+                % self.trajectories_wo_identities_folder
+            )
 
     def create_trajectories_wo_gaps_folder(self):
         """Folder in which trajectories files are stored
         """
-        self.trajectories_wo_gaps_folder = os.path.join(self.session_folder, 'trajectories_wo_gaps')
+        self.trajectories_wo_gaps_folder = os.path.join(
+            self.session_folder, "trajectories_wo_gaps"
+        )
         if not os.path.isdir(self.trajectories_wo_gaps_folder):
             logger.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_wo_gaps_folder)
-            logger.info("the folder %s has been created" %self.trajectories_wo_gaps_folder)
+            logger.info(
+                "the folder %s has been created"
+                % self.trajectories_wo_gaps_folder
+            )
 
     def create_embeddings_folder(self):
         """If it does not exist creates a folder called embedding
         in the video folder"""
-        self._embeddings_folder = os.path.join(self.session_folder, 'embeddings')
+        self._embeddings_folder = os.path.join(
+            self.session_folder, "embeddings"
+        )
         if not os.path.isdir(self.embeddings_folder):
             os.makedirs(self.embeddings_folder)
-            logger.info("the folder %s has been created" %self.embeddings_folder)
+            logger.info(
+                "the folder %s has been created" % self.embeddings_folder
+            )
 
     def get_episodes(self):
         """Split video in episodes (chunks) of FRAMES_PER_EPISODE frames
         for parallelisation"""
-        starting_frames = np.arange(0, self.number_of_frames, conf.FRAMES_PER_EPISODE)
-        ending_frames = np.hstack((starting_frames[1:]-1, self.number_of_frames))
+        starting_frames = np.arange(
+            0, self.number_of_frames, conf.FRAMES_PER_EPISODE
+        )
+        ending_frames = np.hstack(
+            (starting_frames[1:] - 1, self.number_of_frames)
+        )
         self._episodes_start_end = list(zip(starting_frames, ending_frames))
         self._number_of_episodes = len(starting_frames)
 
     def in_which_episode(self, frame_number):
         """Check to which episode a frame index belongs
         """
-        episode_number = [i for i, episode_start_end in enumerate(self._episodes_start_end)
-                            if episode_start_end[0] <= frame_number
-                            and episode_start_end[1] >= frame_number]
+        episode_number = [
+            i
+            for i, episode_start_end in enumerate(self._episodes_start_end)
+            if episode_start_end[0] <= frame_number
+            and episode_start_end[1] >= frame_number
+        ]
         if episode_number:
             return episode_number[0]
         else:
             return None
 
-    def copy_attributes_between_two_video_objects(self, video_object_source, list_of_attributes, is_property = None):
+    def copy_attributes_between_two_video_objects(
+        self, video_object_source, list_of_attributes, is_property=None
+    ):
         for i, attribute in enumerate(list_of_attributes):
             if not hasattr(video_object_source, attribute):
-                logger.warning("attribute %s does not exist" %attribute)
+                logger.warning("attribute %s does not exist" % attribute)
             else:
                 if is_property is not None:
                     attribute_is_property = is_property[i]
                     if attribute_is_property:
-                        setattr(self, '_' + attribute, getattr(video_object_source, attribute))
+                        setattr(
+                            self,
+                            "_" + attribute,
+                            getattr(video_object_source, attribute),
+                        )
                     else:
-                        setattr(self, attribute, getattr(video_object_source, attribute))
+                        setattr(
+                            self,
+                            attribute,
+                            getattr(video_object_source, attribute),
+                        )
                 else:
-                    setattr(self, '_' + attribute, getattr(video_object_source, attribute))
+                    setattr(
+                        self,
+                        "_" + attribute,
+                        getattr(video_object_source, attribute),
+                    )
 
     def compute_overall_P2(self, fragments):
         weighted_P2 = 0
@@ -945,20 +1165,27 @@ class Video(object):
         for fragment in fragments:
             if fragment.is_an_individual:
                 if fragment.assigned_identities[0] != 0:
-                    weighted_P2 += fragment.P2_vector[fragment.assigned_identities[0] - 1] * fragment.number_of_images
+                    weighted_P2 += (
+                        fragment.P2_vector[fragment.assigned_identities[0] - 1]
+                        * fragment.number_of_images
+                    )
                 number_of_individual_blobs += fragment.number_of_images
 
         self.overall_P2 = weighted_P2 / number_of_individual_blobs
 
     def delete_accumulation_folders(self):
-        for path in glob.glob(os.path.join(self.session_folder, '*')):
-            if 'accumulation_' in path or 'pretraining' in path:
+        for path in glob.glob(os.path.join(self.session_folder, "*")):
+            if "accumulation_" in path or "pretraining" in path:
                 rmtree(path, ignore_errors=True)
 
     def delete_data(self):
         logger.info("Data policy: {}".format(conf.DATA_POLICY))
-        if conf.DATA_POLICY in ['trajectories', 'validation',
-                           'knowledge_transfer', 'idmatcher.ai']:
+        if conf.DATA_POLICY in [
+            "trajectories",
+            "validation",
+            "knowledge_transfer",
+            "idmatcher.ai",
+        ]:
 
             if os.path.isdir(self._segmentation_data_folder):
                 logger.info("Deleting segmentation images")
@@ -969,28 +1196,38 @@ class Video(object):
             if os.path.isfile(self.blobs_path_segmented):
                 logger.info("Deleting blobs segmented")
                 os.remove(self.blobs_path_segmented)
-            if hasattr(self, '_crossings_detector_folder') and os.path.isdir(self.crossings_detector_folder):
+            if hasattr(self, "_crossings_detector_folder") and os.path.isdir(
+                self.crossings_detector_folder
+            ):
                 logger.info("Deleting crossing detector folder")
                 rmtree(self.crossings_detector_folder, ignore_errors=True)
 
-
-        if conf.DATA_POLICY in ['trajectories', 'validation',
-                           'knowledge_transfer']:
+        if conf.DATA_POLICY in [
+            "trajectories",
+            "validation",
+            "knowledge_transfer",
+        ]:
             if os.path.isdir(self._identification_images_folder):
                 logger.info("Deleting identification images")
                 rmtree(self._identification_images_folder, ignore_errors=True)
 
-        if conf.DATA_POLICY in ['trajectories', 'validation']:
+        if conf.DATA_POLICY in ["trajectories", "validation"]:
             logger.info("Deleting CNN models folders")
             self.delete_accumulation_folders()
 
-        if conf.DATA_POLICY == 'trajectories':
+        if conf.DATA_POLICY == "trajectories":
             if os.path.isdir(self.preprocessing_folder):
                 logger.info("Deleting preprocessing data")
                 rmtree(self.preprocessing_folder, ignore_errors=True)
 
-
-    def interpolate(self, list_of_blobs=None, list_of_fragments=None, identity=None, start=None, end=None):
+    def interpolate(
+        self,
+        list_of_blobs=None,
+        list_of_fragments=None,
+        identity=None,
+        start=None,
+        end=None,
+    ):
         """
         Does the blobs positions interpolation
 
@@ -1002,19 +1239,27 @@ class Video(object):
         """
 
         if self.is_centroid_updated:
-            assert identity is not None and start is not None and end is not None and list_of_blobs is not None
+            assert (
+                identity is not None
+                and start is not None
+                and end is not None
+                and list_of_blobs is not None
+            )
 
-            list_of_blobs.interpolate_from_user_generated_centroids(self, identity, start, end)
+            list_of_blobs.interpolate_from_user_generated_centroids(
+                self, identity, start, end
+            )
 
         else:
             assert list_of_fragments is not None and list_of_blobs is not None
 
             close_trajectories_gaps(self, list_of_blobs, list_of_fragments)
 
-
     def get_first_frame(self, list_of_blobs):
         if self.number_of_animals != 1:
-            return self.first_frame_first_global_fragment[self.accumulation_trial]
+            return self.first_frame_first_global_fragment[
+                self.accumulation_trial
+            ]
         elif self.number_of_animals == 1:
             return 0
         else:

@@ -28,11 +28,12 @@
 
 import os
 import sys
-from idtrackerai.utils.py_utils import  *
+from idtrackerai.utils.py_utils import *
 import numpy as np
 import re
 
 import logging
+
 logger = logging.getLogger("__main__.cnn_utils")
 
 # ****************************************************************************
@@ -98,37 +99,47 @@ logger = logging.getLogger("__main__.cnn_utils")
 # CNN wrappers
 # *****************************************************************************
 
+
 def computeVolume(width, height, strides):
     c1 = float(strides[1])
     c2 = float(strides[2])
-    widthS = int(np.ceil(width/c1))
-    heightS = int(np.ceil(height/c2))
+    widthS = int(np.ceil(width / c1))
+    heightS = int(np.ceil(height / c2))
     return widthS, heightS
 
-def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filter_size, n_filters, stride, pad):
-    w,h = computeVolume(inputWidth, inputHeight, stride)
+
+def buildConv2D(
+    scopeName,
+    inputWidth,
+    inputHeight,
+    inputDepth,
+    inputConv,
+    filter_size,
+    n_filters,
+    stride,
+    pad,
+):
+    w, h = computeVolume(inputWidth, inputHeight, stride)
     with tf.variable_scope(scopeName) as scope:
         W = tf.get_variable(
-            'weights',
+            "weights",
             [filter_size, filter_size, inputDepth, n_filters],
             # initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
-            initializer=tf.contrib.layers.xavier_initializer_conv2d(seed=0.)
-            )
+            initializer=tf.contrib.layers.xavier_initializer_conv2d(seed=0.0),
+        )
         b = tf.get_variable(
-            'biases',
+            "biases",
             [n_filters],
             # initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
-            initializer=tf.constant_initializer(0.0)
-            )
+            initializer=tf.constant_initializer(0.0),
+        )
         conv = tf.nn.conv2d(
-                    input=inputConv,
-                     filter=W,
-                     strides=stride,
-                     padding=pad)
-        convb = tf.nn.bias_add(conv, b, name = scope.name)
+            input=inputConv, filter=W, strides=stride, padding=pad
+        )
+        convb = tf.nn.bias_add(conv, b, name=scope.name)
 
         # _activation_summary(convb)
-        # 
+        #
         # with tf.variable_scope('visualization') :
         #     grid_x = int(np.sqrt(n_filters))
         #     grid_y = grid_x  # to get a square grid for 64 conv1 features
@@ -140,52 +151,60 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
         #     tf.summary.image(scopeName + '/output', convbToPlot, max_outputs=10)
     return convb, w, h, W
 
-def maxpool2d(name,inputWidth, inputHeight, inputPool, pool=2 ,
-                stride=[1,2,2,1] ,pad='VALID'):
-    max_pool = tf.nn.max_pool(inputPool,
+
+def maxpool2d(
+    name,
+    inputWidth,
+    inputHeight,
+    inputPool,
+    pool=2,
+    stride=[1, 2, 2, 1],
+    pad="VALID",
+):
+    max_pool = tf.nn.max_pool(
+        inputPool,
         ksize=[1, pool, pool, 1],
         strides=stride,
         padding=pad,
-        name = name
-        )
+        name=name,
+    )
     w, h = computeVolume(inputWidth, inputHeight, stride)
     return max_pool, w, h
+
 
 def buildFc(scopeName, inputFc, height, width, n_filters, n_fc, keep_prob):
     with tf.variable_scope(scopeName) as scope:
         W = tf.get_variable(
-            'weights',
+            "weights",
             [height * width * n_filters, n_fc],
-            initializer=tf.contrib.layers.xavier_initializer(seed=0.)
-            )
+            initializer=tf.contrib.layers.xavier_initializer(seed=0.0),
+        )
         b = tf.get_variable(
-            'biases',
-            [n_fc],
-            initializer=tf.constant_initializer(0.0)
-            )
+            "biases", [n_fc], initializer=tf.constant_initializer(0.0)
+        )
         fc = tf.add(tf.matmul(inputFc, W), b)
-        fc_drop = tf.nn.dropout(fc, keep_prob, name = scope.name)
+        fc_drop = tf.nn.dropout(fc, keep_prob, name=scope.name)
         # _activation_summary(fc_drop)
     return fc_drop, W
 
+
 def reLU(scopeName, inputRelu):
     with tf.variable_scope(scopeName) as scope:
-        relu = tf.nn.relu(inputRelu, name = scope.name)
+        relu = tf.nn.relu(inputRelu, name=scope.name)
         # _activation_summary(relu)
     return relu
+
 
 def buildSoftMax(scopeName, inputSoftMax, n_fc, classes):
     with tf.variable_scope(scopeName) as scope:
         W = tf.get_variable(
-            'weights',
+            "weights",
             [n_fc, classes],
-            initializer=tf.contrib.layers.xavier_initializer(seed=0.)
-            )
+            initializer=tf.contrib.layers.xavier_initializer(seed=0.0),
+        )
         b = tf.get_variable(
-            'biases',
-            [classes],
-            initializer=tf.constant_initializer(0.0)
-            )
-        logits = tf.add(tf.matmul(inputSoftMax, W), b, name = scope.name)
+            "biases", [classes], initializer=tf.constant_initializer(0.0)
+        )
+        logits = tf.add(tf.matmul(inputSoftMax, W), b, name=scope.name)
         # _activation_summary(logits)
     return logits, W

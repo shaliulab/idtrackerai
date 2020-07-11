@@ -38,7 +38,9 @@ from confapp import conf
 
 
 import logging
+
 logger = logging.getLogger("__main__.video")
+
 
 def get_frame(frame, centroid, height, width):
     if not np.all(np.isnan(centroid)):
@@ -56,19 +58,28 @@ def get_frame(frame, centroid, height, width):
 
 def initialize_video_writer(video_object, height, width, identity):
     # Define the codec and create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    file_name = os.path.join(video_object.individual_videos_folder, 'minivideo_{}.avi'.format(identity))
-    out = cv2.VideoWriter(file_name, fourcc, video_object.frames_per_second, (height, width))
+    fourcc = cv2.VideoWriter_fourcc(*"XVID")
+    file_name = os.path.join(
+        video_object.individual_videos_folder,
+        "minivideo_{}.avi".format(identity),
+    )
+    out = cv2.VideoWriter(
+        file_name, fourcc, video_object.frames_per_second, (height, width)
+    )
     return out
 
 
-def generate_individual_video(video_object, trajectories, identity, width, height):
+def generate_individual_video(
+    video_object, trajectories, identity, width, height
+):
     # Initialize video writer
     out = initialize_video_writer(video_object, height, width, identity)
     # Initialize cap reader
     if video_object.paths_to_video_segments is not None:
         current_segment = 0
-        cap = cv2.VideoCapture(video_object.paths_to_video_segments[current_segment])
+        cap = cv2.VideoCapture(
+            video_object.paths_to_video_segments[current_segment]
+        )
         start = video_object._episodes_start_end[current_segment][0]
     else:
         cap = cv2.VideoCapture(video_object.video_path)
@@ -77,22 +88,25 @@ def generate_individual_video(video_object, trajectories, identity, width, heigh
         # Update cap if necessary.
         if video_object.paths_to_video_segments is not None:
             segment_number = video_object.in_which_episode(frame_number)
-            if current_segment!=segment_number:
+            if current_segment != segment_number:
                 print(video_object.paths_to_video_segments[segment_number])
-                cap = cv2.VideoCapture(video_object.paths_to_video_segments[segment_number])
+                cap = cv2.VideoCapture(
+                    video_object.paths_to_video_segments[segment_number]
+                )
                 start = video_object._episodes_start_end[segment_number][0]
                 current_segment = segment_number
-            cap.set(1,frame_number - start)
+            cap.set(1, frame_number - start)
         # Read frame
         try:
             ret, frame = cap.read()
         except:
             raise Exception("could not read frame")
         # Generate frame for individual
-        individual_frame = get_frame(frame, trajectories[frame_number, identity-1],
-                                     height, width)
+        individual_frame = get_frame(
+            frame, trajectories[frame_number, identity - 1], height, width
+        )
         # Write frame in video
-        out.write(individual_frame.astype('uint8'))
+        out.write(individual_frame.astype("uint8"))
     cap.release()
     out.release()
     cv2.destroyAllWindows()
@@ -100,9 +114,11 @@ def generate_individual_video(video_object, trajectories, identity, width, heigh
 
 def compute_width_height_individual_video(video_object):
     if conf.INDIVIDUAL_VIDEO_WIDTH_HEIGHT is None:
-        height, width = 2*[int(video_object.median_body_length_full_resolution * 1.5 / 2) * 2]
+        height, width = 2 * [
+            int(video_object.median_body_length_full_resolution * 1.5 / 2) * 2
+        ]
     else:
-        height, width = 2*[conf.INDIVIDUAL_VIDEO_WIDTH_HEIGHT]
+        height, width = 2 * [conf.INDIVIDUAL_VIDEO_WIDTH_HEIGHT]
     return height, width
 
 
@@ -117,25 +133,42 @@ def generate_individual_videos(video_object, trajectories):
     # Calculate width and height of the video from the estimated body length
     height, width = compute_width_height_individual_video(video_object)
     logger.info("Generating individual videos ...")
-    Parallel(n_jobs=-2)(delayed(generate_individual_video)(video_object,
-                                                          trajectories,
-                                                          identity=i+1,
-                                                          width=width,
-                                                          height=height)
-                       for i in range(video_object.number_of_animals))
+    Parallel(n_jobs=-2)(
+        delayed(generate_individual_video)(
+            video_object,
+            trajectories,
+            identity=i + 1,
+            width=width,
+            height=height,
+        )
+        for i in range(video_object.number_of_animals)
+    )
     logger.info("Invididual videos generated")
 
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--video_object_path", type = str, help = "Path to the video object created during the tracking session")
-    parser.add_argument("-t", "--trajectories_path", type = str, help = "Path to the trajectory file")
+    parser.add_argument(
+        "-v",
+        "--video_object_path",
+        type=str,
+        help="Path to the video object created during the tracking session",
+    )
+    parser.add_argument(
+        "-t",
+        "--trajectories_path",
+        type=str,
+        help="Path to the trajectory file",
+    )
     args = parser.parse_args()
 
     print("Loading video information from {}".format(args.video_object_path))
     video_object = np.load(args.video_object_path, allow_pickle=True).item()
     print("Loading trajectories from {}".format(args.trajectories_path))
-    trajectories_dict = np.load(args.trajectories_path, allow_pickle=True).item()
+    trajectories_dict = np.load(
+        args.trajectories_path, allow_pickle=True
+    ).item()
 
-    generate_individual_videos(video_object, trajectories_dict['trajectories'])
+    generate_individual_videos(video_object, trajectories_dict["trajectories"])

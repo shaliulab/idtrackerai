@@ -35,26 +35,41 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 from confapp import conf
 
-from idtrackerai.network.data_sets.crossings_dataset import get_train_validation_and_toassign_blobs
-from idtrackerai.network.data_loaders.crossings_dataloader import get_training_data_loaders
-from idtrackerai.network.crossings_detector_model.network_params_crossings import NetworkParams_crossings
-from idtrackerai.network.crossings_detector_model.trainer_crossing_detector import TrainDeepCrossing
-from idtrackerai.network.crossings_detector_model.predictor_crossing_detector import GetPredictionCrossigns
-from idtrackerai.network.crossings_detector_model.stop_training_criteria_crossings import Stop_Training
+from idtrackerai.network.data_sets.crossings_dataset import (
+    get_train_validation_and_toassign_blobs,
+)
+from idtrackerai.network.data_loaders.crossings_dataloader import (
+    get_training_data_loaders,
+)
+from idtrackerai.network.crossings_detector_model.network_params_crossings import (
+    NetworkParams_crossings,
+)
+from idtrackerai.network.crossings_detector_model.trainer_crossing_detector import (
+    TrainDeepCrossing,
+)
+from idtrackerai.network.crossings_detector_model.predictor_crossing_detector import (
+    GetPredictionCrossigns,
+)
+from idtrackerai.network.crossings_detector_model.stop_training_criteria_crossings import (
+    Stop_Training,
+)
 
 
 from idtrackerai.network.learners.learners import Learner_Classification
 
 import logging
+
 logger = logging.getLogger("__main__.crossing_detector")
 
 
-def detect_crossings(list_of_blobs,
-                     video,
-                     model_area,
-                     use_network=True,
-                     return_store_objects=False,
-                     plot_flag=False):
+def detect_crossings(
+    list_of_blobs,
+    video,
+    model_area,
+    use_network=True,
+    return_store_objects=False,
+    plot_flag=False,
+):
     """Classify all blobs in the video as bing crossings or individuals.
 
     Parameters
@@ -82,46 +97,67 @@ def detect_crossings(list_of_blobs,
     """
 
     if video.number_of_animals > 1:
-        logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
-        list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0],
-                                                video.number_of_animals)
+        logger.info(
+            "Discriminating blobs representing individuals from blobs associated to crossings"
+        )
+        list_of_blobs.apply_model_area_to_video(
+            video,
+            model_area,
+            video.identification_image_size[0],
+            video.number_of_animals,
+        )
 
         if use_network:
             video.create_crossings_detector_folder()
             logger.info("Get list of blobs for training, validation and test")
-            train_blobs, val_blobs, toassign_blobs = get_train_validation_and_toassign_blobs(list_of_blobs)
+            (
+                train_blobs,
+                val_blobs,
+                toassign_blobs,
+            ) = get_train_validation_and_toassign_blobs(list_of_blobs)
 
-            if len(train_blobs['crossings']) > conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR:
+            if (
+                len(train_blobs["crossings"])
+                > conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR
+            ):
                 video._there_are_crossings = True
-                logger.info("There are enough crossings to train the crossing detector")
-                train_loader, val_loader = get_training_data_loaders(video, train_blobs, val_blobs)
+                logger.info(
+                    "There are enough crossings to train the crossing detector"
+                )
+                train_loader, val_loader = get_training_data_loaders(
+                    video, train_blobs, val_blobs
+                )
                 logger.info("Setting crossing detector network parameters")
-                network_params = \
-                    NetworkParams_crossings(number_of_classes=2,
-                                            architecture='DCD',
-                                            save_folder=video.crossings_detector_folder,
-                                            saveid='',
-                                            model_name='crossing_detector',
-                                            image_size=video.identification_image_size,
-                                            loss='CE',
-                                            print_freq=-1,
-                                            use_gpu=True,
-                                            optimizer='Adam',
-                                            schedule=[30, 60],
-                                            optim_args={'lr': conf.LEARNING_RATE_DCD},
-                                            apply_mask=False,
-                                            dataset='supervised',
-                                            skip_eval=False,
-                                            epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
-                                            plot_flag=False,
-                                            return_store_objects=False
-                                            )
+                network_params = NetworkParams_crossings(
+                    number_of_classes=2,
+                    architecture="DCD",
+                    save_folder=video.crossings_detector_folder,
+                    saveid="",
+                    model_name="crossing_detector",
+                    image_size=video.identification_image_size,
+                    loss="CE",
+                    print_freq=-1,
+                    use_gpu=True,
+                    optimizer="Adam",
+                    schedule=[30, 60],
+                    optim_args={"lr": conf.LEARNING_RATE_DCD},
+                    apply_mask=False,
+                    dataset="supervised",
+                    skip_eval=False,
+                    epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
+                    plot_flag=False,
+                    return_store_objects=False,
+                )
                 logger.info("Setting training criterion")
-                criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_blobs['weights']))
+                criterion = nn.CrossEntropyLoss(
+                    weight=torch.tensor(train_blobs["weights"])
+                )
                 logger.info("Setting learner class")
                 learner_class = Learner_Classification
                 logger.info("Creating model")
-                crossing_detector_model = learner_class.create_model(network_params)
+                crossing_detector_model = learner_class.create_model(
+                    network_params
+                )
 
                 if network_params.use_gpu:
                     logger.info("Sending model and criterion to GPU")
@@ -131,39 +167,65 @@ def detect_crossings(list_of_blobs,
                     criterion = criterion.cuda()
 
                 logger.info("Setting optimizer")
-                optimizer = torch.optim.__dict__[network_params.optimizer](crossing_detector_model.parameters(),
-                                                                           **network_params.optim_args)
+                optimizer = torch.optim.__dict__[network_params.optimizer](
+                    crossing_detector_model.parameters(),
+                    **network_params.optim_args
+                )
                 logger.info("Setting scheduler")
-                scheduler = MultiStepLR(optimizer,
-                                        milestones=network_params.schedule,
-                                        gamma=0.1)
+                scheduler = MultiStepLR(
+                    optimizer, milestones=network_params.schedule, gamma=0.1
+                )
                 logger.info("Setting the learner")
-                learner = learner_class(crossing_detector_model, criterion, optimizer, scheduler)
+                learner = learner_class(
+                    crossing_detector_model, criterion, optimizer, scheduler
+                )
                 logger.info("Setting the stopping criteria")
                 # set criteria to stop the training
-                stop_training = Stop_Training(check_for_loss_plateau=True,
-                                              num_epochs=network_params.epochs)
+                stop_training = Stop_Training(
+                    check_for_loss_plateau=True,
+                    num_epochs=network_params.epochs,
+                )
                 logger.info("Training crossing detector")
-                trainer = TrainDeepCrossing(learner, train_loader, val_loader,
-                                            network_params, stop_training)
+                trainer = TrainDeepCrossing(
+                    learner,
+                    train_loader,
+                    val_loader,
+                    network_params,
+                    stop_training,
+                )
                 logger.info("Crossing detector training finished")
 
                 if not trainer.model_diverged:
                     del train_loader
                     del val_loader
 
-                    logger.info('=> Load model weights: {}'.format(trainer.best_model_path))
-                    model_state = torch.load(trainer.best_model_path,
-                                             map_location=lambda storage, loc: storage)  # Load to CPU as the default!
-                    crossing_detector_model.load_state_dict(model_state, strict=True)
-                    logger.info('=> Load Done')
+                    logger.info(
+                        "=> Load model weights: {}".format(
+                            trainer.best_model_path
+                        )
+                    )
+                    model_state = torch.load(
+                        trainer.best_model_path,
+                        map_location=lambda storage, loc: storage,
+                    )  # Load to CPU as the default!
+                    crossing_detector_model.load_state_dict(
+                        model_state, strict=True
+                    )
+                    logger.info("=> Load Done")
 
                     logger.info("Classify individuals and crossings")
-                    crossings_predictor = GetPredictionCrossigns(video, crossing_detector_model, toassign_blobs, network_params)
+                    crossings_predictor = GetPredictionCrossigns(
+                        video,
+                        crossing_detector_model,
+                        toassign_blobs,
+                        network_params,
+                    )
                     predictions = crossings_predictor.get_all_predictions()
 
-                    print(len([p for p in predictions if p==0]), 'individuals')
-                    print(len([p for p in predictions if p==1]), 'crossings')
+                    print(
+                        len([p for p in predictions if p == 0]), "individuals"
+                    )
+                    print(len([p for p in predictions if p == 1]), "crossings")
                     for blob, prediction in zip(toassign_blobs, predictions):
                         if prediction == 1:
                             blob._is_a_crossing = True
@@ -173,12 +235,16 @@ def detect_crossings(list_of_blobs,
                             blob._is_an_individual = True
                     logger.debug("Freeing memory. Test crossings set deleted")
 
-                    list_of_blobs.update_identification_image_dataset_with_crossings(video)
+                    list_of_blobs.update_identification_image_dataset_with_crossings(
+                        video
+                    )
 
                     if return_store_objects:
                         return trainer
             else:
-                logger.debug("There are not enough crossings to train the crossing detector")
+                logger.debug(
+                    "There are not enough crossings to train the crossing detector"
+                )
                 video._there_are_crossings = False
                 return list_of_blobs
 

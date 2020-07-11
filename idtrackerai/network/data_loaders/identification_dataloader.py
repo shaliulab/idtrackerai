@@ -32,39 +32,42 @@ from confapp import conf
 import torch
 from torchvision import transforms
 
-from idtrackerai.network.data_sets.identification_dataset import IdentificationDataset
+from idtrackerai.network.data_sets.identification_dataset import (
+    IdentificationDataset,
+)
 
 logger = logging.getLogger("__main__.crossings_dataloader")
 
 
 def get_training_data_loaders(video, train_data, val_data):
 
-
     logger.info("Creating training IdentificationDataset")
-    training_set = IdentificationDataset(train_data,
-                                         scope='training',
-                                         transform=transforms.Compose(
-                                           [transforms.ToTensor(),
-                                            Normalize()])
-                                         )
-    train_loader = torch.utils.data.DataLoader(training_set,
-                                               batch_size=conf.BATCH_SIZE_IDCNN,
-                                               shuffle=False,
-                                               num_workers=2)
+    training_set = IdentificationDataset(
+        train_data,
+        scope="training",
+        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+    )
+    train_loader = torch.utils.data.DataLoader(
+        training_set,
+        batch_size=conf.BATCH_SIZE_IDCNN,
+        shuffle=False,
+        num_workers=2,
+    )
     train_loader.num_classes = video.number_of_animals
     train_loader.image_shape = training_set[0][0].shape
 
     logger.info("Creating validation IdentificationDataset")
-    validation_set = IdentificationDataset(val_data,
-                                           scope='validation',
-                                           transform=transforms.Compose(
-                                             [transforms.ToTensor(),
-                                              Normalize()])
-                                        )
-    val_loader = torch.utils.data.DataLoader(validation_set,
-                                             batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
-                                             shuffle=False,
-                                             num_workers=2)
+    validation_set = IdentificationDataset(
+        val_data,
+        scope="validation",
+        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+    )
+    val_loader = torch.utils.data.DataLoader(
+        validation_set,
+        batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
+        shuffle=False,
+        num_workers=2,
+    )
     val_loader.num_classes = video.number_of_animals
     val_loader.image_shape = validation_set[0][0].shape
     return train_loader, val_loader
@@ -72,15 +75,17 @@ def get_training_data_loaders(video, train_data, val_data):
 
 def get_test_data_loader(test_data, number_of_classes):
     logger.info("Creating test IdentificationDataset")
-    test_set = IdentificationDataset(test_data,
-                                     scope='predict',
-                                     transform=transforms.Compose(
-                                             [transforms.ToTensor(),
-                                              Normalize()]))
-    test_loader = torch.utils.data.DataLoader(test_set,
-                                              batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
-                                              shuffle=False,
-                                              num_workers=2)
+    test_set = IdentificationDataset(
+        test_data,
+        scope="predict",
+        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+    )
+    test_loader = torch.utils.data.DataLoader(
+        test_set,
+        batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
+        shuffle=False,
+        num_workers=2,
+    )
     test_loader.num_classes = number_of_classes
     test_loader.image_shape = test_set[0][0].shape
     return test_loader

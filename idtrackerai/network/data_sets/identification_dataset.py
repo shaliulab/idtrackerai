@@ -38,11 +38,13 @@ logger = logging.getLogger("__main__.crossings_data_set")
 
 class IdentificationDataset(VisionDataset):
     def __init__(self, data_dict, scope, transform=None):
-        super(IdentificationDataset, self).__init__(data_dict, transform=transform)
+        super(IdentificationDataset, self).__init__(
+            data_dict, transform=transform
+        )
         self.scope = scope
-        self.images = data_dict['images']
-        if self.scope in ['training', 'validation', 'test']:
-            self.labels = data_dict['labels']
+        self.images = data_dict["images"]
+        if self.scope in ["training", "validation", "test"]:
+            self.labels = data_dict["labels"]
         else:
             self.labels = np.zeros((self.images.shape[0]))
         self.get_data()
@@ -53,8 +55,12 @@ class IdentificationDataset(VisionDataset):
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
 
         if self.scope == "training":
-            self.images, self.labels = duplicate_PCA_images(self.images, self.labels)
-            self.images, self.labels = shuffle_images_and_labels(self.images, self.labels)
+            self.images, self.labels = duplicate_PCA_images(
+                self.images, self.labels
+            )
+            self.images, self.labels = shuffle_images_and_labels(
+                self.images, self.labels
+            )
 
     def __len__(self):
         return len(self.images)
@@ -67,7 +73,9 @@ class IdentificationDataset(VisionDataset):
         return image, target
 
 
-def split_data_train_and_validation(images, labels, validation_proportion=conf.VALIDATION_PROPORTION):
+def split_data_train_and_validation(
+    images, labels, validation_proportion=conf.VALIDATION_PROPORTION
+):
     """Splits a set of `images` and `labels` into training and validation sets
 
     Parameters
@@ -108,7 +116,9 @@ def split_data_train_and_validation(images, labels, validation_proportion=conf.V
         this_indiv_labels = labels[np.where(labels == i)[0]]
         # Compute number of images for training and validation
         num_images = len(this_indiv_labels)
-        num_images_validation = np.ceil(validation_proportion*num_images).astype(int)
+        num_images_validation = np.ceil(
+            validation_proportion * num_images
+        ).astype(int)
         num_images_training = num_images - num_images_validation
         # Get train, validation and test, images and labels
         train_images.append(this_indiv_images[:num_images_training])
@@ -122,14 +132,17 @@ def split_data_train_and_validation(images, labels, validation_proportion=conf.V
     validation_images = np.vstack(validation_images)
     validation_labels = np.concatenate(validation_labels, axis=0)
 
-    training_weights = (1. - np.unique(train_labels, return_counts=True)[1]/len(train_labels)).astype('float32')
+    training_weights = (
+        1.0
+        - np.unique(train_labels, return_counts=True)[1] / len(train_labels)
+    ).astype("float32")
 
-
-    train_dict = {'images': train_images,
-                  'labels': train_labels,
-                  'weights': training_weights}
-    val_dict = {'images': validation_images,
-                'labels': validation_labels}
+    train_dict = {
+        "images": train_images,
+        "labels": train_labels,
+        "weights": training_weights,
+    }
+    val_dict = {"images": validation_images, "labels": validation_labels}
     return train_dict, val_dict
 
 
@@ -165,6 +178,10 @@ def duplicate_PCA_images(training_images, training_labels):
         to the original images and the images rotated
     """
     augmented_images = [np.rot90(image, 2) for image in training_images]
-    training_images = np.concatenate([training_images, augmented_images], axis = 0)
-    training_labels = np.concatenate([training_labels, training_labels], axis = 0)
+    training_images = np.concatenate(
+        [training_images, augmented_images], axis=0
+    )
+    training_labels = np.concatenate(
+        [training_labels, training_labels], axis=0
+    )
     return training_images, training_labels

@@ -12,44 +12,75 @@ class DCD(nn.Module):
         super(DCD, self).__init__()
 
         self.out_dim = out_dim
-        self.conv1 = nn.Conv2d(input_shape[-1], 16, 5,
-                               stride=1, padding=2, dilation=1,
-                               groups=1, bias=True, padding_mode='zeros')
+        self.conv1 = nn.Conv2d(
+            input_shape[-1],
+            16,
+            5,
+            stride=1,
+            padding=2,
+            dilation=1,
+            groups=1,
+            bias=True,
+            padding_mode="zeros",
+        )
         w = compute_output_width(input_shape[1], 5, 2, 1)
-        self.pool1 = nn.MaxPool2d(2, stride=2, padding=0, dilation=1,
-                                  return_indices=False, ceil_mode=False)
+        self.pool1 = nn.MaxPool2d(
+            2,
+            stride=2,
+            padding=0,
+            dilation=1,
+            return_indices=False,
+            ceil_mode=False,
+        )
         w = compute_output_width(w, 2, 0, 2)
-        self.conv2 = nn.Conv2d(16, 64, 5,
-                               stride=1,
-                               padding=2,
-                               dilation=1,
-                               groups=1,
-                               bias=True,
-                               padding_mode='zeros')
+        self.conv2 = nn.Conv2d(
+            16,
+            64,
+            5,
+            stride=1,
+            padding=2,
+            dilation=1,
+            groups=1,
+            bias=True,
+            padding_mode="zeros",
+        )
         w = compute_output_width(w, 5, 2, 1)
-        self.pool2 = nn.MaxPool2d(2, stride=2, padding=0, dilation=1,
-                                  return_indices=False, ceil_mode=False)
+        self.pool2 = nn.MaxPool2d(
+            2,
+            stride=2,
+            padding=0,
+            dilation=1,
+            return_indices=False,
+            ceil_mode=False,
+        )
         w = compute_output_width(w, 2, 0, 2)
-        self.conv3 = nn.Conv2d(64, 100, 5,
-                               stride=1,
-                               padding=2,
-                               dilation=1,
-                               groups=1,
-                               bias=True,
-                               padding_mode='zeros')
+        self.conv3 = nn.Conv2d(
+            64,
+            100,
+            5,
+            stride=1,
+            padding=2,
+            dilation=1,
+            groups=1,
+            bias=True,
+            padding_mode="zeros",
+        )
         self.w = compute_output_width(w, 5, 2, 1)
         self.fc1 = nn.Linear(100 * w * w, 100)
         self.fc2 = nn.Linear(100, out_dim)
 
         self.conv = nn.Sequential(
-            self.conv1, nn.ReLU(inplace=True), self.pool1,
-            self.conv2, nn.ReLU(inplace=True), self.pool2,
-            self.conv3, nn.ReLU(inplace=True)
+            self.conv1,
+            nn.ReLU(inplace=True),
+            self.pool1,
+            self.conv2,
+            nn.ReLU(inplace=True),
+            self.pool2,
+            self.conv3,
+            nn.ReLU(inplace=True),
         )
 
-        self.linear = nn.Sequential(
-            self.fc1, nn.ReLU(inplace=True)
-        )
+        self.linear = nn.Sequential(self.fc1, nn.ReLU(inplace=True))
 
         self.last = self.fc2
 
@@ -77,44 +108,75 @@ class idCNN(nn.Module):
         super(idCNN, self).__init__()
 
         self.out_dim = out_dim
-        self.conv1 = nn.Conv2d(input_shape[-1], 16, 5,
-                               stride=1, padding=2, dilation=1,
-                               groups=1, bias=True, padding_mode='zeros')
+        self.conv1 = nn.Conv2d(
+            input_shape[-1],
+            16,
+            5,
+            stride=1,
+            padding=2,
+            dilation=1,
+            groups=1,
+            bias=True,
+            padding_mode="zeros",
+        )
         w = compute_output_width(input_shape[1], 5, 2, 1)
-        self.pool1 = nn.MaxPool2d(2, stride=2, padding=0, dilation=1,
-                                  return_indices=False, ceil_mode=False)
+        self.pool1 = nn.MaxPool2d(
+            2,
+            stride=2,
+            padding=0,
+            dilation=1,
+            return_indices=False,
+            ceil_mode=False,
+        )
         w = compute_output_width(w, 2, 0, 2)
-        self.conv2 = nn.Conv2d(16, 64, 5,
-                               stride=1,
-                               padding=2,
-                               dilation=1,
-                               groups=1,
-                               bias=True,
-                               padding_mode='zeros')
+        self.conv2 = nn.Conv2d(
+            16,
+            64,
+            5,
+            stride=1,
+            padding=2,
+            dilation=1,
+            groups=1,
+            bias=True,
+            padding_mode="zeros",
+        )
         w = compute_output_width(w, 5, 2, 1)
-        self.pool2 = nn.MaxPool2d(2, stride=2, padding=0, dilation=1,
-                                  return_indices=False, ceil_mode=False)
+        self.pool2 = nn.MaxPool2d(
+            2,
+            stride=2,
+            padding=0,
+            dilation=1,
+            return_indices=False,
+            ceil_mode=False,
+        )
         w = compute_output_width(w, 2, 0, 2)
-        self.conv3 = nn.Conv2d(64, 100, 5,
-                               stride=1,
-                               padding=2,
-                               dilation=1,
-                               groups=1,
-                               bias=True,
-                               padding_mode='zeros')
+        self.conv3 = nn.Conv2d(
+            64,
+            100,
+            5,
+            stride=1,
+            padding=2,
+            dilation=1,
+            groups=1,
+            bias=True,
+            padding_mode="zeros",
+        )
         self.w = compute_output_width(w, 5, 2, 1)
         self.fc1 = nn.Linear(100 * w * w, 100)
         self.fc2 = nn.Linear(100, out_dim)
 
         self.conv = nn.Sequential(
-            self.conv1, nn.ReLU(inplace=True), self.pool1,
-            self.conv2, nn.ReLU(inplace=True), self.pool2,
-            self.conv3, nn.ReLU(inplace=True)
+            self.conv1,
+            nn.ReLU(inplace=True),
+            self.pool1,
+            self.conv2,
+            nn.ReLU(inplace=True),
+            self.pool2,
+            self.conv3,
+            nn.ReLU(inplace=True),
         )
 
-        self.linear = nn.Sequential(
-            self.fc1, nn.ReLU(inplace=True)
-        )
+        self.linear = nn.Sequential(self.fc1, nn.ReLU(inplace=True))
 
         self.last = self.fc2
 

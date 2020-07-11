@@ -33,17 +33,36 @@ import numpy as np
 from idtrackerai.list_of_blobs import ListOfBlobs
 
 import logging
+
 logger = logging.getLogger("__main__.identify_non_assigned_with_interpolation")
 
-def assign_zeros_with_interpolation_identities(list_of_blobs, list_of_blobs_no_gaps):
+
+def assign_zeros_with_interpolation_identities(
+    list_of_blobs, list_of_blobs_no_gaps
+):
     logger.debug("creating copy of list_of_blobs")
 
-    for blobs_in_frame, blobs_in_frame_no_gaps in zip(list_of_blobs.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video):
-        unassigned_blobs = [blob for blob in blobs_in_frame if blob.is_an_individual and blob.assigned_identities[0] == 0]
+    for blobs_in_frame, blobs_in_frame_no_gaps in zip(
+        list_of_blobs.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video
+    ):
+        unassigned_blobs = [
+            blob
+            for blob in blobs_in_frame
+            if blob.is_an_individual and blob.assigned_identities[0] == 0
+        ]
         for unassigned_blob in unassigned_blobs:
-            candidate_blobs = [blob for blob in blobs_in_frame_no_gaps
-                               if blob.fragment_identifier == unassigned_blob.fragment_identifier]
-            if len(candidate_blobs) == 1 and len(candidate_blobs[0].assigned_identities) == 1:
-                unassigned_blob._identities_corrected_closing_gaps = candidate_blobs[0].assigned_identities
+            candidate_blobs = [
+                blob
+                for blob in blobs_in_frame_no_gaps
+                if blob.fragment_identifier
+                == unassigned_blob.fragment_identifier
+            ]
+            if (
+                len(candidate_blobs) == 1
+                and len(candidate_blobs[0].assigned_identities) == 1
+            ):
+                unassigned_blob._identities_corrected_closing_gaps = candidate_blobs[
+                    0
+                ].assigned_identities
 
     return list_of_blobs
