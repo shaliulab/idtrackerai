@@ -41,9 +41,10 @@ class Learner_Classification(nn.Module):
         print(
             "=> Load model weights:", model_path
         )  # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
-        model_state = torch.load(
-            model_path, map_location=lambda storage, loc: storage
-        )  # Load to CPU as the default!
+        # model_state = torch.load(
+        #     model_path, map_location=lambda storage, loc: storage
+        # )  # Load to CPU as the default!
+        model_state = torch.load(model_path)
         model.load_state_dict(
             model_state, strict=True
         )  # The pretrained state dict doesn't need to fit the model
@@ -98,9 +99,10 @@ class Learner_Classification(nn.Module):
 
     def resume(self, resume_file):
         print("=> Loading checkpoint:", resume_file)
-        checkpoint = torch.load(
-            resume_file, map_location=lambda storage, loc: storage
-        )  # Load to CPU as the default!
+        # checkpoint = torch.load(
+        #     resume_file, map_location=lambda storage, loc: storage
+        # )  # Load to CPU as the default!
+        checkpoint = torch.load(resume_file)
         self.epoch = checkpoint["epoch"]
         print("=> resume epoch:", self.epoch)
         self.model.load_state_dict(checkpoint["model"])

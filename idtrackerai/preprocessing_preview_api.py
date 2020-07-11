@@ -268,7 +268,6 @@ class PreprocessingPreviewAPI(object):
             self.chosen_video.list_of_blob.save(
                 self.chosen_video.video,
                 self.chosen_video.video.blobs_path_segmented,
-                number_of_chunks=self.chosen_video.video.number_of_frames,
             )
 
     def generate_list_of_fragments_and_global_fragments(self):
@@ -341,8 +340,7 @@ class PreprocessingPreviewAPI(object):
         self.chosen_video.video._has_been_preprocessed = True
         self.chosen_video.list_of_blobs.save(
             self.chosen_video.video,
-            self.chosen_video.video.blobs_path,
-            number_of_chunks=self.chosen_video.video.number_of_frames,
+            self.chosen_video.video.blobs_path
         )
         if self.chosen_video.video.number_of_animals != 1:
             self.list_of_global_fragments.save(

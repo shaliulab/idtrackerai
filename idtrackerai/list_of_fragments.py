@@ -311,8 +311,8 @@ class ListOfFragments(object):
                 self.fragments
             )
 
-    @classmethod
-    def load(cls, path_to_load):
+    @staticmethod
+    def load(path_to_load):
         """Loads a previously saved (see :meth:`load`) from the path
         `path_to_load`
         """

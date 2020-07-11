@@ -190,8 +190,6 @@ is set to TRUE, the network will be trained with the ADAM optimizer.
 USE_ADAM_OPTIMISER = False
 """***LAYERS_TO_OPTIMISE_ACCUMULATION
 List of layers to be optimized. None indicates that all layers are optimizsed.
-To check the name of the different layers see the module cnn_architectures.py
-in the folder network.
 """
 LAYERS_TO_OPTIMISE_ACCUMULATION = (
     None  # ['fully-connected1','fully_connected_pre_softmax']

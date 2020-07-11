@@ -86,7 +86,6 @@ class AccumulationManager(object):
         list_of_fragments,
         list_of_global_fragments,
         certainty_threshold=conf.CERTAINTY_THRESHOLD,
-        allow_partial_accumulation=False,
         threshold_acceptable_accumulation=None,
     ):
         self.video = video

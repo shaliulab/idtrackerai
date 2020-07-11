@@ -27,14 +27,11 @@
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import os
-import sys
 import glob
 import re
 
 import numpy as np
-from itertools import groupby
 import multiprocessing
-import matplotlib
 from matplotlib import cm
 
 import logging

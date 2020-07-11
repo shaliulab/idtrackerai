@@ -417,7 +417,9 @@ class Video(object):
     @property
     def git_commit(self):
         return "0"
-        return self._git_commit
+        # TODO: Maybe save version when installed from pip and commit when
+        # installed from git
+        # return self._git_commit
 
     def save(self):
         """save class"""

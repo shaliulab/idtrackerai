@@ -379,7 +379,7 @@ class TrackerAPI(object):
         self.accumulation_step_finished = True
         self.accumulation_loop()
 
-    def one_shot_accumulation(self, save_summaries=True, call_accumulate=True):
+    def one_shot_accumulation(self, call_accumulate=True):
         logger.warning("Starting one_shot_accumulation")
         self.accumulation_step_finished = False
         self.accumulation_manager.ratio_accumulated_images = perform_one_accumulation_step(
@@ -736,15 +736,13 @@ class TrackerAPI(object):
             self.pretrain_network_params
         )
 
-    def pretraining_loop(self, call_from_gui=False):
+    def pretraining_loop(self):
         self.chosen_video.list_of_fragments.reset(roll_back_to="fragmentation")
         self.chosen_video.list_of_global_fragments.order_by_distance_travelled()
         self.one_shot_pretraining()
         self.continue_pretraining()
 
-    def one_shot_pretraining(
-        self, generate_tensorboard=False, gui_graph_canvas=None
-    ):
+    def one_shot_pretraining(self):
         self.pretraining_step_finished = False
         self.pretraining_global_fragment = self.chosen_video.list_of_global_fragments.global_fragments[
             self.pretraining_counter
@@ -1113,7 +1111,7 @@ class TrackerAPI(object):
             self.chosen_video.old_video, ["blobs_no_gaps_path"], [False]
         )
         self.chosen_video.list_of_blobs_no_gaps = ListOfBlobs.load(
-            self.chosen_video.video, self.chosen_video.video.blobs_no_gaps_path
+            self.chosen_video.video.blobs_no_gaps_path
         )
         self.chosen_video.video.save()
 
@@ -1176,7 +1174,7 @@ class TrackerAPI(object):
         self.chosen_video.video.save()
         if not hasattr(self.chosen_video, "list_of_blobs"):
             self.chosen_video.list_of_blobs = ListOfBlobs.load(
-                self.chosen_video.video, self.chosen_video.old_video.blobs_path
+                self.chosen_video.old_video.blobs_path
             )
         self.chosen_video.list_of_blobs.update_from_list_of_fragments(
             self.chosen_video.list_of_fragments.fragments,
@@ -1186,8 +1184,7 @@ class TrackerAPI(object):
         #     self.chosen_video.list_of_blobs.compute_nose_and_head_coordinates()
         self.chosen_video.list_of_blobs.save(
             self.chosen_video.video,
-            self.chosen_video.video.blobs_path,
-            number_of_chunks=self.chosen_video.video.number_of_frames,
+            self.chosen_video.video.blobs_path
         )
         self.chosen_video.video._identify_time = (
             time.time() - self.chosen_video.video.identify_time
@@ -1257,7 +1254,6 @@ class TrackerAPI(object):
             self.chosen_video.list_of_blobs.save(
                 self.chosen_video.video,
                 self.chosen_video.video.blobs_path,
-                number_of_chunks=self.chosen_video.video.number_of_frames,
             )
             # Call GUI function
             if update_and_show_happy_ending_popup:
@@ -1287,7 +1283,6 @@ class TrackerAPI(object):
         self.chosen_video.list_of_blobs_no_gaps.save(
             self.chosen_video.video,
             path_to_save=self.chosen_video.video.blobs_no_gaps_path,
-            number_of_chunks=self.chosen_video.video.number_of_frames,
         )
         self.chosen_video.video._has_crossings_solved = True
         self.chosen_video.video.save()

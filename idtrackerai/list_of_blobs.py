@@ -102,7 +102,7 @@ class ListOfBlobs(object):
         logger.info("re-Connecting list of blob objects")
         self.compute_overlapping_between_subsequent_frames()
 
-    def save(self, video, path_to_save=None, number_of_chunks=1):
+    def save(self, video, path_to_save=None):
         """save instance"""
         self.disconnect()
         logger.info("saving blobs list at %s" % path_to_save)
@@ -111,14 +111,12 @@ class ListOfBlobs(object):
             self.connect()
         self.blobs_are_connected = True
 
-    @classmethod
-    def load(cls, video, path_to_load_blob_list_file):
+    @staticmethod
+    def load(path_to_load_blob_list_file):
         """Short summary.
 
         Parameters
         ----------
-        video : <Video object>
-            See :class:`~video.Video`
         path_to_load_blob_list_file : str
             path to load a list of blobs
 

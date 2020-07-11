@@ -204,10 +204,11 @@ def detect_crossings(
                             trainer.best_model_path
                         )
                     )
-                    model_state = torch.load(
-                        trainer.best_model_path,
-                        map_location=lambda storage, loc: storage,
-                    )  # Load to CPU as the default!
+                    # model_state = torch.load(
+                    #     trainer.best_model_path,
+                    #     map_location=lambda storage, loc: storage,
+                    # )  # Load to CPU as the default!
+                    model_state = torch.load(trainer.best_model_path)
                     crossing_detector_model.load_state_dict(
                         model_state, strict=True
                     )

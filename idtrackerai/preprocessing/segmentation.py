@@ -36,7 +36,7 @@ import cv2
 import h5py
 from joblib import Parallel, delayed
 from tqdm import tqdm
-from scipy import ndimage
+# from scipy import ndimage # TODO: used to fill binary holes see below
 from confapp import conf
 
 from idtrackerai.blob import Blob
@@ -181,15 +181,11 @@ def get_blobs_in_frame(
             video.ROI,
             video.subtract_bkg,
         )
-        # import matplotlib.pyplot as plt
-        # fig, ax = plt.subplots(1,4)
-        # ax[0].imshow(frameGray)
-        # ax[1].imshow(video.bkg)
-        # ax[2].imshow(segmentedFrame)
+
+        # TODO: Check if this is necessary
         # Fill holes in the segmented frame to avoid duplication of contours
         # segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
-        # plt.show()
-        # input("Press Enter to continue...")
+
         # Find contours in the segmented image
         (
             bounding_boxes,
