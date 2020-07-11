@@ -43,7 +43,7 @@ The most stable version of idtracker.ai can be installed from the PyPI using one
 2.**GUI and GPU support (II)**: If you do not want to install CUDA 10.0 and cuDNN 7.6 by yourself, you can install idtracker.ai in a Conda environment and then install Tensorflow 1.13 with GPU support from the Conda package manager.
 
     pip install idtrackerai[gui]
-    conda install tensorflow-gpu=1.13
+    conda install tensorflow-gpu=1.15
 
 3.**No GUI and GPU support.**: Use this option if you are installing idtrackerai in a computer where you plan to run it only from the terminal (see how to do this below).
 
@@ -52,7 +52,7 @@ The most stable version of idtracker.ai can be installed from the PyPI using one
 If you don't want to install CUDA 10.0 and cuDNN by yourself, install idtrackerai insider of a conda environment and then install Tensorflow 1.13 with GPU support from the Conda package manager.
 
     pip install idtrackerai
-    conda install tensorflow-gpu=1.13
+    conda install tensorflow-gpu=1.15
 
 4.**GUI and no GPU support**: Use this option if you only want to use the GUI to save *.json* parameters files, or if you want to track animals using the "track without identities" feature. In this cases you don't need the GPU.
 
@@ -102,7 +102,7 @@ This test will donwload a example video of around 500Mb and will execute idtrack
     
 5.- Install tensorflow-gpu if required 
 
-    conda install tensorflow-gpu=1.13
+    conda install tensorflow-gpu=1.15
 
 ## Open or run idtracker.ai
 
