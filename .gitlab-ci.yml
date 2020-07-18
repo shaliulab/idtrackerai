@@ -8,7 +8,7 @@ testbuild:
     - conda env create -f dev-environment.yml
     - source activate idtrackerai_dev
     - python setup.py install
-    - cd idtackerai-app
+    - cd idtrackerai-app
     - python setup.py install
     - cd ..
     - pip install black flake8
