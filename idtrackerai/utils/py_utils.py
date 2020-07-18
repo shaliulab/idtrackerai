@@ -21,20 +21,22 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import os
 import glob
+import logging
+import multiprocessing
+import os
 import re
 
 import numpy as np
-import multiprocessing
 from matplotlib import cm
-
-import logging
 
 logger = logging.getLogger("__main__.py_utils")
 
@@ -57,9 +59,9 @@ def set_mkl_to_multi_thread():
 def append_values_to_lists(values, list_of_lists):
     list_of_lists_updated = []
 
-    for l, value in zip(list_of_lists, values):
-        l.append(value)
-        list_of_lists_updated.append(l)
+    for list_, value in zip(list_of_lists, values):
+        list_.append(value)
+        list_of_lists_updated.append(list_)
 
     return list_of_lists_updated
 
@@ -83,23 +85,31 @@ def delete_attributes_from_object(object_to_modify, list_of_attributes):
 
 
 ### Dict utils ###
-def flatten(l):
+def flatten(list_):
     """ flatten a list of lists """
     try:
-        ans = [inner for outer in l for inner in outer]
+        ans = [inner for outer in list_ for inner in outer]
     except:
-        ans = [y for x in l for y in (x if isinstance(x, tuple) else (x,))]
+        ans = [y for x in list_ for y in (x if isinstance(x, tuple) else (x,))]
     return ans
 
 
-def natural_sort(l):
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
-    return sorted(l, key=alphanum_key)
+def natural_sort(list_):
+    def convert(text):
+        if text.isdigit():
+            return int(text)
+        else:
+            return text.lower()
+
+    def alphanum_key(key):
+        return [convert(c) for c in re.split("([0-9]+)", key)]
+
+    return sorted(list_, key=alphanum_key)
 
 
 def scanFolder(path):
-    ### NOTE if the video selected does not finish with '_1' the scanFolder function won't select all of them. This can be improved
+    ### NOTE if the video selected does not finish with '_1' the scanFolder
+    # function won't select all of them. This can be improved
     paths = [path]
     video_path = os.path.basename(path)
     filename, extension = os.path.splitext(video_path)
@@ -142,7 +152,7 @@ def check_and_change_video_path(video_object, old_video):
         attributes_to_modify = {
             key: getattr(old_video, key)
             for key in old_video.__dict__
-            if isinstance(getattr(old_video, key), basestring)
+            if isinstance(getattr(old_video, key), str)
             and old_video_folder in getattr(old_video, key)
         }
 

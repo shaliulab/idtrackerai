@@ -1,47 +1,74 @@
-import sys, time, os
-
-from confapp import conf
-
-import logging
-
-logger = logging.getLogger(__name__)
+# This file is part of idtracker.ai a multiple animals tracking system
+# described in [1].
+# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
+# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
+# Champalimaud Foundation.
+#
+# idtracker.ai is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details. In addition, we require
+# derivatives or applications to acknowledge the authors by citing [1].
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# For more information please send an email (idtrackerai@gmail.com) or
+# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
+#
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import copy
+import logging
+import os
+import sys
+import time
+
 import numpy as np
+import torch
+import torch.backends.cudnn as cudnn
+from confapp import conf
 
-from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import (
-    assign_zeros_with_interpolation_identities,
-)
-
-# from idtrackerai.network.identification_model.store_accuracy_and_loss    import Store_Accuracy_and_Loss
-from idtrackerai.postprocessing.correct_impossible_velocity_jumps import (
-    correct_impossible_velocity_jumps,
-)
+from idtrackerai.accumulation_manager import AccumulationManager
+from idtrackerai.accumulator import perform_one_accumulation_step
+from idtrackerai.assigner import assign_remaining_fragments
+from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.network.identification_model.network_params import (
     NetworkParams,
 )
+from idtrackerai.network.learners.learners import Learner_Classification
+from idtrackerai.postprocessing.assign_them_all import close_trajectories_gaps
 from idtrackerai.postprocessing.compute_velocity_model import (
     compute_model_velocity,
 )
 
-# from idtrackerai.network.identification_model.id_CNN                     import ConvNetwork
+# from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
+from idtrackerai.postprocessing.correct_impossible_velocity_jumps import (
+    correct_impossible_velocity_jumps,
+)
+
+# from idtrackerai.network.identification_model.id_CNN import ConvNetwork
 from idtrackerai.postprocessing.get_trajectories import produce_output_dict
+from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import (
+    assign_zeros_with_interpolation_identities,
+)
 from idtrackerai.postprocessing.trajectories_to_csv import (
     convert_trajectories_file_to_csv_and_json,
 )
-from idtrackerai.postprocessing.assign_them_all import close_trajectories_gaps
-from idtrackerai.accumulation_manager import AccumulationManager
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.accumulator import perform_one_accumulation_step
-from idtrackerai.pre_trainer import pre_train_global_fragment
-from idtrackerai.assigner import assign_remaining_fragments
-from confapp import conf
+from idtrackerai.pre_trainer import pre_train_global_fragment, weights_reinit
 
-
-import torch
-import torch.backends.cudnn as cudnn
-from idtrackerai.network.learners.learners import Learner_Classification
-from idtrackerai.pre_trainer import weights_reinit
+logger = logging.getLogger(__name__)
 
 
 class TrackerAPI(object):
@@ -100,9 +127,11 @@ class TrackerAPI(object):
                 "post_processing" in self.chosen_video.processes_to_restore
                 and self.chosen_video.processes_to_restore["post_processing"]
             ):
-                self.restore_trajectories()
-                self.restore_crossings_solved()
-                self.restore_trajectories_wo_gaps()
+                # TODO: bring restoring back to life
+                raise
+                # self.restore_trajectories()
+                # self.restore_crossings_solved()
+                # self.restore_trajectories_wo_gaps()
 
             elif (
                 "residual_identification"
@@ -112,13 +141,17 @@ class TrackerAPI(object):
                 ]
             ):
                 if self.chosen_video.video.track_wo_identities:
-                    self.restore_trajectories()
+                    # TODO: bring restoring back to life
+                    raise
+                    # self.restore_trajectories()
 
                 else:
-                    logger.info("Restoring residual identification")
-                    self.restore_identification()
-                    self.chosen_video.video._has_been_assigned = True
-                    self.create_trajectories()
+                    # TODO: bring restoring back to life
+                    raise
+                    # logger.info("Restoring residual identification")
+                    # self.restore_identification()
+                    # self.chosen_video.video._has_been_assigned = True
+                    # self.create_trajectories()
 
             elif (
                 "protocol3_accumulation"
@@ -128,7 +161,7 @@ class TrackerAPI(object):
                 ]
             ):
                 logger.info("Restoring second accumulation")
-                self.restore_second_accumulation()
+                # self.restore_second_accumulation()
                 self.chosen_video.video._first_frame_first_global_fragment = (
                     self.chosen_video.video._first_frame_first_global_fragment
                 )
@@ -149,49 +182,51 @@ class TrackerAPI(object):
                     "protocol3_pretraining"
                 ]
             ):
-                logger.info("Restoring pretraining")
-                logger.info("Initialising pretraining network")
-                self.init_pretraining_net()
-                logger.info("Restoring pretraining")
-                self.accumulation_step_finished = True
-                self.restore_first_accumulation()
-                self.restore_pretraining()
-                self.accumulation_manager.ratio_accumulated_images = self.chosen_video.video.percentage_of_accumulated_images[
-                    0
-                ]
-                self.chosen_video.video._first_frame_first_global_fragment = [
-                    self.chosen_video.video._first_frame_first_global_fragment[
-                        0
-                    ]
-                ]
-                self.chosen_video.video._percentage_of_accumulated_images = [
-                    self.chosen_video.video.percentage_of_accumulated_images[0]
-                ]
-                logger.info("Start accumulation parachute")
-
-                self.accumulate()
+                # TODO: bring restoring back to life
+                raise
+                # logger.info("Restoring pretraining")
+                # logger.info("Initialising pretraining network")
+                # self.init_pretraining_net()
+                # logger.info("Restoring pretraining")
+                # self.accumulation_step_finished = True
+                # self.restore_first_accumulation()
+                # self.restore_pretraining()
+                # self.accumulation_manager.ratio_accumulated_images =
+                # self.chosen_video.video.percentage_of_accumulated_images[0]
+                # self.chosen_video.video._first_frame_first_global_fragment = [
+                #     self.chosen_video.video._first_frame_first_global_fragment[
+                #         0
+                #     ]
+                # ]
+                # self.chosen_video.video._percentage_of_accumulated_images = [
+                #     self.chosen_video.video.percentage_of_accumulated_images[0]
+                # ]
+                # logger.info("Start accumulation parachute")
+                #
+                # self.accumulate()
 
             elif (
                 "protocols1_and_2" in self.chosen_video.processes_to_restore
                 and self.chosen_video.processes_to_restore["protocols1_and_2"]
             ):
-                logger.info("Restoring protocol 1 and 2")
-                self.restoring_first_accumulation = True
-                self.restore_first_accumulation()
-                self.accumulation_manager.ratio_accumulated_images = self.chosen_video.video.percentage_of_accumulated_images[
-                    0
-                ]
-                self.chosen_video.video._first_frame_first_global_fragment = [
-                    self.chosen_video.video._first_frame_first_global_fragment[
-                        0
-                    ]
-                ]
-                self.chosen_video.video._percentage_of_accumulated_images = [
-                    self.chosen_video.video.percentage_of_accumulated_images[0]
-                ]
-                self.accumulation_step_finished = True
-
-                self.accumulate()
+                # TODO: bring restoring back to life
+                raise
+                # logger.info("Restoring protocol 1 and 2")
+                # self.restoring_first_accumulation = True
+                # # self.restore_first_accumulation()
+                # self.accumulation_manager.ratio_accumulated_images =
+                # self.chosen_video.video.percentage_of_accumulated_images[0]
+                # self.chosen_video.video._first_frame_first_global_fragment = [
+                #     self.chosen_video.video._first_frame_first_global_fragment[
+                #         0
+                #     ]
+                # ]
+                # self.chosen_video.video._percentage_of_accumulated_images = [
+                #     self.chosen_video.video.percentage_of_accumulated_images[0]
+                # ]
+                # self.accumulation_step_finished = True
+                #
+                # self.accumulate()
 
             elif (
                 "protocols1_and_2"
@@ -655,7 +690,7 @@ class TrackerAPI(object):
 
         if (
             self.chosen_video.old_video
-            and self.chosen_video.old_video.first_accumulation_finished == True
+            and self.chosen_video.old_video.first_accumulation_finished
         ):
             self.chosen_video.list_of_global_fragments.reset(
                 roll_back_to="fragmentation"
@@ -968,156 +1003,159 @@ class TrackerAPI(object):
         )
         self.chosen_video.video.save()
 
-    def restore_video_attributes(self):
-        list_of_attributes = [
-            "accumulation_folder",
-            "second_accumulation_finished",
-            "number_of_accumulated_global_fragments",
-            "number_of_non_certain_global_fragments",
-            "number_of_randomly_assigned_global_fragments",
-            "number_of_nonconsistent_global_fragments",
-            "number_of_nonunique_global_fragments",
-            "number_of_acceptable_global_fragments",
-            "validation_accuracy",
-            "validation_individual_accuracies",
-            "training_accuracy",
-            "training_individual_accuracies",
-            "percentage_of_accumulated_images",
-            "accumulation_trial",
-            "ratio_accumulated_images",
-            "first_accumulation_finished",
-            "identity_transfer",
-            "accumulation_statistics",
-            "first_frame_first_global_fragment",
-            "pretraining_folder",
-            "has_been_pretrained",
-            "has_been_assigned",
-            "has_crossings_solved",
-            "has_trajectories",
-            "has_trajectories_wo_gaps",
-            "protocol1_time",
-            "protocol2_time",
-            "protocol3_pretraining_time",
-            "protocol3_accumulation_time",
-            "identify_time",
-            "create_trajectories_time",
-        ]
-        is_property = [
-            True,
-            True,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            True,
-            False,
-            True,
-            True,
-            True,
-            False,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-        ]
-        self.chosen_video.video.copy_attributes_between_two_video_objects(
-            self.chosen_video.old_video,
-            list_of_attributes,
-            is_property=is_property,
-        )
+    ### TODO: Bring restoring back to life
+    # def restore_video_attributes(self):
+    #     list_of_attributes = [
+    #         "accumulation_folder",
+    #         "second_accumulation_finished",
+    #         "number_of_accumulated_global_fragments",
+    #         "number_of_non_certain_global_fragments",
+    #         "number_of_randomly_assigned_global_fragments",
+    #         "number_of_nonconsistent_global_fragments",
+    #         "number_of_nonunique_global_fragments",
+    #         "number_of_acceptable_global_fragments",
+    #         "validation_accuracy",
+    #         "validation_individual_accuracies",
+    #         "training_accuracy",
+    #         "training_individual_accuracies",
+    #         "percentage_of_accumulated_images",
+    #         "accumulation_trial",
+    #         "ratio_accumulated_images",
+    #         "first_accumulation_finished",
+    #         "identity_transfer",
+    #         "accumulation_statistics",
+    #         "first_frame_first_global_fragment",
+    #         "pretraining_folder",
+    #         "has_been_pretrained",
+    #         "has_been_assigned",
+    #         "has_crossings_solved",
+    #         "has_trajectories",
+    #         "has_trajectories_wo_gaps",
+    #         "protocol1_time",
+    #         "protocol2_time",
+    #         "protocol3_pretraining_time",
+    #         "protocol3_accumulation_time",
+    #         "identify_time",
+    #         "create_trajectories_time",
+    #     ]
+    #     is_property = [
+    #         True,
+    #         True,
+    #         False,
+    #         False,
+    #         False,
+    #         False,
+    #         False,
+    #         False,
+    #         False,
+    #         False,
+    #         False,
+    #         False,
+    #         True,
+    #         False,
+    #         True,
+    #         True,
+    #         True,
+    #         False,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #         True,
+    #     ]
+    #     self.chosen_video.video.copy_attributes_between_two_video_objects(
+    #         self.chosen_video.old_video,
+    #         list_of_attributes,
+    #         is_property=is_property,
+    #     )
+    #
+    # def restore_first_accumulation(self):
+    #     self.restore_video_attributes()
+    #     self.chosen_video.video._ratio_accumulated_images = self.chosen_video.video.percentage_of_accumulated_images[
+    #         0
+    #     ]
+    #     self.accumulation_network_params.restore_folder = (
+    #         self.chosen_video.video._accumulation_folder
+    #     )
+    #     self.accumulation_manager = AccumulationManager(
+    #         self.chosen_video.video,
+    #         self.chosen_video.list_of_fragments,
+    #         self.chosen_video.list_of_global_fragments,
+    #         threshold_acceptable_accumulation=conf.THRESHOLD_ACCEPTABLE_ACCUMULATION,
+    #     )
+    #     self.net = ConvNetwork(self.accumulation_network_params)
+    #     self.net.restore()
+    #     logger.info("Saving video")
+    #     self.chosen_video.video._has_been_pretrained = False
+    #     self.chosen_video.video.save()
+    #     self.chosen_video.list_of_fragments.save_light_list(
+    #         self.chosen_video.video._accumulation_folder
+    #     )
+    #
+    # def restore_pretraining(self):
+    #     logger.info("Restoring pretrained network")
+    #     self.restore_video_attributes()
+    #     self.pretrain_network_params.restore_folder = (
+    #         self.chosen_video.video.pretraining_folder
+    #     )
+    #     self.net = ConvNetwork(self.pretrain_network_params)
+    #     self.net.restore()
+    #     self.accumulation_manager = AccumulationManager(
+    #         self.chosen_video.video,
+    #         self.chosen_video.list_of_fragments,
+    #         self.chosen_video.list_of_global_fragments,
+    #         threshold_acceptable_accumulation=conf.THRESHOLD_ACCEPTABLE_ACCUMULATION,
+    #     )
+    #     self.chosen_video.video.accumulation_trial = 0
+    #     self.chosen_video.video.save()
+    #
+    # def restore_second_accumulation(self):
+    #     self.restore_video_attributes()
+    #     logger.info("Restoring trained network")
+    #     self.accumulation_network_params.restore_folder = (
+    #         self.chosen_video.video._accumulation_folder
+    #     )
+    #     self.chosen_video.list_of_fragments.load_light_list(
+    #         self.chosen_video.video._accumulation_folder
+    #     )
+    #     self.net = ConvNetwork(self.accumulation_network_params)
+    #     self.net.restore()
+    #     self.chosen_video.video.save()
+    #
+    # def restore_identification(self):
+    #     self.restore_video_attributes()
+    #     self.chosen_video.list_of_fragments.load_light_list(
+    #         self.chosen_video.video._accumulation_folder
+    #     )
+    #     self.chosen_video.video.save()
+    #
+    # def restore_trajectories(self):
+    #     self.restore_video_attributes()
+    #     self.chosen_video.video.save()
+    #
+    # def restore_crossings_solved(self):
+    #     self.restore_video_attributes()
+    #     self.chosen_video.video.copy_attributes_between_two_video_objects(
+    #         self.chosen_video.old_video, ["blobs_no_gaps_path"], [False]
+    #     )
+    #     self.chosen_video.list_of_blobs_no_gaps = ListOfBlobs.load(
+    #         self.chosen_video.video.blobs_no_gaps_path
+    #     )
+    #     self.chosen_video.video.save()
+    #
+    # def restore_trajectories_wo_gaps(self):
+    #     self.restore_video_attributes()
+    #     self.chosen_video.video.save()
 
-    def restore_first_accumulation(self):
-        self.restore_video_attributes()
-        self.chosen_video.video._ratio_accumulated_images = self.chosen_video.video.percentage_of_accumulated_images[
-            0
-        ]
-        self.accumulation_network_params.restore_folder = (
-            self.chosen_video.video._accumulation_folder
-        )
-        self.accumulation_manager = AccumulationManager(
-            self.chosen_video.video,
-            self.chosen_video.list_of_fragments,
-            self.chosen_video.list_of_global_fragments,
-            threshold_acceptable_accumulation=conf.THRESHOLD_ACCEPTABLE_ACCUMULATION,
-        )
-        self.net = ConvNetwork(self.accumulation_network_params)
-        self.net.restore()
-        logger.info("Saving video")
-        self.chosen_video.video._has_been_pretrained = False
-        self.chosen_video.video.save()
-        self.chosen_video.list_of_fragments.save_light_list(
-            self.chosen_video.video._accumulation_folder
-        )
-
-    def restore_pretraining(self):
-        logger.info("Restoring pretrained network")
-        self.restore_video_attributes()
-        self.pretrain_network_params.restore_folder = (
-            self.chosen_video.video.pretraining_folder
-        )
-        self.net = ConvNetwork(self.pretrain_network_params)
-        self.net.restore()
-        self.accumulation_manager = AccumulationManager(
-            self.chosen_video.video,
-            self.chosen_video.list_of_fragments,
-            self.chosen_video.list_of_global_fragments,
-            threshold_acceptable_accumulation=conf.THRESHOLD_ACCEPTABLE_ACCUMULATION,
-        )
-        self.chosen_video.video.accumulation_trial = 0
-        self.chosen_video.video.save()
-
-    def restore_second_accumulation(self):
-        self.restore_video_attributes()
-        logger.info("Restoring trained network")
-        self.accumulation_network_params.restore_folder = (
-            self.chosen_video.video._accumulation_folder
-        )
-        self.chosen_video.list_of_fragments.load_light_list(
-            self.chosen_video.video._accumulation_folder
-        )
-        self.net = ConvNetwork(self.accumulation_network_params)
-        self.net.restore()
-        self.chosen_video.video.save()
-
-    def restore_identification(self):
-        self.restore_video_attributes()
-        self.chosen_video.list_of_fragments.load_light_list(
-            self.chosen_video.video._accumulation_folder
-        )
-        self.chosen_video.video.save()
-
-    def restore_trajectories(self):
-        self.restore_video_attributes()
-        self.chosen_video.video.save()
-
-    def restore_crossings_solved(self):
-        self.restore_video_attributes()
-        self.chosen_video.video.copy_attributes_between_two_video_objects(
-            self.chosen_video.old_video, ["blobs_no_gaps_path"], [False]
-        )
-        self.chosen_video.list_of_blobs_no_gaps = ListOfBlobs.load(
-            self.chosen_video.video.blobs_no_gaps_path
-        )
-        self.chosen_video.video.save()
-
-    def restore_trajectories_wo_gaps(self):
-        self.restore_video_attributes()
-        self.chosen_video.video.save()
+    """ Residual identification """
 
     def identify(self):
         self.chosen_video.video._identify_time = time.time()
@@ -1132,6 +1170,8 @@ class TrackerAPI(object):
         )
         self.chosen_video.video._has_been_assigned = True
         self.chosen_video.video.save()
+
+    """ Post processing """
 
     def postprocess_impossible_jumps(self, call_update_list_of_blobs=True):
         if not hasattr(
@@ -1183,8 +1223,7 @@ class TrackerAPI(object):
         # if False:
         #     self.chosen_video.list_of_blobs.compute_nose_and_head_coordinates()
         self.chosen_video.list_of_blobs.save(
-            self.chosen_video.video,
-            self.chosen_video.video.blobs_path
+            self.chosen_video.video, self.chosen_video.video.blobs_path
         )
         self.chosen_video.video._identify_time = (
             time.time() - self.chosen_video.video.identify_time
@@ -1252,8 +1291,7 @@ class TrackerAPI(object):
             self.chosen_video.video._has_crossings_solved = False
             self.chosen_video.video._has_trajectories_wo_gaps = False
             self.chosen_video.list_of_blobs.save(
-                self.chosen_video.video,
-                self.chosen_video.video.blobs_path,
+                self.chosen_video.video, self.chosen_video.video.blobs_path,
             )
             # Call GUI function
             if update_and_show_happy_ending_popup:

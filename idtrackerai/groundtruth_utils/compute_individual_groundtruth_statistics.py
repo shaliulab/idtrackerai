@@ -21,23 +21,27 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
-
-import os
-import sys
-import numpy as np
-from pprint import pprint
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.blob import Blob
-from idtrackerai.groundtruth_utils.generate_individual_groundtruth import (
-    IndividualGroundTruth,
-    GroundTruthBlob,
-)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
+import os
+import sys
+from pprint import pprint
+
+import numpy as np
+
+from idtrackerai.blob import Blob
+from idtrackerai.groundtruth_utils.generate_individual_groundtruth import (
+    GroundTruthBlob,
+    IndividualGroundTruth,
+)
+from idtrackerai.list_of_blobs import ListOfBlobs
 
 logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
 
@@ -89,7 +93,10 @@ def check_groundtruth_consistency(
     individual_blobs,
     individual_id,
 ):
-    non_matching_error = "The length of the collections of the ground truth individual and the selected one do not match"
+    non_matching_error = (
+        "The length of the collections of the ground truth "
+        "individual and the selected one do not match"
+    )
     if individual_groundtruth_id != individual_id or len(
         blobs_in_individual_groundtruth
     ) != len(individual_blobs):

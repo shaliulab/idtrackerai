@@ -21,18 +21,21 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import os
 
-import numpy as np
 import cv2
 import h5py
-from confapp import conf
 import matplotlib.pyplot as plt
+import numpy as np
+from confapp import conf
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.segmentation_utils import blob_extractor

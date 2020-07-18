@@ -1,22 +1,51 @@
-import numpy as np
+# This file is part of idtracker.ai a multiple animals tracking system
+# described in [1].
+# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
+# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
+# Champalimaud Foundation.
+#
+# idtracker.ai is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details. In addition, we require
+# derivatives or applications to acknowledge the authors by citing [1].
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# For more information please send an email (idtrackerai@gmail.com) or
+# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
+#
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
+# (F.R.-F. and M.G.B. contributed equally to this work.
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
+
+import logging
 import time
 
+import numpy as np
 from confapp import conf
 
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.preprocessing.segmentation import segment
 from idtrackerai.crossing_detector import detect_crossings
-
-from idtrackerai.list_of_global_fragments import (
-    ListOfGlobalFragments,
-    create_list_of_global_fragments,
-)
+from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.list_of_fragments import (
     ListOfFragments,
     create_list_of_fragments,
 )
-
-import logging
+from idtrackerai.list_of_global_fragments import (
+    ListOfGlobalFragments,
+    create_list_of_global_fragments,
+)
+from idtrackerai.preprocessing.segmentation import segment
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +104,8 @@ class PreprocessingPreviewAPI(object):
         self.frames_with_more_blobs_than_animals = None
 
     def init_preview(self):
-        ## TODO: Check how important is this method. Variables in init_segment_zero do not seem to be used
+        ## TODO: Check how important is this method. Variables in
+        # init_segment_zero do not seem to be used
         logger.debug("init_preview")
         self.init_preproc_parameters()
 
@@ -109,7 +139,7 @@ class PreprocessingPreviewAPI(object):
 
         if (
             self.chosen_video.old_video is not None
-            and self.chosen_video.old_video._has_been_preprocessed == True
+            and self.chosen_video.old_video._has_been_preprocessed
         ):
 
             self.max_threshold = self.chosen_video.old_video.max_threshold
@@ -185,9 +215,12 @@ class PreprocessingPreviewAPI(object):
         )
 
         """
-        #This call is used in the GUI to re-segment the image in the case the tracking returned more blobs than expected
+        #This call is used in the GUI to re-segment the image in the case the 
+        tracking returned more blobs than expected
         #In the case of the API this is not necessary
-        if len(self.frames_with_more_blobs_than_animals) > 0 and (check_segmentation_consistency or self.chosen_video.video.number_of_animals == 1):
+        if len(self.frames_with_more_blobs_than_animals) > 0 and 
+        (check_segmentation_consistency or 
+        self.chosen_video.video.number_of_animals == 1):
             self.resegmentation_step_finished = True
 
             if resegment: self.resegmentation()
@@ -339,8 +372,7 @@ class PreprocessingPreviewAPI(object):
             )
         self.chosen_video.video._has_been_preprocessed = True
         self.chosen_video.list_of_blobs.save(
-            self.chosen_video.video,
-            self.chosen_video.video.blobs_path
+            self.chosen_video.video, self.chosen_video.video.blobs_path
         )
         if self.chosen_video.video.number_of_animals != 1:
             self.list_of_global_fragments.save(

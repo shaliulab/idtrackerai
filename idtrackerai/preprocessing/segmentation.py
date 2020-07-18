@@ -21,37 +21,40 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import gc
+import logging
+import multiprocessing
 import os
 import sys
-import gc
 
-import numpy as np
-import multiprocessing
 import cv2
 import h5py
-from joblib import Parallel, delayed
-from tqdm import tqdm
+import numpy as np
+
 # from scipy import ndimage # TODO: used to fill binary holes see below
 from confapp import conf
+from joblib import Parallel, delayed
+from tqdm import tqdm
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import (
     flatten,
-    set_mkl_to_single_thread,
     set_mkl_to_multi_thread,
+    set_mkl_to_single_thread,
 )
 from idtrackerai.utils.segmentation_utils import (
-    segment_frame,
     blob_extractor,
     get_frame_average_intensity,
+    segment_frame,
 )
-
-import logging
 
 logger = logging.getLogger("__main__.segmentation")
 
@@ -527,7 +530,7 @@ def resegment(video, frame_number, list_of_blobs, new_segmentation_thresholds):
     if video.paths_to_video_segments is None:
         video_path = video.video_path
     else:
-        video_path = video.paths_to_video_segments[episode]
+        video_path = video.paths_to_video_segments[episode_number]
     if not video.paths_to_video_segments:
         cap, _ = get_videoCapture(
             video, None, video.episodes_start_end[episode_number]

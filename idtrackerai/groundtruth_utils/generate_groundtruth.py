@@ -21,19 +21,23 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
-
-import os
-import sys
-import numpy as np
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.list_of_fragments import ListOfFragments
-from idtrackerai.blob import Blob
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
+import os
+import sys
+
+import numpy as np
+
+from idtrackerai.blob import Blob
+from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.list_of_fragments import ListOfFragments
 
 logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
 
@@ -112,7 +116,7 @@ def generate_groundtruth(
     tracked video
     """
     # make sure the video has been succesfully tracked
-    assert video.has_been_assigned == True
+    assert video.has_been_assigned
     blobs_in_video_groundtruth = []
 
     for blobs_in_frame in blobs_in_video:
@@ -142,22 +146,28 @@ def generate_groundtruth(
 
 if __name__ == "__main__":
 
-    # session_path = selectDir('./') #select path to video
+    session_path = sys.argv[1]  # select path to video
     video_path = os.path.join(session_path, "video_object.npy")
     video = np.load(video_path, allow_pickle=True).item()
-    start = getInput(
-        "GroundTruth (start)",
-        "Input the starting frame for the interval in which the video has been validated",
+    start = input(
+        "GroundTruth (start)"
+        "Input the starting frame for the interval "
+        "in which the video has been validated",
     )
-    end = getInput(
-        "GroundTruth (end)",
-        "Input the ending frame for the interval in which the video has been validated",
+    end = input(
+        "GroundTruth (end)"
+        "Input the ending frame for the interval "
+        "in which the video has been validated",
     )
     # read blob list from video
-    # fragments_path = os.path.join(session_path, 'preprocessing', 'fragments.npy')
-    # blobs_path = os.path.join(session_path, 'preprocessing', 'blobs_collection.npy')
-    list_of_fragments = ListOfFragments.load(video.fragments_path)
-    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
+    fragments_path = os.path.join(
+        session_path, "preprocessing", "fragments.npy"
+    )
+    blobs_path = os.path.join(
+        session_path, "preprocessing", "blobs_collection.npy"
+    )
+    list_of_fragments = ListOfFragments.load(fragments_path)
+    list_of_blobs = ListOfBlobs.load(video, blobs_path)
     list_of_blobs.update_from_list_of_fragments(
         list_of_fragments.fragments, video.fragment_identifier_to_index
     )

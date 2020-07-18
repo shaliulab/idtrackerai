@@ -21,37 +21,39 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
+
+import logging
+
+import numpy as np
+import torch
+import torch.backends.cudnn as cudnn
+import torch.nn as nn
+from confapp import conf
+from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai.accumulation_manager import (
     get_predictions_of_candidates_fragments,
 )
-from confapp import conf
-import numpy as np
-
-import torch
-import torch.nn as nn
-import torch.backends.cudnn as cudnn
-from torch.optim.lr_scheduler import MultiStepLR
-
-from idtrackerai.network.identification_model.trainer import (
-    TrainIdentification,
-)
 from idtrackerai.network.data_loaders.identification_dataloader import (
     get_training_data_loaders,
-)
-from idtrackerai.network.identification_model.stop_training_criteria import (
-    Stop_Training,
 )
 from idtrackerai.network.data_sets.identification_dataset import (
     split_data_train_and_validation,
 )
-
-import logging
+from idtrackerai.network.identification_model.stop_training_criteria import (
+    Stop_Training,
+)
+from idtrackerai.network.identification_model.trainer import (
+    TrainIdentification,
+)
 
 logger = logging.getLogger("__main__.accumulator")
 

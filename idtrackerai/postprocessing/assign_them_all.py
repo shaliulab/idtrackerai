@@ -21,34 +21,35 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import collections
+import logging
 import os
 import sys
 
-import collections
-import numpy as np
 import cv2
-from tqdm import tqdm
-from scipy.spatial.distance import cdist
+import numpy as np
 from confapp import conf
+from scipy.spatial.distance import cdist
+from tqdm import tqdm
 
+from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.list_of_fragments import ListOfFragments
+from idtrackerai.postprocessing.compute_velocity_model import (
+    compute_model_velocity,
+)
 from idtrackerai.preprocessing.erosion import (
     compute_erosion_disk,
     erode,
     get_eroded_blobs,
 )
-from idtrackerai.list_of_fragments import ListOfFragments
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.postprocessing.compute_velocity_model import (
-    compute_model_velocity,
-)
-
-
-import logging
 
 logger = logging.getLogger("__main__.assign_them_all")
 
@@ -367,7 +368,8 @@ def evaluate_candidate_blobs_and_centroid(
         candidate_eroded_blobs, candidate_centroid
     )
     if blob_containing_candidate_centroid:
-        # logger.debug('Finished evaluating candidate blobs and centroids: the candidate centroid is in an eroded blob')
+        # logger.debug('Finished evaluating candidate blobs and centroids: '
+        #              'the candidate centroid is in an eroded blob')
         return blob_containing_candidate_centroid[0], candidate_centroid
     elif len(candidate_eroded_blobs) > 0:
         nearest_blob = get_nearest_eroded_blob_to_candidate_centroid(
@@ -384,13 +386,16 @@ def evaluate_candidate_blobs_and_centroid(
         ) or eroded_blob_overlaps_with_blob_in_border_frame(
             nearest_blob, blob_in_border_frame
         ):
-            # logger.debug('Finished evaluating candidate blobs and centroids: the candidate centroid is near to a candidate blob')
+            # logger.debug('Finished evaluating candidate blobs and centroids: '
+            #              'the candidate centroid is near to a candidate blob')
             return nearest_blob, new_centroid
         else:
-            # logger.debug('Finished evaluating candidate blobs and centroids: the candidate centrois is far from a candidate blob')
+            # logger.debug('Finished evaluating candidate blobs and centroids: '
+            #              'the candidate centrois is far from a candidate blob')
             return None, None
     else:
-        # logger.debug('Finished evaluating candidate blobs and centroids: there where no candidate blobs')
+        # logger.debug('Finished evaluating candidate blobs and centroids: '
+        #              'there where no candidate blobs')
         return None, None
 
 
@@ -477,8 +482,10 @@ def assign_identity_to_new_blobs(
         elif (
             len(candidate_tuples_with_centroids_in_original_blob) > 1
             and original_blob.is_a_crossing
-        ):  # Note that the original blobs that were unidentified (identity 0) are set to zero before starting the main while loop
-            # logger.debug('Many candidate tuples for this original blob, and the original blob is a crossing')
+        ):  # Note that the original blobs that were unidentified (identity 0)
+            # are set to zero before starting the main while loop
+            # logger.debug('Many candidate tuples for this original blob, '
+            #              'and the original blob is a crossing')
             candidate_eroded_blobs = list(
                 zip(*candidate_tuples_with_centroids_in_original_blob)
             )[0]
@@ -586,13 +593,18 @@ def interpolate_trajectories_during_gaps(
                 forward_backward_list_of_frames = get_forward_backward_list_of_frames(
                     gap_interval
                 )
-                # logger.debug('--There are missing identities in this main frame: gap interval %s ' %(gap_interval,))
+                # logger.debug('--There are missing identities in this main '
+                #              'frame: gap interval %s ' %(gap_interval,))
                 for index, inner_frame_number in enumerate(
                     forward_backward_list_of_frames
                 ):
-                    # logger.debug('---Length forward_backward_list_of_frames %i' %len(forward_backward_list_of_frames))
-                    # logger.debug('---Gap interval: interval %s ' %(gap_interval,))
-                    # logger.debug('---Inner frame number %i' %inner_frame_number )
+                    # logger.debug('---Length '
+                    #              'forward_backward_list_of_frames '
+                    #              '%i' %len(forward_backward_list_of_frames))
+                    # logger.debug('---Gap interval: interval '
+                    #              '%s ' %(gap_interval,))
+                    # logger.debug('---Inner frame number '
+                    #              '%i' %inner_frame_number )
                     inner_occluded_identities_in_frame = list_of_occluded_identities[
                         inner_frame_number
                     ]
@@ -627,12 +639,14 @@ def interpolate_trajectories_during_gaps(
                                 inner_frame_number,
                                 list_of_occluded_identities,
                             )
-                            # logger.debug('individual_gap_interval: %s' %(individual_gap_interval,))
+                            # logger.debug('individual_gap_interval: '
+                            #              '%s' %(individual_gap_interval,))
                             if (
                                 previous_blob_to_the_gap is not None
                                 and next_blob_to_the_gap is not None
                             ):
-                                # logger.debug('------The previous and next blobs are not None')
+                                # logger.debug('------The previous and next '
+                                #              'blobs are not None')
                                 border = "start" if index % 2 == 0 else "end"
                                 candidate_centroid = get_candidate_centroid(
                                     individual_gap_interval,
@@ -671,7 +685,10 @@ def interpolate_trajectories_during_gaps(
                                     identity=identity,
                                 )
                                 if candidate_blob_to_close_gap is not None:
-                                    # logger.debug('------There is a tuple (blob, centroid, identity) to close the gap in this inner frame)')
+                                    # logger.debug('------There is a tuple '
+                                    #              '(blob, centroid, identity) '
+                                    #              'to close the gap in this '
+                                    #              'inner frame)')
                                     candidate_tuples_to_close_gap.append(
                                         (
                                             candidate_blob_to_close_gap,
@@ -680,15 +697,32 @@ def interpolate_trajectories_during_gaps(
                                         )
                                     )
                                 else:
-                                    # logger.debug('------There are no candidate blobs and/or centroids: it must be occluded or it jumped')
+                                    # logger.debug('------There are no candidate '
+                                    #              'blobs and/or centroids: it '
+                                    #              'must be occluded or it jumped')
                                     list_of_occluded_identities[
                                         inner_frame_number
                                     ].append(identity)
-                            else:  # this manages the case in which identities are missing in the first frame or disappear without appearing anymore,
-                                # and evntual occlusions (an identified blob does not appear in the previous and/or the next frame)
-                                # logger.debug('------There is not next or not previous blob to this inner gap: it must be occluded')
-                                # logger.debug('previous_blob_to_the_gap is None') if previous_blob_to_the_gap is None else logger.debug('previous_blob_to_the_gap exists')
-                                # logger.debug('next_blob_to_the_gap is None') if next_blob_to_the_gap is None else logger.debug('next_blob_to_the_gap exists')
+                            # this manages the case in which identities are
+                            # missing in the first frame or disappear
+                            # without appearing anymore,
+                            else:
+                                # and evntual occlusions (an identified blob
+                                # does not appear in the previous and/or the
+                                # next frame)
+                                # logger.debug('------There is not next or not '
+                                #              'previous blob to this inner gap:'
+                                #              ' it must be occluded')
+                                # if previous_blob_to_the_gap is None:
+                                #     logger.debug('previous_blob_to_the_gap '
+                                #                  'is None')
+                                # else:
+                                #     logger.debug('previous_blob_to_the_gap '
+                                #                  'exists')
+                                # if next_blob_to_the_gap:
+                                #     logger.debug('next_blob_to_the_gap is None')
+                                # else:
+                                #     logger.debug('next_blob_to_the_gap exists')
                                 [
                                     list_of_occluded_identities[i].append(
                                         identity
@@ -699,7 +733,8 @@ def interpolate_trajectories_during_gaps(
                                     )
                                 ]
 
-                        # logger.debug('-----Assinning identities to candidate tuples (blob, centroid, identity)')
+                        # logger.debug('-----Assinning identities to candidate '
+                        #              'tuples (blob, centroid, identity)')
                         (
                             blobs_in_video,
                             list_of_occluded_identities,

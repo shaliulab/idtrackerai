@@ -21,31 +21,25 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import logging
 import sys
 
 import torch
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
+import torch.nn as nn
+from confapp import conf
 from torch.optim.lr_scheduler import MultiStepLR
 
-from confapp import conf
-
-from idtrackerai.network.data_sets.crossings_dataset import (
-    get_train_validation_and_toassign_blobs,
-)
-from idtrackerai.network.data_loaders.crossings_dataloader import (
-    get_training_data_loaders,
-)
 from idtrackerai.network.crossings_detector_model.network_params_crossings import (
     NetworkParams_crossings,
-)
-from idtrackerai.network.crossings_detector_model.trainer_crossing_detector import (
-    TrainDeepCrossing,
 )
 from idtrackerai.network.crossings_detector_model.predictor_crossing_detector import (
     GetPredictionCrossigns,
@@ -53,11 +47,16 @@ from idtrackerai.network.crossings_detector_model.predictor_crossing_detector im
 from idtrackerai.network.crossings_detector_model.stop_training_criteria_crossings import (
     Stop_Training,
 )
-
-
+from idtrackerai.network.crossings_detector_model.trainer_crossing_detector import (
+    TrainDeepCrossing,
+)
+from idtrackerai.network.data_loaders.crossings_dataloader import (
+    get_training_data_loaders,
+)
+from idtrackerai.network.data_sets.crossings_dataset import (
+    get_train_validation_and_toassign_blobs,
+)
 from idtrackerai.network.learners.learners import Learner_Classification
-
-import logging
 
 logger = logging.getLogger("__main__.crossing_detector")
 

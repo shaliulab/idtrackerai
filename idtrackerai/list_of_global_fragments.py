@@ -21,26 +21,27 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import logging
 import sys
 
 import numpy as np
 from confapp import conf
 
-from idtrackerai.globalfragment import GlobalFragment
+from idtrackerai.accumulation_manager import AccumulationManager
 from idtrackerai.assigner import (
     assign,
     compute_identification_statistics_for_non_accumulated_fragments,
 )
-from idtrackerai.accumulation_manager import AccumulationManager
+from idtrackerai.globalfragment import GlobalFragment
 from idtrackerai.pre_trainer import weights_reinit
-
-
-import logging
 
 logger = logging.getLogger("__main__.list_of_global_fragments")
 
@@ -242,8 +243,8 @@ class ListOfGlobalFragments(object):
         ----------
         video : <Video object>
             instance of the class :class:`~video.Video`.
-        net : ConvNetwork object
-            network used to assign the identities of the first global fragment.
+        identification_model :
+        network_params :
 
         """
         (
@@ -340,7 +341,7 @@ class ListOfGlobalFragments(object):
                 "Identity transfer failed because the identities are not unique"
             )
             identities = self.abort_knowledge_transfer_on_same_animals(
-                video, net
+                video, identification_model
             )
             logger.info(
                 "Identity transfer is not possible. Identities will be intialized"

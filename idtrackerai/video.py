@@ -21,28 +21,29 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
 
+import glob
+import logging
 import os
 import sys
 import time
-import glob
-from tempfile import mkstemp
 from shutil import move, rmtree
+from tempfile import mkstemp
 
-import numpy as np
 import cv2
-from natsort import natsorted
+import numpy as np
 from confapp import conf
-
+from natsort import natsorted
 
 from idtrackerai.postprocessing.assign_them_all import close_trajectories_gaps
-
-import logging
 
 logger = logging.getLogger("__main__.video")
 
@@ -96,13 +97,20 @@ class Video(object):
         logger.debug("Video object init")
         self._open_multiple_files = open_multiple_files
         self._video_path = video_path  # string: path to the video
-        self._number_of_animals = None  # int: number of animals in the video
-        self._episodes_start_end = None  # list of lists: starting and ending frame per chunk [video is split for parallel computation]
-        self._original_bkg = None  # matrix [shape = shape of a frame] background used to do bkg subtraction
+        # int: number of animals in the video
+        self._number_of_animals = None
+        # list of lists: starting and ending frame per chunk [video is split
+        # for parallel computation]
+        self._episodes_start_end = None
+        # matrix [shape = shape of a frame] background used to do bkg subtraction
+        self._original_bkg = None
         self._bkg = None
         self._resolution_reduction = 1.0
-        self._subtract_bkg = None  # boolean: True if the user specifies to subtract the background
-        self._original_ROI = None  # matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
+        # boolean: True if the user specifies to subtract the background
+        self._subtract_bkg = None
+        # matrix [shape = shape of a frame] 255 are valid
+        # (part of the ROI) pixels and 0 are invalid according to openCV convention
+        self._original_ROI = None
         self._ROI = None
         self._apply_ROI = (
             None  # boolean: True if the user applies a ROI to the video
@@ -114,7 +122,10 @@ class Video(object):
         self._resize = 1
         self._resegmentation_parameters = []
         self._tracking_interval = None
-        self._has_preprocessing_parameters = False  # boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
+        # boolean: True once the preprocessing parameters
+        # (max/min area, max/min threshold) are set and saved
+        self._has_preprocessing_parameters = False
+
         self._maximum_number_of_blobs = (
             0  # int: the maximum number of blobs detected in the video
         )
@@ -124,7 +135,8 @@ class Video(object):
         self._blobs_path_segmented = None
         self._blobs_path_interpolated = None
         self._has_been_segmented = None
-        self._has_been_preprocessed = None  # boolean: True if a video has been fragmented in a past session
+        # boolean: True if a video has been fragmented in a past session
+        self._has_been_preprocessed = None
         self._preprocessing_folder = None
         self._images_folder = None
         self._global_fragments_path = (
@@ -165,7 +177,8 @@ class Video(object):
         if conf.SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
 
-        # Flag to decide which type of interpolation is done. This flag is updated when we update a blob centroid
+        # Flag to decide which type of interpolation is done. This flag
+        # is updated when we update a blob centroid
         self._is_centroid_updated = False
 
         logger.debug(f"Video(open_multiple_files={self.open_multiple_files})")
@@ -454,7 +467,8 @@ class Video(object):
         if conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN is None:
             raise ValueError(
                 "To perform identity transfer you "
-                "need to provide a path for the variable KNOWLEDGE_TRANSFER_FOLDER_IDCNN "
+                "need to provide a path for the variable "
+                "KNOWLEDGE_TRANSFER_FOLDER_IDCNN "
                 "in the local_settings.py file"
             )
         self.knowledge_transfer_model_file = (
@@ -469,13 +483,16 @@ class Video(object):
             ).item()
         else:
             raise ValueError(
-                "To perform identity transfer the models_params.npy file is needed to check the "
-                "input_image_size and the number_of_classes of the model to be loaded"
+                "To perform identity transfer the models_params.npy file "
+                "is needed to check the "
+                "input_image_size and the number_of_classes of the model to "
+                "be loaded"
             )
 
         if self.is_identity_transfer_possible():
             logger.info(
-                "Tracking with identity transfer. The IDENTIFICATION_IMAGE_SIZE will be matched "
+                "Tracking with identity transfer. The IDENTIFICATION_IMAGE_SIZE "
+                "will be matched "
                 "to the input_image_size of the transferred network"
             )
             self._identity_transfer = True
@@ -488,8 +505,9 @@ class Video(object):
             ]
         else:
             logger.info(
-                "Tracking with identity transfer failed. The number of animals in the video\
-                        needs to be the same as the number of animals in the transferred network"
+                "Tracking with identity transfer failed. The number of animals "
+                "in the video needs to be the same as the number of animals "
+                "in the transferred network"
             )
             self._identity_transfer = False
             self._tracking_with_knowledge_transfer = False

@@ -21,11 +21,15 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import logging
 import os
 import sys
 
@@ -35,11 +39,9 @@ from tqdm import tqdm
 
 from idtrackerai.fragment import Fragment
 from idtrackerai.utils.py_utils import (
-    set_attributes_of_object_to_value,
     append_values_to_lists,
+    set_attributes_of_object_to_value,
 )
-
-import logging
 
 logger = logging.getLogger("__main__.list_of_fragments")
 
@@ -339,7 +341,7 @@ class ListOfFragments(object):
             list of dictionaries organised per fragment with keys the
             attributes listed in `attributes`
         """
-        if attributes == None:
+        if attributes is None:
             attributes_to_discard = [
                 "images",
                 "coexisting_individual_fragments",

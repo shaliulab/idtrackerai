@@ -21,26 +21,28 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import logging
+import multiprocessing
 import sys
 
 import cv2
 import numpy as np
-import multiprocessing
-from joblib import Parallel, delayed
 from confapp import conf
+from joblib import Parallel, delayed
 
 # from idtrackerai.utils.py_utils import *
 from idtrackerai.utils.py_utils import (
-    set_mkl_to_single_thread,
     set_mkl_to_multi_thread,
+    set_mkl_to_single_thread,
 )
-
-import logging
 
 logger = logging.getLogger("__main__.segmentation_utils")
 

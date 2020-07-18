@@ -21,13 +21,17 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import numpy as np
 from tqdm import tqdm
+
 
 """
 The correct_impossible_velocity_jumps module
@@ -184,15 +188,16 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
         available_identities,
         impossible_velocity_threshold,
     ):
-        """Computes the candidate identities of a `fragment` taking into consideration
-        the probability of identification given by its `fragment.P2_vector`. An identity
-        is a potential candidate if the probability of identification is above random.
+        """Computes the candidate identities of a `fragment` taking into
+        consideration the probability of identification given by its
+        `fragment.P2_vector`. An identity is a potential candidate if the
+        probability of identification is above random.
 
         Parameters
         ----------
         fragment : <Fragment object>
-            Object collecting all the information for a consecutive set of overlapping
-            blobs that are considered to be the same animal
+            Object collecting all the information for a consecutive set of
+            overlapping blobs that are considered to be the same animal
         fragments : list
             List with all the `Fragment` objects of the video
         non_available_identities : nd.array
@@ -200,21 +205,22 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
         available_identities : set
             Set with the available idenities for the `fragment`
         impossible_velocity_threshold : float
-            If the velocity needed to link two fragments is higher than this threshold
-            the identiy of one of the fragments is considerd to be wrong as it would be
-            physically impossible for an animal to move so much. See `video.velocity_threshold`
-            for each definition
+            If the velocity needed to link two fragments is higher than this
+            threshold the identiy of one of the fragments is considerd to be
+            wrong as it would be physically impossible for an animal to move so
+            much. See `video.velocity_threshold` for each definition
 
         Returns
         -------
         candidate_identities_by_speed : nd.array
-            Array with the identities that fullfill the `impossible_velocity_threshold`
-            ordered from minimum to maximum velocity
+            Array with the identities that fullfill the
+            `impossible_velocity_threshold` ordered from minimum to maximum
+            velocity
 
         speed_of_candidate_identities : nd.array
             Array with the maximum velocity needed to link the given `fragment`
-            with its neighbours assuming a given identity. Ordered from minimum to maximum
-            velocity
+            with its neighbours assuming a given identity. Ordered from
+            minimum to maximum velocity
 
         See Also
         --------
@@ -308,8 +314,8 @@ def compute_velocities_consecutive_fragments(
         `Fragment` object with the same identity as the current fragment in the
         past
     fragment : <Fragment object>
-        Object collecting all the information for a consecutive set of overlapping
-        blobs that are considered to be the same animal
+        Object collecting all the information for a consecutive set of
+        overlapping blobs that are considered to be the same animal
     neighbour_fragment_future : <Fragment object>
         `Fragment` object with the same identity as the current fragment in the
         future
@@ -345,16 +351,18 @@ def get_fragment_with_same_identity(
     Parameters
     ----------
     video : <Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
+        Object collecting all the parameters of the video and paths for saving
+        and loading
     list_of_fragments : <ListOfFragments object>
-        Object collecting the list of fragments and all the statistics and methods
-        related to them
+        Object collecting the list of fragments and all the statistics and
+        methods related to them
     fragment : <Fragment object>
-        Object collecting all the information for a consecutive set of overlapping
-        blobs that are considered to be the same animal
+        Object collecting all the information for a consecutive set of
+        overlapping blobs that are considered to be the same animal
     direction : string
-        If `direction` = `to_the_past` gets the `neighbour_fragment` in the past
-        `direction` = `to_the_future` gets the `neighbour_fragment` in the future
+        If `direction` = `to_the_past` gets the `neighbour_fragment` in the
+        past, `direction` = `to_the_future` gets the `neighbour_fragment` in
+        the future
 
     Returns
     -------
@@ -395,19 +403,20 @@ def compute_neighbour_fragments_and_velocities(
     video, list_of_fragments, fragment
 ):
     """Computes the fragments with the same identities to the past and to the
-    future of a given `fragment` and gives the velocities at the extremes of the
-    current `fragment`
+    future of a given `fragment` and gives the velocities at the extremes of
+    the current `fragment`
 
     Parameters
     ----------
     video : <Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
+        Object collecting all the parameters of the video and paths for saving
+        and loading
     list_of_fragments : <ListOfFragments object>
-        Object collecting the list of fragments and all the statistics and methods
-        related to them
+        Object collecting the list of fragments and all the statistics and
+        methods related to them
     fragment : <Fragment object>
-        Object collecting all the information for a consecutive set of overlapping
-        blobs that are considered to be the same animal
+        Object collecting all the information for a consecutive set of
+        overlapping blobs that are considered to be the same animal
 
     Returns
     -------
@@ -466,7 +475,8 @@ def correct_impossible_velocity_jumps_loop(
     Parameters
     ----------
     video : <Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
+        Object collecting all the parameters of the video and paths for saving
+        and loading
     list_of_fragments : <ListOfFragments object>
         Object collecting the list of fragments and all the statistics and methods
         related to them
