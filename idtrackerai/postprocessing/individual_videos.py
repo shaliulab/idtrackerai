@@ -101,7 +101,7 @@ def generate_individual_video(
         # Read frame
         try:
             ret, frame = cap.read()
-        except:
+        except cv2.error:
             raise Exception("could not read frame")
         # Generate frame for individual
         individual_frame = get_frame(

@@ -265,7 +265,7 @@ def compare_tracking_against_groundtruth(
                             results["sum_individual_P2"][
                                 gt_identity
                             ] += blob._P2_vector[gt_identity - 1]
-                    except:
+                    except IndexError:
                         logger.debug("P2_vector %s" % str(blob._P2_vector))
                         logger.debug(
                             "individual %s" % str(blob.is_an_individual)

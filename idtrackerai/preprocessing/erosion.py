@@ -65,7 +65,7 @@ def compute_min_frame_distance_transform(video, blobs_in_frame):
                 max_distance_transform.append(
                     compute_max_distance_transform(video, blob)
                 )
-            except:
+            except cv2.error:
                 print(
                     "WARNING: Could not compute distance transform for this blob"
                 )

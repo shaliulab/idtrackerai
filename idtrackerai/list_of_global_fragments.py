@@ -166,7 +166,7 @@ class ListOfGlobalFragments(object):
             self.first_global_fragment_for_accumulation = self.global_fragments[
                 accumulation_trial
             ]
-        except:
+        except IndexError:
             return None
 
         if not video.identity_transfer or identification_model is None:

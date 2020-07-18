@@ -89,7 +89,7 @@ def flatten(list_):
     """ flatten a list of lists """
     try:
         ans = [inner for outer in list_ for inner in outer]
-    except:
+    except TypeError:
         ans = [y for x in list_ for y in (x if isinstance(x, tuple) else (x,))]
     return ans
 
