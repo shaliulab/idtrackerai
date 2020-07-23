@@ -328,8 +328,11 @@ CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON = False
 
 ################################################
 ################    GUI   ######################
+################################################
 """ ***OLD_LAYOUT*** 
-Activates new GUI horizontal Layout and activates the variables below
+Activates new GUI horizontal Layout and sets the width and height of the GUI 
+window following the values of the variables GUI_MINIMUM_HEIGHT and
+GUI_MINIMUM_WIDTH below.
 """
 NEW_GUI_LAYOUT = False
 """ ***GUI_MINIMUM_HEIGHT*** 
