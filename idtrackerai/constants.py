@@ -325,3 +325,19 @@ DATA_POLICY = os.environ.get('DATA_POLICY', 'all')
 INDIVIDUAL_VIDEO_WIDTH_HEIGHT = None
 
 CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON = False
+
+################################################
+################    GUI   ######################
+""" ***OLD_LAYOUT*** 
+Defaults to old GUI layout
+Inactivates the variables below
+"""
+OLD_GUI_LAYOUT = True
+""" ***GUI_MINIMUM_HEIGHT*** 
+Only functional if OLD_GUI_LAYOUT is False
+"""
+GUI_MINIMUM_HEIGHT = 500
+""" ***GUI_MINIMUM_HEIGHT*** 
+Only functional if OLD_GUI_LAYOUT is False
+"""
+GUI_MINIMUM_WIDTH = 1500
