@@ -21,24 +21,30 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import logging
 import sys
 
 import numpy as np
 from confapp import conf
 
-from idtrackerai.globalfragment import GlobalFragment
-from idtrackerai.assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
 from idtrackerai.accumulation_manager import AccumulationManager
+from idtrackerai.assigner import (
+    assign,
+    compute_identification_statistics_for_non_accumulated_fragments,
+)
+from idtrackerai.globalfragment import GlobalFragment
 from idtrackerai.pre_trainer import weights_reinit
 
-
-import logging
 logger = logging.getLogger("__main__.list_of_global_fragments")
+
 
 class ListOfGlobalFragments(object):
     """ Collects all the instances of the class
@@ -72,11 +78,12 @@ class ListOfGlobalFragments(object):
     :const:`conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION`
 
     """
+
     def __init__(self, global_fragments):
         self.global_fragments = global_fragments
         self.number_of_global_fragments = len(self.global_fragments)
 
-    def reset(self, roll_back_to = None):
+    def reset(self, roll_back_to=None):
         """Resets all the global fragment by calling recursively the method
         :meth:`~globalfragment.GlobalFragment.reset`
         """
@@ -87,10 +94,16 @@ class ListOfGlobalFragments(object):
         """Sorts the global fragments by the minimum distance travelled of their
         individual fragments
         """
-        self.global_fragments = sorted(self.global_fragments, key = lambda x: x.minimum_distance_travelled, reverse = True)
+        self.global_fragments = sorted(
+            self.global_fragments,
+            key=lambda x: x.minimum_distance_travelled,
+            reverse=True,
+        )
 
     @staticmethod
-    def give_me_frequencies_first_fragment_accumulated(i, number_of_animals, fragment):
+    def give_me_frequencies_first_fragment_accumulated(
+        i, number_of_animals, fragment
+    ):
         """The frequencies (see :meth:`~fragments.Fragments.compute_identification_statistics`)
         are generated artificially for the first global fragments.
 
@@ -118,11 +131,18 @@ class ListOfGlobalFragments(object):
     def abort_knowledge_transfer_on_same_animals(video, identification_model):
         identities = range(video.number_of_animals)
         identification_model.apply(weights_reinit)
-        logger.info("Identity transfer failed. We proceed by transferring only the convolutional filters.")
+        logger.info(
+            "Identity transfer failed. We proceed by transferring only the convolutional filters."
+        )
         return identities
 
-    def set_first_global_fragment_for_accumulation(self, video, accumulation_trial=0, identification_model=None,
-                                                   network_params=None):
+    def set_first_global_fragment_for_accumulation(
+        self,
+        video,
+        accumulation_trial=0,
+        identification_model=None,
+        network_params=None,
+    ):
         """Selects the first global fragment to be used for accumulation
 
         Parameters
@@ -143,28 +163,55 @@ class ListOfGlobalFragments(object):
         self.order_by_distance_travelled()
 
         try:
-            self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
-        except:
+            self.first_global_fragment_for_accumulation = self.global_fragments[
+                accumulation_trial
+            ]
+        except IndexError:
             return None
 
         if not video.identity_transfer or identification_model is None:
             identities = range(video.number_of_animals)
         else:
-            logger.info("Transferring identities from {}".format(video.knowledge_transfer_model_file))
-            identities = self.get_transferred_identities(video, identification_model, network_params)
+            logger.info(
+                "Transferring identities from {}".format(
+                    video.knowledge_transfer_model_file
+                )
+            )
+            identities = self.get_transferred_identities(
+                video, identification_model, network_params
+            )
 
+        [
+            (
+                setattr(fragment, "_acceptable_for_training", True),
+                setattr(fragment, "_temporary_id", identities[i]),
+                setattr(
+                    fragment,
+                    "_frequencies",
+                    self.give_me_frequencies_first_fragment_accumulated(
+                        i, video.number_of_animals, fragment
+                    ),
+                ),
+                setattr(fragment, "_is_certain", True),
+                setattr(fragment, "_certainty", 1.0),
+                setattr(
+                    fragment,
+                    "_P1_vector",
+                    fragment.compute_P1_from_frequencies(fragment.frequencies),
+                ),
+            )
+            for i, fragment in enumerate(
+                self.first_global_fragment_for_accumulation.individual_fragments
+            )
+        ]
 
-        [(setattr(fragment, '_acceptable_for_training', True),
-            setattr(fragment, '_temporary_id', identities[i]),
-            setattr(fragment, '_frequencies', self.give_me_frequencies_first_fragment_accumulated(i, video.number_of_animals, fragment)),
-            setattr(fragment, '_is_certain', True),
-            setattr(fragment, '_certainty', 1.),
-            setattr(fragment, '_P1_vector', fragment.compute_P1_from_frequencies(fragment.frequencies)))
-            for i, fragment in enumerate(self.first_global_fragment_for_accumulation.individual_fragments)]
+        return (
+            self.first_global_fragment_for_accumulation.index_beginning_of_fragment
+        )
 
-        return self.first_global_fragment_for_accumulation.index_beginning_of_fragment
-
-    def order_by_distance_to_the_first_global_fragment_for_accumulation(self, video, accumulation_trial = None):
+    def order_by_distance_to_the_first_global_fragment_for_accumulation(
+        self, video, accumulation_trial=None
+    ):
         """Sorts the global fragments wrt to their distance from the first
         global fragment chose for accumulation
 
@@ -177,11 +224,18 @@ class ListOfGlobalFragments(object):
             attempt, and if used, protocol 3 will perform 3 other attempts)
 
         """
-        self.global_fragments = sorted(self.global_fragments,
-                                        key = lambda x: np.abs(x.index_beginning_of_fragment - video.first_frame_first_global_fragment[accumulation_trial]),
-                                        reverse = False)
+        self.global_fragments = sorted(
+            self.global_fragments,
+            key=lambda x: np.abs(
+                x.index_beginning_of_fragment
+                - video.first_frame_first_global_fragment[accumulation_trial]
+            ),
+            reverse=False,
+        )
 
-    def get_transferred_identities(self, video, identification_model, network_params):
+    def get_transferred_identities(
+        self, video, identification_model, network_params
+    ):
         """Assigns an identity to the images of the first global fragment using
         a network passed by the user to perform identity transfer
 
@@ -189,12 +243,15 @@ class ListOfGlobalFragments(object):
         ----------
         video : <Video object>
             instance of the class :class:`~video.Video`.
-        net : ConvNetwork object
-            network used to assign the identities of the first global fragment.
+        identification_model :
+        network_params :
 
         """
-        images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels(
-            video.identification_images_file_paths, scope='identity_transfer'
+        (
+            images,
+            _,
+        ) = self.first_global_fragment_for_accumulation.get_images_and_labels(
+            video.identification_images_file_paths, scope="identity_transfer"
         )
         images = np.asarray(images)
 
@@ -202,54 +259,109 @@ class ListOfGlobalFragments(object):
 
         compute_identification_statistics_for_non_accumulated_fragments(
             self.first_global_fragment_for_accumulation.individual_fragments,
-            assigner, network_params.number_of_classes
+            assigner,
+            network_params.number_of_classes,
         )
 
         # Check certainties of the individual fragments in the global fragment
         # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
-        [setattr(fragment, '_acceptable_for_training', True) for fragment
-         in self.first_global_fragment_for_accumulation.individual_fragments]
+        [
+            setattr(fragment, "_acceptable_for_training", True)
+            for fragment in self.first_global_fragment_for_accumulation.individual_fragments
+        ]
 
-        for fragment in self.first_global_fragment_for_accumulation.individual_fragments:
-            if AccumulationManager.is_not_certain(fragment, conf.CERTAINTY_THRESHOLD):
-                logger.debug('Identity transfer failed because a fragment is not certain enough')
-                logger.debug('CERTAINTY_THRESHOLD %.2f, fragment certainty %.2f' %(conf.CERTAINTY_THRESHOLD, fragment.certainty))
-                identities = self.abort_knowledge_transfer_on_same_animals(video, identification_model)
+        for (
+            fragment
+        ) in self.first_global_fragment_for_accumulation.individual_fragments:
+            if AccumulationManager.is_not_certain(
+                fragment, conf.CERTAINTY_THRESHOLD
+            ):
+                logger.debug(
+                    "Identity transfer failed because a fragment is not certain enough"
+                )
+                logger.debug(
+                    "CERTAINTY_THRESHOLD %.2f, fragment certainty %.2f"
+                    % (conf.CERTAINTY_THRESHOLD, fragment.certainty)
+                )
+                identities = self.abort_knowledge_transfer_on_same_animals(
+                    video, identification_model
+                )
                 return identities
 
-        P1_array, index_individual_fragments_sorted_by_P1_max_to_min = AccumulationManager.get_P1_array_and_argsort(
-                                self.first_global_fragment_for_accumulation)
+        (
+            P1_array,
+            index_individual_fragments_sorted_by_P1_max_to_min,
+        ) = AccumulationManager.get_P1_array_and_argsort(
+            self.first_global_fragment_for_accumulation
+        )
 
         # assign temporary identity to individual fragments by hierarchical P1
-        for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
-            fragment = self.first_global_fragment_for_accumulation.individual_fragments[index_individual_fragment]
+        for (
+            index_individual_fragment
+        ) in index_individual_fragments_sorted_by_P1_max_to_min:
+            fragment = self.first_global_fragment_for_accumulation.individual_fragments[
+                index_individual_fragment
+            ]
 
-            if AccumulationManager.p1_below_random(P1_array, index_individual_fragment, fragment):
-                logger.debug('Identity transfer failed because P1 is below random')
-                identities = self.abort_knowledge_transfer_on_same_animals(video, identification_model)
+            if AccumulationManager.p1_below_random(
+                P1_array, index_individual_fragment, fragment
+            ):
+                logger.debug(
+                    "Identity transfer failed because P1 is below random"
+                )
+                identities = self.abort_knowledge_transfer_on_same_animals(
+                    video, identification_model
+                )
                 return identities
             else:
-                temporary_id = np.argmax(P1_array[index_individual_fragment,:])
-                if not fragment.check_consistency_with_coexistent_individual_fragments(temporary_id):
-                    logger.debug('Identity transfer failed because the identities are not consistent')
-                    identities = self.abort_knowledge_transfer_on_same_animals(video, identification_model)
+                temporary_id = np.argmax(
+                    P1_array[index_individual_fragment, :]
+                )
+                if not fragment.check_consistency_with_coexistent_individual_fragments(
+                    temporary_id
+                ):
+                    logger.debug(
+                        "Identity transfer failed because the identities are not consistent"
+                    )
+                    identities = self.abort_knowledge_transfer_on_same_animals(
+                        video, identification_model
+                    )
                     return identities
                 else:
                     P1_array = AccumulationManager.set_fragment_temporary_id(
-                                            fragment, temporary_id, P1_array,
-                                            index_individual_fragment)
+                        fragment,
+                        temporary_id,
+                        P1_array,
+                        index_individual_fragment,
+                    )
 
         # Check if the global fragment is unique after assigning the identities
         if not self.first_global_fragment_for_accumulation.is_unique:
-            logger.debug('Identity transfer failed because the identities are not unique')
-            identities = self.abort_knowledge_transfer_on_same_animals(video, net)
-            logger.info("Identity transfer is not possible. Identities will be intialized")
+            logger.debug(
+                "Identity transfer failed because the identities are not unique"
+            )
+            identities = self.abort_knowledge_transfer_on_same_animals(
+                video, identification_model
+            )
+            logger.info(
+                "Identity transfer is not possible. Identities will be intialized"
+            )
         else:
-            video._first_global_fragment_knowledge_transfer_identities = [fragment.temporary_id for fragment
-                        in self.first_global_fragment_for_accumulation.individual_fragments]
-            if video.number_of_animals == video.knowledge_transfer_info_dict['number_of_classes']:
-                identities = video._first_global_fragment_knowledge_transfer_identities
-            elif video.number_of_animals < video.knowledge_transfer_info_dict['number_of_classes']:
+            video._first_global_fragment_knowledge_transfer_identities = [
+                fragment.temporary_id
+                for fragment in self.first_global_fragment_for_accumulation.individual_fragments
+            ]
+            if (
+                video.number_of_animals
+                == video.knowledge_transfer_info_dict["number_of_classes"]
+            ):
+                identities = (
+                    video._first_global_fragment_knowledge_transfer_identities
+                )
+            elif (
+                video.number_of_animals
+                < video.knowledge_transfer_info_dict["number_of_classes"]
+            ):
                 identities = range(video.number_of_animals)
             logger.info("Identities transferred succesfully")
 
@@ -259,17 +371,28 @@ class ListOfGlobalFragments(object):
     def compute_maximum_number_of_images(self):
         """Computes the maximum number of images in the global fragments
         """
-        self.maximum_number_of_images = max([global_fragment.get_total_number_of_images() for global_fragment in self.global_fragments])
+        self.maximum_number_of_images = max(
+            [
+                global_fragment.get_total_number_of_images()
+                for global_fragment in self.global_fragments
+            ]
+        )
 
     def filter_candidates_global_fragments_for_accumulation(self):
         """Filters the global fragments by taking into account the minium
         number of images per individual fragments specified in
         :attr:`~globalfragment.GlobalFragment.candidate_for_accumulation`
         """
-        self.non_accumulable_global_fragments = [global_fragment for global_fragment in self.global_fragments
-                    if not global_fragment.candidate_for_accumulation]
-        self.global_fragments = [global_fragment for global_fragment in self.global_fragments
-                                 if global_fragment.candidate_for_accumulation]
+        self.non_accumulable_global_fragments = [
+            global_fragment
+            for global_fragment in self.global_fragments
+            if not global_fragment.candidate_for_accumulation
+        ]
+        self.global_fragments = [
+            global_fragment
+            for global_fragment in self.global_fragments
+            if global_fragment.candidate_for_accumulation
+        ]
         self.number_of_global_fragments = len(self.global_fragments)
 
     # def get_data_plot(self):
@@ -317,7 +440,9 @@ class ListOfGlobalFragments(object):
         """Resets the individual fragments to their respective global fragments
         """
         for global_fragment in self.global_fragments:
-            global_fragment.get_individual_fragments_of_global_fragment(fragments)
+            global_fragment.get_individual_fragments_of_global_fragment(
+                fragments
+            )
 
     def save(self, global_fragments_path, fragments):
         """Saves an instance of the class in the path `global_fragments_path`.
@@ -327,9 +452,11 @@ class ListOfGlobalFragments(object):
         and resets them after saving by calling
         :meth:`~relink_fragments_to_global_fragments`
         """
-        logger.info("saving list of global fragments at %s" %global_fragments_path)
+        logger.info(
+            "saving list of global fragments at %s" % global_fragments_path
+        )
         self.delete_fragments_from_global_fragments()
-        np.save(global_fragments_path,self)
+        np.save(global_fragments_path, self)
         # After saving the list of globa fragments the individual fragments are deleted and we need to relink them again
         self.relink_fragments_to_global_fragments(fragments)
 
@@ -339,10 +466,15 @@ class ListOfGlobalFragments(object):
         associates individual fragments to each global fragment by calling
         :meth:`~relink_fragments_to_global_fragments`
         """
-        logger.info("loading list of global fragments from %s" %path_to_load)
-        list_of_global_fragments = np.load(path_to_load, allow_pickle=True).item()
-        list_of_global_fragments.relink_fragments_to_global_fragments(fragments)
+        logger.info("loading list of global fragments from %s" % path_to_load)
+        list_of_global_fragments = np.load(
+            path_to_load, allow_pickle=True
+        ).item()
+        list_of_global_fragments.relink_fragments_to_global_fragments(
+            fragments
+        )
         return list_of_global_fragments
+
 
 def detect_beginnings(boolean_array):
     """ Detects the frame where the core of a global fragment starts.
@@ -355,13 +487,19 @@ def detect_beginnings(boolean_array):
     if np.all(boolean_array):
         return [0]
     else:
-        return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
+        return [
+            i
+            for i in range(0, len(boolean_array))
+            if (boolean_array[i] and not boolean_array[i - 1])
+        ]
+
 
 def check_global_fragments(blobs_in_video, num_animals):
     """Returns an array with True if:
     * each blob has a unique blob intersecting in the past and future
     * number of blobs equals num_animals
     """
+
     def all_blobs_in_a_fragment(blobs_in_frame):
         """Returns all the blobs in `blobs_in_frame` that are associated to an
         individual
@@ -372,14 +510,22 @@ def check_global_fragments(blobs_in_video, num_animals):
         """Return True if the set of fragments identifiers in the current frame
         is the same as in the previous frame, otherwise returns false
         """
-        condition_1 = set([blob.fragment_identifier for blob in blobs_in_frame]) == set([blob.fragment_identifier for blob in blobs_in_frame_past])
-        condition_2 = all_blobs_in_a_fragment(blobs_in_frame_past) and len(blobs_in_frame_past) == num_animals
+        condition_1 = set(
+            [blob.fragment_identifier for blob in blobs_in_frame]
+        ) == set([blob.fragment_identifier for blob in blobs_in_frame_past])
+        condition_2 = (
+            all_blobs_in_a_fragment(blobs_in_frame_past)
+            and len(blobs_in_frame_past) == num_animals
+        )
         return condition_1 or not condition_2
 
-    return [all_blobs_in_a_fragment(blobs_in_frame)
-            and len(blobs_in_frame) == num_animals
-            and same_fragment_identifier(blobs_in_frame, blobs_in_video[i-1])
-            for i, blobs_in_frame in enumerate(blobs_in_video)]
+    return [
+        all_blobs_in_a_fragment(blobs_in_frame)
+        and len(blobs_in_frame) == num_animals
+        and same_fragment_identifier(blobs_in_frame, blobs_in_video[i - 1])
+        for i, blobs_in_frame in enumerate(blobs_in_video)
+    ]
+
 
 def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
     """Creates the list of instances of the class
@@ -401,10 +547,21 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
         list of instances of the class :class:`~globalfragment.GlobalFragment`
 
     """
-    global_fragments_boolean_array = check_global_fragments(blobs_in_video, num_animals)
-    indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
-    global_fragments = [GlobalFragment(blobs_in_video, fragments, i, num_animals)
-                        for i in indices_beginning_of_fragment]
+    global_fragments_boolean_array = check_global_fragments(
+        blobs_in_video, num_animals
+    )
+    indices_beginning_of_fragment = detect_beginnings(
+        global_fragments_boolean_array
+    )
+    global_fragments = [
+        GlobalFragment(blobs_in_video, fragments, i, num_animals)
+        for i in indices_beginning_of_fragment
+    ]
     logger.info("total number of global_fragments: %i" % len(global_fragments))
-    logger.info([gf.number_of_images_per_individual_fragment for gf in global_fragments])
+    logger.info(
+        [
+            gf.number_of_images_per_individual_fragment
+            for gf in global_fragments
+        ]
+    )
     return global_fragments

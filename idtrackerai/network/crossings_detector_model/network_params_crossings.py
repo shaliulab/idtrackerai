@@ -21,41 +21,47 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
-
-import os
-from confapp import conf
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
+import os
+
+from confapp import conf
+
 logger = logging.getLogger("__main__.network_params_crossings")
 
+
 class NetworkParams_crossings(object):
-    def __init__(self,
-                 number_of_classes,
-                 architecture=None,
-                 use_adam_optimiser=False,
-                 restore_folder=None,
-                 save_folder=None,
-                 knowledge_transfer_folder=None,
-                 image_size=None,
-                 loss='CE',
-                 print_freq=-1,
-                 use_gpu=True,
-                 optimizer='SGD',
-                 schedule=None,
-                 optim_args=None,
-                 apply_mask=False,
-                 dataset=None,
-                 skip_eval=False,
-                 epochs= conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-                 plot_flag=True,
-                 return_store_objects=False,
-                 saveid='',
-                 model_name='',
-                 ):
+    def __init__(
+        self,
+        number_of_classes,
+        architecture=None,
+        use_adam_optimiser=False,
+        restore_folder=None,
+        save_folder=None,
+        knowledge_transfer_folder=None,
+        image_size=None,
+        loss="CE",
+        print_freq=-1,
+        use_gpu=True,
+        optimizer="SGD",
+        schedule=None,
+        optim_args=None,
+        apply_mask=False,
+        dataset=None,
+        skip_eval=False,
+        epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
+        plot_flag=True,
+        return_store_objects=False,
+        saveid="",
+        model_name="",
+    ):
 
         self.number_of_classes = number_of_classes
         self.architecture = architecture
@@ -79,8 +85,8 @@ class NetworkParams_crossings(object):
         self.saveid = saveid
         self.model_name = model_name
 
-        if self.optimizer == 'SGD':
-            self.optim_args['momentum'] = 0.9
+        if self.optimizer == "SGD":
+            self.optim_args["momentum"] = 0.9
 
     @property
     def restore_folder(self):

@@ -21,12 +21,16 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
 from confapp import conf
+
 
 class ModelArea(object):
     """Model of the area used to perform a first discrimination between blobs
@@ -47,13 +51,14 @@ class ModelArea(object):
     std_tolerance : int
         tolerance factor
     """
+
     def __init__(self, mean, median, std):
         self.median = median
         self.mean = mean
         self.std = std
         self.std_tolerance = conf.STD_TOLERANCE
 
-    def __call__(self, area, std_tolerance = None):
+    def __call__(self, area, std_tolerance=None):
         if std_tolerance is not None:
             self.std_tolerance = std_tolerance
         return (area - self.median) < self.std_tolerance * self.std

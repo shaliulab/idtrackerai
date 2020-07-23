@@ -21,21 +21,26 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
+# de Polavieja, G.G., Nature Methods, 2019.
+# idtracker.ai: tracking all individuals in small or large collectives of
+# unmarked animals.
 # (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
+# Correspondence should be addressed to G.G.d.P:
+# gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import logging
 import os
 import sys
+
 import numpy as np
-import logging
+
+from idtrackerai.blob import Blob
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.list_of_fragments import ListOfFragments
-from idtrackerai.blob import Blob
 
-import logging
 logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
+
 
 class GroundTruthBlob(object):
     """Lighter blob objects.
@@ -44,23 +49,42 @@ class GroundTruthBlob(object):
         centroid
         pixels (pixels is stored to check the groundtruth in crossings)
     """
-    def __init__(self, attributes_to_get = ['identity', 'assigned_identity',
-                                            'used_for_training', 'accumulation_step',
-                                            'centroid', 'pixels',
-                                            'frame_number',
-                                            'is_an_individual', 'is_a_crossing',
-                                            'blob_index', 'fragment_identifier']):
+
+    def __init__(
+        self,
+        attributes_to_get=[
+            "identity",
+            "assigned_identity",
+            "used_for_training",
+            "accumulation_step",
+            "centroid",
+            "pixels",
+            "frame_number",
+            "is_an_individual",
+            "is_a_crossing",
+            "blob_index",
+            "fragment_identifier",
+        ],
+    ):
         self.attributes = attributes_to_get
 
     def get_attribute(self, blob):
         for attribute in self.attributes:
-            if attribute == 'identity':
-                setattr(self, attribute, getattr(blob, 'final_identity'))
+            if attribute == "identity":
+                setattr(self, attribute, getattr(blob, "final_identity"))
             else:
                 setattr(self, attribute, getattr(blob, attribute))
 
+
 class IndividualGroundTruth(object):
-    def __init__(self, video = [], individual_blobs_in_video = [], start = None, end = None, validated_identity = None):
+    def __init__(
+        self,
+        video=[],
+        individual_blobs_in_video=[],
+        start=None,
+        end=None,
+        validated_identity=None,
+    ):
         self.video = video
         self.individual_blobs_in_video = individual_blobs_in_video
         self.start = start
@@ -68,34 +92,48 @@ class IndividualGroundTruth(object):
         self.validated_identity = validated_identity
 
     def save(self):
-        gt_name = '_individual_' + str(self.validated_identity) + '_groundtruth.npy'
-        path_to_save_groundtruth = os.path.join(os.path.split(self.video.video_path)[0], gt_name)
-        logger.info("saving ground truth at %s" %path_to_save_groundtruth)
+        gt_name = (
+            "_individual_" + str(self.validated_identity) + "_groundtruth.npy"
+        )
+        path_to_save_groundtruth = os.path.join(
+            os.path.split(self.video.video_path)[0], gt_name
+        )
+        logger.info("saving ground truth at %s" % path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
         logger.info("done")
 
-def generate_individual_groundtruth(video, blobs_in_video = None,
-                                    start = None, end = None,
-                                    validated_identity = None, save_gt = True):
+
+def generate_individual_groundtruth(
+    video,
+    blobs_in_video=None,
+    start=None,
+    end=None,
+    validated_identity=None,
+    save_gt=True,
+):
     """Generates a list of light blobs_in_video, given a video object corresponding to a
     tracked video
     """
-    assert video.has_been_assigned == True
+    assert video.has_been_assigned
     individual_blobs_in_video_groundtruth = []
 
     for blobs_in_frame in blobs_in_video:
-        identities_in_frame = set([blob.final_identity for blob in blobs_in_frame])
+        identities_in_frame = set(
+            [blob.final_identity for blob in blobs_in_frame]
+        )
         for blob in blobs_in_frame:
             if blob.final_identity == validated_identity:
                 gt_blob = GroundTruthBlob()
                 gt_blob.get_attribute(blob)
                 individual_blobs_in_video_groundtruth.append(gt_blob)
 
-    groundtruth = IndividualGroundTruth(video = video,
-                            individual_blobs_in_video = individual_blobs_in_video_groundtruth,
-                            start = start,
-                            end = end,
-                            validated_identity = validated_identity)
+    groundtruth = IndividualGroundTruth(
+        video=video,
+        individual_blobs_in_video=individual_blobs_in_video_groundtruth,
+        start=start,
+        end=end,
+        validated_identity=validated_identity,
+    )
     if save_gt:
         groundtruth.save()
     return groundtruth
