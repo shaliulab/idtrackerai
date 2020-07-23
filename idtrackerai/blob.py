@@ -1448,53 +1448,17 @@ def remove_background_pixels(
     )
     temp_image = np.zeros_like(bounding_box_image).astype("uint8")
     temp_image[pxs[0, :], pxs[1, :]] = 255
-    if folder_to_save_for_paper_figure:
-        new_thresholded_image = temp_image.copy()
-        new_bounding_box_image = bounding_box_image.copy()
-        new_bounding_box_image = cv2.cvtColor(
-            new_bounding_box_image, cv2.COLOR_GRAY2RGB
-        )
-        _, contours, hierarchy = cv2.findContours(
-            new_thresholded_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-        )
-        cv2.drawContours(new_bounding_box_image, contours, -1, (255, 0, 0), 1)
-        save_preprocessing_step_image(
-            new_bounding_box_image / 255,
-            folder_to_save_for_paper_figure,
-            name="1_blob_contour",
-            min_max=[0, 1],
-        )
+
     temp_image = cv2.dilate(
         temp_image, np.ones((3, 3)).astype("uint8"), iterations=1
     )
-    if folder_to_save_for_paper_figure:
-        new_thresholded_image = temp_image.copy()
-        new_bounding_box_image = bounding_box_image.copy()
-        new_bounding_box_image = cv2.cvtColor(
-            new_bounding_box_image, cv2.COLOR_GRAY2RGB
-        )
-        _, contours, hierarchy = cv2.findContours(
-            new_thresholded_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-        )
-        cv2.drawContours(new_bounding_box_image, contours, -1, (255, 0, 0), 1)
-        save_preprocessing_step_image(
-            new_bounding_box_image / 255,
-            folder_to_save_for_paper_figure,
-            name="2_blob_bw_dilated",
-            min_max=[0, 1],
-        )
+
     rows, columns = np.where(temp_image == 255)
     dilated_pixels = np.array([rows, columns])
     temp_image[
         dilated_pixels[0, :], dilated_pixels[1, :]
     ] = bounding_box_image[dilated_pixels[0, :], dilated_pixels[1, :]]
-    if folder_to_save_for_paper_figure:
-        save_preprocessing_step_image(
-            temp_image / 255,
-            folder_to_save_for_paper_figure,
-            name="3_blob_contour_dilated",
-            min_max=[0, 1],
-        )
+
     return temp_image
 
 

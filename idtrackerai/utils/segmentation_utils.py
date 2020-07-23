@@ -363,6 +363,7 @@ def get_bounding_box(cnt, width, height, crossing_detector=False):
     """
     x, y, w, h = cv2.boundingRect(cnt)
     original_diagonal = int(np.ceil(np.sqrt(w ** 2 + h ** 2)))
+    ## TODO: add this to constans
     n = 45 if not crossing_detector else 55
     if x - n > 0:  # We only expand the
         x = x - n
