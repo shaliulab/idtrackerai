@@ -41,7 +41,7 @@ from idtrackerai.assigner import (
     compute_identification_statistics_for_non_accumulated_fragments,
 )
 from idtrackerai.globalfragment import GlobalFragment
-from idtrackerai.pre_trainer import weights_reinit
+from idtrackerai.network.utils.utils import fc_weights_reinit
 
 logger = logging.getLogger("__main__.list_of_global_fragments")
 
@@ -130,7 +130,7 @@ class ListOfGlobalFragments(object):
     @staticmethod
     def abort_knowledge_transfer_on_same_animals(video, identification_model):
         identities = range(video.number_of_animals)
-        identification_model.apply(weights_reinit)
+        identification_model.apply(fc_weights_reinit)
         logger.info(
             "Identity transfer failed. We proceed by transferring only the convolutional filters."
         )

@@ -53,14 +53,10 @@ from idtrackerai.network.identification_model.stop_training_criteria import (
 from idtrackerai.network.identification_model.trainer import (
     TrainIdentification,
 )
+from idtrackerai.network.utils.utils import fc_weights_reinit
 
 
 logger = logging.getLogger("__main__.pre_trainer")
-
-
-def weights_reinit(m):
-    if isinstance(m, nn.Linear):
-        nn.init.xavier_uniform(m.weight.data)
 
 
 def pre_train_global_fragment(
@@ -149,7 +145,7 @@ def pre_train_global_fragment(
     criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
     # Re-initialize fully-connected layers
-    identification_model.apply(weights_reinit)
+    identification_model.apply(fc_weights_reinit)
 
     # Send model and criterion to GPU
     if network_params.use_gpu:
