@@ -63,7 +63,7 @@ class TrainIdentification(object):
 
     def train_model(self):
 
-        logger.info("\nTraining Deep Crossing Detector")
+        logger.info("\nTraining Identification Network")
         # TODO: Store accuracies and losses
         # store_training_accuracy_and_loss_data = \
         #     Store_Accuracy_and_Loss(

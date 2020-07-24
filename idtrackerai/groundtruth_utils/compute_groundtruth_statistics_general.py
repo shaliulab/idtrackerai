@@ -139,8 +139,8 @@ def compare_tracking_against_groundtruth(
                     else:
                         try:
                             if (
-                                blob.assigned_identity != 0
-                                and blob.identity_corrected_closing_gaps
+                                blob.assigned_identities != 0
+                                and blob.identities_corrected_closing_gaps
                                 is None
                             ):  # we only consider P2 for non interpolated blobs
                                 results["sum_individual_P2"][
@@ -160,7 +160,7 @@ def compare_tracking_against_groundtruth(
                         ] += 1
                         results["number_of_assigned_blobs_per_identity"][
                             gt_identity
-                        ] += (1 if blob.assigned_identity != 0 else 0)
+                        ] += (1 if blob.assigned_identities[0] != 0 else 0)
                         results[
                             "number_of_blobs_assigned_during_accumulation_per_identity"
                         ][gt_identity] += (1 if blob.used_for_training else 0)
@@ -169,7 +169,7 @@ def compare_tracking_against_groundtruth(
                         ][gt_identity] += (
                             1 if not blob.used_for_training else 0
                         )
-                        if gt_identity != blob.assigned_identity:
+                        if gt_identity != blob.assigned_identities[0]:
                             results["number_of_errors_in_all_blobs"][
                                 gt_identity
                             ] += 1
@@ -178,7 +178,7 @@ def compare_tracking_against_groundtruth(
                             ][gt_identity] += (
                                 1 if not blob.used_for_training else 0
                             )
-                            if blob.assigned_identity != 0:
+                            if blob.assigned_identities[0] != 0:
                                 results["number_of_errors_in_assigned_blobs"][
                                     gt_identity
                                 ] += 1
@@ -333,8 +333,8 @@ def get_accuracy_wrt_groundtruth(
             for i in range(1, number_of_animals + 1)
         }
         accuracies["mean_individual_P2_in_validated_part"] = np.sum(
-            results["sum_individual_P2"].values()
-        ) / np.sum(results["number_of_blobs_per_identity"].values())
+            list(results["sum_individual_P2"].values())
+        ) / np.sum(list(results["number_of_blobs_per_identity"].values()))
         accuracies["individual_accuracy"] = {
             i: 1
             - results["number_of_errors_in_all_blobs"][i]
@@ -344,8 +344,8 @@ def get_accuracy_wrt_groundtruth(
             for i in range(1, number_of_animals + 1)
         }
         accuracies["accuracy"] = 1.0 - np.sum(
-            results["number_of_errors_in_all_blobs"].values()
-        ) / np.sum(results["number_of_blobs_per_identity"].values())
+            list(results["number_of_errors_in_all_blobs"].values())
+        ) / np.sum(list(results["number_of_blobs_per_identity"].values()))
         accuracies["individual_accuracy_assigned"] = {
             i: 1
             - results["number_of_errors_in_assigned_blobs"][i]
@@ -355,8 +355,8 @@ def get_accuracy_wrt_groundtruth(
             for i in range(1, number_of_animals + 1)
         }
         accuracies["accuracy_assigned"] = 1.0 - np.sum(
-            results["number_of_errors_in_assigned_blobs"].values()
-        ) / np.sum(results["number_of_assigned_blobs_per_identity"].values())
+            list(results["number_of_errors_in_assigned_blobs"].values())
+        ) / np.sum(list(results["number_of_assigned_blobs_per_identity"].values()))
         accuracies["individual_accuracy_in_accumulation"] = {}
         for i in range(1, number_of_animals + 1):
             if (
@@ -377,13 +377,13 @@ def get_accuracy_wrt_groundtruth(
             else:
                 accuracies["individual_accuracy_in_accumulation"][i] = None
         accuracies["accuracy_in_accumulation"] = 1.0 - np.sum(
-            results[
+            list(results[
                 "number_of_errors_in_blobs_assigned_during_accumulation"
-            ].values()
+            ].values())
         ) / np.sum(
-            results[
+            list(results[
                 "number_of_blobs_assigned_during_accumulation_per_identity"
-            ].values()
+            ].values())
         )
         accuracies["individual_accuracy_after_accumulation"] = {}
         for i in range(1, number_of_animals + 1):
@@ -404,20 +404,20 @@ def get_accuracy_wrt_groundtruth(
                 accuracies["individual_accuracy_after_accumulation"][i] = None
         if (
             np.sum(
-                results[
+                list(results[
                     "number_of_blobs_after_accumulation_per_identity"
-                ].values()
+                ].values())
             )
             != 0
         ):
             accuracies["accuracy_after_accumulation"] = 1.0 - np.sum(
-                results[
+                list(results[
                     "number_of_errors_in_blobs_after_accumulation"
-                ].values()
+                ].values())
             ) / np.sum(
-                results[
+                list(results[
                     "number_of_blobs_after_accumulation_per_identity"
-                ].values()
+                ].values())
             )
         else:
             accuracies["accuracy_after_accumulation"] = None
@@ -483,9 +483,9 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
 ):
     logger.info("loading list_of_blobs")
     if groundtruth_type == "normal":
-        list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
+        list_of_blobs = ListOfBlobs.load(video.blobs_path)
     elif groundtruth_type == "no_gaps":
-        list_of_blobs = ListOfBlobs.load(video, video.blobs_no_gaps_path)
+        list_of_blobs = ListOfBlobs.load(video.blobs_no_gaps_path)
     # select ground truth file
     logger.info("loading groundtruth")
     if groundtruth_type == "normal":
@@ -494,7 +494,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
         groundtruth_path = os.path.join(
             video.video_folder, "_groundtruth_with_crossing_identified.npy"
         )
-    groundtruth = np.load(groundtruth_path, allow_pickle=True).item()
+    groundtruth = np.load(groundtruth_path, allow_pickle=True, encoding='latin1').item()
 
     check_ground_truth_consistency(video, groundtruth.video)
     accumulation_number = int(video.accumulation_folder[-1])
@@ -566,10 +566,12 @@ if __name__ == "__main__":
     session_folder = args.session_folder
     video_object_path = os.path.join(session_folder, "video_object.npy")
     logger.info("loading video object")
-    video = np.load(video_object_path, allow_pickle=True).item(0)
+    video = np.load(
+        video_object_path, allow_pickle=True, encoding="latin1"
+    ).item(0)
     video.update_paths(video_object_path)
     groundtruth_path = os.path.join(video.video_folder, "_groundtruth.npy")
-    groundtruth = np.load(groundtruth_path, allow_pickle=True).item()
+    groundtruth = np.load(groundtruth_path, allow_pickle=True, encoding='latin1').item()
     video, groundtruth = compute_and_save_session_accuracy_wrt_groundtruth(
         video, groundtruth_type
     )
