@@ -66,7 +66,11 @@ from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import 
 from idtrackerai.postprocessing.trajectories_to_csv import (
     convert_trajectories_file_to_csv_and_json,
 )
-from idtrackerai.pre_trainer import pre_train_global_fragment, weights_reinit
+from idtrackerai.pre_trainer import pre_train_global_fragment
+from idtrackerai.network.utils.utils import (
+    fc_weights_reinit,
+    weights_xavier_init,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -377,7 +381,7 @@ class TrackerAPI(object):
             )
             if not self.chosen_video.video.identity_transfer:
                 logger.info("Reinitializing fully connected layers")
-                self.identification_model.apply(weights_reinit)
+                self.identification_model.apply(fc_weights_reinit)
             else:
                 logger.info(
                     "Identity transfer. Not reinitializing the fully connected layers."
@@ -386,6 +390,7 @@ class TrackerAPI(object):
             self.identification_model = self.learner_class.create_model(
                 self.accumulation_network_params
             )
+            self.identification_model.apply(weights_xavier_init)
 
         # Set first global fragment to start accumulation. If the network is passed in case of identity transfer.
         self.chosen_video.video._first_frame_first_global_fragment.append(
@@ -729,11 +734,12 @@ class TrackerAPI(object):
             self.identification_model = self.learner_class.load_model(
                 self.pretrain_network_params, scope="knowledge_transfer"
             )
-            self.identification_model.apply(weights_reinit)
+            self.identification_model.apply(fc_weights_reinit)
         else:
             self.identification_model = self.learner_class.create_model(
                 self.pretrain_network_params
             )
+            self.identification_model.apply(weights_xavier_init)
 
     def init_pretraining_net(self):
         delete = (
@@ -904,7 +910,7 @@ class TrackerAPI(object):
         )
 
         # Re-initialize fully-connected layers
-        self.identification_model.apply(weights_reinit)
+        self.identification_model.apply(fc_weights_reinit)
 
         # Instantiate accumualtion manager
         logger.info("Initialising accumulation manager")
@@ -989,7 +995,7 @@ class TrackerAPI(object):
         )
 
         # # Re-initialize fully-connected layers
-        # self.identification_model.apply(weights_reinit)
+        # self.identification_model.apply(fc_weights_reinit)
 
         # Send model and criterion to GPU
         if self.accumulation_network_params.use_gpu:

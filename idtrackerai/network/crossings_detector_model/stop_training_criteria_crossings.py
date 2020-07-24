@@ -44,7 +44,7 @@ class Stop_Training(object):
 
     def __init__(
         self,
-        epochs_before_checking_stopping_conditions=20,
+        epochs_before_checking_stopping_conditions=10,
         check_for_loss_plateau=True,
         num_epochs=10,
     ):

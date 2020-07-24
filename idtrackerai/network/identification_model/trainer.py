@@ -130,7 +130,7 @@ class TrainIdentification(object):
                     val_losses_MCL.update(losses[2].avg)
                 val_accs.update(val_acc)
             # Save checkpoint at each LR steps and the end of optimization
-
+            ## TODO: Consider saving only best model
             self.best_model_path = self.learner.snapshot(
                 self.network_params.save_model_path, val_acc
             )

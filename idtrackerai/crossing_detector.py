@@ -57,6 +57,7 @@ from idtrackerai.network.data_sets.crossings_dataset import (
     get_train_validation_and_toassign_blobs,
 )
 from idtrackerai.network.learners.learners import Learner_Classification
+from idtrackerai.network.utils.utils import weights_xavier_init
 
 logger = logging.getLogger("__main__.crossing_detector")
 
@@ -157,6 +158,10 @@ def detect_crossings(
                 crossing_detector_model = learner_class.create_model(
                     network_params
                 )
+                logger.info(
+                    "Initialize networks params with Xavier initialization"
+                )
+                crossing_detector_model.apply(weights_xavier_init)
 
                 if network_params.use_gpu:
                     logger.info("Sending model and criterion to GPU")
