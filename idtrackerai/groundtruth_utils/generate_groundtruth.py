@@ -69,7 +69,7 @@ class GroundTruthBlob(object):
     ):
         self.attributes = attributes_to_get
 
-    def get_attribute(self, blob):
+    def set_attributes(self, blob):
         for attribute in self.attributes:
             if attribute == "identity":
                 setattr(self, attribute, getattr(blob, "final_identities")[0])
@@ -124,7 +124,7 @@ def generate_groundtruth(
 
         for blob in blobs_in_frame:
             gt_blob = GroundTruthBlob()
-            gt_blob.get_attribute(blob)
+            gt_blob.set_attributes(blob)
             blobs_in_frame_groundtruth.append(gt_blob)
 
         blobs_in_video_groundtruth.append(blobs_in_frame_groundtruth)
