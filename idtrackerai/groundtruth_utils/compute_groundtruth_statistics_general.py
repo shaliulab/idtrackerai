@@ -70,111 +70,185 @@ def get_corresponding_gt_blob(blob, gt_blobs_in_frame):
     return corresponding_gt_blobs
 
 
+def update_sum_indiv_P2(gt_id, blob, results):
+    identified = blob.assigned_identities[0] != 0
+    # we only consider P2 for non interpolated blobs
+    id_before_interp = blob.identities_corrected_closing_gaps is None
+    if identified and id_before_interp:
+        results["sum_indiv_P2"][gt_id] += blob._P2_vector[gt_id - 1]
+
+
+def update_results_with_id_error(results, blob, gt_id):
+    results["errors_blobs"][gt_id] += 1
+    results["frames_w_id_errors"].union({blob.frame_number})
+    if blob.fragment_identifier:
+        results["frag_w_id_errors"].union({blob.fragment_identifier})
+
+    if not blob.used_for_training:
+        results["errors_blobs_after_accum"][gt_id] += 1
+
+    # Errors of identified blobs
+    if blob.assigned_identities[0] != 0:
+        results["errors_id_blobs"][gt_id] += 1
+
+        if blob.used_for_training:
+            results["errors_id_blobs_accum"][gt_id] += 1
+        else:
+            results["errors_id_blobs_after_accum"][gt_id] += 1
+
+
+def update_results_for_identified_gt_blob(results, blob, gt_id):
+    update_sum_indiv_P2(gt_id, blob, results)
+
+    # Count blobs
+    results["num_blobs"][gt_id] += 1
+    if blob.used_for_training:
+        results["num_id_blobs_accum"][gt_id] += 1
+    else:
+        results["num_blobs_after_accum"][gt_id] += 1
+
+    if blob.assigned_identities[0] != 0:
+        results["num_id_blobs"][gt_id] += 1
+
+    if gt_id != blob.assigned_identities[0]:
+        update_results_with_id_error(results, blob, gt_id)
+
+
+def compare_blob_with_gt_blob(results, blob, gt_blob, ids_perm_dict):
+
+    if ids_perm_dict is not None:
+        gt_id = ids_perm_dict[gt_blob.identity]
+    else:
+        gt_id = gt_blob.identity
+
+    if gt_id == 0:
+        # This is here to raise and error at the end of the computations
+        # A ground truth individual blob cannot have identity 0.
+        results["frames_w_0_id_in_gt"].union({gt_blob.frame_number})
+    else:
+        update_results_for_identified_gt_blob(results, blob, gt_id)
+
+
 def compare_frame(results, blobs_in_frame, gt_blobs_in_frame, ids_perm_dict):
     for blob in blobs_in_frame:
         corresponding_gt_blobs = get_corresponding_gt_blob(
             blob, gt_blobs_in_frame
         )
-        if blob.is_an_individual and len(corresponding_gt_blobs) == 1:
-            groundtruth_blob = corresponding_gt_blobs[0]
-            if (
-                groundtruth_blob.is_an_individual
-                and groundtruth_blob.identity != -1
-                and not groundtruth_blob.was_a_crossing
-            ):  # we are not considering crossing or failures of the model area
-                if ids_perm_dict is not None:
-                    gt_identity = ids_perm_dict[groundtruth_blob.identity]
-                else:
-                    gt_identity = groundtruth_blob.identity
+        if len(corresponding_gt_blobs) == 1:
+            gt_blob = corresponding_gt_blobs[0]
+            cond1 = gt_blob.is_an_individual
+            cond2 = gt_blob.identity != -1
+            cond3 = not gt_blob.was_a_crossing
+            gt_blob_is_individual = cond1 and cond2 and cond3
+            if blob.is_an_individual and gt_blob_is_individual:
+                results["num_indiv_gt_blobs"] += 1
                 results["num_indiv_blobs"] += 1
-                if gt_identity == 0:
-                    results["frames_with_zeros_in_groundtruth"].append(
-                        groundtruth_blob.frame_number
-                    )
-                else:
-                    try:
-                        if (
-                            blob.assigned_identities != 0
-                            and blob.identities_corrected_closing_gaps is None
-                        ):  # we only consider P2 for non interpolated blobs
-                            results["sum_individual_P2"][
-                                gt_identity
-                            ] += blob._P2_vector[gt_identity - 1]
-                    except IndexError:
-                        logger.debug("P2_vector %s" % str(blob._P2_vector))
-                        logger.debug(
-                            "individual %s" % str(blob.is_an_individual)
-                        )
-                        logger.debug(
-                            "fragment identifier ", blob.fragment_identifier,
-                        )
-                    results["num_blobs"][gt_identity] += 1
-                    results["num_id_blobs"][gt_identity] += (
-                        1 if blob.assigned_identities[0] != 0 else 0
-                    )
-                    results["num_id_blobs_accum"][gt_identity] += (
-                        1 if blob.used_for_training else 0
-                    )
-                    results["num_blobs_after_accum"][gt_identity] += (
-                        1 if not blob.used_for_training else 0
-                    )
-                    if gt_identity != blob.assigned_identities[0]:
-                        results["errors_blobs"][gt_identity] += 1
-                        results["errors_blobs_after_accum"][gt_identity] += (
-                            1 if not blob.used_for_training else 0
-                        )
-                        if blob.assigned_identities[0] != 0:
-                            results["errors_id_blobs"][gt_identity] += 1
-                            results["errors_id_blobs_accum"][gt_identity] += (
-                                1 if blob.used_for_training else 0
-                            )
-                            results["errors_id_blobs_after_accum"][
-                                gt_identity
-                            ] += (1 if not blob.used_for_training else 0)
-                        if (
-                            blob.fragment_identifier
-                            not in results[
-                                "fragment_identifiers_with_identity_errors"
-                            ]
-                        ):
-                            results["frames_with_identity_errors"].append(
-                                blob.frame_number
-                            )
-                            results[
-                                "fragment_identifiers_with_identity_errors"
-                            ].append(blob.fragment_identifier)
-
-            elif groundtruth_blob.is_a_crossing or gt_identity == -1:
-                if (
-                    blob.fragment_identifier
-                    not in results["fragments_identifiers_of_crossings"]
-                ):
-                    results["fragments_identifiers_of_crossings"].append(
-                        blob.fragment_identifier
-                    )
-                    results["number_of_crossing_fragments"] += 1
-                results["num_crossing_blobs"] += 1
-                results["num_crossings_blobs_assigned_as_indiv"] += (
-                    1 if blob.is_an_individual else 0
+                results["crossing_detector_tn"] += 1
+                compare_blob_with_gt_blob(
+                    results, blob, gt_blob, ids_perm_dict
                 )
-                if blob.is_an_individual:
-                    if (
-                        blob.fragment_identifier
-                        not in results[
-                            "fragment_identifiers_with_crossing_errors"
-                        ]
-                    ):
-                        results["frames_with_crossing_errors"].append(
-                            blob.frame_number
-                        )
-                        results[
-                            "fragment_identifiers_with_crossing_errors"
-                        ].append(blob.fragment_identifier)
+            elif blob.is_an_individual and not gt_blob_is_individual:
+                # TOOD: Check if there more new blobs that overlap with the
+                # ground truth crossing blob. This could mean that the
+                # video has a better segmentation and it would not be a
+                # crossing detection error.
+                results["num_crossing_gt_blobs"] += 1
+                results["num_indiv_blobs"] += 1
+                results["crossing_detector_fn"] += 1
+                results["frame_with_crossing_detection_error"].union(
+                    {blob.frame_number}
+                )
+            elif blob.is_a_crossing and gt_blob_is_individual:
+                results["num_indiv_gt_blobs"] += 1
+                results["num_crossing_blobs"] += 1
+                results["crossing_detector_fp"] += 1
+                results["frame_with_crossing_detection_error"].union(
+                    {blob.frame_number}
+                )
+            elif blob.is_a_crossing and not gt_blob_is_individual:
+                results["num_crossing_gt_blobs"] += 1
+                results["num_crossing_blobs"] += 1
+                results["crossing_detector_tp"] += 1
+        else:
+            if blob.is_an_individual:
+                results["num_indiv_blobs"] += 1
+            else:
+                results["num_crossing_blobs"] += 1
+            print(
+                blob.identity, [b.identity for b in corresponding_gt_blobs],
+            )
+
     return results
 
 
 def per_id_counter_dict(num_animals):
     return {i: 0 for i in range(1, num_animals + 1)}
+
+
+def init_results_dict(num_animals):
+    results = {}
+    results["num_blobs"] = per_id_counter_dict(num_animals)
+    results["sum_indiv_P2"] = per_id_counter_dict(num_animals)
+    results["num_id_blobs"] = per_id_counter_dict(num_animals)
+    results["num_id_blobs_accum"] = per_id_counter_dict(num_animals)
+    results["num_blobs_after_accum"] = per_id_counter_dict(num_animals)
+    results["errors_blobs"] = per_id_counter_dict(num_animals)
+    results["errors_id_blobs"] = per_id_counter_dict(num_animals)
+    results["errors_blobs_after_accum"] = per_id_counter_dict(num_animals)
+    results["errors_id_blobs_accum"] = per_id_counter_dict(num_animals)
+    results["errors_id_blobs_after_accum"] = per_id_counter_dict(num_animals)
+
+    results["frames_w_id_errors"] = set()
+    results["frag_w_id_errors"] = set()
+    results["frames_w_crossing_errors"] = set()
+    results["frag_w_crossing_errors"] = set()
+    results["frames_w_0_id_in_gt"] = set()
+    results["num_crossing_frags"] = 0
+    results["frag_crossings"] = set()
+
+    # Crossing detector
+    results["crossing_detector_tn"] = 0
+    results["crossing_detector_fn"] = 0
+    results["crossing_detector_tp"] = 0
+    results["crossing_detector_fp"] = 0
+
+    results["num_indiv_gt_blobs"] = 0
+    results["num_crossing_gt_blobs"] = 0
+    results["num_indiv_blobs"] = 0
+    results["num_crossing_blobs"] = 0
+
+    results["frame_with_crossing_detection_error"] = set()
+
+    return results
+
+
+def aggregate_counters(results):
+    results["total_sum_P2"] = np.sum(list(results["sum_indiv_P2"].values()))
+    results["total_num_blobs"] = (
+        results["num_indiv_gt_blobs"] + results["num_crossing_gt_blobs"]
+    )
+    results["total_indiv_blobs"] = np.sum(list(results["num_blobs"].values()))
+    results["total_num_errors"] = np.sum(
+        list(results["errors_blobs"].values())
+    )
+    results["total_assigned_blobs"] = np.sum(
+        list(results["num_id_blobs"].values())
+    )
+    results["total_errors_assigned_blobs"] = np.sum(
+        list(results["errors_id_blobs"].values())
+    )
+    results["total_id_blobs_accum"] = np.sum(
+        list(results["num_id_blobs_accum"].values())
+    )
+    results["total_errors_accum"] = np.sum(
+        list(results["errors_id_blobs_accum"].values())
+    )
+    results["total_id_blobs_after_accum"] = np.sum(
+        list(results["num_blobs_after_accum"].values())
+    )
+    results["total_errors_after_accum"] = np.sum(
+        list(results["errors_blobs_after_accum"].values())
+    )
 
 
 def compare_tracking_with_ground_truth(
@@ -190,35 +264,13 @@ def compare_tracking_with_ground_truth(
     :return:
     """
     # create dictionary to store counters
-    results = {}
-    results["num_blobs"] = per_id_counter_dict(num_animals)
-    results["sum_individual_P2"] = per_id_counter_dict(num_animals)
-    results["num_id_blobs"] = per_id_counter_dict(num_animals)
-    results["num_id_blobs_accum"] = per_id_counter_dict(num_animals)
-    results["num_blobs_after_accum"] = per_id_counter_dict(num_animals)
-    results["errors_blobs"] = per_id_counter_dict(num_animals)
-    results["errors_id_blobs"] = per_id_counter_dict(num_animals)
-    results["errors_blobs_after_accum"] = per_id_counter_dict(num_animals)
-    results["errors_id_blobs_accum"] = per_id_counter_dict(num_animals)
-    results["errors_id_blobs_after_accum"] = per_id_counter_dict(num_animals)
-    results["num_indiv_blobs"] = 0
-    results["num_crossing_blobs"] = 0
-    results["num_crossings_blobs_assigned_as_indiv"] = 0
-    results["frames_with_identity_errors"] = []
-    results["fragment_identifiers_with_identity_errors"] = []
-    results["frames_with_crossing_errors"] = []
-    results["fragment_identifiers_with_crossing_errors"] = []
-    results["frames_with_zeros_in_groundtruth"] = []
-    results["number_of_crossing_fragments"] = 0
-    results["fragments_identifiers_of_crossings"] = []
-
-    for gt_blobs_in_frame, blobs_in_frame in zip(
-        gt_blobs_in_video, blobs_in_video
-    ):
+    results = init_results_dict(num_animals)
+    both_blobs_in_video = zip(gt_blobs_in_video, blobs_in_video)
+    for gt_blobs_in_frame, blobs_in_frame in both_blobs_in_video:
         results = compare_frame(
             results, blobs_in_frame, gt_blobs_in_frame, ids_perm_dict
         )
-
+    aggregate_counters(results)
     return results
 
 
@@ -305,17 +357,120 @@ def get_permutation_of_identities(
     return ids_perm_dict
 
 
+def compute_performance(results, number_of_animals):
+    accuracies = {}
+
+    accuracies["percentage_of_unoccluded_images"] = (
+        results["num_indiv_gt_blobs"] / results["total_num_blobs"]
+    )
+
+    accuracies["mean_individual_P2_in_validated_part"] = (
+        results["total_sum_P2"] / results["total_indiv_blobs"]
+    )
+
+    error_rate = results["total_num_errors"] / results["total_indiv_blobs"]
+    accuracies["accuracy"] = 1.0 - error_rate
+
+    error_rate = (
+        results["total_errors_assigned_blobs"]
+        / results["total_assigned_blobs"]
+    )
+    accuracies["accuracy_assigned"] = 1.0 - error_rate
+
+    error_rate = (
+        results["total_errors_accum"] / results["total_id_blobs_accum"]
+    )
+    accuracies["accuracy_in_accumulation"] = 1.0 - error_rate
+
+    if results["total_id_blobs_after_accum"] != 0:
+        error_rate = (
+            results["total_errors_after_accum"]
+            / results["total_id_blobs_after_accum"]
+        )
+        accuracies["accuracy_after_accumulation"] = 1.0 - error_rate
+    else:
+        accuracies["accuracy_after_accumulation"] = None
+
+    if results["num_crossing_gt_blobs"] != 0:
+        correct = (
+            results["crossing_detector_tn"] + results["crossing_detector_tp"]
+        )
+        positive = (
+            results["crossing_detector_tp"] + results["crossing_detector_fp"]
+        )
+        negative = (
+            results["crossing_detector_tn"] + results["crossing_detector_fn"]
+        )
+        total = positive + negative
+        accuracies["crossing_detector_accuracy"] = correct / total
+        accuracies["crossing_detector_precision"] = (
+            results["crossing_detector_tp"] / positive
+        )
+        accuracies["crossing_detector_recall"] = results[
+            "crossing_detector_tp"
+        ] / (results["crossing_detector_tp"] + results["crossing_detector_fn"])
+    else:
+        accuracies["crossing_detector_accuracy"] = None
+
+    accuracies["individual_P2_in_validated_part"] = {}
+    accuracies["individual_accuracy"] = {}
+    accuracies["individual_accuracy_assigned"] = {}
+    accuracies["individual_accuracy_in_accumulation"] = {}
+    accuracies["individual_accuracy_after_accumulation"] = {}
+    for i in range(1, number_of_animals + 1):
+        accuracies["individual_P2_in_validated_part"][i] = (
+            results["sum_indiv_P2"][i] / results["num_blobs"][i]
+        )
+        if results["num_blobs"] != 0:
+            error_rate = results["errors_blobs"][i] / results["num_blobs"][i]
+            accuracies["individual_accuracy"][i] = 1 - error_rate
+        else:
+            accuracies["individual_accuracy"][i] = None
+
+        if results["num_id_blobs"] != 0:
+            error_rate = (
+                results["errors_id_blobs"][i] / results["num_id_blobs"][i]
+            )
+            accuracies["individual_accuracy_assigned"][i] = 1 - error_rate
+        else:
+            accuracies["individual_accuracy_assigned"][i] = None
+
+        if results["num_id_blobs_accum"][i] != 0:
+            error_rate = (
+                results["errors_id_blobs_accum"][i]
+                / results["num_id_blobs_accum"][i]
+            )
+            accuracies["individual_accuracy_in_accumulation"][i] = (
+                1 - error_rate
+            )
+        else:
+            accuracies["individual_accuracy_in_accumulation"][i] = None
+
+        if results["num_blobs_after_accum"][i] != 0:
+            error_rate = (
+                results["errors_blobs_after_accum"][i]
+                / results["num_blobs_after_accum"][i]
+            )
+            accuracies["individual_accuracy_after_accumulation"][i] = (
+                1 - error_rate
+            )
+        else:
+            accuracies["individual_accuracy_after_accumulation"][i] = None
+
+    logger.info("accuracies %s" % str(accuracies))
+    return accuracies
+
+
 def get_accuracy_wrt_groundtruth(
     video,
-    gt_video,
     gt_blobs_in_video,
     blobs_in_video=None,
     identities_dictionary_permutation=None,
 ):
     number_of_animals = video.number_of_animals
-    blobs_in_video = (
-        gt_blobs_in_video if blobs_in_video is None else blobs_in_video
-    )
+    if blobs_in_video is None:
+        blobs_in_video = gt_blobs_in_video
+
     results = compare_tracking_with_ground_truth(
         number_of_animals,
         gt_blobs_in_video,
@@ -323,88 +478,14 @@ def get_accuracy_wrt_groundtruth(
         identities_dictionary_permutation,
     )
     pprint(results)
-    if len(results["frames_with_zeros_in_groundtruth"]) == 0:
-        accuracies = {}
-        accuracies["percentage_of_unoccluded_images"] = results[
-            "num_indiv_blobs"
-        ] / (results["num_indiv_blobs"] + results["num_crossing_blobs"])
-        accuracies["individual_P2_in_validated_part"] = {
-            i: results["sum_individual_P2"][i] / results["num_blobs"][i]
-            for i in range(1, number_of_animals + 1)
-        }
-        accuracies["mean_individual_P2_in_validated_part"] = np.sum(
-            list(results["sum_individual_P2"].values())
-        ) / np.sum(list(results["num_blobs"].values()))
-        accuracies["individual_accuracy"] = {
-            i: 1 - results["errors_blobs"][i] / results["num_blobs"][i]
-            if results["num_blobs"] != 0
-            else None
-            for i in range(1, number_of_animals + 1)
-        }
-        accuracies["accuracy"] = 1.0 - np.sum(
-            list(results["errors_blobs"].values())
-        ) / np.sum(list(results["num_blobs"].values()))
-        accuracies["individual_accuracy_assigned"] = {
-            i: 1 - results["errors_id_blobs"][i] / results["num_id_blobs"][i]
-            if results["num_id_blobs"] != 0
-            else None
-            for i in range(1, number_of_animals + 1)
-        }
-        accuracies["accuracy_assigned"] = 1.0 - np.sum(
-            list(results["errors_id_blobs"].values())
-        ) / np.sum(list(results["num_id_blobs"].values()))
-        accuracies["individual_accuracy_in_accumulation"] = {}
-        for i in range(1, number_of_animals + 1):
-            if results["num_id_blobs_accum"][i] != 0:
-                accuracies["individual_accuracy_in_accumulation"][i] = (
-                    1
-                    - results["errors_id_blobs_accum"][i]
-                    / results["num_id_blobs_accum"][i]
-                )
-            else:
-                accuracies["individual_accuracy_in_accumulation"][i] = None
-        accuracies["accuracy_in_accumulation"] = 1.0 - np.sum(
-            list(results["errors_id_blobs_accum"].values())
-        ) / np.sum(list(results["num_id_blobs_accum"].values()))
-        accuracies["individual_accuracy_after_accumulation"] = {}
-        for i in range(1, number_of_animals + 1):
-            if results["num_blobs_after_accum"][i] != 0:
-                accuracies["individual_accuracy_after_accumulation"][i] = (
-                    1
-                    - results["errors_blobs_after_accum"][i]
-                    / results["num_blobs_after_accum"][i]
-                )
-            else:
-                accuracies["individual_accuracy_after_accumulation"][i] = None
-        if np.sum(list(results["num_blobs_after_accum"].values())) != 0:
-            accuracies["accuracy_after_accumulation"] = 1.0 - np.sum(
-                list(results["errors_blobs_after_accum"].values())
-            ) / np.sum(list(results["num_blobs_after_accum"].values()))
-        else:
-            accuracies["accuracy_after_accumulation"] = None
-        if results["num_crossing_blobs"] != 0:
-            accuracies["crossing_detector_accuracy"] = (
-                1.0
-                - results["num_crossings_blobs_assigned_as_indiv"]
-                / results["num_crossing_blobs"]
-            )
-        else:
-            accuracies["crossing_detector_accuracy"] = None
-        logger.info("accuracies %s" % str(accuracies))
-        logger.info(
-            "number of crossing fragments in ground truth interval: %i"
-            % results["number_of_crossing_fragments"]
-        )
-        logger.info(
-            "number of crossing blobs in ground truth interval: %i"
-            % results["num_crossing_blobs"]
-        )
-        return accuracies, results
 
+    if len(results["frames_w_0_id_in_gt"]) == 0:
+        accuracies = compute_performance(results, number_of_animals)
+        return accuracies, results
     else:
         logger.info(
             "there are fish with 0 identity in frame %s"
-            % str(results["frames_with_zeros_in_groundtruth"])
+            % str(results["frames_w_0_id_in_gt"])
         )
         return None, results
 
@@ -422,7 +503,7 @@ def reduce_pixels(
     return pxs_reduced
 
 
-def reduce_resolution_groundtruth_blobs(video, gt_blobs_in_video):
+def reduce_resolution_gt_blobs(video, gt_blobs_in_video):
     for gt_blobs_in_frame in gt_blobs_in_video:
         for gt_blob in gt_blobs_in_frame:
             gt_blob.pixels = reduce_pixels(
@@ -464,7 +545,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, gt_type=None):
     check_gt_video_consistency(video, ground_truth.video)
 
     if video.resolution_reduction != 1:
-        reduce_resolution_groundtruth_blobs(video, ground_truth.blobs_in_video)
+        reduce_resolution_gt_blobs(video, ground_truth.blobs_in_video)
 
     accumulation_number = int(video.accumulation_folder[-1])
     identities_dictionary_permutation = get_permutation_of_identities(
@@ -487,7 +568,6 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, gt_type=None):
     logger.info("computing performance")
     accuracies, results = performance_func(
         video,
-        ground_truth.video,
         gt_blobs_in_video,
         blobs_in_video,
         identities_dictionary_permutation,
