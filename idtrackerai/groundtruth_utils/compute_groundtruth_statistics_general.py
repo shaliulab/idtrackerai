@@ -115,7 +115,6 @@ def update_results_for_identified_gt_blob(results, blob, gt_id):
 
 
 def compare_blob_with_gt_blob(results, blob, gt_blob, ids_perm_dict):
-
     if ids_perm_dict is not None:
         gt_id = ids_perm_dict[gt_blob.identity]
     else:
@@ -144,11 +143,13 @@ def compare_frame(results, blobs_in_frame, gt_blobs_in_frame, ids_perm_dict):
                 results["num_indiv_gt_blobs"] += 1
                 results["num_indiv_blobs"] += 1
                 results["crossing_detector_tn"] += 1
+                # TODO: Compute accuracy of ground_truth blobs considering only the corresponding blobs.
+                # TODO: That's the right accuracy to compare the new trajectories against.
                 compare_blob_with_gt_blob(
                     results, blob, gt_blob, ids_perm_dict
                 )
             elif blob.is_an_individual and not gt_blob_is_individual:
-                # TOOD: Check if there more new blobs that overlap with the
+                # TODO: Check if there more new blobs that overlap with the
                 # ground truth crossing blob. This could mean that the
                 # video has a better segmentation and it would not be a
                 # crossing detection error.
