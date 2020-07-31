@@ -41,6 +41,23 @@ from idtrackerai.list_of_fragments import ListOfFragments
 
 logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
 
+ATTRIBUTES_TO_COPY = (
+    "identities",
+    "centroids",
+    "assigned_identities",
+    "assigned_centroids",
+    "used_for_training",
+    "accumulation_step",
+    "centroid",
+    "pixels",
+    "frame_number",
+    "is_an_individual",
+    "is_a_crossing",
+    "was_a_crossing",
+    "blob_index",
+    "fragment_identifier",
+)
+
 
 class GroundTruthBlob(object):
     """Lighter blob objects.
@@ -50,39 +67,32 @@ class GroundTruthBlob(object):
         pixels (pixels is stored to check the groundtruth in crossings)
     """
 
-    def __init__(
-        self,
-        attributes_to_get=[
-            "identity",
-            "assigned_identities",
-            "used_for_training",
-            "accumulation_step",
-            "centroid",
-            "pixels",
-            "frame_number",
-            "is_an_individual",
-            "is_a_crossing",
-            "was_a_crossing",
-            "blob_index",
-            "fragment_identifier",
-        ],
-    ):
-        self.attributes = attributes_to_get
+    def __init__(self, blob):
+        self.attributes = ATTRIBUTES_TO_COPY
+        self.set_attributes(blob)
 
-    def get_attribute(self, blob):
+    def set_attributes(self, blob):
         for attribute in self.attributes:
-            if attribute == "identity":
-                setattr(self, attribute, getattr(blob, "final_identities")[0])
-            if attribute == "assigned_identities":
-                setattr(
-                    self, attribute, getattr(blob, "assigned_identities")[0]
-                )
+            if attribute == "identities":
+                setattr(self, attribute, getattr(blob, "final_identities"))
+            elif attribute == "centroids":
+                setattr(self, attribute, getattr(blob, "final_centroids"))
             else:
                 setattr(self, attribute, getattr(blob, attribute))
 
+    @property
+    def gt_identity(self):
+        if hasattr(self, "identity"):
+            return self.identity
+        else:
+            if len(self.identities) == 1:
+                return self.identities[0]
+            else:
+                return -1
+
 
 class GroundTruth(object):
-    def __init__(self, video=[], blobs_in_video=[], start=None, end=None):
+    def __init__(self, video, blobs_in_video, start, end):
         self.video = video
         self.blobs_in_video = blobs_in_video
         self.start = start
@@ -115,6 +125,7 @@ def generate_groundtruth(
     """Generates a list of light blobs_in_video, given a video object corresponding to a
     tracked video
     """
+    logger.info("Generating ground truth file")
     # make sure the video has been succesfully tracked
     assert video.has_been_assigned
     blobs_in_video_groundtruth = []
@@ -123,8 +134,7 @@ def generate_groundtruth(
         blobs_in_frame_groundtruth = []
 
         for blob in blobs_in_frame:
-            gt_blob = GroundTruthBlob()
-            gt_blob.get_attribute(blob)
+            gt_blob = GroundTruthBlob(blob)
             blobs_in_frame_groundtruth.append(gt_blob)
 
         blobs_in_video_groundtruth.append(blobs_in_frame_groundtruth)
