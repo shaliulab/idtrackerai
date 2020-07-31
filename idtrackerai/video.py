@@ -552,6 +552,10 @@ class Video(object):
         return self._video_folder
 
     @property
+    def ground_truth_path(self):
+        return os.path.join(self.video_folder, "_groundtruth.npy")
+
+    @property
     def number_of_animals(self):
         return self._number_of_animals
 

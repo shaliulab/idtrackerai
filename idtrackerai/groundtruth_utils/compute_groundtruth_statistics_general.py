@@ -65,7 +65,7 @@ def get_corresponding_gt_blob(blob, gt_blobs_in_frame):
     assert all(blobs_of_same_frame)
     corresponding_gt_blobs = []
     for gt_blob in gt_blobs_in_frame:
-        if set(gt_blob.pixels) & set(blob.pixels):
+        if set(gt_blob.pixels).intersection(set(blob.pixels)):
             corresponding_gt_blobs.append(gt_blob)
     return corresponding_gt_blobs
 
@@ -80,9 +80,13 @@ def update_sum_indiv_P2(gt_id, blob, results):
 
 def update_results_with_id_error(results, blob, gt_id):
     results["errors_blobs"][gt_id] += 1
-    results["frames_w_id_errors"].union({blob.frame_number})
+    results["frames_w_id_errors"] = results["frames_w_id_errors"].union(
+        {blob.frame_number}
+    )
     if blob.fragment_identifier:
-        results["frag_w_id_errors"].union({blob.fragment_identifier})
+        results["frag_w_id_errors"] = results["frag_w_id_errors"].union(
+            {blob.fragment_identifier}
+        )
 
     if not blob.used_for_training:
         results["errors_blobs_after_accum"][gt_id] += 1
@@ -116,14 +120,16 @@ def update_results_for_identified_gt_blob(results, blob, gt_id):
 
 def compare_blob_with_gt_blob(results, blob, gt_blob, ids_perm_dict):
     if ids_perm_dict is not None:
-        gt_id = ids_perm_dict[gt_blob.identity]
+        gt_id = ids_perm_dict[gt_blob.gt_identity]
     else:
-        gt_id = gt_blob.identity
+        gt_id = gt_blob.gt_identity
 
     if gt_id == 0:
         # This is here to raise and error at the end of the computations
         # A ground truth individual blob cannot have identity 0.
-        results["frames_w_0_id_in_gt"].union({gt_blob.frame_number})
+        results["frames_w_0_id_in_gt"] = results["frames_w_0_id_in_gt"].union(
+            {gt_blob.frame_number}
+        )
     else:
         update_results_for_identified_gt_blob(results, blob, gt_id)
 
@@ -136,36 +142,33 @@ def compare_frame(results, blobs_in_frame, gt_blobs_in_frame, ids_perm_dict):
         if len(corresponding_gt_blobs) == 1:
             gt_blob = corresponding_gt_blobs[0]
             cond1 = gt_blob.is_an_individual
-            cond2 = gt_blob.identity != -1
+            cond2 = gt_blob.gt_identity != -1
             cond3 = not gt_blob.was_a_crossing
             gt_blob_is_individual = cond1 and cond2 and cond3
             if blob.is_an_individual and gt_blob_is_individual:
                 results["num_indiv_gt_blobs"] += 1
                 results["num_indiv_blobs"] += 1
                 results["crossing_detector_tn"] += 1
-                # TODO: Compute accuracy of ground_truth blobs considering only the corresponding blobs.
-                # TODO: That's the right accuracy to compare the new trajectories against.
                 compare_blob_with_gt_blob(
                     results, blob, gt_blob, ids_perm_dict
                 )
             elif blob.is_an_individual and not gt_blob_is_individual:
-                # TODO: Check if there more new blobs that overlap with the
-                # ground truth crossing blob. This could mean that the
+                # ground truth crossing blob. This could mean that the new
                 # video has a better segmentation and it would not be a
                 # crossing detection error.
                 results["num_crossing_gt_blobs"] += 1
                 results["num_indiv_blobs"] += 1
                 results["crossing_detector_fn"] += 1
-                results["frame_with_crossing_detection_error"].union(
-                    {blob.frame_number}
-                )
+                results["frame_with_crossing_detection_error"] = results[
+                    "frame_with_crossing_detection_error"
+                ].union({blob.frame_number})
             elif blob.is_a_crossing and gt_blob_is_individual:
                 results["num_indiv_gt_blobs"] += 1
                 results["num_crossing_blobs"] += 1
                 results["crossing_detector_fp"] += 1
-                results["frame_with_crossing_detection_error"].union(
-                    {blob.frame_number}
-                )
+                results["frame_with_crossing_detection_error"] = results[
+                    "frame_with_crossing_detection_error"
+                ].union({blob.frame_number})
             elif blob.is_a_crossing and not gt_blob_is_individual:
                 results["num_crossing_gt_blobs"] += 1
                 results["num_crossing_blobs"] += 1
@@ -175,9 +178,6 @@ def compare_frame(results, blobs_in_frame, gt_blobs_in_frame, ids_perm_dict):
                 results["num_indiv_blobs"] += 1
             else:
                 results["num_crossing_blobs"] += 1
-            print(
-                blob.identity, [b.identity for b in corresponding_gt_blobs],
-            )
 
     return results
 
@@ -311,7 +311,9 @@ def get_ids_perm_dict(gt_blobs_in_frame, blobs_in_frame):
             blob, gt_blobs_in_frame
         )
         if len(corresponding_blobs) == 1:
-            ids_perm_dict[corresponding_blobs[0].identity] = blob.identity
+            ids_perm_dict[
+                corresponding_blobs[0].gt_identity
+            ] = blob.assigned_identities[0]
         else:
             break
     return ids_perm_dict
