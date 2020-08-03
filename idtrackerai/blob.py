@@ -1285,6 +1285,50 @@ class Blob(object):
             current_centroid = np.asarray(previous_centroid)
             count_past_corrections += 1
 
+    @property
+    def summary(self):
+        blob_name = f"{self}\n"
+        used_for_training = f"used for training: {self.used_for_training}\n"
+        fragment_id = f"fragment id: {self.fragment_identifier}\n"
+        previous_blob = f"previous blob(s): {self.previous}\n"
+        next_blob = f"next blob(s): {self.next}\n"
+        sure_individual_crossing = f"sure individual-crossing: {self.is_a_sure_individual()}-{self.is_a_sure_crossing()}\n"
+        individual_crossing = f"individual-crossing: {self.is_an_individual}-{self.is_a_crossing}\n"
+        was_a_crossing = f"was_a_crossing: {self.was_a_crossing}\n"
+        id = f"identity: {self.identity}\n"
+        id_correcting_jumps = f"identity correcting jumps {self.identity_corrected_solving_jumps}\n"
+        correcting_gaps_id = (
+            f"id correcting gaps: {self.identities_corrected_closing_gaps}\n"
+        )
+        assigned_identities = f"assigned identities: {self.assigned_identities}\n"
+        assigned_centroids = f"assigned centroids: {self.assigned_centroids}\n"
+        user_identities = f"user identities: {self.user_generated_identities}\n"
+        user_centroids = f"user centroids: {self.user_generated_centroids}\n"
+        final_identities = f"final identities: {self.final_identities}\n"
+        final_centroids = f"final centroids: {self.final_centroids}\n"
+
+
+        summary_str = (
+            blob_name
+            + used_for_training
+            + fragment_id
+            + previous_blob
+            + next_blob
+            + sure_individual_crossing
+            + individual_crossing
+            + was_a_crossing
+            + id
+            + id_correcting_jumps
+            + correcting_gaps_id
+            + assigned_identities
+            + assigned_centroids
+            + user_identities
+            + user_centroids
+            + final_identities
+            + final_centroids
+        )
+        return summary_str
+
     def draw(
         self, image, colors_lst=None, selected_id=None, is_selected=False
     ):
