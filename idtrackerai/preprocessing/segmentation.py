@@ -39,7 +39,7 @@ import cv2
 import h5py
 import numpy as np
 
-# from scipy import ndimage # TODO: used to fill binary holes see below
+from scipy import ndimage  # TODO: used to fill binary holes see below
 from confapp import conf
 from joblib import Parallel, delayed
 from tqdm import tqdm
@@ -187,7 +187,9 @@ def get_blobs_in_frame(
 
         # TODO: Check if this is necessary
         # Fill holes in the segmented frame to avoid duplication of contours
-        # segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
+        segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype(
+            "uint8"
+        )
 
         # Find contours in the segmented image
         (
