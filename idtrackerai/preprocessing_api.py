@@ -50,7 +50,7 @@ from idtrackerai.preprocessing.segmentation import segment
 logger = logging.getLogger(__name__)
 
 
-class PreprocessingPreviewAPI(object):
+class PreprocessingAPI(object):
     def __init__(self, chosen_video=None, **kwargs):
 
         #: Chosen_Video: ?
