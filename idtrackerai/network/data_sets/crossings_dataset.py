@@ -141,9 +141,9 @@ def get_train_validation_and_toassign_blobs(
     toassign_blobs = []
     for blobs_in_frame in list_of_blobs.blobs_in_video:
         for blob in blobs_in_frame:
-            if (
-                blob.is_a_sure_individual()
-            ) or blob.in_a_global_fragment_core(blobs_in_frame):
+            if blob.is_a_sure_individual() or blob.in_a_global_fragment_core(
+                blobs_in_frame
+            ):
                 training_blobs["individuals"].append(blob)
             elif blob.is_a_sure_crossing():
                 training_blobs["crossings"].append(blob)
