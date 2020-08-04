@@ -249,39 +249,25 @@ class TrackerAPI(object):
         if create_trajectories is None:
             create_trajectories = self.create_trajectories
 
-        logger.debug("------------------------> track_single_animal")
-        [
-            setattr(b, "_identity", 1)
-            for bf in self.chosen_video.list_of_blobs.blobs_in_video
-            for b in bf
-        ]
-        [
-            setattr(b, "_P2_vector", [1.0])
-            for bf in self.chosen_video.list_of_blobs.blobs_in_video
-            for b in bf
-        ]
-        [
-            setattr(b, "frame_number", frame_number)
-            for frame_number, bf in enumerate(
-                self.chosen_video.list_of_blobs.blobs_in_video
-            )
-            for b in bf
-        ]
+        logger.debug("---> track_single_animal")
+        for f, bf in enumerate(self.chosen_video.list_of_blobs.blobs_in_video):
+            for blob in bf:
+                blob._identity = 1
+                blob._P2_vector = [1.0]
+                blob.frame_number = f
+
         create_trajectories()
 
     def track_single_global_fragment_video(self, create_trajectories=None):
-
-        if create_trajectories is None:
-            create_trajectories = self.create_trajectories
-
-        logger.debug(
-            "------------------------> track_single_global_fragment_video"
-        )
-
         def get_P2_vector(identity, number_of_animals):
             P2_vector = np.zeros(number_of_animals)
             P2_vector[identity - 1] = 1.0
             return P2_vector
+
+        if create_trajectories is None:
+            create_trajectories = self.create_trajectories
+
+        logger.debug("---> track_single_global_fragment_video")
 
         fragment_identifier_to_id = {}
         identity = 1
@@ -292,29 +278,17 @@ class TrackerAPI(object):
             else:
                 fragment_identifier_to_id[fragment.identifier] = None
 
-        [
-            setattr(
-                b,
-                "_identity",
-                fragment_identifier_to_id[b.fragment_identifier],
-            )
-            for bf in self.chosen_video.list_of_blobs.blobs_in_video
-            for b in bf
-            if b.is_an_individual
-        ]
-        [
-            setattr(
-                b,
-                "_P2_vector",
-                get_P2_vector(
-                    fragment_identifier_to_id[b.fragment_identifier],
-                    self.chosen_video.video.number_of_animals,
-                ),
-            )
-            for bf in self.chosen_video.list_of_blobs.blobs_in_video
-            for b in bf
-            if b.is_an_individual
-        ]
+        for f, bf in enumerate(self.chosen_video.list_of_blobs.blobs_in_video):
+            for b in bf:
+                if b.is_an_individual:
+                    b._identity = fragment_identifier_to_id[
+                        b.fragment_identifier
+                    ]
+                    b._P2_vector = get_P2_vector(
+                        fragment_identifier_to_id[b.fragment_identifier],
+                        self.chosen_video.video.number_of_animals,
+                    )
+                    b.frame_number = f
         self.chosen_video.video.accumulation_trial = 0
         self.chosen_video.video._first_frame_first_global_fragment = [
             0
