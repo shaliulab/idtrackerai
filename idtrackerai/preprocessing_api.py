@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import os
 import logging
 import time
 
@@ -55,149 +56,30 @@ class PreprocessingAPI(object):
 
         #: Chosen_Video: ?
         self.chosen_video = chosen_video
-        #: int: Used to filter the image to find the blobs
-        self.min_threshold = (
-            chosen_video.video.min_threshold
-            if chosen_video.video is not None
-            else 0
-        )
-        #: int: Used to filter the image to find the blobs
-        self.max_threshold = (
-            chosen_video.video.max_threshold
-            if chosen_video.video is not None
-            else 135
-        )
-        #: int: Minimum area of a blob
-        self.min_area = (
-            chosen_video.video.min_area
-            if chosen_video.video is not None
-            else 150
-        )
-        #: int: Maximum area of a blob
-        self.max_area = (
-            chosen_video.video.max_area
-            if chosen_video.video is not None
-            else 60000
-        )
-
-        #: float: ?
-        self.resolution_reduction = (
-            chosen_video.video.resolution_reduction
-            if chosen_video.video is not None
-            else 1
-        )
-        #: int: Number of animals to track
-        self.number_of_animals = (
-            chosen_video.video.number_of_animals
-            if chosen_video.video.number_of_animals is not None
-            else 1
-        )
+        #: ListOfBlobs
+        self.blobs = None
         #: ListOfFragments: List of fragments ( blobs paths before crossing )
         self.list_of_fragments = None
         #: list(GlobalFragment): ?
         self.list_of_global_fragments = None
         #: ?: ?
         self.crossing_detector_trainer = None
-        #: boolean: ?
-        self.resegmentation_step_finished = True
-        #: list(int): Indexes of the frames with more blobs than animals to track
+        # #: boolean: ?
+        # self.resegmentation_step_finished = True
+        #:list(int):Indexes of the frames with more blobs than animals to track
         self.frames_with_more_blobs_than_animals = None
 
-    def init_preview(self):
-        ## TODO: Check how important is this method. Variables in
-        # init_segment_zero do not seem to be used
-        logger.debug("init_preview")
-        self.init_preproc_parameters()
+    def detect_blobs(self):
+        self.chosen_video.video._segmentation_time = time.time()
+        logger.debug("segment 2")
+        self.chosen_video.video.save()
+        self.chosen_video.video.create_images_folders()  # for ram optimization
 
-        ## TODO: Check this
-        self.bkg = self.chosen_video.video.bkg
-        self.ROI = (
-            self.chosen_video.video.ROI
-            if self.chosen_video.video.ROI is not None
-            else np.ones(
-                (
-                    self.chosen_video.video.original_height,
-                    self.chosen_video.video.original_width,
-                ),
-                dtype="uint8",
-            )
-            * 255
-        )
-
-        logger.debug("init_segment_zero")
-        self.init_segment_zero()
-
-    def init_segment_zero(self):
-        ## TODO: This seems not to be used
-        self.currentSegment = 0
-        self.areas_plotted = False
-        self.number_of_detected_blobs = [0]
-
-    def init_preproc_parameters(self):
-
-        logger.debug("init_preproc_parameters")
-
-        if (
-            self.chosen_video.old_video is not None
-            and self.chosen_video.old_video._has_been_preprocessed
-        ):
-
-            self.max_threshold = self.chosen_video.old_video.max_threshold
-            self.min_threshold = self.chosen_video.old_video.min_threshold
-            self.min_area = self.chosen_video.old_video.min_area
-            self.max_area = self.chosen_video.old_video.max_area
-            self.resolution_reduction = (
-                self.chosen_video.old_video.resolution_reduction
-            )
-            self.number_of_animals = (
-                self.chosen_video.old_video.number_of_animals
-            )
-            self.chosen_video.video.resolution_reduction = (
-                self.chosen_video.old_video.resolution_reduction
-            )
-
-        else:
-
-            self.max_threshold = conf.MAX_THRESHOLD_DEFAULT
-            self.min_threshold = conf.MIN_THRESHOLD_DEFAULT
-            self.min_area = conf.MIN_AREA_DEFAULT
-            self.max_area = conf.MAX_AREA_DEFAULT
-            self.resolution_reduction = (
-                self.chosen_video.video.resolution_reduction
-            )
-            if self.chosen_video.video._original_ROI is None:
-                self.chosen_video.video._original_ROI = (
-                    np.ones(
-                        (
-                            self.chosen_video.video.original_height,
-                            self.chosen_video.video.original_width,
-                        ),
-                        dtype="uint8",
-                    )
-                    * 255
-                )
-
-    def compute_list_of_blobs(self, *args):
-        ### TODO: This call should go to the method segment below
         self.blobs = segment(self.chosen_video.video)
         self.chosen_video.list_of_blobs = ListOfBlobs(
             blobs_in_video=self.blobs
         )
         self.chosen_video.video.create_preprocessing_folder()
-
-    def segment(self, min_threshold, max_threshold, min_area, max_area):
-        self.chosen_video.video._segmentation_time = time.time()
-        logger.debug("segment")
-        self.chosen_video.video._max_threshold = max_threshold
-        self.chosen_video.video._min_threshold = min_threshold
-        self.chosen_video.video._min_area = min_area
-        self.chosen_video.video._max_area = max_area
-        logger.debug("segment 1")
-        self.chosen_video.video.resolution_reduction = (
-            self.resolution_reduction
-        )
-        logger.debug("segment 2")
-        self.chosen_video.video.save()
 
     def check_segmentation_consistency(self):
         """
@@ -229,6 +111,21 @@ class PreprocessingAPI(object):
             len(self.chosen_video.video.frames_with_more_blobs_than_animals)
             == 0
         )
+
+    def save_inconsistent_frames(self):
+        outfile_path = os.path.join(
+            self.chosen_video.video.session_folder, "inconsistent_frames.csv"
+        )
+        with open(outfile_path, "w") as outfile:
+            outfile.write(
+                "\n".join(
+                    map(
+                        str,
+                        self.chosen_video.video.frames_with_more_blobs_than_animals,
+                    )
+                )
+            )
+        return outfile_path
 
     def save_list_of_blobs_segmented(self):
         self.chosen_video.video._has_been_segmented = True
