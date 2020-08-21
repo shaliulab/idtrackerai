@@ -83,6 +83,7 @@ Contents
    validation_GUI_explained
    tracking_from_terminal
    advanced_parameters
+   setups
    tutorials
    what_is_new
    trajectories_analysis
