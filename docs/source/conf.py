@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
+import re
 # autodoc_mock_imports = ['_tkinter']
 # import matplotlib
 # if os.name == 'posix':
@@ -15,6 +16,12 @@ sys.path.insert(0, os.path.abspath('../../idtrackerai/network/crossings_detector
 sys.path.insert(0, os.path.abspath('../../idtrackerai/network/identification_model'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/postprocessing'))
 
+version = ""
+with open("../../idtrackerai/__init__.py", "r") as fd:
+    version = re.search(
+        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE
+    ).group(1)
+
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
               'sphinx.ext.intersphinx',
               'sphinx.ext.coverage',
@@ -28,8 +35,8 @@ master_doc = 'index'
 project = u'idtrackerai'
 copyright = u'2018, Champalimaud Center for the Unknown'
 author = u'Francisco Romero Ferrero, Mattia G. Bergomi'
-version = u'3.0.18-alpha'
-release = u'3.0.18-alpha'
+version = version
+release = version
 language = 'en'
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'
