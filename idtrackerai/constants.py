@@ -41,12 +41,16 @@ TEST_VIDEO_URL = (
 )
 
 PROCESSES = [
-    "preprocessing",
+    "blob_detection",
+    "crossing_detection",
+    "fragmentation",
     "protocols1_and_2",
     "protocol3_pretraining",
     "protocol3_accumulation",
     "residual_identification",
-    "post_processing",
+    "impossible_jumps_solving",
+    "crossing_solving",
+    "trajectories_generation"
 ]
 
 #######################################

@@ -102,40 +102,37 @@ class TrackerAPI(object):
 
         else:
             self.chosen_video.video.accumulation_trial = 0
-            delete = (
-                not self.chosen_video.processes_to_restore["protocols1_and_2"]
-                if "protocols1_and_2"
-                in self.chosen_video.processes_to_restore.keys()
-                else True
-            )
+
+            if "protocols1_and_2" in self.chosen_video.processes_to_restore:
+                delete = not self.chosen_video.processes_to_restore["protocols1_and_2"]
+            else:
+                delete = True
+
             self.chosen_video.video.create_accumulation_folder(
                 iteration_number=0, delete=delete
             )
-            self.number_of_animals = (
-                self.chosen_video.video.number_of_animals
-                if not self.chosen_video.video.identity_transfer
-                else self.chosen_video.video.knowledge_transfer_info_dict[
-                    "number_of_classes"
-                ]
-            )
+
+            if not self.chosen_video.video.identity_transfer:
+                self.number_of_animals = self.chosen_video.video.number_of_animals
+            else:
+                self.number_of_animals = self.chosen_video.video.knowledge_transfer_info_dict["number_of_classes"]
+
             self.restoring_first_accumulation = False
             self.init_accumulation_network()
-            self.chosen_video.video._tracking_with_knowledge_transfer = (
-                False
-                if self.accumulation_network_params.knowledge_transfer_model_file
-                is None
-                else True
-            )
 
+            if self.accumulation_network_params.knowledge_transfer_model_file is None:
+                self.chosen_video.video._tracking_with_knowledge_transfer = False
+            else:
+                self.chosen_video.video._tracking_with_knowledge_transfer = True
+
+            # Restoring
             if (
                 "post_processing" in self.chosen_video.processes_to_restore
                 and self.chosen_video.processes_to_restore["post_processing"]
             ):
-                # TODO: bring restoring back to life
-                raise
-                # self.restore_trajectories()
-                # self.restore_crossings_solved()
-                # self.restore_trajectories_wo_gaps()
+                self.restore_trajectories()
+                self.restore_crossings_solved()
+                self.restore_trajectories_wo_gaps()
 
             elif (
                 "residual_identification"
@@ -146,16 +143,14 @@ class TrackerAPI(object):
             ):
                 if self.chosen_video.video.track_wo_identities:
                     # TODO: bring restoring back to life
-                    raise
-                    # self.restore_trajectories()
+                    self.restore_trajectories()
 
                 else:
                     # TODO: bring restoring back to life
-                    raise
-                    # logger.info("Restoring residual identification")
-                    # self.restore_identification()
-                    # self.chosen_video.video._has_been_assigned = True
-                    # self.create_trajectories()
+                    logger.info("Restoring residual identification")
+                    self.restore_identification()
+                    self.chosen_video.video._has_been_assigned = True
+                    self.create_trajectories()
 
             elif (
                 "protocol3_accumulation"
@@ -1123,9 +1118,9 @@ class TrackerAPI(object):
     #     )
     #     self.chosen_video.video.save()
     #
-    # def restore_trajectories(self):
-    #     self.restore_video_attributes()
-    #     self.chosen_video.video.save()
+    def restore_trajectories(self):
+        self.restore_video_attributes()
+        self.chosen_video.video.save()
     #
     # def restore_crossings_solved(self):
     #     self.restore_video_attributes()
@@ -1137,9 +1132,9 @@ class TrackerAPI(object):
     #     )
     #     self.chosen_video.video.save()
     #
-    # def restore_trajectories_wo_gaps(self):
-    #     self.restore_video_attributes()
-    #     self.chosen_video.video.save()
+    def restore_trajectories_wo_gaps(self):
+        self.restore_video_attributes()
+        self.chosen_video.video.save()
 
     """ Residual identification """
 

@@ -134,33 +134,32 @@ class Video(object):
         )
         self._blobs_path_segmented = None
         self._blobs_path_interpolated = None
-        self._has_been_segmented = None
-        # boolean: True if a video has been fragmented in a past session
-        self._has_been_preprocessed = None
-        self._preprocessing_folder = None
-        self._images_folder = None
-        self._global_fragments_path = (
-            None  # string: path to saved list of global fragments
-        )
-        self._has_been_pretrained = None
-        self._pretraining_folder = None
-        self._knowledge_transfer_model_folder = None
-        self._identity_transfer = None
-        self._tracking_with_knowledge_transfer = False
-        self._percentage_of_accumulated_images = None
-        self._first_accumulation_finished = None
-        self._second_accumulation_finished = None
-        self._has_been_assigned = None  # ?
-        self._has_duplications_solved = None
-        self._has_crossings_solved = None
-        self._has_trajectories = None
-        self._has_trajectories_wo_gaps = None
-        self._embeddings_folder = (
-            None  # If embeddings are computed, the will be saved in this path
-        )
-        self._first_frame_first_global_fragment = []
-        self._segmentation_time = 0.0
-        self._crossing_detector_time = 0.0
+
+        # Processes flags (used for restoring computational blocks)
+        self._has_preprocessing_parameters = None
+        self._has_animals_detected = None  # animal detection and segmentation
+        self._has_model_area = None # crossings detection
+        self._has_identification_images = None # crossing detection
+        self._has_crossings_detected = None  # crossings detection
+        self._has_been_fragmented = None  # fragmentation
+        self._has_protocol1_finished = None # protocols cascade
+        self._has_protocol2_finished = None # protocols cascade
+        self._has_protocol3_pretraining_finished = None # protocols cascade
+        self._has_protocol3_accumulation_finished = None # protocols cascade
+        self._has_protocol3_finished = None # protocols cascade
+        self._has_residual_identification = None # residual identification
+        self._has_impossible_jumps_solved = None # post-processing
+        self._has_crossings_solved = None # crossings interpolation
+        self._has_trajectories = None # trajectories generation
+        self._has_trajectories_wo_gaps = None # trajectories generation
+
+        # Timers
+        self._detect_animals_time = 0.0
+        self._segmentation_consistency_time = 0.0
+        self._compute_model_area_time = 0.0
+        self._set_identification_images_time = 0.0
+        self._connect_list_of_blobs_id_cd_time = 0.0
+        self._training_crossing_detector_time = 0.0
         self._fragmentation_time = 0.0
         self._protocol1_time = 0.0
         self._protocol2_time = 0.0
@@ -168,6 +167,34 @@ class Video(object):
         self._protocol3_accumulation_time = 0.0
         self._identify_time = 0.0
         self._create_trajectories_time = 0.0
+
+        # self._has_been_preprocessed = None
+        # self._has_been_segmented = None
+        # self._first_accumulation_finished = None
+        # self._second_accumulation_finished = None
+        # self._has_been_assigned = None  # ?
+        # self._has_duplications_solved = None
+        # self._has_crossings_solved = None
+
+        # boolean: True if a video has been fragmented in a past session
+
+        self._preprocessing_folder = None
+        self._images_folder = None
+        self._global_fragments_path = (
+            None  # string: path to saved list of global fragments
+        )
+        self._pretraining_folder = None
+        self._knowledge_transfer_model_folder = None
+        self._identity_transfer = None
+        self._tracking_with_knowledge_transfer = False
+        self._percentage_of_accumulated_images = None
+
+
+        self._embeddings_folder = (
+            None  # If embeddings are computed, the will be saved in this path
+        )
+        self._first_frame_first_global_fragment = []
+
         self._there_are_crossings = True
         self._track_wo_identities = False  # Track without identities
         self._number_of_channels = 1
@@ -183,6 +210,100 @@ class Video(object):
 
         logger.debug(f"Video(open_multiple_files={self.open_multiple_files})")
 
+    # Processes attributes and properties
+    @property
+    def has_preprocessing_parameters(self):
+        return self._has_preprocessing_parameters
+
+    @property
+    def has_animals_detected(self):
+        return self._has_animals_detected
+
+    @property
+    def has_crossings_detected(self):
+        return self._has_crossings_detected
+
+    @property
+    def has_model_area(self):
+        return self._has_model_area
+
+    @property
+    def has_identification_images(self):
+        return self._has_identification_images
+
+    @property
+    def has_been_fragmented(self):
+        return self._has_been_fragmented
+
+    @property
+    def has_protocol1_finished(self):
+        return self._has_protocol1_finished
+
+    @property
+    def has_protocol2_finished(self):
+        return self._has_protocol2_finished
+
+    @property
+    def has_protocol3_pretraining_finished(self):
+        return self._has_protocol3_pretraining_finished
+
+    @property
+    def has_protocol3_accumulation_finished(self):
+        return self._has_protocol3_accumulation_finished
+
+    @property
+    def has_protocol3_finished(self):
+        return self._has_protocol3_finished
+
+    @property
+    def has_residual_identification(self):
+        return self._has_residual_identification
+
+    @property
+    def has_impossible_jumps_solved(self):
+        return self._has_impossible_jumps_solved
+
+    @property
+    def has_crossings_solved(self):
+        return self._has_crossings_solved
+
+    @property
+    def has_trajectories(self):
+        return self._has_trajectories
+
+    @property
+    def has_trajectories_wo_gaps(self):
+        return self._has_trajectories_wo_gaps
+
+    # Comptational times
+    @property
+    def detect_animals_time(self):
+        return self._detect_animals_time
+
+    @property
+    def segmentation_consistency_time(self):
+        return self._segmentation_consistency_time
+
+    @property
+    def compute_model_area_time(self):
+        return self._compute_model_area_time
+
+    @property
+    def set_identification_images_time(self):
+        return self._set_identification_images_time
+
+    @property
+    def connect_list_of_blobs_id_cd_time(self):
+        return self._connect_list_of_blobs_id_cd_time
+
+    @property
+    def training_crossing_detector_time(self):
+        return self._training_crossing_detector_time
+
+
+
+
+    # Other properties
     @property
     def is_centroid_updated(self):
         return self._is_centroid_updated
@@ -212,20 +333,8 @@ class Video(object):
         return self._images_folder
 
     @property
-    def has_been_preprocessed(self):
-        return self._has_been_preprocessed
-
-    @property
-    def has_been_segmented(self):
-        return self._has_been_segmented
-
-    @property
     def crossings_detector_folder(self):
         return self._crossings_detector_folder
-
-    @property
-    def has_been_pretrained(self):
-        return self._has_been_pretrained
 
     @property
     def previous_session_folder(self):
@@ -236,40 +345,12 @@ class Video(object):
         return self._pretraining_folder
 
     @property
-    def first_accumulation_finished(self):
-        return self._first_accumulation_finished
-
-    @property
-    def second_accumulation_finished(self):
-        return self._second_accumulation_finished
-
-    @property
     def accumulation_folder(self):
         return self._accumulation_folder
 
     @property
     def percentage_of_accumulated_images(self):
         return self._percentage_of_accumulated_images
-
-    @property
-    def has_been_assigned(self):
-        return self._has_been_assigned
-
-    @property
-    def has_duplications_solved(self):
-        return self._has_duplications_solved
-
-    @property
-    def has_crossings_solved(self):
-        return self._has_crossings_solved
-
-    @property
-    def has_trajectories(self):
-        return self._has_trajectories
-
-    @property
-    def has_trajectories_wo_gaps(self):
-        return self._has_trajectories_wo_gaps
 
     @property
     def embeddings_folder(self):
@@ -644,8 +725,8 @@ class Video(object):
         return self._ratio_accumulated_images
 
     @property
-    def segmentation_time(self):
-        return self._segmentation_time
+    def detect_animals_time(self):
+        return self._detect_animals_time
 
     @property
     def crossing_detector_time(self):

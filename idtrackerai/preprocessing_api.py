@@ -66,25 +66,36 @@ class PreprocessingAPI(object):
         self.crossing_detector_trainer = None
         # #: boolean: ?
         # self.resegmentation_step_finished = True
-        #:list(int):Indexes of the frames with more blobs than animals to track
-        self.frames_with_more_blobs_than_animals = None
+        self.chosen_video.video.create_preprocessing_folder()
 
-    def detect_blobs(self):
-        self.chosen_video.video._segmentation_time = time.time()
-        logger.debug("segment 2")
+    def detect_animals(self):
+        """
+        Animal detection computational block.
+
+        Detects the animals as blobs of pixels following the user-defined
+        animal detection parameters
+
+        Generates a ListOfBlobs object
+        """
+        self.chosen_video.video._detect_animals_time = time.time()
         self.chosen_video.video.save()
         self.chosen_video.video.create_images_folders()  # for ram optimization
-
+        logger.info("--> segment")
         self.blobs = segment(self.chosen_video.video)
+        logger.info("--> ListOfBlobs")
         self.chosen_video.list_of_blobs = ListOfBlobs(
             blobs_in_video=self.blobs
         )
-        self.chosen_video.video.create_preprocessing_folder()
 
     def check_segmentation_consistency(self):
         """
-        :return: True if the segmentation is consistence with the number of animals, otherwise return False
+        Checks whether there is some frame with more blobs than number
+        of animals in the video (as specified by the user)
+        Then the segmentation is considered inconsistent
+
+        :return: True if the segmentation is consistent else False.
         """
+        logger.info("--> check_segmentation_consistency")
         (
             self.chosen_video.video.frames_with_more_blobs_than_animals,
             self.chosen_video.video._maximum_number_of_blobs,
@@ -92,27 +103,14 @@ class PreprocessingAPI(object):
             self.chosen_video.video.number_of_animals,
             return_maximum_number_of_blobs=True,
         )
-        self.frames_with_more_blobs_than_animals = (
-            self.chosen_video.video.frames_with_more_blobs_than_animals
-        )
-
-        """
-        #This call is used in the GUI to re-segment the image in the case the 
-        tracking returned more blobs than expected
-        #In the case of the API this is not necessary
-        if len(self.frames_with_more_blobs_than_animals) > 0 and 
-        (check_segmentation_consistency or 
-        self.chosen_video.video.number_of_animals == 1):
-            self.resegmentation_step_finished = True
-
-            if resegment: self.resegmentation()
-        """
-        return (
+        consistent_segmentation = (
             len(self.chosen_video.video.frames_with_more_blobs_than_animals)
             == 0
         )
+        return consistent_segmentation
 
     def save_inconsistent_frames(self):
+        logger.info("--> save_inconsistent_frames")
         outfile_path = os.path.join(
             self.chosen_video.video.session_folder, "inconsistent_frames.csv"
         )
@@ -128,8 +126,7 @@ class PreprocessingAPI(object):
         return outfile_path
 
     def save_list_of_blobs_segmented(self):
-        self.chosen_video.video._has_been_segmented = True
-
+        logger.info("--> save_list_of_blobs_segmented")
         if len(self.chosen_video.list_of_blobs.blobs_in_video[-1]) == 0:
             self.chosen_video.list_of_blobs.blobs_in_video = (
                 self.chosen_video.list_of_blobs.blobs_in_video[:-1]
@@ -141,13 +138,14 @@ class PreprocessingAPI(object):
                 self.chosen_video.list_of_blobs.number_of_frames
             )
 
-        self.chosen_video.video.save()
-        self.chosen_video.video._segmentation_time = (
-            time.time() - self.chosen_video.video.segmentation_time
+        self.chosen_video.video._detect_animals_time = (
+            time.time() - self.chosen_video.video.detect_animals_time
         )
+        self.chosen_video.video._has_animals_detected = True
 
-    def compute_model_area_and_connect(self):
-        self.chosen_video.video._crossing_detector_time = time.time()
+    def compute_model_area(self):
+        logger.info("--> compute_model_area")
+        self.chosen_video.video._compute_model_area_time = time.time()
 
         (
             self.chosen_video.video._model_area,
@@ -155,28 +153,41 @@ class PreprocessingAPI(object):
         ) = self.chosen_video.list_of_blobs.compute_model_area_and_body_length(
             self.chosen_video.video.number_of_animals
         )
+        self.chosen_video.video._compute_model_area_time = (
+            time.time() - self.chosen_video.video._compute_model_area_time
+        )
+        self.chosen_video.video._has_model_area = True
+
+    def set_identification_images(self):
+        logger.info("--> set_identification_images")
+        self.chosen_video.video._set_identification_images_time = time.time()
         self.chosen_video.video.compute_identification_image_size(
             self.chosen_video.video.median_body_length
         )
-
-        start = time.time()
         self.chosen_video.list_of_blobs.set_images_for_identification(
             self.chosen_video.video
         )
-        print(
-            "Setting images for identification took {}".format(
-                time.time() - start
-            )
+        self.chosen_video.video._set_identification_images_time = (
+            time.time()
+            - self.chosen_video.video.set_identification_images_time
         )
+        self.chosen_video.video._has_identification_images = True
+
+    def connect_list_of_blobs(self):
+        logger.info("--> connect_list_of_blobs (crossing detector overlapping heuristic)")
+        self.chosen_video.video._connect_list_of_blobs_id_cd_time = time.time()
         if not self.chosen_video.list_of_blobs.blobs_are_connected:
-            start = time.time()
             self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
-            print("Connecting blobs took {}".format(time.time() - start))
+        self.chosen_video.video._connect_list_of_blobs_id_cd_time = (
+                time.time()
+                - self.chosen_video.video.connect_list_of_blobs_id_cd_time
+        )
 
     def train_and_apply_crossing_detector(self):
+        logger.info("--> train_and_apply_crossing_detector")
+        self.chosen_video.video._training_crossing_detector_time = time.time()
 
         if self.chosen_video.video.number_of_animals != 1:
-
             self.crossing_detector_trainer = detect_crossings(
                 self.chosen_video.list_of_blobs,
                 self.chosen_video.video,
@@ -186,7 +197,6 @@ class PreprocessingAPI(object):
                 plot_flag=conf.PLOT_CROSSING_DETECTOR,
             )
         else:
-
             self.chosen_video.list_of_blob = detect_crossings(
                 self.chosen_video.list_of_blobs,
                 self.chosen_video.video,
@@ -195,71 +205,18 @@ class PreprocessingAPI(object):
                 return_store_objects=False,
                 plot_flag=conf.PLOT_CROSSING_DETECTOR,
             )
-            self.chosen_video.list_of_blob.save(
-                self.chosen_video.video,
-                self.chosen_video.video.blobs_path_segmented,
-            )
+
+        self.chosen_video.video._training_crossing_detector_time = (
+                time.time()
+                - self.chosen_video.video.training_crossing_detector_time
+        )
+        self.chosen_video.video._has_crossings_detected = True
 
     def generate_list_of_fragments_and_global_fragments(self):
         self.chosen_video.video._fragmentation_time = time.time()
 
         if self.chosen_video.video.number_of_animals != 1:
-            if not self.chosen_video.list_of_blobs.blobs_are_connected:
-                self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
-            self.chosen_video.list_of_blobs.compute_fragment_identifier_and_blob_index(
-                max(
-                    self.chosen_video.video.number_of_animals,
-                    self.chosen_video.video.maximum_number_of_blobs,
-                )
-            )
-            self.chosen_video.list_of_blobs.compute_crossing_fragment_identifier()
-            fragments = create_list_of_fragments(
-                self.chosen_video.list_of_blobs.blobs_in_video,
-                self.chosen_video.video.number_of_animals,
-            )
-            self.list_of_fragments = ListOfFragments(
-                fragments,
-                self.chosen_video.video.identification_images_file_paths,
-            )
-            self.chosen_video.video._fragment_identifier_to_index = (
-                self.list_of_fragments.get_fragment_identifier_to_index_list()
-            )
-            global_fragments = create_list_of_global_fragments(
-                self.chosen_video.list_of_blobs.blobs_in_video,
-                self.list_of_fragments.fragments,
-                self.chosen_video.video.number_of_animals,
-            )
-            # Create list of global fragments
-            self.list_of_global_fragments = ListOfGlobalFragments(
-                global_fragments
-            )
-            self.chosen_video.video.number_of_global_fragments = (
-                self.list_of_global_fragments.number_of_global_fragments
-            )
-            # Filter candidates global fragments for accumulation
-            self.list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
-            self.chosen_video.video.number_of_global_fragments_candidates_for_accumulation = (
-                self.list_of_global_fragments.number_of_global_fragments
-            )
-            self.list_of_global_fragments.relink_fragments_to_global_fragments(
-                self.list_of_fragments.fragments
-            )
-            self.list_of_global_fragments.compute_maximum_number_of_images()
-            self.chosen_video.video._maximum_number_of_images_in_global_fragments = (
-                self.list_of_global_fragments.maximum_number_of_images
-            )
-            self.list_of_fragments.get_accumulable_individual_fragments_identifiers(
-                self.list_of_global_fragments
-            )
-            self.list_of_fragments.get_not_accumulable_individual_fragments_identifiers(
-                self.list_of_global_fragments
-            )
-            self.list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
-            self.chosen_video.video._number_of_unique_images_in_global_fragments = (
-                self.list_of_fragments.compute_total_number_of_images_in_global_fragments()
-            )
-            self.list_of_fragments.save(self.chosen_video.video.fragments_path)
-            self.chosen_video.list_of_fragments = self.list_of_fragments
+            self._generate_list_of_fragments_and_global_fragments()
         else:
             self.chosen_video.video._number_of_unique_images_in_global_fragments = (
                 None
@@ -267,19 +224,93 @@ class PreprocessingAPI(object):
             self.chosen_video.video._maximum_number_of_images_in_global_fragments = (
                 None
             )
-        self.chosen_video.video._has_been_preprocessed = True
-        self.chosen_video.list_of_blobs.save(
-            self.chosen_video.video, self.chosen_video.video.blobs_path
-        )
-        if self.chosen_video.video.number_of_animals != 1:
-            self.list_of_global_fragments.save(
-                self.chosen_video.video.global_fragments_path,
-                self.list_of_fragments.fragments,
-            )
-            self.chosen_video.list_of_global_fragments = (
-                self.list_of_global_fragments
-            )
+        self.chosen_video.video._has_been_fragmented = True
+        # self.chosen_video.list_of_blobs.save(
+        #     self.chosen_video.video, self.chosen_video.video.blobs_path
+        # )
+        # if self.chosen_video.video.number_of_animals != 1:
+        #     self.list_of_global_fragments.save(
+        #         self.chosen_video.video.global_fragments_path,
+        #         self.list_of_fragments.fragments,
+        #     )
+        #     self.chosen_video.list_of_global_fragments = (
+        #         self.list_of_global_fragments
+        #     )
         self.chosen_video.video._fragmentation_time = (
             time.time() - self.chosen_video.video.fragmentation_time
         )
-        self.chosen_video.video.save()
+        # self.chosen_video.video.save()
+
+    def _generate_list_of_fragments_and_global_fragments(self):
+        if not self.chosen_video.list_of_blobs.blobs_are_connected:
+            self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
+
+        # FRAGMENTS
+        # Individual fragments and crossing fragments identifiers
+        self.chosen_video.list_of_blobs.compute_fragment_identifier_and_blob_index(
+            max(
+                self.chosen_video.video.number_of_animals,
+                self.chosen_video.video.maximum_number_of_blobs,
+            )
+        )
+        self.chosen_video.list_of_blobs.compute_crossing_fragment_identifier()
+        fragments = create_list_of_fragments(
+            self.chosen_video.list_of_blobs.blobs_in_video,
+            self.chosen_video.video.number_of_animals,
+        )
+
+        # List of fragments
+        self.list_of_fragments = ListOfFragments(
+            fragments,
+            self.chosen_video.video.identification_images_file_paths,
+        )
+        # Populate chosen_video.list_of_fragments to save it if it chrashes
+        self.chosen_video.list_of_fragments = self.list_of_fragments
+
+        # Update video object 1
+        self.chosen_video.video._fragment_identifier_to_index = (
+            self.list_of_fragments.get_fragment_identifier_to_index_list()
+        )
+
+        # GLOBAL FRAGMENTS
+        global_fragments = create_list_of_global_fragments(
+            self.chosen_video.list_of_blobs.blobs_in_video,
+            self.list_of_fragments.fragments,
+            self.chosen_video.video.number_of_animals,
+        )
+        # Create list of global fragments
+        self.list_of_global_fragments = ListOfGlobalFragments(
+            global_fragments
+        )
+        # Populate chosen_video.list_of_global_fragments to save it
+        # if it chrashes
+        self.chosen_video.list_of_global_fragments = (
+            self.list_of_global_fragments
+        )
+        self.chosen_video.video.number_of_global_fragments = (
+            self.list_of_global_fragments.number_of_global_fragments
+        )
+        # Filter candidates global fragments for accumulation
+        self.list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
+        self.chosen_video.video.number_of_global_fragments_candidates_for_accumulation = (
+            self.list_of_global_fragments.number_of_global_fragments
+        )
+        self.list_of_global_fragments.relink_fragments_to_global_fragments(
+            self.list_of_fragments.fragments
+        )
+        self.list_of_global_fragments.compute_maximum_number_of_images()
+        self.chosen_video.video._maximum_number_of_images_in_global_fragments = (
+            self.list_of_global_fragments.maximum_number_of_images
+        )
+        self.list_of_fragments.get_accumulable_individual_fragments_identifiers(
+            self.list_of_global_fragments
+        )
+        self.list_of_fragments.get_not_accumulable_individual_fragments_identifiers(
+            self.list_of_global_fragments
+        )
+        self.list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
+        self.chosen_video.video._number_of_unique_images_in_global_fragments = (
+            self.list_of_fragments.compute_total_number_of_images_in_global_fragments()
+        )
+        # self.list_of_fragments.save(self.chosen_video.video.fragments_path)
+        # self.chosen_video.list_of_fragments = self.list_of_fragments
