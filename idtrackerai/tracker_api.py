@@ -119,9 +119,11 @@ class TrackerAPI(object):
                     self.chosen_video.video.number_of_animals
                 )
             else:
-                self.number_of_animals = self.chosen_video.video.knowledge_transfer_info_dict[
-                    "number_of_classes"
-                ]
+                self.number_of_animals = (
+                    self.chosen_video.video.knowledge_transfer_info_dict[
+                        "number_of_classes"
+                    ]
+                )
 
             self.restoring_first_accumulation = False
             self.init_accumulation_network()
