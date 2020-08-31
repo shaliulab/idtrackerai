@@ -49,7 +49,7 @@ logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
 
 
 def get_corresponding_gt_blob(blob, gt_blobs_in_frame):
-    """ Returs the blobs in the `gt_blobs_in_frame` that overlap (in pixels)
+    """Returs the blobs in the `gt_blobs_in_frame` that overlap (in pixels)
     with a given `blob` of the tracked trajectories.
 
     :param blob: <Blob object>
@@ -253,7 +253,10 @@ def aggregate_counters(results):
 
 
 def compare_tracking_with_ground_truth(
-    num_animals, gt_blobs_in_video, blobs_in_video, ids_perm_dict,
+    num_animals,
+    gt_blobs_in_video,
+    blobs_in_video,
+    ids_perm_dict,
 ):
     """
     This function only considers individual blobs
@@ -276,7 +279,7 @@ def compare_tracking_with_ground_truth(
 
 
 def check_gt_video_consistency(video, gt_video):
-    """ Checks that the `video` and `gt_video` are consistent: they have
+    """Checks that the `video` and `gt_video` are consistent: they have
     the same number of frames, the same number animals.
 
     :param video: <Video object> of the tracked video
@@ -320,9 +323,12 @@ def get_ids_perm_dict(gt_blobs_in_frame, blobs_in_frame):
 
 
 def get_permutation_of_identities(
-    video, fff_global_fragment, gt_blobs_in_video, blobs_in_video,
+    video,
+    fff_global_fragment,
+    gt_blobs_in_video,
+    blobs_in_video,
 ):
-    """ Returns a dictionary with the permutation of identities to be
+    """Returns a dictionary with the permutation of identities to be
     considered when comparing identities of the ground truth data with the
     new trajectories
 

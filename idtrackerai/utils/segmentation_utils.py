@@ -221,7 +221,7 @@ def cumpute_background(video):
 
 
 def get_frame_average_intensity(frame, mask):
-    """ Computes the average intensity of a given frame considering the maks. Only pixels with values
+    """Computes the average intensity of a given frame considering the maks. Only pixels with values
     different than zero in the mask are considered to compute the average intensity
 
     Parameters

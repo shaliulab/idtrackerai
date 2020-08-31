@@ -158,8 +158,12 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
             neighbour_fragment_future = fragment.get_neighbour_fragment(
                 fragments, "to_the_future"
             )
-            velocities_between_fragments = compute_velocities_consecutive_fragments(
-                neighbour_fragment_past, fragment, neighbour_fragment_future
+            velocities_between_fragments = (
+                compute_velocities_consecutive_fragments(
+                    neighbour_fragment_past,
+                    fragment,
+                    neighbour_fragment_future,
+                )
             )
 
             if np.all(np.isnan(velocities_between_fragments)):
@@ -525,26 +529,30 @@ def correct_impossible_velocity_jumps_loop(
                         impossible_velocity_threshold,
                     )
                 else:
-                    neighbour_fragment_past_past = neighbour_fragment_past.get_neighbour_fragment(
-                        list_of_fragments.fragments, "to_the_past"
+                    neighbour_fragment_past_past = (
+                        neighbour_fragment_past.get_neighbour_fragment(
+                            list_of_fragments.fragments, "to_the_past"
+                        )
                     )
-                    velocity_in_past = compute_velocities_consecutive_fragments(
-                        neighbour_fragment_past_past,
-                        neighbour_fragment_past,
-                        fragment,
-                    )[
-                        0
-                    ]
-                    neighbour_fragment_future_future = neighbour_fragment_future.get_neighbour_fragment(
-                        list_of_fragments.fragments, "to_the_future"
+                    velocity_in_past = (
+                        compute_velocities_consecutive_fragments(
+                            neighbour_fragment_past_past,
+                            neighbour_fragment_past,
+                            fragment,
+                        )[0]
                     )
-                    velocity_in_future = compute_velocities_consecutive_fragments(
-                        fragment,
-                        neighbour_fragment_future,
-                        neighbour_fragment_future_future,
-                    )[
-                        1
-                    ]
+                    neighbour_fragment_future_future = (
+                        neighbour_fragment_future.get_neighbour_fragment(
+                            list_of_fragments.fragments, "to_the_future"
+                        )
+                    )
+                    velocity_in_future = (
+                        compute_velocities_consecutive_fragments(
+                            fragment,
+                            neighbour_fragment_future,
+                            neighbour_fragment_future_future,
+                        )[1]
+                    )
                     if (
                         velocity_in_past < impossible_velocity_threshold
                         or velocity_in_future < impossible_velocity_threshold

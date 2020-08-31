@@ -47,7 +47,7 @@ logger = logging.getLogger("__main__.list_of_fragments")
 
 
 class ListOfFragments(object):
-    """ Collects all the instances of the class :class:`~fragment.Fragment`
+    """Collects all the instances of the class :class:`~fragment.Fragment`
     generated from the blobs extracted from the video during segmentation
     (see :mod:`~segmentation`) after having assigned to each Blob instance
     a fragment identifier by using the method
@@ -154,8 +154,7 @@ class ListOfFragments(object):
         )
 
     def compute_total_number_of_images_in_global_fragments(self):
-        """Sets the number of images available in global fragments (without repetitions)
-        """
+        """Sets the number of images available in global fragments (without repetitions)"""
         self.number_of_images_in_global_fragments = sum(
             [
                 fragment.number_of_images
@@ -464,8 +463,7 @@ class ListOfFragments(object):
         )
 
     def set_fragments_as_accumulable_or_not_accumulable(self):
-        """Set the attribute :attr:`~fragment.accumulable`
-        """
+        """Set the attribute :attr:`~fragment.accumulable`"""
         for fragment in self.fragments:
             if fragment.identifier in self.accumulable_individual_fragments:
                 setattr(fragment, "_accumulable", True)

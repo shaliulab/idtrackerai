@@ -429,8 +429,10 @@ def assign_identity_to_new_blobs(
 
     for i, original_blob in enumerate(original_inner_blobs_in_frame):
         # logger.debug('Checking original blob')
-        candidate_tuples_with_centroids_in_original_blob = get_candidate_tuples_with_centroids_in_original_blob(
-            original_blob, candidate_tuples_to_close_gap
+        candidate_tuples_with_centroids_in_original_blob = (
+            get_candidate_tuples_with_centroids_in_original_blob(
+                original_blob, candidate_tuples_to_close_gap
+            )
         )
         if (
             len(candidate_tuples_with_centroids_in_original_blob) == 1
@@ -590,8 +592,8 @@ def interpolate_trajectories_during_gaps(
                     frame_number,
                     list_of_occluded_identities,
                 )
-                forward_backward_list_of_frames = get_forward_backward_list_of_frames(
-                    gap_interval
+                forward_backward_list_of_frames = (
+                    get_forward_backward_list_of_frames(gap_interval)
                 )
                 # logger.debug('--There are missing identities in this main '
                 #              'frame: gap interval %s ' %(gap_interval,))
@@ -605,9 +607,9 @@ def interpolate_trajectories_during_gaps(
                     #              '%s ' %(gap_interval,))
                     # logger.debug('---Inner frame number '
                     #              '%i' %inner_frame_number )
-                    inner_occluded_identities_in_frame = list_of_occluded_identities[
-                        inner_frame_number
-                    ]
+                    inner_occluded_identities_in_frame = (
+                        list_of_occluded_identities[inner_frame_number]
+                    )
                     inner_blobs_in_frame = blobs_in_video[inner_frame_number]
                     if len(inner_blobs_in_frame) != 0:
                         # logger.debug('----There are blobs in the inner frame')
@@ -620,10 +622,12 @@ def interpolate_trajectories_during_gaps(
                         else:
                             eroded_blobs_in_frame = inner_blobs_in_frame
                         # logger.debug('Getting missing identities')
-                        inner_missing_identities = get_missing_identities_from_blobs_in_frame(
-                            possible_identities,
-                            inner_blobs_in_frame,
-                            inner_occluded_identities_in_frame,
+                        inner_missing_identities = (
+                            get_missing_identities_from_blobs_in_frame(
+                                possible_identities,
+                                inner_blobs_in_frame,
+                                inner_occluded_identities_in_frame,
+                            )
                         )
                         candidate_tuples_to_close_gap = []
                         for identity in inner_missing_identities:
@@ -662,8 +666,11 @@ def interpolate_trajectories_during_gaps(
                                     )
                                 elif border == "end":
                                     blob_in_border_frame = next_blob_to_the_gap
-                                candidate_eroded_blobs_by_overlapping = get_candidate_blobs_by_overlapping(
-                                    blob_in_border_frame, eroded_blobs_in_frame
+                                candidate_eroded_blobs_by_overlapping = (
+                                    get_candidate_blobs_by_overlapping(
+                                        blob_in_border_frame,
+                                        eroded_blobs_in_frame,
+                                    )
                                 )
                                 candidate_eroded_blobs_by_inclusion_of_centroid = centroid_is_inside_of_any_eroded_blob(
                                     eroded_blobs_in_frame, candidate_centroid

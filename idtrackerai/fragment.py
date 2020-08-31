@@ -41,7 +41,7 @@ logger = logging.getLogger("__main__.fragment")
 
 
 class Fragment(object):
-    """ Collects the Blob objects (:class:`~blob.Blob`) associated to the same individual or crossing.
+    """Collects the Blob objects (:class:`~blob.Blob`) associated to the same individual or crossing.
 
     Attributes
     ----------
@@ -549,8 +549,10 @@ class Fragment(object):
             if number_of_animals is None
             else number_of_animals
         )
-        self._frequencies = self.compute_identification_frequencies_individual_fragment(
-            predictions, number_of_animals
+        self._frequencies = (
+            self.compute_identification_frequencies_individual_fragment(
+                predictions, number_of_animals
+            )
         )
         self._P1_vector = self.compute_P1_from_frequencies(self.frequencies)
         median_softmax = self.compute_median_softmax(
@@ -614,8 +616,7 @@ class Fragment(object):
         ]
 
     def compute_P2_vector(self):
-        """Computes the P2_vector related to self. It is based on :attr:`coexisting_individual_fragments`
-        """
+        """Computes the P2_vector related to self. It is based on :attr:`coexisting_individual_fragments`"""
         coexisting_P1_vectors = np.asarray(
             [
                 fragment.P1_vector

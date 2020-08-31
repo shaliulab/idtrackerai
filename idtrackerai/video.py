@@ -365,7 +365,7 @@ class Video(object):
 
     @property
     def tracking_interval(self):
-        """ Tuple with the starting and ending frame on which the tracking will
+        """Tuple with the starting and ending frame on which the tracking will
         be performed.
         """
         return self._tracking_interval
@@ -576,8 +576,7 @@ class Video(object):
         return self._open_multiple_files
 
     def check_split_video(self):
-        """If the video is divided in segments retrieves their paths
-        """
+        """If the video is divided in segments retrieves their paths"""
         paths_to_video_segments = scanFolder(self.video_path)
         if len(paths_to_video_segments) > 1 and self.open_multiple_files:
             return paths_to_video_segments
@@ -943,8 +942,7 @@ class Video(object):
         logger.info("the folder %s has been created" % self.session_folder)
 
     def create_images_folders(self):
-        """Create a folder named images inside of the session_folder
-        """
+        """Create a folder named images inside of the session_folder"""
         ## for RAM optimization
         self._segmentation_data_folder = os.path.join(
             self.session_folder, "segmentation_data"
@@ -1027,8 +1025,7 @@ class Video(object):
             os.makedirs(self.accumulation_folder)
 
     def create_individual_videos_folder(self):
-        """Create folder where to save the individual videos
-        """
+        """Create folder where to save the individual videos"""
         self.individual_videos_folder = os.path.join(
             self.session_folder, "individual_videos"
         )
@@ -1076,8 +1073,7 @@ class Video(object):
         ]
 
     def create_trajectories_folder(self):
-        """Folder in which trajectories files are stored
-        """
+        """Folder in which trajectories files are stored"""
         self.trajectories_folder = os.path.join(
             self.session_folder, "trajectories"
         )
@@ -1089,8 +1085,7 @@ class Video(object):
             )
 
     def create_trajectories_wo_identities_folder(self):
-        """Folder in which trajectories without identites are stored
-        """
+        """Folder in which trajectories without identites are stored"""
         self.trajectories_wo_identities_folder = os.path.join(
             self.session_folder, "trajectories_wo_identities"
         )
@@ -1103,8 +1098,7 @@ class Video(object):
             )
 
     def create_trajectories_wo_gaps_folder(self):
-        """Folder in which trajectories files are stored
-        """
+        """Folder in which trajectories files are stored"""
         self.trajectories_wo_gaps_folder = os.path.join(
             self.session_folder, "trajectories_wo_gaps"
         )
@@ -1141,8 +1135,7 @@ class Video(object):
         self._number_of_episodes = len(starting_frames)
 
     def in_which_episode(self, frame_number):
-        """Check to which episode a frame index belongs
-        """
+        """Check to which episode a frame index belongs"""
         episode_number = [
             i
             for i, episode_start_end in enumerate(self._episodes_start_end)

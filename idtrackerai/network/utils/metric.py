@@ -46,8 +46,7 @@ class Metric(object):
 
 
 class Timer(object):
-    """
-    """
+    """"""
 
     def __init__(self):
         self.reset()

@@ -422,12 +422,14 @@ class TrackerAPI(object):
     def one_shot_accumulation(self, call_accumulate=True):
         logger.warning("Starting one_shot_accumulation")
         self.accumulation_step_finished = False
-        self.accumulation_manager.ratio_accumulated_images = perform_one_accumulation_step(
-            self.accumulation_manager,
-            self.chosen_video.video,
-            self.identification_model,
-            self.learner_class,
-            network_params=self.accumulation_network_params,
+        self.accumulation_manager.ratio_accumulated_images = (
+            perform_one_accumulation_step(
+                self.accumulation_manager,
+                self.chosen_video.video,
+                self.identification_model,
+                self.learner_class,
+                network_params=self.accumulation_network_params,
+            )
         )
 
         self.accumulation_step_finished = True
@@ -785,9 +787,11 @@ class TrackerAPI(object):
 
     def one_shot_pretraining(self):
         self.pretraining_step_finished = False
-        self.pretraining_global_fragment = self.chosen_video.list_of_global_fragments.global_fragments[
-            self.pretraining_counter
-        ]
+        self.pretraining_global_fragment = (
+            self.chosen_video.list_of_global_fragments.global_fragments[
+                self.pretraining_counter
+            ]
+        )
         (
             self.identification_model,
             self.ratio_of_pretrained_images,
@@ -950,9 +954,11 @@ class TrackerAPI(object):
         )
 
         # Update ratio of accumulated images and  accumulation folder
-        self.chosen_video.video._ratio_accumulated_images = self.chosen_video.video.percentage_of_accumulated_images[
-            self.chosen_video.video.accumulation_trial
-        ]
+        self.chosen_video.video._ratio_accumulated_images = (
+            self.chosen_video.video.percentage_of_accumulated_images[
+                self.chosen_video.video.accumulation_trial
+            ]
+        )
         accumulation_folder_name = "accumulation_" + str(
             self.chosen_video.video.accumulation_trial
         )
@@ -1187,10 +1193,12 @@ class TrackerAPI(object):
                 self.chosen_video.old_video.velocity_threshold
             )
         elif not hasattr(self.chosen_video.old_video, "velocity_threshold"):
-            self.chosen_video.video.velocity_threshold = compute_model_velocity(
-                self.chosen_video.list_of_fragments.fragments,
-                self.chosen_video.video.number_of_animals,
-                percentile=conf.VEL_PERCENTILE,
+            self.chosen_video.video.velocity_threshold = (
+                compute_model_velocity(
+                    self.chosen_video.list_of_fragments.fragments,
+                    self.chosen_video.video.number_of_animals,
+                    percentile=conf.VEL_PERCENTILE,
+                )
             )
         correct_impossible_velocity_jumps(
             self.chosen_video.video, self.chosen_video.list_of_fragments
@@ -1208,8 +1216,10 @@ class TrackerAPI(object):
         if create_trajectories is None:
             create_trajectories = self.create_trajectories
 
-        self.chosen_video.video.individual_fragments_stats = self.chosen_video.list_of_fragments.get_stats(
-            self.chosen_video.list_of_global_fragments
+        self.chosen_video.video.individual_fragments_stats = (
+            self.chosen_video.list_of_fragments.get_stats(
+                self.chosen_video.list_of_global_fragments
+            )
         )
         self.chosen_video.video.compute_overall_P2(
             self.chosen_video.list_of_fragments.fragments
@@ -1297,7 +1307,8 @@ class TrackerAPI(object):
             self.chosen_video.video._has_crossings_solved = False
             self.chosen_video.video._has_trajectories_wo_gaps = False
             self.chosen_video.list_of_blobs.save(
-                self.chosen_video.video, self.chosen_video.video.blobs_path,
+                self.chosen_video.video,
+                self.chosen_video.video.blobs_path,
             )
             # Call GUI function
             if update_and_show_happy_ending_popup:
@@ -1355,9 +1366,11 @@ class TrackerAPI(object):
             )
         self.chosen_video.video._has_trajectories_wo_gaps = True
         logger.info("Saving trajectories")
-        self.chosen_video.list_of_blobs = assign_zeros_with_interpolation_identities(
-            self.chosen_video.list_of_blobs,
-            self.chosen_video.list_of_blobs_no_gaps,
+        self.chosen_video.list_of_blobs = (
+            assign_zeros_with_interpolation_identities(
+                self.chosen_video.list_of_blobs,
+                self.chosen_video.list_of_blobs_no_gaps,
+            )
         )
         trajectories_file = os.path.join(
             self.chosen_video.video.trajectories_folder, "trajectories.npy"

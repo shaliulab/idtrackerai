@@ -41,7 +41,7 @@ logger = logging.getLogger("__main__.globalfragment")
 
 
 class GlobalFragment(object):
-    """ A global fragment is a collection of instances of the class
+    """A global fragment is a collection of instances of the class
     :class:`~fragment.Fragment`. Such fragments are collected from a part of the
     video in which all animals are visible.
 
@@ -203,15 +203,13 @@ class GlobalFragment(object):
                     ).append(getattr(fragment, attribute))
 
     def set_minimum_distance_travelled(self):
-        """Sets the minum distance travelled attribute
-        """
+        """Sets the minum distance travelled attribute"""
         self.minimum_distance_travelled = min(
             self.distance_travelled_per_individual_fragment
         )
 
     def set_candidate_for_accumulation(self):
-        """Sets the global fragment to be eligible for accumulation
-        """
+        """Sets the global fragment to be eligible for accumulation"""
         self._candidate_for_accumulation = True
         if (
             np.min(self.number_of_images_per_individual_fragment)
@@ -299,8 +297,7 @@ class GlobalFragment(object):
                 self._is_partially_unique = True
 
     def get_total_number_of_images(self):
-        """Gets the total number of images in the global fragment
-        """
+        """Gets the total number of images in the global fragment"""
         if not hasattr(self, "total_number_of_images"):
             self.total_number_of_images = sum(
                 [

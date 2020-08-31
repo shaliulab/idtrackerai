@@ -47,7 +47,7 @@ logger = logging.getLogger("__main__.accumulation_manager")
 
 
 class AccumulationManager(object):
-    """ Manages the process of accumulating images for training the network.
+    """Manages the process of accumulating images for training the network.
 
     Attributes
     ----------
@@ -112,7 +112,7 @@ class AccumulationManager(object):
 
     @property
     def continue_accumulation(self):
-        """ We stop the accumulation when there are not more global fragments
+        """We stop the accumulation when there are not more global fragments
         that are acceptable for training."""
         if not any(
             [
@@ -134,12 +134,11 @@ class AccumulationManager(object):
             return True
 
     def update_counter(self):
-        """ Update iteration counter
-        """
+        """Update iteration counter"""
         self.counter += 1
 
     def get_new_images_and_labels(self):
-        """ Get the images and labels of the new global fragments that are going
+        """Get the images and labels of the new global fragments that are going
         to be used for training. This function checks whether the images of a individual
         fragment have been added before"""
         (
@@ -160,14 +159,14 @@ class AccumulationManager(object):
             )
 
     def get_images_and_labels_for_training(self):
-        """ Create a new dataset of labelled images to train the idCNN in the
+        """Create a new dataset of labelled images to train the idCNN in the
         following way:
         Per individual select conf.MAXIMAL_IMAGES_PER_ANIMAL images.
         Such collection of images is composed
         of a ratio corresponding to conf.RATIO_NEW of new images (acquired in
         the current evaluation of the
         global fragments) and conf.RATIO_OLD of images already used
-        in the previous iteration. """
+        in the previous iteration."""
         logger.info("Getting images for training...")
         random.seed(0)
         images = []
@@ -254,8 +253,7 @@ class AccumulationManager(object):
         )
 
     def update_used_images_and_labels(self):
-        """Sets as used the images already used for training
-        """
+        """Sets as used the images already used for training"""
         logger.debug("Updating used_images...")
         if self.counter == 0:
             self.used_images = self.new_images
@@ -271,7 +269,7 @@ class AccumulationManager(object):
         )
 
     def update_fragments_used_for_training(self):
-        """ Once a global fragment has been used for training, sets the flags
+        """Once a global fragment has been used for training, sets the flags
         used_for_training to TRUE and acceptable_for_training to FALSE"""
         logger.debug(
             "Setting used_for_training to TRUE and acceptable for training to "
@@ -298,7 +296,7 @@ class AccumulationManager(object):
         #     and not fragment.used_for_training]
 
     def assign_identities_to_fragments_used_for_training(self):
-        """ Assign the identities to the global fragments used for training and
+        """Assign the identities to the global fragments used for training and
         their individual fragments.
         This function checks that the identities of the individual fragments in
         the global fragment
@@ -336,7 +334,7 @@ class AccumulationManager(object):
         )
 
     def update_list_of_individual_fragments_used(self):
-        """ Updates the list of individual fragments used for training and
+        """Updates the list of individual fragments used for training and
         their identities.
         If an individual fragment was added before is not added again.
         """

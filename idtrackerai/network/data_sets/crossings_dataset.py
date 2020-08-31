@@ -129,7 +129,7 @@ class CrossingDataset(VisionDataset):
 def get_train_validation_and_toassign_blobs(
     list_of_blobs, ratio_validation=0.1
 ):
-    """ Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs), and a list (toassign_blobs).
+    """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs), and a list (toassign_blobs).
 
     :param list_of_blobs:
     :param ratio_validation:

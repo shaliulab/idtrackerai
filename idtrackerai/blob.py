@@ -44,7 +44,7 @@ logger = logging.getLogger("__main__.blob")
 
 
 class Blob(object):
-    """ Object representing a blob (collection of pixels) segmented from a frame
+    """Object representing a blob (collection of pixels) segmented from a frame
 
     Attributes
     ----------
@@ -392,8 +392,8 @@ class Blob(object):
             has_crossing_in_past = self.check_for_crossing_in_next_or_previous(
                 "previous"
             )
-            has_crossing_in_future = self.check_for_crossing_in_next_or_previous(
-                "next"
+            has_crossing_in_future = (
+                self.check_for_crossing_in_next_or_previous("next")
             )
             if has_crossing_in_past and has_crossing_in_future:
                 return True
@@ -964,7 +964,7 @@ class Blob(object):
         return False
 
     def update_centroid(self, video, old_centroid, new_centroid, identity):
-        """ Updates the coordinates of the centrod
+        """Updates the coordinates of the centrod
 
         Parameters
         ----------
@@ -1034,7 +1034,7 @@ class Blob(object):
         blobs_in_frame,
         apply_resolution_reduction=True,
     ):
-        """ Remove the centroid and the identity from the blob if it exist.
+        """Remove the centroid and the identity from the blob if it exist.
 
         Parameters
         ----------
@@ -1096,7 +1096,7 @@ class Blob(object):
     def add_centroid(
         self, video, centroid, identity, apply_resolution_reduction=True
     ):
-        """ Adds a centroid with a given identity, identity.
+        """Adds a centroid with a given identity, identity.
 
         Parameters
         ----------
@@ -1144,7 +1144,7 @@ class Blob(object):
         video.is_centroid_updated = True
 
     def update_identity(self, old_id, new_id, centroid):
-        """ Updates identity. If the blob has multiple identities already assigned
+        """Updates identity. If the blob has multiple identities already assigned
         the old_id to be modified must be specified.
 
         Parameters
@@ -1197,8 +1197,7 @@ class Blob(object):
         )
 
     def propagate_identity(self, old_identity, new_blob_identity, centroid):
-        """Propagates the identity specified by new_blob_identity.
-        """
+        """Propagates the identity specified by new_blob_identity."""
         count_past_corrections = 1  # to take into account the modification
         # already done in the current frame
         count_future_corrections = 0

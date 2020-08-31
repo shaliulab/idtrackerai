@@ -46,7 +46,7 @@ logger = logging.getLogger("__main__.list_of_blobs")
 
 
 class ListOfBlobs(object):
-    """ Collects all the instances of the class :class:`~blob.Blob` generated
+    """Collects all the instances of the class :class:`~blob.Blob` generated
     from the blobs extracted from the video during segmentation
     (see :mod:`~segmentation`)
 
@@ -93,8 +93,7 @@ class ListOfBlobs(object):
         self.blobs_are_connected = False
 
     def connect(self):
-        """Connects blobs in subsequent frames by computing their overlapping
-        """
+        """Connects blobs in subsequent frames by computing their overlapping"""
         logger.info("Connecting list of blob objects")
         self.compute_overlapping_between_subsequent_frames()
 
@@ -202,8 +201,7 @@ class ListOfBlobs(object):
         logger.info("number_of_individual_fragments, %i" % counter)
 
     def compute_crossing_fragment_identifier(self):
-        """Assign a unique identifier to fragments associated to a crossing
-        """
+        """Assign a unique identifier to fragments associated to a crossing"""
 
         def propagate_crossing_identifier(blob, fragment_identifier):
             """Propagates the identifier throughout the entire fragment to which

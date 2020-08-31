@@ -234,9 +234,9 @@ class PreprocessingPreviewAPI(object):
         self.chosen_video.video._has_been_segmented = True
 
         if len(self.chosen_video.list_of_blobs.blobs_in_video[-1]) == 0:
-            self.chosen_video.list_of_blobs.blobs_in_video = self.chosen_video.list_of_blobs.blobs_in_video[
-                :-1
-            ]
+            self.chosen_video.list_of_blobs.blobs_in_video = (
+                self.chosen_video.list_of_blobs.blobs_in_video[:-1]
+            )
             self.chosen_video.list_of_blobs.number_of_frames = len(
                 self.chosen_video.list_of_blobs.blobs_in_video
             )

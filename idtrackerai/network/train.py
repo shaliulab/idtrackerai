@@ -38,7 +38,7 @@ from idtrackerai.network.utils.task import prepare_task_target
 
 def train(epoch, train_loader, learner, network_params):
     """Trains trains a network using a learner, a given train_loader and a set of network_params
-    
+
     :param epoch: current epoch
     :param train_loader: dataloader
     :param learner: learner from learner.py
