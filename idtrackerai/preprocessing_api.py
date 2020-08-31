@@ -174,13 +174,15 @@ class PreprocessingAPI(object):
         self.chosen_video.video._has_identification_images = True
 
     def connect_list_of_blobs(self):
-        logger.info("--> connect_list_of_blobs (crossing detector overlapping heuristic)")
+        logger.info(
+            "--> connect_list_of_blobs (crossing detector overlapping heuristic)"
+        )
         self.chosen_video.video._connect_list_of_blobs_id_cd_time = time.time()
         if not self.chosen_video.list_of_blobs.blobs_are_connected:
             self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
         self.chosen_video.video._connect_list_of_blobs_id_cd_time = (
-                time.time()
-                - self.chosen_video.video.connect_list_of_blobs_id_cd_time
+            time.time()
+            - self.chosen_video.video.connect_list_of_blobs_id_cd_time
         )
 
     def train_and_apply_crossing_detector(self):
@@ -207,8 +209,8 @@ class PreprocessingAPI(object):
             )
 
         self.chosen_video.video._training_crossing_detector_time = (
-                time.time()
-                - self.chosen_video.video.training_crossing_detector_time
+            time.time()
+            - self.chosen_video.video.training_crossing_detector_time
         )
         self.chosen_video.video._has_crossings_detected = True
 
@@ -279,9 +281,7 @@ class PreprocessingAPI(object):
             self.chosen_video.video.number_of_animals,
         )
         # Create list of global fragments
-        self.list_of_global_fragments = ListOfGlobalFragments(
-            global_fragments
-        )
+        self.list_of_global_fragments = ListOfGlobalFragments(global_fragments)
         # Populate chosen_video.list_of_global_fragments to save it
         # if it chrashes
         self.chosen_video.list_of_global_fragments = (
