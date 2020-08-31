@@ -104,7 +104,9 @@ class TrackerAPI(object):
             self.chosen_video.video.accumulation_trial = 0
 
             if "protocols1_and_2" in self.chosen_video.processes_to_restore:
-                delete = not self.chosen_video.processes_to_restore["protocols1_and_2"]
+                delete = not self.chosen_video.processes_to_restore[
+                    "protocols1_and_2"
+                ]
             else:
                 delete = True
 
@@ -113,17 +115,28 @@ class TrackerAPI(object):
             )
 
             if not self.chosen_video.video.identity_transfer:
-                self.number_of_animals = self.chosen_video.video.number_of_animals
+                self.number_of_animals = (
+                    self.chosen_video.video.number_of_animals
+                )
             else:
-                self.number_of_animals = self.chosen_video.video.knowledge_transfer_info_dict["number_of_classes"]
+                self.number_of_animals = self.chosen_video.video.knowledge_transfer_info_dict[
+                    "number_of_classes"
+                ]
 
             self.restoring_first_accumulation = False
             self.init_accumulation_network()
 
-            if self.accumulation_network_params.knowledge_transfer_model_file is None:
-                self.chosen_video.video._tracking_with_knowledge_transfer = False
+            if (
+                self.accumulation_network_params.knowledge_transfer_model_file
+                is None
+            ):
+                self.chosen_video.video._tracking_with_knowledge_transfer = (
+                    False
+                )
             else:
-                self.chosen_video.video._tracking_with_knowledge_transfer = True
+                self.chosen_video.video._tracking_with_knowledge_transfer = (
+                    True
+                )
 
             # Restoring
             if (
@@ -1121,6 +1134,7 @@ class TrackerAPI(object):
     def restore_trajectories(self):
         self.restore_video_attributes()
         self.chosen_video.video.save()
+
     #
     # def restore_crossings_solved(self):
     #     self.restore_video_attributes()

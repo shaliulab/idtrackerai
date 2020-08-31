@@ -50,7 +50,7 @@ PROCESSES = [
     "residual_identification",
     "impossible_jumps_solving",
     "crossing_solving",
-    "trajectories_generation"
+    "trajectories_generation",
 ]
 
 #######################################

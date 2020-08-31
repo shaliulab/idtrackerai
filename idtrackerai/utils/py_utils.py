@@ -272,11 +272,13 @@ def get_computed_processes(video_object, processes):
     if os.path.isdir(video_object._previous_session_folder):
         logger.info("loading old video object from get_computed_processes")
         previous_video_object_path = os.path.join(
-                video_object._previous_session_folder, "video_object.npy"
-            )
+            video_object._previous_session_folder, "video_object.npy"
+        )
         print(previous_video_object_path)
         if os.path.isfile(previous_video_object_path):
-            old_video = np.load(previous_video_object_path, allow_pickle=True).item()
+            old_video = np.load(
+                previous_video_object_path, allow_pickle=True
+            ).item()
             old_video.update_paths(previous_video_object_path)
             logger.info("old video_object loaded")
         else:

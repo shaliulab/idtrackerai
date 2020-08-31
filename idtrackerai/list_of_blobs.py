@@ -109,7 +109,7 @@ class ListOfBlobs(object):
         self.disconnect()
         logger.info("saving blobs list at %s" % path_to_save)
         np.save(path_to_save, self)
-        if 'segmented' not in path_to_save:
+        if "segmented" not in path_to_save:
             if video.has_animals_detected and not video.has_been_fragmented:
                 self.connect()
             self.blobs_are_connected = True

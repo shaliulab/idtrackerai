@@ -83,7 +83,6 @@ class ListOfGlobalFragments(object):
         self.global_fragments = global_fragments
         self.number_of_global_fragments = len(self.global_fragments)
 
-
     def reset(self, roll_back_to=None):
         """Resets all the global fragment by calling recursively the method
         :meth:`~globalfragment.GlobalFragment.reset`

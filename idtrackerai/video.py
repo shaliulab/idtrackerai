@@ -138,20 +138,20 @@ class Video(object):
         # Processes flags (used for restoring computational blocks)
         self._has_preprocessing_parameters = None
         self._has_animals_detected = None  # animal detection and segmentation
-        self._has_model_area = None # crossings detection
-        self._has_identification_images = None # crossing detection
+        self._has_model_area = None  # crossings detection
+        self._has_identification_images = None  # crossing detection
         self._has_crossings_detected = None  # crossings detection
         self._has_been_fragmented = None  # fragmentation
-        self._has_protocol1_finished = None # protocols cascade
-        self._has_protocol2_finished = None # protocols cascade
-        self._has_protocol3_pretraining_finished = None # protocols cascade
-        self._has_protocol3_accumulation_finished = None # protocols cascade
-        self._has_protocol3_finished = None # protocols cascade
-        self._has_residual_identification = None # residual identification
-        self._has_impossible_jumps_solved = None # post-processing
-        self._has_crossings_solved = None # crossings interpolation
-        self._has_trajectories = None # trajectories generation
-        self._has_trajectories_wo_gaps = None # trajectories generation
+        self._has_protocol1_finished = None  # protocols cascade
+        self._has_protocol2_finished = None  # protocols cascade
+        self._has_protocol3_pretraining_finished = None  # protocols cascade
+        self._has_protocol3_accumulation_finished = None  # protocols cascade
+        self._has_protocol3_finished = None  # protocols cascade
+        self._has_residual_identification = None  # residual identification
+        self._has_impossible_jumps_solved = None  # post-processing
+        self._has_crossings_solved = None  # crossings interpolation
+        self._has_trajectories = None  # trajectories generation
+        self._has_trajectories_wo_gaps = None  # trajectories generation
 
         # Timers
         self._detect_animals_time = 0.0
@@ -188,7 +188,6 @@ class Video(object):
         self._identity_transfer = None
         self._tracking_with_knowledge_transfer = False
         self._percentage_of_accumulated_images = None
-
 
         self._embeddings_folder = (
             None  # If embeddings are computed, the will be saved in this path
@@ -299,9 +298,6 @@ class Video(object):
     @property
     def training_crossing_detector_time(self):
         return self._training_crossing_detector_time
-
-
-
 
     # Other properties
     @property
