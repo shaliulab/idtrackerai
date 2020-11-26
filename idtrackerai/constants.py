@@ -28,6 +28,7 @@
 
 import sys
 import os
+from distutils.util import strtobool
 
 MIN_FLOAT = sys.float_info[3]
 MAX_FLOAT = sys.float_info[0]
@@ -324,7 +325,7 @@ DATA_POLICY = os.environ.get('DATA_POLICY', 'all')
 
 INDIVIDUAL_VIDEO_WIDTH_HEIGHT = None
 
-CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON = False
+CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON = bool(distutils.util.strtobool(os.environ.get('CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON','False')))
 
 ################################################
 ################    GUI   ######################
