@@ -28,6 +28,8 @@
 
 import sys
 import os
+
+import distutils
 from distutils.util import strtobool
 
 MIN_FLOAT = sys.float_info[3]
