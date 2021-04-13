@@ -231,3 +231,81 @@ class idCNN(nn.Module):
         x = self.forward(x)
         x = self.softmax(x)
         return x
+
+
+
+
+class idCNN_adaptive(nn.Module):
+    def __init__(self, input_shape, out_dim):
+        """
+        input_shape: tuple (width, height, channels)
+        out_dim: int
+        """
+        super(idCNN_adaptive, self).__init__()
+
+        self.out_dim = out_dim
+        num_channels = [input_shape[-1], 16, 64, 100]
+        cnn_kwargs = dict(
+            stride=1,
+            padding=2,
+            dilation=1,
+            groups=1,
+            bias=True,
+            padding_mode="zeros",
+        )
+        maxpool_kwargs = dict(
+            stride=2,
+            padding=0,
+            dilation=1,
+            return_indices=False,
+            ceil_mode=False,
+        )
+        kernel_size = 5
+        self.width_adaptive_pool = 3
+
+        # Convolutional and pooling layers
+        cnn_layers = []
+        for i, (num_ch_in, num_ch_out) in enumerate(
+            zip(num_channels[:-1], num_channels[1:])
+        ):
+            if i > 0:
+                # no pooling after input
+                cnn_layers.append(nn.MaxPool2d(2, **maxpool_kwargs))
+
+            cnn_layers.append(
+                nn.Conv2d(num_ch_in, num_ch_out, kernel_size, **cnn_kwargs)
+            )
+            cnn_layers.append(nn.ReLU(inplace=True))
+
+        cnn_layers.append(nn.AdaptiveAvgPool2d(self.width_adaptive_pool))
+        self.conv = nn.Sequential(*cnn_layers)
+        
+        # Fully connected layers
+        self.fc1 = nn.Linear(
+            num_channels[-1] * self.width_adaptive_pool ** 2, 100
+        )
+        self.fc2 = nn.Linear(100, out_dim)
+        self.linear = nn.Sequential(self.fc1, nn.ReLU(inplace=True))
+        self.last = self.fc2
+
+        self.softmax = nn.Softmax(dim=1)
+
+    def features(self, x):
+        x = self.conv(x)
+        x = self.linear(x.view(-1, 100 * self.width_adaptive_pool ** 2))
+        return x
+
+    def logits(self, x):
+        x = self.last(x)
+        return x
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.logits(x)
+        return x
+
+    def softmax_probs(self, x):
+        x = self.forward(x)
+        x = self.softmax(x)
+        return x
+
