@@ -227,7 +227,7 @@ def set_load_previous_dict(old_video, processes, computed_processes):
     processes_to_attributes = {
         "preprocessing": ["has_been_preprocessed"],
         "protocols1_and_2": ["first_accumulation_finished"],
-        "protocol3_pretraining": ["has_been_pretrained"],
+        "protocol3_pretraining": ["has_protocol3_pretraining_finished"],
         "protocol3_accumulation": ["second_accumulation_finished"],
         "residual_identification": ["has_been_assigned"],
         "post_processing": [

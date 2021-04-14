@@ -227,21 +227,9 @@ class PreprocessingAPI(object):
                 None
             )
         self.chosen_video.video._has_been_fragmented = True
-        # self.chosen_video.list_of_blobs.save(
-        #     self.chosen_video.video, self.chosen_video.video.blobs_path
-        # )
-        # if self.chosen_video.video.number_of_animals != 1:
-        #     self.list_of_global_fragments.save(
-        #         self.chosen_video.video.global_fragments_path,
-        #         self.list_of_fragments.fragments,
-        #     )
-        #     self.chosen_video.list_of_global_fragments = (
-        #         self.list_of_global_fragments
-        #     )
         self.chosen_video.video._fragmentation_time = (
             time.time() - self.chosen_video.video.fragmentation_time
         )
-        # self.chosen_video.video.save()
 
     def _generate_list_of_fragments_and_global_fragments(self):
         if not self.chosen_video.list_of_blobs.blobs_are_connected:

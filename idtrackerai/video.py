@@ -136,22 +136,25 @@ class Video(object):
         self._blobs_path_interpolated = None
 
         # Processes flags (used for restoring computational blocks)
-        self._has_preprocessing_parameters = None
-        self._has_animals_detected = None  # animal detection and segmentation
-        self._has_model_area = None  # crossings detection
-        self._has_identification_images = None  # crossing detection
-        self._has_crossings_detected = None  # crossings detection
-        self._has_been_fragmented = None  # fragmentation
-        self._has_protocol1_finished = None  # protocols cascade
-        self._has_protocol2_finished = None  # protocols cascade
-        self._has_protocol3_pretraining_finished = None  # protocols cascade
-        self._has_protocol3_accumulation_finished = None  # protocols cascade
-        self._has_protocol3_finished = None  # protocols cascade
-        self._has_residual_identification = None  # residual identification
-        self._has_impossible_jumps_solved = None  # post-processing
-        self._has_crossings_solved = None  # crossings interpolation
-        self._has_trajectories = None  # trajectories generation
-        self._has_trajectories_wo_gaps = None  # trajectories generation
+        self._has_preprocessing_parameters = False
+        self._has_animals_detected = False  # animal detection and segmentation
+        self._has_model_area = False  # crossings detection
+        self._has_identification_images = False  # crossing detection
+        self._has_crossings_detected = False  # crossings detection
+        self._has_been_fragmented = False  # fragmentation
+        self._has_protocol1_finished = False  # protocols cascade
+        self._has_protocol2_finished = False  # protocols cascade
+        self._has_protocol3_pretraining_finished = False  # protocols cascade
+        self._has_protocol3_accumulation_finished = False  # protocols cascade
+        self._has_protocol3_finished = False  # protocols cascade
+        self._has_residual_identification = False  # residual identification
+        self._has_impossible_jumps_solved = False  # post-processing
+        self._has_crossings_solved = False  # crossings interpolation
+        self._has_trajectories = False  # trajectories generation
+        self._has_trajectories_wo_gaps = False  # trajectories generation
+
+        # Folder
+        self._accumulation_folder = None
 
         # Timers
         self._detect_animals_time = 0.0
@@ -196,6 +199,7 @@ class Video(object):
 
         self._there_are_crossings = True
         self._track_wo_identities = False  # Track without identities
+        self._accumulation_trial = 0
         self._number_of_channels = 1
         self.individual_videos_folder = None
         self._setup_points = []
@@ -534,6 +538,10 @@ class Video(object):
     def identity_transfer(self):
         return self._identity_transfer
 
+    @property
+    def accumulation_trial(self):
+        return self._accumulation_trial
+
     def is_identity_transfer_possible(self):
         return (
             self.number_of_animals
@@ -616,7 +624,7 @@ class Video(object):
             self._video_folder = os.path.dirname(self.video_path)
             # collect some info on the video (resolution, number of frames, ..)
             if not hasattr(self, "number_of_frames"):
-                self.get_info()
+                self.get_info_from_video_file()
             self.modified = time.strftime("%c")
         else:
             raise ValueError(
@@ -928,7 +936,7 @@ class Video(object):
         logger.info("Saving video object")
         self.save()
 
-    def get_info(self):
+    def get_info_from_video_file(self):
         """Retrieves basic information concerning the video. If the video is
         recorded as a single file, it generates "episodes" for parallelisation
         during segmentation

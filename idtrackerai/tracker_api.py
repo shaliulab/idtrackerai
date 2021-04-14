@@ -32,7 +32,6 @@
 import copy
 import logging
 import os
-import sys
 import time
 
 import numpy as np
@@ -80,7 +79,7 @@ class TrackerAPI(object):
 
         self.chosen_video = chosen_video
 
-        self.number_of_animals = None  # Number of animals
+        self.number_of_identities = None  # Number of identities
         self.accumulation_network_params = None  # Network params
         self.restoring_first_accumulation = (
             False  # Flag restores first accumulation
@@ -88,171 +87,6 @@ class TrackerAPI(object):
         self.accumulation_step_finished = (
             False  # Flag accumulation step finished
         )
-
-    def start_tracking(self):
-
-        if self.chosen_video.video.number_of_animals == 1:
-            self.track_single_animal()
-
-        elif (
-            self.chosen_video.list_of_global_fragments.number_of_global_fragments
-            == 1
-        ):
-            self.track_single_global_fragment_video()
-
-        else:
-            self.chosen_video.video.accumulation_trial = 0
-
-            if "protocols1_and_2" in self.chosen_video.processes_to_restore:
-                delete = not self.chosen_video.processes_to_restore[
-                    "protocols1_and_2"
-                ]
-            else:
-                delete = True
-
-            self.chosen_video.video.create_accumulation_folder(
-                iteration_number=0, delete=delete
-            )
-
-            if not self.chosen_video.video.identity_transfer:
-                self.number_of_animals = (
-                    self.chosen_video.video.number_of_animals
-                )
-            else:
-                self.number_of_animals = (
-                    self.chosen_video.video.knowledge_transfer_info_dict[
-                        "number_of_classes"
-                    ]
-                )
-
-            self.restoring_first_accumulation = False
-            self.init_accumulation_network()
-
-            if (
-                self.accumulation_network_params.knowledge_transfer_model_file
-                is None
-            ):
-                self.chosen_video.video._tracking_with_knowledge_transfer = (
-                    False
-                )
-            else:
-                self.chosen_video.video._tracking_with_knowledge_transfer = (
-                    True
-                )
-
-            # Restoring
-            if (
-                "post_processing" in self.chosen_video.processes_to_restore
-                and self.chosen_video.processes_to_restore["post_processing"]
-            ):
-                self.restore_trajectories()
-                self.restore_crossings_solved()
-                self.restore_trajectories_wo_gaps()
-
-            elif (
-                "residual_identification"
-                in self.chosen_video.processes_to_restore
-                and self.chosen_video.processes_to_restore[
-                    "residual_identification"
-                ]
-            ):
-                if self.chosen_video.video.track_wo_identities:
-                    # TODO: bring restoring back to life
-                    self.restore_trajectories()
-
-                else:
-                    # TODO: bring restoring back to life
-                    logger.info("Restoring residual identification")
-                    self.restore_identification()
-                    self.chosen_video.video._has_been_assigned = True
-                    self.create_trajectories()
-
-            elif (
-                "protocol3_accumulation"
-                in self.chosen_video.processes_to_restore
-                and self.chosen_video.processes_to_restore[
-                    "protocol3_accumulation"
-                ]
-            ):
-                logger.info("Restoring second accumulation")
-                # self.restore_second_accumulation()
-                self.chosen_video.video._first_frame_first_global_fragment = (
-                    self.chosen_video.video._first_frame_first_global_fragment
-                )
-                logger.warning(
-                    "first_frame_first_global_fragment "
-                    + str(
-                        self.chosen_video.video.first_frame_first_global_fragment
-                    )
-                )
-                logger.info("Starting identification")
-
-                self.create_trajectories()
-
-            elif (
-                "protocol3_pretraining"
-                in self.chosen_video.processes_to_restore
-                and self.chosen_video.processes_to_restore[
-                    "protocol3_pretraining"
-                ]
-            ):
-                # TODO: bring restoring back to life
-                raise
-                # logger.info("Restoring pretraining")
-                # logger.info("Initialising pretraining network")
-                # self.init_pretraining_net()
-                # logger.info("Restoring pretraining")
-                # self.accumulation_step_finished = True
-                # self.restore_first_accumulation()
-                # self.restore_pretraining()
-                # self.accumulation_manager.ratio_accumulated_images =
-                # self.chosen_video.video.percentage_of_accumulated_images[0]
-                # self.chosen_video.video._first_frame_first_global_fragment = [
-                #     self.chosen_video.video._first_frame_first_global_fragment[
-                #         0
-                #     ]
-                # ]
-                # self.chosen_video.video._percentage_of_accumulated_images = [
-                #     self.chosen_video.video.percentage_of_accumulated_images[0]
-                # ]
-                # logger.info("Start accumulation parachute")
-                #
-                # self.accumulate()
-
-            elif (
-                "protocols1_and_2" in self.chosen_video.processes_to_restore
-                and self.chosen_video.processes_to_restore["protocols1_and_2"]
-            ):
-                # TODO: bring restoring back to life
-                raise
-                # logger.info("Restoring protocol 1 and 2")
-                # self.restoring_first_accumulation = True
-                # # self.restore_first_accumulation()
-                # self.accumulation_manager.ratio_accumulated_images =
-                # self.chosen_video.video.percentage_of_accumulated_images[0]
-                # self.chosen_video.video._first_frame_first_global_fragment = [
-                #     self.chosen_video.video._first_frame_first_global_fragment[
-                #         0
-                #     ]
-                # ]
-                # self.chosen_video.video._percentage_of_accumulated_images = [
-                #     self.chosen_video.video.percentage_of_accumulated_images[0]
-                # ]
-                # self.accumulation_step_finished = True
-                #
-                # self.accumulate()
-
-            elif (
-                "protocols1_and_2"
-                not in self.chosen_video.processes_to_restore
-                or not self.chosen_video.processes_to_restore[
-                    "protocols1_and_2"
-                ]
-            ):
-                logger.info("Starting protocol cascade")
-                self.protocol1()
-                # TODO: OR
-                # self.track_wo_identities()
 
     def track_single_animal(self, create_trajectories=None):
 
@@ -299,7 +133,6 @@ class TrackerAPI(object):
                         self.chosen_video.video.number_of_animals,
                     )
                     b.frame_number = f
-        self.chosen_video.video.accumulation_trial = 0
         self.chosen_video.video._first_frame_first_global_fragment = [
             0
         ]  # in case
@@ -310,12 +143,173 @@ class TrackerAPI(object):
         if create_trajectories is None:
             create_trajectories = self.create_trajectories
 
-        self.chosen_video.video.accumulation_trial = 0
         self.chosen_video.video._first_frame_first_global_fragment = [0]
         self.chosen_video.video._track_wo_identities = True
         create_trajectories()
 
-    def init_accumulation_network(self):
+    def track_w_identities(self):
+        track_with_cascade = True
+        if track_with_cascade:
+            # This runs the protocol cascade and also the residual
+            # identification, the impossible_jumps, the creation of
+            # trajectories, the crossings interpolation, and the
+            # creation of trajectories_wo_gaps
+            # TODO: Factorize track_with_protocols_cascade so it only runs
+            # up to residual identification
+            self.track_with_protocols_cascade()
+        else:
+            # TODO: Here is where new tracking methods should come
+            # Call to tracking method
+
+            # Call to postprocessing
+            # TODO: Factorize postprocess_impossible_jumps
+            # postprocess_impossible_jumps
+            # create_trajectories
+            # crossings_interpolation
+            # create_trajectories_wo_gaps
+            self.postprocess_impossible_jumps()
+            raise NotImplementedError("New tracking methods are not allwoed")
+
+
+    def track_with_protocols_cascade(self):
+        logger.info("******* Start tracking with protocol cascade ********")
+        # Restoring
+        if "protocols1_and_2" in self.chosen_video.processes_to_restore:
+            delete = not self.chosen_video.processes_to_restore[
+                "protocols1_and_2"
+            ]
+        else:
+            delete = True
+
+        # Create accumulation folder
+        self.chosen_video.video.create_accumulation_folder(
+            iteration_number=0, delete=delete
+        )
+
+        # Set number of animals params for identity transfer
+        if not self.chosen_video.video.identity_transfer:
+            self.number_of_identities = (
+                self.chosen_video.video.number_of_animals
+            )
+        else:
+            self.number_of_identities = (
+                self.chosen_video.video.knowledge_transfer_info_dict[
+                    "number_of_classes"
+                ]
+            )
+
+        self.init_accumulation_idCNN_params()
+
+        # Restoring
+        self.restoring_first_accumulation = False
+        if (
+            "post_processing" in self.chosen_video.processes_to_restore
+            and self.chosen_video.processes_to_restore["post_processing"]
+        ):
+            raise
+            # self.restore_trajectories()
+            # self.restore_crossings_solved()
+            # self.restore_trajectories_wo_gaps()
+
+        elif (
+            "residual_identification" in self.chosen_video.processes_to_restore
+            and self.chosen_video.processes_to_restore[
+                "residual_identification"
+            ]
+        ):
+            if self.chosen_video.video.track_wo_identities:
+                # TODO: bring restoring back to life
+                raise
+                # self.restore_trajectories()
+
+            else:
+                # TODO: bring restoring back to life
+                raise
+                # logger.info("Restoring residual identification")
+                # self.restore_identification()
+                # self.chosen_video.video._has_been_assigned = True
+                # self.create_trajectories()
+
+        elif (
+            "protocol3_accumulation" in self.chosen_video.processes_to_restore
+            and self.chosen_video.processes_to_restore[
+                "protocol3_accumulation"
+            ]
+        ):
+            raise
+            # logger.info("Restoring second accumulation")
+            # # self.restore_second_accumulation()
+            # self.chosen_video.video._first_frame_first_global_fragment = (
+            #     self.chosen_video.video._first_frame_first_global_fragment
+            # )
+            # logger.warning(
+            #     "first_frame_first_global_fragment "
+            #     + str(
+            #         self.chosen_video.video.first_frame_first_global_fragment
+            #     )
+            # )
+            # logger.info("Starting identification")
+            #
+            # self.create_trajectories()
+
+        elif (
+            "protocol3_pretraining" in self.chosen_video.processes_to_restore
+            and self.chosen_video.processes_to_restore["protocol3_pretraining"]
+        ):
+            # TODO: bring restoring back to life
+            raise
+            # logger.info("Restoring pretraining")
+            # logger.info("Initialising pretraining network")
+            # self.init_pretraining_net()
+            # logger.info("Restoring pretraining")
+            # self.accumulation_step_finished = True
+            # self.restore_first_accumulation()
+            # self.restore_pretraining()
+            # self.accumulation_manager.ratio_accumulated_images =
+            # self.chosen_video.video.percentage_of_accumulated_images[0]
+            # self.chosen_video.video._first_frame_first_global_fragment = [
+            #     self.chosen_video.video._first_frame_first_global_fragment[
+            #         0
+            #     ]
+            # ]
+            # self.chosen_video.video._percentage_of_accumulated_images = [
+            #     self.chosen_video.video.percentage_of_accumulated_images[0]
+            # ]
+            # logger.info("Start accumulation parachute")
+            #
+            # self.accumulate()
+
+        elif (
+            "protocols1_and_2" in self.chosen_video.processes_to_restore
+            and self.chosen_video.processes_to_restore["protocols1_and_2"]
+        ):
+            # TODO: bring restoring back to life
+            raise
+            # logger.info("Restoring protocol 1 and 2")
+            # self.restoring_first_accumulation = True
+            # # self.restore_first_accumulation()
+            # self.accumulation_manager.ratio_accumulated_images =
+            # self.chosen_video.video.percentage_of_accumulated_images[0]
+            # self.chosen_video.video._first_frame_first_global_fragment = [
+            #     self.chosen_video.video._first_frame_first_global_fragment[
+            #         0
+            #     ]
+            # ]
+            # self.chosen_video.video._percentage_of_accumulated_images = [
+            #     self.chosen_video.video.percentage_of_accumulated_images[0]
+            # ]
+            # self.accumulation_step_finished = True
+            #
+            # self.accumulate()
+
+        elif (
+            "protocols1_and_2" not in self.chosen_video.processes_to_restore
+            or not self.chosen_video.processes_to_restore["protocols1_and_2"]
+        ):
+            logger.info("Starting protocol cascade")
+            self.protocol1()
+
+    def init_accumulation_idCNN_params(self):
         self.accumulation_network_params = NetworkParams(
             number_of_classes=self.number_of_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
@@ -354,10 +348,10 @@ class TrackerAPI(object):
             roll_back_to="fragmentation"
         )
 
-        # Initialize network
+        # Initialize idCNN
         logger.info("Setting learner class")
         self.learner_class = Learner_Classification
-        logger.info("Creating model")
+        logger.info("Creating idCNN")
         if self.chosen_video.video.tracking_with_knowledge_transfer:
             logger.info("Tracking with knowledge transfer")
             self.identification_model = self.learner_class.load_model(
@@ -376,7 +370,9 @@ class TrackerAPI(object):
             )
             self.identification_model.apply(weights_xavier_init)
 
-        # Set first global fragment to start accumulation. If the network is passed in case of identity transfer.
+        # Set first global fragment to start accumulation.
+        # The network is passed in case of identity transfer.
+        logger.info("Setting first global fragment for accumulation")
         self.chosen_video.video._first_frame_first_global_fragment.append(
             self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(
                 self.chosen_video.video,
@@ -385,7 +381,9 @@ class TrackerAPI(object):
                 network_params=self.accumulation_network_params,
             )
         )
+
         # Order global fragments by distance to the first global fragment for the accumulation
+        logger.info("Setting first global fragment for accumulation")
         self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(
             self.chosen_video.video, accumulation_trial=0
         )
@@ -397,14 +395,17 @@ class TrackerAPI(object):
             self.chosen_video.list_of_global_fragments,
             threshold_acceptable_accumulation=conf.THRESHOLD_ACCEPTABLE_ACCUMULATION,
         )
-        # General counter for training
+
+        # General counter for training epochs
         self.global_step = 0
 
+        # Selecting the first global fragment is considered as
+        # the 0 accumulation step
         self.accumulation_step_finished = True
-        self.accumulation_loop()
+        self.init_and_accumulate()
 
-    def one_shot_accumulation(self, call_accumulate=True):
-        logger.warning("Starting one_shot_accumulation")
+    def one_shot_accumulation(self):
+        logger.info("Starting one_shot_accumulation")
         self.accumulation_step_finished = False
         self.accumulation_manager.ratio_accumulated_images = (
             perform_one_accumulation_step(
@@ -415,62 +416,45 @@ class TrackerAPI(object):
                 network_params=self.accumulation_network_params,
             )
         )
-
         self.accumulation_step_finished = True
 
-        if call_accumulate:
-            self.accumulate()
 
-    def __accumulate_handler_call_accumulate(self):
-        if self.accumulation_manager.continue_accumulation:
-            self.accumulate()
-
-    def __accumulate_handler_identification_popup_open(self):
-        self.identify()
-        self.postprocess_impossible_jumps()
-
-    def accumulate(
-        self,
-        identification_popup_open=None,
-        one_shot_accumulation_popup_dismiss=None,
-        create_pretraining_popup=None,
-        unschedule_accumulate=None,
-        call_accumulate=True,
-    ):
-
-        if identification_popup_open is None:
-            identification_popup_open = (
-                self.__accumulate_handler_identification_popup_open
-            )
-
+    def accumulate(self):
         logger.info("------------------------> Calling accumulate")
 
         if (
             self.accumulation_step_finished
-            and self.accumulation_manager.continue_accumulation
+            and self.accumulation_manager.new_global_fragments_for_training
         ):
-
+            # Training and identification continues
             logger.info("--------------------> Performing accumulation")
             if (
                 self.accumulation_manager.counter == 1
                 and self.chosen_video.video.accumulation_trial == 0
             ):
+                # first training finished
+                # Measure time of protocol 1
                 self.chosen_video.video._protocol1_time = (
                     time.time() - self.chosen_video.video.protocol1_time
                 )
+                self.chosen_video.video._has_protocol1_finished = True
+                # Start timer of protocol 2
                 self.chosen_video.video._protocol2_time = time.time()
 
+            # Training and identification step
             self.one_shot_accumulation()
-            call_accumulate = False
+            # Re-enter the function for the next step of the accumulation
+            self.accumulate()
 
         elif (
-            not self.accumulation_manager.continue_accumulation
-            and not self.chosen_video.video.first_accumulation_finished
+            not self.accumulation_manager.new_global_fragments_for_training
+            and not self.chosen_video.video._has_protocol2_finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         ):
-
-            logger.info("Protocol 1 successful")
+            # Accumulation stop because protocol 1 is successful
+            logger.info("--------------------> Protocol 1 successful")
+            print(self.accumulation_manager.ratio_accumulated_images)
             self.save_after_first_accumulation()
             if (
                 "protocols1_and_2"
@@ -483,26 +467,21 @@ class TrackerAPI(object):
                     time.time() - self.chosen_video.video.protocol1_time
                 )
 
-            # call handler
-            identification_popup_open()
+            self.identify()
+            self.postprocess_impossible_jumps()
 
         elif (
-            not self.accumulation_manager.continue_accumulation
-            and not self.chosen_video.video.has_been_pretrained
+            not self.accumulation_manager.new_global_fragments_for_training
+            and not self.chosen_video.video.has_protocol3_pretraining_finished
         ):
-
+            logger.info("--------------------> No more new global fragments")
             self.save_after_first_accumulation()
 
             if (
                 self.accumulation_manager.ratio_accumulated_images
                 >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             ):
-                logger.info("Protocol 2 successful")
-                logger.warning(
-                    "------------------------ dismissing one shot accumulation popup"
-                )
-                if one_shot_accumulation_popup_dismiss:
-                    one_shot_accumulation_popup_dismiss()  # UPDATE GUI
+                logger.info("--------------------> Protocol 2 successful")
 
                 self.save_after_first_accumulation()
                 if (
@@ -516,15 +495,16 @@ class TrackerAPI(object):
                         time.time() - self.chosen_video.video.protocol2_time
                     )
 
-                # call handler
-                identification_popup_open()
+                self.identify()
+                self.postprocess_impossible_jumps()
 
             elif (
                 self.accumulation_manager.ratio_accumulated_images
                 < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             ):
 
-                logger.info("Protocol 2 failed -> Start protocol 3")
+                logger.info("--------------------> Protocol 2 failed -> Start protocol 3")
+                print(self.accumulation_manager.ratio_accumulated_images)
                 # raise ValueError('Protocol 3')
                 if (
                     "protocols1_and_2"
@@ -546,15 +526,10 @@ class TrackerAPI(object):
                 )
 
                 self.pretraining_counter = 0
-
-                # call handler
-                if create_pretraining_popup:
-                    create_pretraining_popup()
-
                 self.protocol3()
 
         elif (
-            self.chosen_video.video.has_been_pretrained
+            self.chosen_video.video.has_protocol3_pretraining_finished
             and self.chosen_video.video.accumulation_trial
             < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
             and self.accumulation_manager.ratio_accumulated_images
@@ -562,15 +537,16 @@ class TrackerAPI(object):
         ):
 
             logger.info(
-                "Accumulation in protocol 3 is not successful. Opening parachute ..."
+                "--------------------> Accumulation Protocol 3 failed. Opening parachute ..."
             )
+            print(self.accumulation_manager.ratio_accumulated_images)
             if self.chosen_video.video.accumulation_trial == 0:
                 self.chosen_video.video._protocol3_accumulation_time = (
                     time.time()
                 )
-            self.chosen_video.video.accumulation_trial += 1
+            self.chosen_video.video._accumulation_trial += 1
             if (
-                not self.accumulation_manager.continue_accumulation
+                not self.accumulation_manager.new_global_fragments_for_training
                 and self.chosen_video.video.accumulation_trial > 1
             ):
                 self.save_and_update_accumulation_parameters_in_parachute()
@@ -578,17 +554,17 @@ class TrackerAPI(object):
                 self.chosen_video.video.accumulation_trial
             )
 
-            call_accumulate = False
-            self.accumulation_loop()
+            self.init_and_accumulate()
 
-        elif self.chosen_video.video.has_been_pretrained and (
+        elif self.chosen_video.video.has_protocol3_pretraining_finished and (
             self.accumulation_manager.ratio_accumulated_images
             >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             or self.chosen_video.video.accumulation_trial
             >= conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
         ):
 
-            logger.info("Accumulation after protocol 3 has been successful")
+            logger.info("--------------------> Accumulation after protocol 3 has been successful")
+            print(self.accumulation_manager.ratio_accumulated_images)
             if (
                 "protocol3_accumulation"
                 not in self.chosen_video.processes_to_restore
@@ -614,37 +590,28 @@ class TrackerAPI(object):
                     - self.chosen_video.video.protocol3_accumulation_time
                 )
 
-            logger.warning("************************ Unscheduling accumulate")
-            # call handler
-            if unschedule_accumulate:
-                unschedule_accumulate()
-
-            logger.warning(
-                "------------------------ dismissing one shot accumulation popup"
-            )
-            # call handler
-            if one_shot_accumulation_popup_dismiss:
-                one_shot_accumulation_popup_dismiss()
-
             self.save_after_second_accumulation()
             logger.info("Start residual indentification")
-            # call handler
-            identification_popup_open()
+            self.identify()
+            self.postprocess_impossible_jumps()
 
-        # call handler
-        if call_accumulate:
-            self.__accumulate_handler_call_accumulate()
+        # Whether to re-enter the function for the next accumulation step
+        if self.accumulation_manager.new_global_fragments_for_training:
+            self.accumulate()
 
-    def accumulation_loop(self, do_accumulate=True):
+    def init_and_accumulate(self):
+        """
+        This is called in the first step of each accumulation trial
+        :param do_accumulate:
+        :return:
+        """
         logger.warning("------------Calling accumulation loop")
         self.chosen_video.video.init_accumulation_statistics_attributes()
         self.accumulation_manager.threshold_early_stop_accumulation = (
             conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         )
-        logger.warning("Calling accumulate from accumulation_loop")
-
-        if do_accumulate:
-            self.accumulate()
+        logger.warning("Calling accumulate from init_and_accumulate")
+        self.accumulate()
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
@@ -809,7 +776,7 @@ class TrackerAPI(object):
             self.ratio_of_pretrained_images
             > conf.MAX_RATIO_OF_PRETRAINED_IMAGES
         ):
-            self.chosen_video.video._has_been_pretrained = True
+            self.chosen_video.video._has_protocol3_pretraining_finished = True
 
             logger.warning("Calling accumulate from continue_pretraining")
             logger.debug("****** saving protocol3 pretraining time")
@@ -837,7 +804,7 @@ class TrackerAPI(object):
         self.chosen_video.video.create_accumulation_folder(
             iteration_number=iteration_number, delete=delete
         )
-        self.chosen_video.video.accumulation_trial = iteration_number
+        self.chosen_video.video._accumulation_trial = iteration_number
         self.chosen_video.list_of_fragments.reset(roll_back_to="fragmentation")
         self.chosen_video.list_of_global_fragments.reset(
             roll_back_to="fragmentation"
@@ -933,18 +900,18 @@ class TrackerAPI(object):
         self.save_and_update_accumulation_parameters_in_parachute()
 
         # Choose best accumulation
-        self.chosen_video.video.accumulation_trial = np.argmax(
+        self.chosen_video.video._accumulation_trial = np.argmax(
             self.chosen_video.video.percentage_of_accumulated_images
         )
 
         # Update ratio of accumulated images and  accumulation folder
         self.chosen_video.video._ratio_accumulated_images = (
             self.chosen_video.video.percentage_of_accumulated_images[
-                self.chosen_video.video.accumulation_trial
+                self.chosen_video.video._accumulation_trial
             ]
         )
         accumulation_folder_name = "accumulation_" + str(
-            self.chosen_video.video.accumulation_trial
+            self.chosen_video.video._accumulation_trial
         )
         self.chosen_video.video._accumulation_folder = os.path.join(
             self.chosen_video.video.session_folder, accumulation_folder_name
@@ -1133,9 +1100,9 @@ class TrackerAPI(object):
     #     )
     #     self.chosen_video.video.save()
     #
-    def restore_trajectories(self):
-        self.restore_video_attributes()
-        self.chosen_video.video.save()
+    # def restore_trajectories(self):
+    #     self.restore_video_attributes()
+    #     self.chosen_video.video.save()
 
     #
     # def restore_crossings_solved(self):
