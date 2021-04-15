@@ -108,7 +108,7 @@ class AccumulationManager(object):
         self.used_labels = None
         self.new_images = None
         self.new_labels = None
-        self.ratio_accumulated_images=None
+        self.ratio_accumulated_images = None
         # When we init the Accumulation manager we are starting Protocol 1
         # or the accumulation parachute (
         self._continue_accumulation = True

@@ -170,7 +170,6 @@ class TrackerAPI(object):
             self.postprocess_impossible_jumps()
             raise NotImplementedError("New tracking methods are not allwoed")
 
-
     def track_with_protocols_cascade(self):
         logger.info("******* Start tracking with protocol cascade ********")
         # Restoring
@@ -418,7 +417,6 @@ class TrackerAPI(object):
         )
         self.accumulation_step_finished = True
 
-
     def accumulate(self):
         logger.info("------------------------> Calling accumulate")
 
@@ -503,7 +501,9 @@ class TrackerAPI(object):
                 < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             ):
 
-                logger.info("--------------------> Protocol 2 failed -> Start protocol 3")
+                logger.info(
+                    "--------------------> Protocol 2 failed -> Start protocol 3"
+                )
                 print(self.accumulation_manager.ratio_accumulated_images)
                 # raise ValueError('Protocol 3')
                 if (
@@ -563,7 +563,9 @@ class TrackerAPI(object):
             >= conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
         ):
 
-            logger.info("--------------------> Accumulation after protocol 3 has been successful")
+            logger.info(
+                "--------------------> Accumulation after protocol 3 has been successful"
+            )
             print(self.accumulation_manager.ratio_accumulated_images)
             if (
                 "protocol3_accumulation"
