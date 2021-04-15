@@ -233,8 +233,6 @@ class idCNN(nn.Module):
         return x
 
 
-
-
 class idCNN_adaptive(nn.Module):
     def __init__(self, input_shape, out_dim):
         """
@@ -279,7 +277,7 @@ class idCNN_adaptive(nn.Module):
 
         cnn_layers.append(nn.AdaptiveAvgPool2d(self.width_adaptive_pool))
         self.conv = nn.Sequential(*cnn_layers)
-        
+
         # Fully connected layers
         self.fc1 = nn.Linear(
             num_channels[-1] * self.width_adaptive_pool ** 2, 100
@@ -308,4 +306,3 @@ class idCNN_adaptive(nn.Module):
         x = self.forward(x)
         x = self.softmax(x)
         return x
-
