@@ -310,7 +310,7 @@ class TrackerAPI(object):
 
     def init_accumulation_idCNN_params(self):
         self.accumulation_network_params = NetworkParams(
-            number_of_classes=self.number_of_animals,
+            number_of_classes=self.chosen_video.video.number_of_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.chosen_video.video.accumulation_folder,
             knowledge_transfer_model_file=conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN,
