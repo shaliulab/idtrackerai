@@ -1117,9 +1117,9 @@ class TrackerAPI(object):
     #     )
     #     self.chosen_video.video.save()
     #
-    def restore_trajectories_wo_gaps(self):
-        self.restore_video_attributes()
-        self.chosen_video.video.save()
+    # def restore_trajectories_wo_gaps(self):
+    #     self.restore_video_attributes()
+    #     self.chosen_video.video.save()
 
     """ Residual identification """
 
