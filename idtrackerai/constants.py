@@ -299,6 +299,10 @@ MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = int(
 #######################################
 # Deep fingerprint protocols cascade  #
 #######################################
+"""
+IDCNN_NETWORK_NAME 
+"""
+IDCNN_NETWORK_NAME = "idCNN"  # "idCNN_adaptive"
 """***THRESHOLD_EARLY_STOP_ACCUMULATION***
 If the total of accumulated images + images to be accumulated is above this
 threshold, we stop the accumulation (holds for each deep fingerprint protocol)

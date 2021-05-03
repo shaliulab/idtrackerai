@@ -334,7 +334,7 @@ class TrackerAPI(object):
     def init_accumulation_network(self):
         self.accumulation_network_params = NetworkParams(
             number_of_classes=self.number_of_animals,
-            architecture="idCNN",
+            architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.chosen_video.video.accumulation_folder,
             knowledge_transfer_model_file=conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN,
             saveid="",
@@ -754,7 +754,7 @@ class TrackerAPI(object):
 
         self.pretrain_network_params = NetworkParams(
             number_of_classes=self.number_of_animals,
-            architecture="idCNN",
+            architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.chosen_video.video.pretraining_folder,
             saveid="",
             model_name="identification_network",
