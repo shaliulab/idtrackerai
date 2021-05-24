@@ -38,6 +38,7 @@ import sys
 import cv2
 import h5py
 import numpy as np
+import matplotlib.pyplot as plt
 
 from scipy import ndimage  # TODO: used to fill binary holes see below
 from confapp import conf
@@ -174,8 +175,7 @@ def get_blobs_in_frame(
             else frame
         )
         avIntensity = get_frame_average_intensity(frameGray, video.ROI)
-        # avIntensity = np.float32(np.mean(np.ma.array(frameGray,
-        #                                              mask=video.ROI==0)))
+
         segmentedFrame = segment_frame(
             frameGray / avIntensity,
             segmentation_thresholds["min_threshold"],
@@ -184,7 +184,6 @@ def get_blobs_in_frame(
             video.ROI,
             video.subtract_bkg,
         )
-
         # TODO: Check if this is necessary
         # Fill holes in the segmented frame to avoid duplication of contours
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype(

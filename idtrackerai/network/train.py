@@ -58,7 +58,7 @@ def train(epoch, train_loader, learner, network_params):
     confusion = Confusion(network_params.number_of_classes)
 
     # Setup learner's configuration
-    print("\n\n==== Epoch:{0} ====".format(epoch))
+    # print("==== Epoch:{0} ====".format(epoch))
     learner.train()
     learner.step_schedule(epoch)
 
@@ -149,21 +149,22 @@ def train(epoch, train_loader, learner, network_params):
                 )
 
     # print loss avg
-    print(losses.avg)
+    # print(losses.avg)
     # Loss-specific information
     if network_params.loss == "CE":
-        print("[Train] ACC: ", confusion.acc())
+        pass
+        # print("[Train] ACC: ", confusion.acc())
     elif network_params.loss in ["MCL", "CEMCL", "CEMCL_weighted"]:
         network_params.cluster2Class = tuple(
             confusion.optimal_assignment(train_loader.num_classes)
         )  # Save the mapping in network_params to use in eval
-        print(network_params.cluster2Class)
+        # print(network_params.cluster2Class)
         if (
             network_params.out_dim <= 20
         ):  # Avoid to print a large confusion matrix
             confusion.show()
-        print("Clustering scores:", confusion.clusterscores())
-        print("[Train] ACC: ", confusion.acc())
+        # print("Clustering scores:", confusion.clusterscores())
+        # print("[Train] ACC: ", confusion.acc())
 
     if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
         return (losses, losses_CE, losses_MCL), confusion.acc()

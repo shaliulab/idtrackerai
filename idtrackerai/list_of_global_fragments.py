@@ -181,29 +181,21 @@ class ListOfGlobalFragments(object):
                 video, identification_model, network_params
             )
 
-        [
-            (
-                setattr(fragment, "_acceptable_for_training", True),
-                setattr(fragment, "_temporary_id", identities[i]),
-                setattr(
-                    fragment,
-                    "_frequencies",
-                    self.give_me_frequencies_first_fragment_accumulated(
-                        i, video.number_of_animals, fragment
-                    ),
-                ),
-                setattr(fragment, "_is_certain", True),
-                setattr(fragment, "_certainty", 1.0),
-                setattr(
-                    fragment,
-                    "_P1_vector",
-                    fragment.compute_P1_from_frequencies(fragment.frequencies),
-                ),
+        for i, fragment in enumerate(
+            self.first_global_fragment_for_accumulation.individual_fragments
+        ):
+            fragment._acceptable_for_training = True
+            fragment._temporary_id = identities[i]
+            fragment._frequencies = (
+                self.give_me_frequencies_first_fragment_accumulated(
+                    i, video.number_of_animals, fragment
+                )
             )
-            for i, fragment in enumerate(
-                self.first_global_fragment_for_accumulation.individual_fragments
+            fragment._is_certain = True
+            fragment._certainty = 1.0
+            fragment._P1_vector = fragment.compute_P1_from_frequencies(
+                fragment.frequencies
             )
-        ]
 
         return (
             self.first_global_fragment_for_accumulation.index_beginning_of_fragment

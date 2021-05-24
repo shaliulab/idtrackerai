@@ -100,8 +100,8 @@ class Learner_Classification(nn.Module):
     def step_schedule(self, epoch):
         self.epoch = epoch
         self.scheduler.step(self.epoch)
-        for param_group in self.optimizer.param_groups:
-            print("LR:", param_group["lr"])
+        # for param_group in self.optimizer.param_groups:
+        # print("LR:", param_group["lr"])
 
     def save_model(self, savename):
         model_state = self.model.state_dict()
@@ -110,10 +110,10 @@ class Learner_Classification(nn.Module):
             model_state = self.model.module.state_dict()
         for key in model_state.keys():  # Always save it to cpu
             model_state[key] = model_state[key].cpu()
-        print("=> Saving model to:", savename)
+        # print("=> Saving model to:", savename)
         self.model_path = savename + ".pth"
         torch.save(model_state, self.model_path)
-        print("=> Done")
+        # print("=> Done")
 
     def snapshot(self, savename, KPI=-1):
         model_state = self.model.state_dict()
@@ -123,7 +123,7 @@ class Learner_Classification(nn.Module):
             "model": model_state,
             "optimizer": optim_state,
         }
-        print("=> Saving checkpoint to:", savename + ".checkpoint.pth")
+        # print("=> Saving checkpoint to:", savename + ".checkpoint.pth")
         torch.save(checkpoint, savename + ".checkpoint.pth")
         self.save_model(savename + ".model")
         return self.model_path

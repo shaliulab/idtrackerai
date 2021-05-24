@@ -222,26 +222,12 @@ def check_and_change_video_path(video_object, old_video):
     return old_video
 
 
-def set_load_previous_dict(old_video, processes, existentFile):
+def set_load_previous_dict(old_video, processes, computed_processes):
     print("in set load previous dict")
-    attributes = [
-        "has_been_preprocessed",
-        "first_accumulation_finished",
-        "has_been_pretrained",
-        "second_accumulation_finished",
-        "has_been_assigned",
-        "has_crossings_solved",
-        "has_trajectories",
-        "has_trajectories_wo_gaps",
-    ]
-
-    # gui_processes = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
-    #                 'protocol3_accumulation', 'residual_identification',
-    #                 'post_processing']
     processes_to_attributes = {
         "preprocessing": ["has_been_preprocessed"],
         "protocols1_and_2": ["first_accumulation_finished"],
-        "protocol3_pretraining": ["has_been_pretrained"],
+        "protocol3_pretraining": ["has_protocol3_pretraining_finished"],
         "protocol3_accumulation": ["second_accumulation_finished"],
         "residual_identification": ["has_been_assigned"],
         "post_processing": [
@@ -258,17 +244,17 @@ def set_load_previous_dict(old_video, processes, existentFile):
             print(attribute, getattr(old_video, attribute))
             attributes_values.append(getattr(old_video, attribute))
         if None in attributes_values:
-            existentFile[process] = "-1"
+            computed_processes[process] = "-1"
         elif all(attributes_values):
             logger.debug(attribute)
-            existentFile[process] = "1"
+            computed_processes[process] = "1"
         else:
-            existentFile[process] = "0"
+            computed_processes[process] = "0"
 
-    return existentFile
+    return computed_processes
 
 
-def getExistentFiles(video_object, processes):
+def get_computed_processes(video_object, processes):
     """get processes already computed in a previous session
     preprocessing: segmentation, fragmentation and creation of blobs and individual/global fragments
     knowledge_transfer: knowledge transferred from a model trained on a different video_object
@@ -280,41 +266,37 @@ def getExistentFiles(video_object, processes):
     crossings: assign identity to single animals during occlusions
     trajectories: compute the individual trajectories
     """
-    existentFile = {name: "-1" for name in processes}
+    computed_processes = {name: False for name in processes}
     old_video = None
+    print(video_object._previous_session_folder)
     if os.path.isdir(video_object._previous_session_folder):
-        logger.debug("loading old video object from get existent files")
-        if os.path.isfile(
-            os.path.join(
-                video_object._previous_session_folder, "video_object.npy"
-            )
-        ):
-            print(video_object._previous_session_folder)
+        logger.info("loading old video object from get_computed_processes")
+        previous_video_object_path = os.path.join(
+            video_object._previous_session_folder, "video_object.npy"
+        )
+        print(previous_video_object_path)
+        if os.path.isfile(previous_video_object_path):
             old_video = np.load(
-                os.path.join(
-                    video_object._previous_session_folder, "video_object.npy"
-                ),
-                allow_pickle=True,
+                previous_video_object_path, allow_pickle=True
             ).item()
-            old_video.update_paths(
-                os.path.join(
-                    video_object._previous_session_folder, "video_object.npy"
-                )
-            )
+            old_video.update_paths(previous_video_object_path)
             logger.info("old video_object loaded")
         else:
             logger.info(
-                "The folder %s is empty. The tracking cannot be restored."
-                % video_object._previous_session_folder
+                f"The folder {video_object._previous_session_folder} is empty. "
+                f"The tracking cannot be resumed."
             )
-            return existentFile, old_video
-
+            return computed_processes, old_video
+        print(video_object)
+        print(old_video)
         old_video = check_and_change_video_path(video_object, old_video)
-        existentFile = set_load_previous_dict(
-            old_video, processes, existentFile
+        print(processes)
+        print(computed_processes)
+        computed_processes = set_load_previous_dict(
+            old_video, processes, computed_processes
         )
 
-    return existentFile, old_video
+    return computed_processes, old_video
 
 
 def interpolate_nans(t):

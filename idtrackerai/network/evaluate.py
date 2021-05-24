@@ -46,7 +46,7 @@ def evaluate(eval_loader, model, label, args, learner=None):
             losses_MCL = AverageMeter()
         confusion = Confusion(args.number_of_classes)
 
-    print("---- Evaluation ----")
+    # print("---- Evaluation ----")
     if learner is not None:
         learner.eval()
     if model is not None:
@@ -96,21 +96,21 @@ def evaluate(eval_loader, model, label, args, learner=None):
             confusion.add(output, eval_target)
 
     # print loss avg
-    print(losses.avg)
+    # print(losses.avg)
     # Loss-specific information
     KPI = 0
     if args.loss == "CE":
         KPI = confusion.acc()
-        print("[{}] ACC: ".format(label), KPI)
+        # print("[{}] ACC: ".format(label), KPI)
     elif args.loss in ["MCL", "CEMCL", "CEMCL_weighted"]:
         confusion.optimal_assignment(
             eval_loader.num_classes, args.cluster2Class
         )
         if args.out_dim <= 20:
             confusion.show()
-        print("Clustering scores:", confusion.clusterscores())
+        # print("Clustering scores:", confusion.clusterscores())
         KPI = confusion.acc()
-        print("[{}] ACC: ".format(label), KPI)
+        # print("[{}] ACC: ".format(label), KPI)
 
     if learner is not None:
         if args.loss in ["CEMCL", "CEMCL_weighted"]:
