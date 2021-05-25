@@ -170,7 +170,7 @@ def get_blobs_in_frame(
                 interpolation=cv2.INTER_AREA,
             )
         frameGray = (
-            cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
             if len(frame.shape) > 2
             else frame
         )
