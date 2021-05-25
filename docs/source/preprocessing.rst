@@ -26,6 +26,7 @@ blobs collected during the segmentation process (see :mod:`~segmentation`)
 
 .. automodule:: model_area
   :members:
+
 ^^^^^^^^^^^^
 Segmentation
 ^^^^^^^^^^^^
@@ -37,5 +38,5 @@ Segmentation
 Segmentation utils
 ^^^^^^^^^^^^^^^^^^
 
-.. automodule:: video_utils
+.. automodule:: segmentation_utils
   :members:

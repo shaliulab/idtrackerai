@@ -50,6 +50,11 @@ class ModelArea(object):
         the video in which all the animals are visible (not touching)
     std_tolerance : int
         tolerance factor
+
+    Methods
+    -------
+    __call__:
+      some description
     """
 
     def __init__(self, mean, median, std):
