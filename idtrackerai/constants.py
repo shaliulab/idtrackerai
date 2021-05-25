@@ -119,6 +119,7 @@ Period used to sample the video to compute the background model
 BACKGROUND_SUBTRACTION_PERIOD = int(
     os.environ.get("BACKGROUND_SUBTRACTION_PERIOD", 500)
 )
+BACKGROUND_SUBTRACTION_STAT = "mean"
 """***NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION***
 Number of jobs used to compute the background model
 """
