@@ -93,10 +93,7 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(
         logger.debug("Frame %i" % ind)
         cap.set(1, ind)
         ret, frameBkg = cap.read()
-        if conf.SIGMA_GAUSSIAN_BLURRING is not None:
-            frameBkg = cv2.GaussianBlur(
-                frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING
-            )
+        frameBkg = gaussian_blur(frameBkg, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
             gray = np.true_divide(
@@ -142,10 +139,7 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(
     for ind in frameInds:
         cap.set(1, ind)
         ret, frameBkg = cap.read()
-        if conf.SIGMA_GAUSSIAN_BLURRING is not None:
-            frameBkg = cv2.GaussianBlur(
-                frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING
-            )
+        frameBkg = gaussian_blur(frameBkg, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
             gray = np.true_divide(
@@ -218,6 +212,12 @@ def cumpute_background(video):
     bkg = np.sum(np.asarray(partialBkg), axis=0)
     bkg = np.true_divide(bkg, totNumFrame)
     return bkg.astype("float32")
+
+
+def gaussian_blur(frame, sigma=None):
+    if sigma is not None:
+        frame = cv2.GaussianBlur(frame, (0, 0), sigma)
+    return frame
 
 
 def to_gray_scale(frame):

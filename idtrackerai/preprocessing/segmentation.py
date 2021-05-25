@@ -56,6 +56,7 @@ from idtrackerai.utils.segmentation_utils import (
     get_frame_average_intensity,
     segment_frame,
     to_gray_scale,
+    gaussian_blur,
 )
 import idtrackerai.constants as cons
 
@@ -159,8 +160,7 @@ def get_blobs_in_frame(
     """
     blobs_in_frame = []
     ret, frame = cap.read()
-    if conf.SIGMA_GAUSSIAN_BLURRING is not None:
-        frame = cv2.GaussianBlur(frame, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
+    frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
 
     try:
         # Apply resolution reduction
