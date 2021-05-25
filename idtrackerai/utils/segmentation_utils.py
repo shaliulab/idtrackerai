@@ -220,6 +220,12 @@ def cumpute_background(video):
     return bkg.astype("float32")
 
 
+def to_gray_scale(frame):
+    if len(frame.shape) > 2:
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+    return frame
+
+
 def get_frame_average_intensity(frame, mask):
     """Computes the average intensity of a given frame considering the maks. Only pixels with values
     different than zero in the mask are considered to compute the average intensity
