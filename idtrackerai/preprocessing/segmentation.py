@@ -55,7 +55,9 @@ from idtrackerai.utils.segmentation_utils import (
     blob_extractor,
     get_frame_average_intensity,
     segment_frame,
+    to_gray_scale,
 )
+import idtrackerai.constants as cons
 
 logger = logging.getLogger("__main__.segmentation")
 
@@ -161,7 +163,8 @@ def get_blobs_in_frame(
         frame = cv2.GaussianBlur(frame, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
 
     try:
-        if video.resolution_reduction != 1 and ret:
+        # Apply resolution reduction
+        if video.resolution_reduction != 1:
             frame = cv2.resize(
                 frame,
                 None,
@@ -169,28 +172,24 @@ def get_blobs_in_frame(
                 fy=video.resolution_reduction,
                 interpolation=cv2.INTER_AREA,
             )
-        frameGray = (
-            cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-            if len(frame.shape) > 2
-            else frame
-        )
-        avIntensity = get_frame_average_intensity(frameGray, video.ROI)
-
+        # Convert the frame to gray scale
+        gray = to_gray_scale(frame)
+        # Normalize frame
+        normalized_framed = gray / get_frame_average_intensity(gray, video.ROI)
+        # Binarize frame
         segmentedFrame = segment_frame(
-            frameGray / avIntensity,
+            normalized_framed,
             segmentation_thresholds["min_threshold"],
             segmentation_thresholds["max_threshold"],
             video.bkg,
             video.ROI,
             video.subtract_bkg,
         )
-        # TODO: Check if this is necessary
         # Fill holes in the segmented frame to avoid duplication of contours
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype(
             "uint8"
         )
-
-        # Find contours in the segmented image
+        # Extract blobs info
         (
             bounding_boxes,
             miniframes,
@@ -201,14 +200,14 @@ def get_blobs_in_frame(
             estimated_body_lengths,
         ) = blob_extractor(
             segmentedFrame,
-            frameGray,
+            gray,
             segmentation_thresholds["min_area"],
             segmentation_thresholds["max_area"],
             save_pixels,
             save_segmentation_image,
         )
     except Exception as e:
-        print(e)
+        print(f"Frame {frame_number + episode * cons.FRAMES_PER_EPISODE}: {e}")
         logger.info(
             "An error occurred while reading frame number : %i" % frame_number
         )
