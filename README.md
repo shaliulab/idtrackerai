@@ -89,6 +89,7 @@ This test will donwload a example video of around 500Mb and will execute idtrack
 2.- Initialize all the submodules. In Windows, run this step in the Git Shell.
     
     cd idtrackerai_dev 
+    git checkout v4-dev
     git submodule update --init --recursive
     
 3.- Create a new conda environment and activate it. In Windows, run the following steps in the Anaconda Prompt terminal.
