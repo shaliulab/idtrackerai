@@ -29,16 +29,18 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
+from typing import Iterable, Optional, Tuple
+import os
 import logging
-import multiprocessing
-import sys
+from tqdm import tqdm
 
 import cv2
 import numpy as np
 from confapp import conf
 from joblib import Parallel, delayed
 
-# from idtrackerai.utils.py_utils import *
+# TODO: importing video here for typing creates a circular import
+# from idtrackerai.video import Video
 from idtrackerai.utils.py_utils import (
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
@@ -52,165 +54,198 @@ The utilities to segment and extract the blob information
 """
 
 
-def sum_frames_for_bkg_per_episode_in_single_file_video(
-    starting_frame, ending_frame, video_path, bkg, mask
+def _update_bkg_stat(
+    bkg: np.ndarray, gray: np.ndarray, stat: str
+) -> np.ndarray:
+    if stat == "mean":
+        # We only sum the frames and divide by the number of samples
+        # outside of the loop
+        bkg += gray
+    elif stat == "min":
+        bkg = np.min(np.asarray([bkg, gray]), axis=0)
+    elif stat == "max":
+        bkg = np.max(np.asarray([bkg, gray]), axis=0)
+    return bkg
+
+
+def _compute_bkg_for_episode(
+    cap: cv2.VideoCapture,
+    bkg: np.ndarray,
+    frames_range: Iterable,  # sample frames in the given episode
+    mask: np.ndarray,
+    sigma: float,
+    stat: str,
 ):
-    """Computes the sum of frames (1 every 100 frames) for a particular episode of
-    the video when the video is a single file.
+    #
+    number_of_sample_frames_in_episode = 0
+    for ind in frames_range:
+        logger.debug("Frame %i" % ind)
+        cap.set(1, ind)
+        ret, frame = cap.read()
+        frame = gaussian_blur(frame, sigma=sigma)
+        if ret:
+            gray = to_gray_scale(frame)
+            gray = gray / get_frame_average_intensity(gray, mask)
+            bkg = _update_bkg_stat(bkg, gray, stat)
+            number_of_sample_frames_in_episode += 1
+    return bkg, number_of_sample_frames_in_episode
 
-    Parameters
-    ----------
-    starting_frame : int
-        First frame of the episode
-    ending_frame : int
-        Last frame of the episode
-    video_path : string
-        Path to the single file of the video
-    bkg : nd.array
-        Zeros array with same width and height as the frame of the video.
-    mask : nd.array
-        Array with 0 or 255 values used mask the frame in order to compute
-        the average intensity only considering the non-zero values of the
-        mask.
 
-    Returns
-    -------
-    bkg : nd.array
-        Array with same width and height as the frame of the video. Contains the
-        sum of (ending_frame - starting_frame) / 100 frames for the given episode
-    number_of_frames_for_bkg_in_episode : int
-        Number of frames used to compute the background in the current episode
-    """
+def _compute_episode_bkg(
+    video_path: str,
+    bkg: np.ndarray,
+    mask: np.ndarray,
+    period: int,
+    stat: str = "mean",
+    sigma: Optional[float] = None,
+    starting_frame: Optional[int] = 0,
+    ending_frame: Optional[int] = None,
+) -> Tuple[np.ndarray, int]:
     cap = cv2.VideoCapture(video_path)
     logger.debug(
         "Adding from starting frame %i to background" % starting_frame
     )
-    number_of_frames_for_bkg_in_episode = 0
-    frameInds = range(
-        starting_frame, ending_frame, conf.BACKGROUND_SUBTRACTION_PERIOD
-    )
-    for ind in frameInds:
-        logger.debug("Frame %i" % ind)
-        cap.set(1, ind)
-        ret, frameBkg = cap.read()
-        frameBkg = gaussian_blur(frameBkg, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
-        if ret:
-            gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
-            gray = np.true_divide(
-                gray, get_frame_average_intensity(gray, mask)
+    if ending_frame is None:
+
+        # ending_frame is None when the video is splitted in chunks
+        ending_frame = int(cap.get(7))  # number of frames in video
+        if period > ending_frame:
+            # TODO: Find a better implementation that does not change the
+            # effective BACKGROUND_SUBTRACTION_PERIOD when the video is
+            # splitted in multiple files
+            logger.warning(
+                "In this video episode "
+                "BACKGROUND_SUBTRACTION_PERIOD > num_frames in video file "
+                f"({period} > {ending_frame}). "
+                f"The effective period will be num_frames ({ending_frame})."
             )
-            bkg = bkg + gray
-            number_of_frames_for_bkg_in_episode += 1
+    bkg, number_of_sample_frames_in_episode = _compute_bkg_for_episode(
+        cap,
+        bkg,
+        range(starting_frame, ending_frame, period),
+        mask,
+        sigma,
+        stat,
+    )
 
     cap.release()
-    return bkg, number_of_frames_for_bkg_in_episode
+    return bkg, number_of_sample_frames_in_episode
 
 
-def sum_frames_for_bkg_per_episode_in_multiple_files_video(
-    video_path, bkg, mask
+def compute_background(
+    video,
+    background_sampling_period=conf.BACKGROUND_SUBTRACTION_PERIOD,
+    background_subtraction_stat=conf.BACKGROUND_SUBTRACTION_STAT,
+    parallel_period=conf.FRAMES_PER_EPISODE,
+    num_jobs_parallel=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION,
+    sigma_gaussian_blur=conf.SIGMA_GAUSSIAN_BLURRING,
 ):
-    """Computes the sum of frames (1 every 100 frames) for a particular episode of
-    the video when the video is splitted in several files
+    """
+    Computes the background model by sampling frames from the video with a
+    period `background_sampling_period` and computing the stat
+    `background_subtraction_stat` across the sampled frames.
+    If the video comes in a single file it computes the background in parallel
+    splitting the video in `parallel_period`.
+    This parameter is ignored if the the video comes in multiple files.
 
     Parameters
     ----------
-    video_path : string
-        Path to the file of the episode to be added to the background
-    bkg : nd.array
-        Zeros array with same width and height as the frame of the video.
-    mask : nd.array
-        Array with 0 or 255 values used mask the frame in order to compute
-        the average intensity only considering the non-zero values of the
-        mask.
+    video : idtrackerai.video.VideoObject
+    background_sampling_period : int
+        sampling period to compute the background model
+    background_subtraction_stat: str
+        statistic to compute over the sampled frames ("mean", "min", or "max)
+    parallel_period: int
+        video chunk size (in frames) for the parallel computation
+    num_jobs_parallel: int
+        number of jobs for the parallel computation
+    sigma_gaussian_blur: float
+        sigma of the gaussian kernel to blur each frame
 
     Returns
     -------
-    bkg : nd.array
-        Array with same width and height as the frame of the video. Contains the
-        sum of (ending_frame - starting_frame) / 100 frames for the given episode
-    number_of_frames_for_bkg_in_episode : int
-        Number of frames used to compute the background in the current episode
+    bkg : np.ndarray
+        Background model
+
     """
-    logger.debug("Adding video %s to background" % video_path)
-    cap = cv2.VideoCapture(video_path)
-    numFrame = int(cap.get(7))
-    number_of_frames_for_bkg_in_episode = 0
-    frameInds = range(0, numFrame, conf.BACKGROUND_SUBTRACTION_PERIOD)
-    for ind in frameInds:
-        cap.set(1, ind)
-        ret, frameBkg = cap.read()
-        frameBkg = gaussian_blur(frameBkg, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
-        if ret:
-            gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
-            gray = np.true_divide(
-                gray, get_frame_average_intensity(gray, mask)
-            )
-            bkg = bkg + gray
-            number_of_frames_for_bkg_in_episode += 1
+    bkg_geq_episode_period = background_sampling_period >= parallel_period
+    single_video_file = video.paths_to_video_segments is None
+    if single_video_file and bkg_geq_episode_period:
+        logger.warning(
+            f"BACKGROUND_SUBTRACTION_PERIOD "
+            f"({background_sampling_period}) >= "
+            f"FRAMES_PER_EPISODE ({parallel_period}): "
+            f"This effectively makes "
+            f"BACKGROUND_SUBTRACTION_PERIOD=FRAMES_PER_EPISODE."
+        )
+        logger.warning(
+            "To get a higher BACKGROUND_SUBTRACTION_PERIOD make "
+            "FRAMES_PER_EPISODE > BACKGROUND_SUBTRACTION_PERIOD"
+        )
 
-    return bkg, number_of_frames_for_bkg_in_episode
-
-
-def cumpute_background(video):
-    """Computes a model of the background by averaging multiple frames of the video.
-    In particular 1 every 100 frames is used for the computation.
-
-    Parameters
-    ----------
-    video : <Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
-
-    Returns
-    -------
-    bkg : nd.array
-        Array with the model of the background.
-
-    See Also
-    --------
-    sum_frames_for_bkg_per_episode_in_single_file_video
-    sum_frames_for_bkg_per_episode_in_multiple_files_video
-    """
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
-    bkg = np.zeros((video.original_height, video.original_width))
+    if background_subtraction_stat in ["mean", "max"]:
+        bkg = np.zeros((video.original_height, video.original_width))
+    else:
+        bkg = np.ones((video.original_height, video.original_width)) * 10
 
     set_mkl_to_single_thread()
     if video.paths_to_video_segments is None:  # one single file
         logger.debug(
             "one single video, computing bkg in parallel from single video"
         )
-        output = Parallel(
-            n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION
-        )(
-            delayed(sum_frames_for_bkg_per_episode_in_single_file_video)(
-                starting_frame,
-                ending_frame,
+        output = Parallel(n_jobs=num_jobs_parallel)(
+            delayed(_compute_episode_bkg)(
                 video.video_path,
                 bkg,
                 video.original_ROI,
+                background_sampling_period,
+                stat=background_subtraction_stat,
+                sigma=sigma_gaussian_blur,
+                starting_frame=starting_frame,
+                ending_frame=ending_frame,
             )
-            for (starting_frame, ending_frame) in video.episodes_start_end
+            for (starting_frame, ending_frame) in tqdm(
+                video.episodes_start_end, desc="Computing background model"
+            )
         )
         logger.debug("Finished parallel loop for bkg subtraction")
     else:  # multiple video files
         logger.debug(
             "multiple videos, computing bkg in parallel from every episode"
         )
-        output = Parallel(
-            n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION
-        )(
-            delayed(sum_frames_for_bkg_per_episode_in_multiple_files_video)(
-                videoPath, bkg, video.original_ROI
+        output = Parallel(n_jobs=num_jobs_parallel)(
+            delayed(_compute_episode_bkg)(
+                video_path,
+                bkg,
+                video.original_ROI,
+                background_sampling_period,
+                stat=background_subtraction_stat,
+                sigma=sigma_gaussian_blur,
             )
-            for videoPath in video.paths_to_video_segments
+            for video_path in tqdm(
+                video.paths_to_video_segments,
+                desc="Computing bakcground model",
+            )
         )
         logger.debug("Finished parallel loop for bkg subtraction")
     set_mkl_to_multi_thread()
 
-    partialBkg = [bkg for (bkg, _) in output]
-    totNumFrame = np.sum([numFrame for (_, numFrame) in output])
-    bkg = np.sum(np.asarray(partialBkg), axis=0)
-    bkg = np.true_divide(bkg, totNumFrame)
+    logger.info(
+        f"Computing background with stat={background_subtraction_stat} "
+        f"and period={background_sampling_period} frames"
+    )
+    partial_bkg = np.asarray([bkg for (bkg, _) in output])
+    if background_subtraction_stat == "mean":
+        num_samples_bkg = np.sum([numFrame for (_, numFrame) in output])
+        bkg = np.sum(partial_bkg, axis=0)
+        bkg = bkg / num_samples_bkg
+    elif background_subtraction_stat == "min":
+        bkg = np.min(partial_bkg, axis=0)
+    elif background_subtraction_stat == "max":
+        bkg = np.max(partial_bkg, axis=0)
+
     return bkg.astype("float32")
 
 
@@ -227,15 +262,18 @@ def to_gray_scale(frame):
 
 
 def get_frame_average_intensity(frame, mask):
-    """Computes the average intensity of a given frame considering the maks. Only pixels with values
-    different than zero in the mask are considered to compute the average intensity
+    """Computes the average intensity of a given frame considering the maks.
+    Only pixels with values
+    different than zero in the mask are considered to compute the average
+    intensity
 
     Parameters
     ----------
     frame : nd.array
         Frame from which to compute the average intensity
     mask : nd.array
-        Mask to be applied. Pixels with value 0 will be ignored to compute the average intensity.
+        Mask to be applied. Pixels with value 0 will be ignored to compute the
+        average intensity.
 
     Returns
     -------
@@ -246,9 +284,10 @@ def get_frame_average_intensity(frame, mask):
 
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
-    """Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the
-    mask (`ROI`) to a given frame. If `useBkg` is True, the background subtraction
-    operation is applied before thresholding with the given `bkg`.
+    """Applies the intensity thresholds (`min_threshold` and `max_threshold`)
+    and the mask (`ROI`) to a given frame. If `useBkg` is True,
+    the background subtraction operation is applied before
+    thresholding with the given `bkg`.
 
     Parameters
     ----------
@@ -261,8 +300,8 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     bkg : nd.array
         Background model to be used in the background subtraction operation
     ROI : nd.array
-        Mask to be applied after thresholding. Ones in the array are pixels to be
-        considered, zeros are pixels to be discarded.
+        Mask to be applied after thresholding. Ones in the array are pixels to
+        be considered, zeros are pixels to be discarded.
     useBkg : bool
         Flag indicating whether background subtraction must be performed or not
 
@@ -273,15 +312,15 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         Pixels with value 1 are valid pixels given the thresholds and the mask.
     """
     if useBkg:
-        frame = cv2.absdiff(
-            bkg, frame
-        )  # only step where frame normalization is important, because the background is normalised
+        # only step where frame normalization is important,
+        # because the background is normalised
+        frame = cv2.absdiff(bkg, frame)
         p99 = np.percentile(frame, 99.95) * 1.001
         frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
         frame_segmented = cv2.inRange(
             frame, min_threshold, max_threshold
         )  # output: 255 in range, else 0
-    elif not useBkg:
+    else:
         p99 = np.percentile(frame, 99.95) * 1.001
         frame_segmented = cv2.inRange(
             np.clip(frame * (255.0 / p99), 0, 255),
@@ -295,8 +334,8 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
 
 
 def filter_contours_by_area(contours, min_area, max_area):
-    """Filters out contours which number of pixels is smaller than `min_area` or
-    greater than `max_area`
+    """Filters out contours which number of pixels is smaller than `min_area`
+    or greater than `max_area`
 
     Parameters
     ----------
@@ -328,8 +367,8 @@ def cnt2BoundingBox(cnt, bounding_box):
     Parameters
     ----------
     cnt : list
-        List of the coordinates that defines the contour of the blob in the full
-        frame of the video
+        List of the coordinates that defines the contour of the blob in the
+        full frame of the video
     bounding_box : tuple
         Tuple with the coordinates of the bounding box (x, y),(x + w, y + h))
 
@@ -344,28 +383,29 @@ def cnt2BoundingBox(cnt, bounding_box):
 
 def get_bounding_box(cnt, width, height, crossing_detector=False):
     """Computes the bounding box of a given contour with an extra margin of 45
-    pixels. If the function is called with the crossing_detector set to True the
-    margin of the bounding box is set to 55.
+    pixels. If the function is called with the crossing_detector set to True
+    the margin of the bounding box is set to 55.
 
     Parameters
     ----------
     cnt : list
-        List of the coordinates that defines the contour of the blob in the full
-        frame of the video
+        List of the coordinates that defines the contour of the blob in the
+        full frame of the video
     width : int
         Width of the video frame
     height : int
         Height of the video frame
     crossing_detector : bool
-        Flag to indicate whether the function is being called from the crossing_detector module
+        Flag to indicate whether the function is being called from the
+        crossing_detector module
 
     Returns
     -------
     bounding_box : tuple
         Tuple with the coordinates of the bounding box (x, y),(x + w, y + h))
     original_diagonal : int
-        Diagonal of the original bounding box computed with OpenCv that serves as
-        an estimate for the body length of the animal.
+        Diagonal of the original bounding box computed with OpenCv that serves
+        as estimate for the body length of the animal.
     """
     x, y, w, h = cv2.boundingRect(cnt)
     original_diagonal = int(np.ceil(np.sqrt(w ** 2 + h ** 2)))
@@ -396,8 +436,8 @@ def getCentroid(cnt):
     Parameters
     ----------
     cnt : list
-        List of the coordinates that defines the contour of the blob in the full
-        frame of the video
+        List of the coordinates that defines the contour of the blob in the
+        full frame of the video
 
     Returns
     -------
@@ -437,16 +477,17 @@ def get_pixels(cnt, width, height):
 
 def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
     """Computes the `bounding_box_image`from a given frame and contour. It also
-    returns the coordinates of the `bounding_box`, the ravelled `pixels` inside of
-    the contour and the diagonal of the `bounding_box` as an `estimated_body_length`
+    returns the coordinates of the `bounding_box`, the ravelled `pixels`
+    inside of the contour and the diagonal of the `bounding_box` as
+    an `estimated_body_length`
 
     Parameters
     ----------
     frame : nd.array
         frame from where to extract the `bounding_box_image`
     cnt : list
-        List of the coordinates that defines the contour of the blob in the full
-        frame of the video
+        List of the coordinates that defines the contour of the blob in the
+        full frame of the video
 
     Returns
     -------
@@ -609,7 +650,8 @@ def blob_extractor(
     pixels : list
         List with the `pixels` for every contour in `contours`
     good_contours_in_full_frame:
-        List with the `contours` which area is in between `min_area` and `max_area`
+        List with the `contours` which area is in between `min_area` and
+        `max_area`
     estimated_body_lengths : list
         List with the `estimated_body_length` for every contour in `contours`
 
