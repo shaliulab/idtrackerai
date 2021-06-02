@@ -1175,7 +1175,7 @@ class TrackerAPI(object):
                 self.chosen_video.list_of_global_fragments
             )
         )
-        self.chosen_video.video.compute_overall_P2(
+        self.chosen_video.video.compute_estimated_accuracy(
             self.chosen_video.list_of_fragments.fragments
         )
         self.chosen_video.list_of_fragments.save_light_list(
@@ -1256,7 +1256,7 @@ class TrackerAPI(object):
             # Call GUI function
             interpolate_crossings()
         else:
-            self.chosen_video.video.overall_P2 = 1.0
+            self.chosen_video.video.estimated_accuracy = 1.0
             self.chosen_video.video._has_been_assigned = True
             self.chosen_video.video._has_crossings_solved = False
             self.chosen_video.video._has_trajectories_wo_gaps = False
@@ -1343,8 +1343,8 @@ class TrackerAPI(object):
         )
 
     def update_and_show_happy_ending_popup(self):
-        if not hasattr(self.chosen_video.video, "overall_P2"):
-            self.chosen_video.video.compute_overall_P2(
+        if not hasattr(self.chosen_video.video, "estimated_accuracy"):
+            self.chosen_video.video.compute_estimated_accuracy(
                 self.chosen_video.list_of_fragments.fragments
             )
         self.chosen_video.video.save()
