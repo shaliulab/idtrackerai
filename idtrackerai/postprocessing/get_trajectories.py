@@ -253,7 +253,11 @@ def produce_output_dict(blobs_in_video, video):
         "video_path": video.video_path,
         "frames_per_second": video.frames_per_second,
         "body_length": video.median_body_length_full_resolution,
+        "stats": {},
     }
+
+    # Estimated accuracy after the residual identification step
+    output_dict["stats"]["estimated_accuracy"] = video.estimated_accuracy
 
     if (
         "id_probabilities" in trajectories_info_dict
@@ -262,6 +266,19 @@ def produce_output_dict(blobs_in_video, video):
         output_dict["id_probabilities"] = trajectories_info_dict[
             "id_probabilities"
         ]
+        # After the interpolation some identities that were 0 are assigned
+        output_dict["stats"][
+            "estimated_accuracy_after_interpolation"
+        ] = np.nanmean(output_dict["id_probabilities"])
+        # Centroids with identity
+        identified = ~np.isnan(output_dict["trajectories"][..., 0])
+        output_dict["stats"]["percentage_identified"] = np.sum(
+            identified
+        ) / np.prod(identified.shape)
+        # Estimated accuracy of identified blobs
+        output_dict["stats"]["estimated_accuracy_identified"] = np.nanmean(
+            output_dict["id_probabilities"][identified]
+        )
 
     if (
         "areas" in trajectories_info_dict

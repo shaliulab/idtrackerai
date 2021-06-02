@@ -210,6 +210,7 @@ class Video(object):
         # Flag to decide which type of interpolation is done. This flag
         # is updated when we update a blob centroid
         self._is_centroid_updated = False
+        self._estimated_accuracy = None
 
         logger.debug(f"Video(open_multiple_files={self.open_multiple_files})")
 
@@ -541,6 +542,10 @@ class Video(object):
     @property
     def accumulation_trial(self):
         return self._accumulation_trial
+
+    @property
+    def estimated_accuracy(self):
+        return self._estimated_accuracy
 
     def is_identity_transfer_possible(self):
         return (
@@ -1260,7 +1265,7 @@ class Video(object):
                         getattr(video_object_source, attribute),
                     )
 
-    def compute_overall_P2(self, fragments):
+    def compute_estimated_accuracy(self, fragments):
         weighted_P2 = 0
         number_of_individual_blobs = 0
 
@@ -1273,7 +1278,7 @@ class Video(object):
                     )
                 number_of_individual_blobs += fragment.number_of_images
 
-        self.overall_P2 = weighted_P2 / number_of_individual_blobs
+        self._estimated_accuracy = weighted_P2 / number_of_individual_blobs
 
     def delete_accumulation_folders(self):
         for path in glob.glob(os.path.join(self.session_folder, "*")):
