@@ -25,15 +25,6 @@ Assigner
 .. automodule:: assigner
    :members:
 
-^^^^^^^
-Trainer
-^^^^^^^
-
-Trains an instance of the class :class:`~id_CNN.ConvNetwork`
-
-.. automodule:: trainer
-  :members:
-
 ^^^^^^^^^^^
 Pretraining
 ^^^^^^^^^^^

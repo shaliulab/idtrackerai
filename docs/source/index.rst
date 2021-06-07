@@ -19,12 +19,12 @@ idtracker.ai allows to track groups of up to 100 unmarked animals from videos re
     :width: 150
     :target: https://www.youtube.com/watch?v=dT28-VcXaCc
 
-New release: idtracker.ai v3
+New release: idtracker.ai v4
 ****************************
 
-* A more robust :doc:`GUI_explained`.
-* Possibility of :doc:`tracking_from_terminal` which allow for a higher throughput pipeline.
-* Modify :doc:`advanced_parameters` to optimize memory management and other features of the algorithm.
+* Works with Python 3.7 and Pytorch 1.8.1.
+* New horizontal GUI layout.
+* "Add setup points" feature allows to annotate groups of points in the frame that can be useful for analysis. These groups of points are stored together with the trajectories in the `trajectories.npy` and `trajectories_wo_gaps.npy` files.
 
 Check :doc:`what_is_new` and join the `idtracker.ai users group <https://groups.google.com/forum/#!forum/idtrackerai_users>`_ to get announcements about new releases.
 
@@ -41,7 +41,7 @@ If you are unsure whether idtracker.ai will work on your videos, check the :doc:
 Our research using idtracker.ai
 *******************************
 
-  - **[NEW!]** `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2019). Deep attention networks reveal the rules of collective motion in zebrafish. PLoS computational biology, 15(9), e1007354. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007354>`_ `[bibtex] <https://scholar.googleusercontent.com/scholar.bib?q=info:V7dp5ZkhNJ8J:scholar.google.com/&output=citation&scisdr=CgW_YpfCEPnjl2PUqPg:AAGBfm0AAAAAXYnRsPgSPNRDi8mDIRFC17q4Y3gfqJxj&scisig=AAGBfm0AAAAAXYnRsHTK4UNv5YARsNaijlcY1mjyJWwW&scisf=4&ct=citation&cd=-1&hl=en>`_ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/400747v2>`_  `[gitlab] <https://gitlab.com/polavieja_lab/fishandra>`_ `[data] <https://drive.google.com/drive/folders/1Oq7JPmeY3bXqPXc_oTUwUZbHU-m4uq_5>`_.
+  - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2019). Deep attention networks reveal the rules of collective motion in zebrafish. PLoS computational biology, 15(9), e1007354. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007354>`_ `[bibtex] <https://scholar.googleusercontent.com/scholar.bib?q=info:V7dp5ZkhNJ8J:scholar.google.com/&output=citation&scisdr=CgW_YpfCEPnjl2PUqPg:AAGBfm0AAAAAXYnRsPgSPNRDi8mDIRFC17q4Y3gfqJxj&scisig=AAGBfm0AAAAAXYnRsHTK4UNv5YARsNaijlcY1mjyJWwW&scisf=4&ct=citation&cd=-1&hl=en>`_ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/400747v2>`_  `[gitlab] <https://gitlab.com/polavieja_lab/fishandra>`_ `[data] <https://drive.google.com/drive/folders/1Oq7JPmeY3bXqPXc_oTUwUZbHU-m4uq_5>`_.
   - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`_ `[bibtex] <https://scholar.googleusercontent.com/scholar.bib?q=info:gmQUQmzvzucJ:scholar.google.com/&output=citation&scisdr=CgW_YpfCEPnjl2PXek0:AAGBfm0AAAAAXYnSYk0k2Z0wYPI93n58asNqyjvHMNcb&scisig=AAGBfm0AAAAAXYnSYoQQOoklpi_RE_q7-fPQ7ksOwSqm&scisf=4&ct=citation&cd=-1&hl=en>`_ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/208918v2>`_
 
 

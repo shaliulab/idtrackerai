@@ -61,6 +61,28 @@ class ListOfBlobs(object):
     blobs_are_connected :bool
         True if the blobs have already being organised in fragments (see
         :class:`~fragment.Fragment`). False otherwise
+
+    Methods
+    -------
+    compute_overlapping_between_subsequent_frames:
+       some description
+    disconnect:
+      some description
+    connect:
+      some description
+    reconnect:
+      some description
+    save:
+      some description
+    load:
+      some description
+    compute_fragment_identifier_and_blob_index:
+      some description
+    compute_crossing_fragment_identifier:
+      some description
+
+
+
     """
 
     def __init__(self, blobs_in_video=None, number_of_frames=None):

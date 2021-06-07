@@ -130,6 +130,26 @@ class Blob(object):
 
     _resolution_reduction: float
 
+    Methods
+    -------
+    add_centroid:
+       some description
+    apply_model_area:
+      some description
+    check_for_multiple_next_or_previous:
+      some description
+    delete_centroid:
+      some description
+    distance_from_countour_to:
+      some description
+    draw:
+      some description
+    get_image_for_identification:
+      some description
+    compute_crossing_fragment_identifier:
+      some description
+
+
 
     """
 
@@ -938,8 +958,10 @@ class Blob(object):
     @property
     def final_centroids_full_resolution(self):
         """
-        :return: Return a list of the final centroids in the full resolution
-        of the frame
+        Returns
+        -------
+          List of final centroids in the full resolution of the frame
+
         """
         return [
             (
