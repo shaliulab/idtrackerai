@@ -9,6 +9,23 @@ This work has been published in
 ## What is new in idtrackerai v4?
 
 - Works with Python 3.7.
+- Remove Kivy submodules and support for old Kivy GUI
+- Neural network training is done with Pytorch
+- Identification images are saved as uint 8
+- Improve data pipeline for the crossing detector
+- Parallel saving and loading of identification images
+- Background subtraction considers the ROI
+- Add 'Add setup points' button in the tracking GUI. 
+This allows to mark points that might be important for the analysis
+of the trajectories. 
+These points will be stored in the trajectories.npy and 
+trajectories_wo_gaps.npy dictioanries.
+- Allow to save trajectories as csv with the advance parameter 
+`CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON` (using the 
+`local_settings.py` file)
+- Allow to change the output width (and height) of the individual videos with 
+the advance parameter `INDIVIDUAL_VIDEO_WIDTH_HEIGHT` 
+(using the `local_settings.py` file)
 - Horizontal layout for graphical user interface (GUI). This layout can be
 deactivated using the `local_settings.py` setting  `NEW_GUI_LAYOUT=False`.
 - New GUI allows to mark landmark points in the video frame that will be stored
@@ -26,7 +43,6 @@ in the `trajectories.npy` and `trajectories_wo_gaps.npy` in the key
 - Improved code formatting using the black formatter.
 - Better factorization of the TrackerApi.
 - Some bugs fixed.
-
 
 ## Hardware requirements
 
