@@ -62,8 +62,8 @@ def download_example_video(output_folder=""):
     output_file_avi = os.path.join(
         video_example_folder, "example_video_idtrackerai.avi"
     )
-
-    gdown.download(TEST_VIDEO_URL, output_file_avi, quiet=False)
+    if not os.path.isfile(output_file_avi):
+        gdown.download(TEST_VIDEO_URL, output_file_avi, quiet=False)
 
     return output_file_avi
 
