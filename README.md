@@ -9,6 +9,23 @@ This work has been published in
 ## What is new in idtrackerai v4?
 
 - Works with Python 3.7.
+- Remove Kivy submodules and support for old Kivy GUI
+- Neural network training is done with Pytorch
+- Identification images are saved as uint 8
+- Improve data pipeline for the crossing detector
+- Parallel saving and loading of identification images
+- Background subtraction considers the ROI
+- Add 'Add setup points' button in the tracking GUI. 
+This allows to mark points that might be important for the analysis
+of the trajectories. 
+These points will be stored in the trajectories.npy and 
+trajectories_wo_gaps.npy dictioanries.
+- Allow to save trajectories as csv with the advance parameter 
+`CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON` (using the 
+`local_settings.py` file)
+- Allow to change the output width (and height) of the individual videos with 
+the advance parameter `INDIVIDUAL_VIDEO_WIDTH_HEIGHT` 
+(using the `local_settings.py` file)
 - Horizontal layout for graphical user interface (GUI). This layout can be
 deactivated using the `local_settings.py` setting  `NEW_GUI_LAYOUT=False`.
 - New GUI allows to mark landmark points in the video frame that will be stored
@@ -26,20 +43,6 @@ in the `trajectories.npy` and `trajectories_wo_gaps.npy` in the key
 - Improved code formatting using the black formatter.
 - Better factorization of the TrackerApi.
 - Some bugs fixed.
-
-- Remove Kivy submodules and support for old Kivy GUI
-- Neural network training is done with Pytorch
-- Identification images are saved as uint 8
-- Improve data pipeline for the crossing detector
-- Parallel saving and loading of identification images
-- Background subtraction considers the ROI
-- Add 'Add setup points' button in the tracking GUI. This allows to mark points that might be important for the analysis
-of the trajectories. These points will be stored in the trajectories.npy and trajectories_wo_gaps.npy dictioanries.
-- Allow to save trajectories as csv with the advance parameter `CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON` (using the
-`local_settings.py` file)
-- Allow to change the output width (and height) of the individual videos with the advance parameter 
-`INDIVIDUAL_VIDEO_WIDTH_HEIGHT` (using the `local_settings.py` file)
-- Other small bugs fixed.
 
 ## Hardware requirements
 
@@ -82,7 +85,7 @@ The most stable version of idtracker.ai can be installed from the PyPI using
    manager.
 
     pip install idtrackerai[gui]
-    conda install tensorflow-gpu=1.13
+    conda install -c pytorch pytorch torchvision
 
 3.**No GUI and GPU support.**: Use this option if you are installing
  idtrackerai in a computer where you plan to run it only from th  terminal
@@ -95,7 +98,7 @@ If you don't want to install CUDA 10.0 and cuDNN by yourself, install
   GPU support from the Conda package manager.
 
     pip install idtrackerai
-    conda install tensorflow-gpu=1.13
+    conda install -c pytorch pytorch torchvision
 
 4.**GUI and no GPU support**: Use this option if you only want to use the
  GUI to save *.json* parameters files, or if you want to track animals using
@@ -154,8 +157,6 @@ This test will download a example video of around 500Mb and will execute
 4.- Execute the dev_install.sh file
 
     sh dev_install.sh
-
-    conda install tensorflow-gpu=1.13
 
 ## Open or run idtracker.ai
 
