@@ -32,15 +32,18 @@ from confapp import conf
 
 from idtrackerai.list_of_fragments import load_identification_images
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logger = logging.getLogger("__main__.globalfragment")
 
+
 class GlobalFragment(object):
-    """ A global fragment is a collection of instances of the class
+    """A global fragment is a collection of instances of the class
     :class:`~fragment.Fragment`. Such fragments are collected from a part of the
     video in which all animals are visible.
 
@@ -83,14 +86,24 @@ class GlobalFragment(object):
         individual fragment
 
     """
-    def __init__(self, blobs_in_video, fragments, index_beginning_of_fragment, number_of_animals):
+
+    def __init__(
+        self,
+        blobs_in_video,
+        fragments,
+        index_beginning_of_fragment,
+        number_of_animals,
+    ):
         self.index_beginning_of_fragment = index_beginning_of_fragment
-        self.individual_fragments_identifiers = [blob.fragment_identifier for blob in blobs_in_video[index_beginning_of_fragment]]
+        self.individual_fragments_identifiers = [
+            blob.fragment_identifier
+            for blob in blobs_in_video[index_beginning_of_fragment]
+        ]
         self.get_list_of_attributes_from_individual_fragments(fragments)
         self.set_minimum_distance_travelled()
         self.set_candidate_for_accumulation()
         self.number_of_animals = number_of_animals
-        self.reset(roll_back_to = 'fragmentation')
+        self.reset(roll_back_to="fragmentation")
         self._is_unique = False
         self._is_certain = False
 
@@ -100,16 +113,21 @@ class GlobalFragment(object):
 
     @property
     def used_for_training(self):
-        return all([fragment.used_for_training for fragment in self.individual_fragments])
+        return all(
+            [
+                fragment.used_for_training
+                for fragment in self.individual_fragments
+            ]
+        )
 
     @property
     def is_unique(self):
-        self.check_uniqueness(scope = 'global')
+        self.check_uniqueness(scope="global")
         return self._is_unique
 
     @property
     def is_partially_unique(self):
-        self.check_uniqueness(scope = 'partial')
+        self.check_uniqueness(scope="partial")
         return self._is_partially_unique
 
     def reset(self, roll_back_to):
@@ -122,7 +140,7 @@ class GlobalFragment(object):
             "fragmentation"
 
         """
-        if roll_back_to == 'fragmentation':
+        if roll_back_to == "fragmentation":
             self._ids_assigned = np.nan * np.ones(self.number_of_animals)
             self._temporary_ids = np.arange(self.number_of_animals)
             self._score = None
@@ -144,11 +162,17 @@ class GlobalFragment(object):
             (see :class:`~fragment.Fragment`)
 
         """
-        self.individual_fragments = [fragment for fragment in fragments
-                                        if fragment.identifier in self.individual_fragments_identifiers]
+        self.individual_fragments = [
+            fragment
+            for fragment in fragments
+            if fragment.identifier in self.individual_fragments_identifiers
+        ]
 
-    def get_list_of_attributes_from_individual_fragments(self, fragments,
-                list_of_attributes = ['distance_travelled', 'number_of_images']):
+    def get_list_of_attributes_from_individual_fragments(
+        self,
+        fragments,
+        list_of_attributes=["distance_travelled", "number_of_images"],
+    ):
         """Given a set of attributes available in the instances of the class
         :class:`~fragment.Fragment` it copies them in the global fragment.
         For instance the attribute number_of_images belonging to the individual
@@ -167,28 +191,41 @@ class GlobalFragment(object):
             to the global fragment
 
         """
-        [setattr(self, attribute + '_per_individual_fragment',[]) for attribute in list_of_attributes]
+        [
+            setattr(self, attribute + "_per_individual_fragment", [])
+            for attribute in list_of_attributes
+        ]
         for fragment in fragments:
             if fragment.identifier in self.individual_fragments_identifiers:
                 assert fragment.is_an_individual
-                setattr(fragment, '_is_in_a_global_fragment', True)
+                setattr(fragment, "_is_in_a_global_fragment", True)
                 for attribute in list_of_attributes:
-                    getattr(self, attribute + '_per_individual_fragment').append(getattr(fragment, attribute))
+                    getattr(
+                        self, attribute + "_per_individual_fragment"
+                    ).append(getattr(fragment, attribute))
 
     def set_minimum_distance_travelled(self):
-        """Sets the minum distance travelled attribute
-        """
-        self.minimum_distance_travelled = min(self.distance_travelled_per_individual_fragment)
+        """Sets the minum distance travelled attribute"""
+        self.minimum_distance_travelled = min(
+            self.distance_travelled_per_individual_fragment
+        )
 
     def set_candidate_for_accumulation(self):
-        """Sets the global fragment to be eligible for accumulation
-        """
+        """Sets the global fragment to be eligible for accumulation"""
         self._candidate_for_accumulation = True
-        if np.min(self.number_of_images_per_individual_fragment) < conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION:
+        if (
+            np.min(self.number_of_images_per_individual_fragment)
+            < conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+        ):
             self._candidate_for_accumulation = False
 
     def get_total_number_of_images(self):
-        return sum([fragment.number_of_images for fragment in self.individual_fragments])
+        return sum(
+            [
+                fragment.number_of_images
+                for fragment in self.individual_fragments
+            ]
+        )
 
     def acceptable_for_training(self, accumulation_strategy):
         """Returns True if the global fragment is acceptable for training.
@@ -206,10 +243,20 @@ class GlobalFragment(object):
             True if the global fragment is accceptable for training
 
         """
-        if accumulation_strategy == 'global':
-            return all([fragment.acceptable_for_training for fragment in self.individual_fragments])
+        if accumulation_strategy == "global":
+            return all(
+                [
+                    fragment.acceptable_for_training
+                    for fragment in self.individual_fragments
+                ]
+            )
         else:
-            return any([fragment.acceptable_for_training for fragment in self.individual_fragments])
+            return any(
+                [
+                    fragment.acceptable_for_training
+                    for fragment in self.individual_fragments
+                ]
+            )
 
     def check_uniqueness(self, scope):
         """Checks that the identities assigned to the individual fragments are
@@ -222,28 +269,54 @@ class GlobalFragment(object):
 
         """
         all_identities = range(self.number_of_animals)
-        if scope == 'global':
-            if len(set(all_identities) - set([fragment.temporary_id for fragment in self.individual_fragments])) > 0:
+        if scope == "global":
+            if (
+                len(
+                    set(all_identities)
+                    - set(
+                        [
+                            fragment.temporary_id
+                            for fragment in self.individual_fragments
+                        ]
+                    )
+                )
+                > 0
+            ):
                 self._is_unique = False
             else:
                 self._is_unique = True
-        elif scope == 'partial':
-            identities_acceptable_for_training = [fragment.temporary_id for fragment in self.individual_fragments
-                                                    if fragment.acceptable_for_training]
-            self.duplicated_identities = set([x for x in identities_acceptable_for_training if identities_acceptable_for_training.count(x) > 1])
+        elif scope == "partial":
+            identities_acceptable_for_training = [
+                fragment.temporary_id
+                for fragment in self.individual_fragments
+                if fragment.acceptable_for_training
+            ]
+            self.duplicated_identities = set(
+                [
+                    x
+                    for x in identities_acceptable_for_training
+                    if identities_acceptable_for_training.count(x) > 1
+                ]
+            )
             if len(self.duplicated_identities) > 0:
                 self._is_partially_unique = False
             else:
                 self._is_partially_unique = True
 
     def get_total_number_of_images(self):
-        """Gets the total number of images in the global fragment
-        """
-        if not hasattr(self,'total_number_of_images'):
-            self.total_number_of_images = sum([fragment.number_of_images for fragment in self.individual_fragments])
+        """Gets the total number of images in the global fragment"""
+        if not hasattr(self, "total_number_of_images"):
+            self.total_number_of_images = sum(
+                [
+                    fragment.number_of_images
+                    for fragment in self.individual_fragments
+                ]
+            )
         return self.total_number_of_images
 
-    def get_images_and_labels(self, identification_images_file_path, scope='pretraining'):
+    def get_images_and_labels(
+        self, identification_images_file_path, scope="pretraining"
+    ):
         """Arrange the images and identities in the global fragment as a
         labelled dataset in order to train the idCNN
         """
@@ -253,10 +326,17 @@ class GlobalFragment(object):
         for temporary_id, fragment in enumerate(self.individual_fragments):
             images.extend(fragment.images)
             labels.extend([temporary_id] * fragment.number_of_images)
-            if scope=='pretraining':
+            if scope == "pretraining":
                 fragment._temporary_id_for_pretraining = temporary_id
 
-        return np.asarray(load_identification_images(identification_images_file_path, images)), labels
+        return (
+            np.asarray(
+                load_identification_images(
+                    identification_images_file_path, images
+                )
+            ),
+            labels,
+        )
 
     # def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
     #     """
@@ -283,4 +363,7 @@ class GlobalFragment(object):
             value of `attribute`
 
         """
-        [setattr(fragment, attribute, value) for fragment in self.individual_fragments]
+        [
+            setattr(fragment, attribute, value)
+            for fragment in self.individual_fragments
+        ]

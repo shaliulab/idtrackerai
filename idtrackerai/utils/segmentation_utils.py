@@ -35,13 +35,18 @@ from joblib import Parallel, delayed
 from confapp import conf
 
 # from idtrackerai.utils.py_utils import *
-from idtrackerai.utils.py_utils import set_mkl_to_single_thread, set_mkl_to_multi_thread
+from idtrackerai.utils.py_utils import (
+    set_mkl_to_single_thread,
+    set_mkl_to_multi_thread,
+)
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logger = logging.getLogger("__main__.segmentation_utils")
 
 
@@ -50,9 +55,9 @@ The utilities to segment and extract the blob information
 """
 
 
-def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
-                                                        ending_frame,
-                                                        video_path, bkg):
+def sum_frames_for_bkg_per_episode_in_single_file_video(
+    starting_frame, ending_frame, video_path, bkg
+):
     """Computes the sum of frames (1 every 100 frames) for a particular episode of
     the video when the video is a single file.
 
@@ -76,18 +81,24 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
         Number of frames used to compute the background in the current episode
     """
     cap = cv2.VideoCapture(video_path)
-    logger.debug('Adding from starting frame %i to background' %starting_frame)
+    logger.debug(
+        "Adding from starting frame %i to background" % starting_frame
+    )
     number_of_frames_for_bkg_in_episode = 0
-    frameInds = range(starting_frame,ending_frame, conf.BACKGROUND_SUBTRACTION_PERIOD)
+    frameInds = range(
+        starting_frame, ending_frame, conf.BACKGROUND_SUBTRACTION_PERIOD
+    )
     for ind in frameInds:
-        logger.debug('Frame %i' %ind)
-        cap.set(1,ind)
+        logger.debug("Frame %i" % ind)
+        cap.set(1, ind)
         ret, frameBkg = cap.read()
         if conf.SIGMA_GAUSSIAN_BLURRING is not None:
-            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
+            frameBkg = cv2.GaussianBlur(
+                frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING
+            )
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
-            gray = np.true_divide(gray,np.mean(gray))
+            gray = np.true_divide(gray, np.mean(gray))
             bkg = bkg + gray
             number_of_frames_for_bkg_in_episode += 1
 
@@ -114,19 +125,21 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     number_of_frames_for_bkg_in_episode : int
         Number of frames used to compute the background in the current episode
     """
-    logger.debug('Adding video %s to background' % video_path)
+    logger.debug("Adding video %s to background" % video_path)
     cap = cv2.VideoCapture(video_path)
     numFrame = int(cap.get(7))
     number_of_frames_for_bkg_in_episode = 0
-    frameInds = range(0,numFrame, conf.BACKGROUND_SUBTRACTION_PERIOD)
+    frameInds = range(0, numFrame, conf.BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
-        cap.set(1,ind)
+        cap.set(1, ind)
         ret, frameBkg = cap.read()
         if conf.SIGMA_GAUSSIAN_BLURRING is not None:
-            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
+            frameBkg = cv2.GaussianBlur(
+                frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING
+            )
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
-            gray = np.true_divide(gray,np.mean(gray))
+            gray = np.true_divide(gray, np.mean(gray))
             bkg = bkg + gray
             number_of_frames_for_bkg_in_episode += 1
 
@@ -157,26 +170,40 @@ def cumpute_background(video):
     bkg = np.zeros((video.original_height, video.original_width))
 
     set_mkl_to_single_thread()
-    if video.paths_to_video_segments is None: # one single file
-        logger.debug('one single video, computing bkg in parallel from single video')
-        output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
-                    sum_frames_for_bkg_per_episode_in_single_file_video)(
-                    starting_frame, ending_frame, video.video_path, bkg)
-                    for (starting_frame, ending_frame) in video.episodes_start_end)
-        logger.debug('Finished parallel loop for bkg subtraction')
-    else: # multiple video files
-        logger.debug('multiple videos, computing bkg in parallel from every episode')
-        output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION)(delayed(
-                    sum_frames_for_bkg_per_episode_in_multiple_files_video)(
-                    videoPath,bkg) for videoPath in video.paths_to_video_segments)
-        logger.debug('Finished parallel loop for bkg subtraction')
+    if video.paths_to_video_segments is None:  # one single file
+        logger.debug(
+            "one single video, computing bkg in parallel from single video"
+        )
+        output = Parallel(
+            n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION
+        )(
+            delayed(sum_frames_for_bkg_per_episode_in_single_file_video)(
+                starting_frame, ending_frame, video.video_path, bkg
+            )
+            for (starting_frame, ending_frame) in video.episodes_start_end
+        )
+        logger.debug("Finished parallel loop for bkg subtraction")
+    else:  # multiple video files
+        logger.debug(
+            "multiple videos, computing bkg in parallel from every episode"
+        )
+        output = Parallel(
+            n_jobs=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION
+        )(
+            delayed(sum_frames_for_bkg_per_episode_in_multiple_files_video)(
+                videoPath, bkg
+            )
+            for videoPath in video.paths_to_video_segments
+        )
+        logger.debug("Finished parallel loop for bkg subtraction")
     set_mkl_to_multi_thread()
 
-    partialBkg = [bkg for (bkg,_) in output]
-    totNumFrame = np.sum([numFrame for (_,numFrame) in output])
-    bkg = np.sum(np.asarray(partialBkg),axis=0)
+    partialBkg = [bkg for (bkg, _) in output]
+    totNumFrame = np.sum([numFrame for (_, numFrame) in output])
+    bkg = np.sum(np.asarray(partialBkg), axis=0)
     bkg = np.true_divide(bkg, totNumFrame)
-    return bkg.astype('float32')
+    return bkg.astype("float32")
+
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the
@@ -206,14 +233,24 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         Pixels with value 1 are valid pixels given the thresholds and the mask.
     """
     if useBkg:
-        frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
-        p99 = np.percentile(frame, 99.95)*1.001
-        frame = np.clip(255 - frame * (255.0/p99), 0, 255)
-        frame_segmented = cv2.inRange(frame, min_threshold, max_threshold) #output: 255 in range, else 0
+        frame = cv2.absdiff(
+            bkg, frame
+        )  # only step where frame normalization is important, because the background is normalised
+        p99 = np.percentile(frame, 99.95) * 1.001
+        frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
+        frame_segmented = cv2.inRange(
+            frame, min_threshold, max_threshold
+        )  # output: 255 in range, else 0
     elif not useBkg:
-        p99 = np.percentile(frame, 99.95)*1.001
-        frame_segmented = cv2.inRange(np.clip(frame * (255.0/p99), 0, 255), min_threshold, max_threshold) #output: 255 in range, else 0
-    frame_segmented_and_masked = cv2.bitwise_and(frame_segmented,frame_segmented, mask=ROI) #Applying the mask
+        p99 = np.percentile(frame, 99.95) * 1.001
+        frame_segmented = cv2.inRange(
+            np.clip(frame * (255.0 / p99), 0, 255),
+            min_threshold,
+            max_threshold,
+        )  # output: 255 in range, else 0
+    frame_segmented_and_masked = cv2.bitwise_and(
+        frame_segmented, frame_segmented, mask=ROI
+    )  # Applying the mask
     return frame_segmented_and_masked
 
 
@@ -244,7 +281,7 @@ def filter_contours_by_area(contours, min_area, max_area):
     return good_contours
 
 
-def cnt2BoundingBox(cnt,bounding_box):
+def cnt2BoundingBox(cnt, bounding_box):
     """Transforms the coordinates of the contour in the full frame to the the
     bounding box of the blob.
 
@@ -262,10 +299,10 @@ def cnt2BoundingBox(cnt,bounding_box):
     contour_in_bounding_box : nd.array
         Array with the pairs of coordinates of the contour in the bounding box
     """
-    return cnt - np.asarray([bounding_box[0][0],bounding_box[0][1]])
+    return cnt - np.asarray([bounding_box[0][0], bounding_box[0][1]])
 
 
-def get_bounding_box(cnt, width, height, crossing_detector = False):
+def get_bounding_box(cnt, width, height, crossing_detector=False):
     """Computes the bounding box of a given contour with an extra margin of 45
     pixels. If the function is called with the crossing_detector set to True the
     margin of the bounding box is set to 55.
@@ -290,10 +327,10 @@ def get_bounding_box(cnt, width, height, crossing_detector = False):
         Diagonal of the original bounding box computed with OpenCv that serves as
         an estimate for the body length of the animal.
     """
-    x,y,w,h = cv2.boundingRect(cnt)
-    original_diagonal = int(np.ceil(np.sqrt(w**2 + h**2)))
+    x, y, w, h = cv2.boundingRect(cnt)
+    original_diagonal = int(np.ceil(np.sqrt(w ** 2 + h ** 2)))
     n = 45 if not crossing_detector else 55
-    if x - n > 0: # We only expand the
+    if x - n > 0:  # We only expand the
         x = x - n
     else:
         x = 0
@@ -301,15 +338,15 @@ def get_bounding_box(cnt, width, height, crossing_detector = False):
         y = y - n
     else:
         y = 0
-    if x + w + 2*n < width:
-        w = w + 2*n
+    if x + w + 2 * n < width:
+        w = w + 2 * n
     else:
         w = width - x
-    if y + h + 2*n < height:
-        h = h + 2*n
+    if y + h + 2 * n < height:
+        h = h + 2 * n
     else:
         h = height - y
-    return ((x, y),(x + w, y + h)), original_diagonal
+    return ((x, y), (x + w, y + h)), original_diagonal
 
 
 def getCentroid(cnt):
@@ -327,9 +364,9 @@ def getCentroid(cnt):
         (x,y) coordinates of the center of mass of the contour.
     """
     M = cv2.moments(cnt)
-    x = M['m10']/M['m00']
-    y = M['m01']/M['m00']
-    return (x,y)
+    x = M["m10"] / M["m00"]
+    y = M["m01"] / M["m00"]
+    return (x, y)
 
 
 def get_pixels(cnt, width, height):
@@ -352,9 +389,9 @@ def get_pixels(cnt, width, height):
         List of the coordinates of the pixels in a given width and height
     """
     cimg = np.zeros((height, width))
-    cv2.drawContours(cimg, [cnt], -1, color=255, thickness = -1)
+    cv2.drawContours(cimg, [cnt], -1, color=255, thickness=-1)
     pts = np.where(cimg == 255)
-    return np.asarray(list(zip(pts[0],pts[1])))
+    return np.asarray(list(zip(pts[0], pts[1])))
 
 
 def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
@@ -389,30 +426,44 @@ def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
     """
     height = frame.shape[0]
     width = frame.shape[1]
-    bounding_box, estimated_body_length = get_bounding_box(cnt, width, height) # the estimated body length is the diagonal of the original bounding_box
-    if save_segmentation_image == 'RAM' or save_segmentation_image == 'DISK':
-        bounding_box_image = frame[bounding_box[0][1]:bounding_box[1][1],
-                                bounding_box[0][0]:bounding_box[1][0]]
-    elif save_segmentation_image == 'NONE':
+    bounding_box, estimated_body_length = get_bounding_box(
+        cnt, width, height
+    )  # the estimated body length is the diagonal of the original bounding_box
+    if save_segmentation_image == "RAM" or save_segmentation_image == "DISK":
+        bounding_box_image = frame[
+            bounding_box[0][1] : bounding_box[1][1],
+            bounding_box[0][0] : bounding_box[1][0],
+        ]
+    elif save_segmentation_image == "NONE":
         bounding_box_image = None
     contour_in_bounding_box = cnt2BoundingBox(cnt, bounding_box)
-    if save_pixels == 'RAM' or save_pixels == 'DISK':
-        pixels_in_bounding_box = get_pixels(contour_in_bounding_box,
-                                np.abs(bounding_box[0][0] - bounding_box[1][0]),
-                                np.abs(bounding_box[0][1] - bounding_box[1][1]))
-        pixels_in_full_frame = pixels_in_bounding_box + \
-                                np.asarray([bounding_box[0][1], bounding_box[0][0]])
+    if save_pixels == "RAM" or save_pixels == "DISK":
+        pixels_in_bounding_box = get_pixels(
+            contour_in_bounding_box,
+            np.abs(bounding_box[0][0] - bounding_box[1][0]),
+            np.abs(bounding_box[0][1] - bounding_box[1][1]),
+        )
+        pixels_in_full_frame = pixels_in_bounding_box + np.asarray(
+            [bounding_box[0][1], bounding_box[0][0]]
+        )
         pixels_in_full_frame_ravelled = np.ravel_multi_index(
-                                        [pixels_in_full_frame[:,0], pixels_in_full_frame[:,1]],
-                                        (height,width))
-    elif save_pixels == 'NONE':
+            [pixels_in_full_frame[:, 0], pixels_in_full_frame[:, 1]],
+            (height, width),
+        )
+    elif save_pixels == "NONE":
         pixels_in_full_frame_ravelled = None
 
-    return bounding_box, bounding_box_image, pixels_in_full_frame_ravelled, estimated_body_length
+    return (
+        bounding_box,
+        bounding_box_image,
+        pixels_in_full_frame_ravelled,
+        estimated_body_length,
+    )
 
 
-def get_blobs_information_per_frame(frame, contours, save_pixels,
-                                    save_segmentation_image):
+def get_blobs_information_per_frame(
+    frame, contours, save_pixels, save_segmentation_image
+):
     """Computes a set of properties for all the `contours` in a given frame.
 
     Parameters
@@ -451,12 +502,15 @@ def get_blobs_information_per_frame(frame, contours, save_pixels,
     estimated_body_lengths = []
 
     for i, cnt in enumerate(contours):
-        bounding_box, \
-        bounding_box_image, \
-        pixels_in_full_frame_ravelled, \
-        estimated_body_length = get_bounding_box_image(frame, cnt, save_pixels,
-                                                       save_segmentation_image)
-        #bounding boxes
+        (
+            bounding_box,
+            bounding_box_image,
+            pixels_in_full_frame_ravelled,
+            estimated_body_length,
+        ) = get_bounding_box_image(
+            frame, cnt, save_pixels, save_segmentation_image
+        )
+        # bounding boxes
         bounding_boxes.append(bounding_box)
         # bounding_box_images
         bounding_box_images.append(bounding_box_image)
@@ -468,12 +522,24 @@ def get_blobs_information_per_frame(frame, contours, save_pixels,
         # estimated body lengths list
         estimated_body_lengths.append(estimated_body_length)
 
-    return bounding_boxes, bounding_box_images, centroids, areas, \
-        pixels, estimated_body_lengths
+    return (
+        bounding_boxes,
+        bounding_box_images,
+        centroids,
+        areas,
+        pixels,
+        estimated_body_lengths,
+    )
 
 
-def blob_extractor(segmented_frame, frame, min_area, max_area, save_pixels='DISK',
-                   save_segmentation_image='DISK'):
+def blob_extractor(
+    segmented_frame,
+    frame,
+    min_area,
+    max_area,
+    save_pixels="DISK",
+    save_segmentation_image="DISK",
+):
     """Given a `segmented_frame` it extracts the blobs with area greater than
     `min_area` and smaller than `max_area` and it computes a set of relevant
     properties for every blob.
@@ -511,19 +577,34 @@ def blob_extractor(segmented_frame, frame, min_area, max_area, save_pixels='DISK
     filter_contours_by_area
     get_blobs_information_per_frame
     """
-    _, contours, hierarchy = cv2.findContours(segmented_frame,
-                                              cv2.RETR_TREE,
-                                              cv2.CHAIN_APPROX_NONE)
+    _, contours, hierarchy = cv2.findContours(
+        segmented_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
+    )
     # Filter contours by size
-    good_contours_in_full_frame = filter_contours_by_area(contours,
-                                                          min_area,
-                                                          max_area)
+    good_contours_in_full_frame = filter_contours_by_area(
+        contours, min_area, max_area
+    )
     # get contours properties
-    bounding_boxes, bounding_box_images, \
-        centroids, areas, pixels, \
-        estimated_body_lengths = \
-        get_blobs_information_per_frame(frame, good_contours_in_full_frame,
-                                        save_pixels, save_segmentation_image)
+    (
+        bounding_boxes,
+        bounding_box_images,
+        centroids,
+        areas,
+        pixels,
+        estimated_body_lengths,
+    ) = get_blobs_information_per_frame(
+        frame,
+        good_contours_in_full_frame,
+        save_pixels,
+        save_segmentation_image,
+    )
 
-    return bounding_boxes, bounding_box_images, centroids, areas, pixels, \
-        good_contours_in_full_frame, estimated_body_lengths
+    return (
+        bounding_boxes,
+        bounding_box_images,
+        centroids,
+        areas,
+        pixels,
+        good_contours_in_full_frame,
+        estimated_body_lengths,
+    )

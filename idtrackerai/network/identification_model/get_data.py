@@ -31,11 +31,13 @@ import sys
 import numpy as np
 from confapp import conf
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logger = logging.getLogger("__main__.get_data")
 
 np.random.seed(0)
@@ -60,17 +62,17 @@ class DataSet(object):
         Number of classes in the dataset
 
     """
-    def __init__(self, number_of_animals = None, images = None, labels = None):
+
+    def __init__(self, number_of_animals=None, images=None, labels=None):
         self.images = images
         self._num_images = len(self.images)
         self.labels = labels
         self.number_of_animals = number_of_animals
-        #check the number of images and labels are the same. If it true set the num_images
+        # check the number of images and labels are the same. If it true set the num_images
         self.consistency_check()
 
     def consistency_check(self):
-        """Checks that the length of :attr:`images` and :attr:`labels` is the same
-        """
+        """Checks that the length of :attr:`images` and :attr:`labels` is the same"""
         if self.labels is not None:
             assert len(self.images) == len(self.labels)
 
@@ -80,7 +82,9 @@ class DataSet(object):
         --------
         :func:`~get_data.shuffle_images_and_labels`
         """
-        self.labels = dense_to_one_hot(self.labels, n_classes=self.number_of_animals)
+        self.labels = dense_to_one_hot(
+            self.labels, n_classes=self.number_of_animals
+        )
 
 
 def duplicate_PCA_images(training_images, training_labels):
@@ -105,11 +109,21 @@ def duplicate_PCA_images(training_images, training_labels):
         to the original images and the images rotated
     """
     augmented_images = [np.rot90(image, 2) for image in training_images]
-    training_images = np.concatenate([training_images, augmented_images], axis = 0)
-    training_labels = np.concatenate([training_labels, training_labels], axis = 0)
+    training_images = np.concatenate(
+        [training_images, augmented_images], axis=0
+    )
+    training_labels = np.concatenate(
+        [training_labels, training_labels], axis=0
+    )
     return training_images, training_labels
 
-def split_data_train_and_validation(number_of_animals, images, labels, validation_proportion = conf.VALIDATION_PROPORTION):
+
+def split_data_train_and_validation(
+    number_of_animals,
+    images,
+    labels,
+    validation_proportion=conf.VALIDATION_PROPORTION,
+):
     """Splits a set of `images` and `labels` into training and validation sets
 
     Parameters
@@ -142,8 +156,8 @@ def split_data_train_and_validation(number_of_animals, images, labels, validatio
     train_labels = []
     validation_images = []
     validation_labels = []
-    images = np.expand_dims(np.asarray(images), axis = 3)
-    labels = np.expand_dims(np.asarray(labels), axis = 1)
+    images = np.expand_dims(np.asarray(images), axis=3)
+    labels = np.expand_dims(np.asarray(labels), axis=1)
     images, labels = shuffle_images_and_labels(images, labels)
     for i in np.unique(labels):
         # Get images of this individual
@@ -151,7 +165,9 @@ def split_data_train_and_validation(number_of_animals, images, labels, validatio
         this_indiv_labels = labels[np.where(labels == i)[0]]
         # Compute number of images for training and validation
         num_images = len(this_indiv_labels)
-        num_images_validation = np.ceil(validation_proportion*num_images).astype(int)
+        num_images_validation = np.ceil(
+            validation_proportion * num_images
+        ).astype(int)
         num_images_training = num_images - num_images_validation
         # Get train, validation and test, images and labels
         train_images.append(this_indiv_images[:num_images_training])
@@ -161,11 +177,18 @@ def split_data_train_and_validation(number_of_animals, images, labels, validatio
 
     train_images = np.vstack(train_images)
     train_labels = np.vstack(train_labels)
-    train_images, train_labels = duplicate_PCA_images(train_images, train_labels)
-    train_images, train_labels = shuffle_images_and_labels(train_images, train_labels)
+    train_images, train_labels = duplicate_PCA_images(
+        train_images, train_labels
+    )
+    train_images, train_labels = shuffle_images_and_labels(
+        train_images, train_labels
+    )
     validation_images = np.vstack(validation_images)
     validation_labels = np.vstack(validation_labels)
-    return DataSet(number_of_animals, train_images, train_labels), DataSet(number_of_animals, validation_images, validation_labels)
+    return DataSet(number_of_animals, train_images, train_labels), DataSet(
+        number_of_animals, validation_images, validation_labels
+    )
+
 
 def shuffle_images_and_labels(images, labels):
     """Shuffles images and labels with a random
@@ -175,6 +198,7 @@ def shuffle_images_and_labels(images, labels):
     images = images[perm]
     labels = labels[perm]
     return images, labels
+
 
 def dense_to_one_hot(labels, n_classes=2):
     """Convert class labels from scalars to one-hot vectors."""
