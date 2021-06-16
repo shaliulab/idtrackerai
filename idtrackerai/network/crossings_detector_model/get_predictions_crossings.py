@@ -32,12 +32,15 @@ import psutil
 import numpy as np
 from confapp import conf
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logger = logging.getLogger("__main__.get_predictions_crossings")
+
 
 class GetPredictionCrossigns(object):
     def __init__(self, net):
@@ -47,7 +50,6 @@ class GetPredictionCrossigns(object):
         self._predictions = []
         self._fc_vectors = []
         self.batch_size = conf.BATCH_SIZE_PREDICTIONS_DCD
-
 
     def next_batch_test(self, batch_size):
         """Return the next `batch_size` examples from this data set."""
@@ -61,27 +63,52 @@ class GetPredictionCrossigns(object):
         self.number_of_image_predicted = 0
         predictions = []
         while self.number_of_image_predicted < len(test_images):
-            predictions.extend(self.net.prediction(self.next_batch_test(batch_size = conf.BATCH_SIZE_PREDICTIONS_DCD)))
+            predictions.extend(
+                self.net.prediction(
+                    self.next_batch_test(
+                        batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD
+                    )
+                )
+            )
 
         return predictions
 
     def get_all_predictions(self, test_set):
         # compute maximum number of images given the available RAM
-        image_size_bytes = np.prod(test_set.image_size)*4 #XXX:Check it out!!!! np.prod(test_set.image_size**2)*4
+        image_size_bytes = (
+            np.prod(test_set.image_size) * 4
+        )  # XXX:Check it out!!!! np.prod(test_set.image_size**2)*4
         number_of_images_to_be_fitted_in_RAM = len(test_set.test)
-        num_images_that_can_fit_in_RAM = 100000#int(psutil.virtual_memory().available*.2/image_size_bytes)
-        if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
-            logger.debug("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+        num_images_that_can_fit_in_RAM = 100000  # int(psutil.virtual_memory().available*.2/image_size_bytes)
+        if (
+            number_of_images_to_be_fitted_in_RAM
+            > num_images_that_can_fit_in_RAM
+        ):
+            logger.debug(
+                "There is NOT enough RAM to host %i images"
+                % number_of_images_to_be_fitted_in_RAM
+            )
             number_of_predictions_retrieved = 0
             predictions = []
             i = 0
-            while number_of_predictions_retrieved < number_of_images_to_be_fitted_in_RAM:
-                images = test_set.generate_test_images(interval = (i*num_images_that_can_fit_in_RAM, (i+1)*num_images_that_can_fit_in_RAM))
+            while (
+                number_of_predictions_retrieved
+                < number_of_images_to_be_fitted_in_RAM
+            ):
+                images = test_set.generate_test_images(
+                    interval=(
+                        i * num_images_that_can_fit_in_RAM,
+                        (i + 1) * num_images_that_can_fit_in_RAM,
+                    )
+                )
                 predictions.extend(self.predict(images))
                 number_of_predictions_retrieved = len(predictions)
                 i += 1
         else:
-            logger.debug("There is enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+            logger.debug(
+                "There is enough RAM to host %i images"
+                % number_of_images_to_be_fitted_in_RAM
+            )
             logger.info("getting predictions...")
             test_images = test_set.generate_test_images()
             predictions = self.predict(test_images)

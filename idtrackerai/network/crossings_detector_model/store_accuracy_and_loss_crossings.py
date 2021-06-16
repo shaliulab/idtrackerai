@@ -33,17 +33,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logging.getLogger("__main__.store_accuracy_and_loss_crossings")
+
 
 class Store_Accuracy_and_Loss(object):
     """Store the loss, accuracy and individual accuracy values computed during
     training and validation
     """
+
     def __init__(self, network, name):
         self._path_to_accuracy_error_data = network.params.save_folder
         self.name = name
@@ -53,64 +57,120 @@ class Store_Accuracy_and_Loss(object):
         # if network.is_restoring or network.is_knowledge_transfer:
         #     self.load()
 
-    def append_data(self, loss_value, accuracy_value, individual_accuracy_value):
+    def append_data(
+        self, loss_value, accuracy_value, individual_accuracy_value
+    ):
         self.loss.append(loss_value)
         self.accuracy.append(accuracy_value)
         self.individual_accuracy.append(individual_accuracy_value)
 
-    def plot(self, axes_handles = None, index = 0, color = 'r', plot_now = True, legend_font_color = None, from_GUI = False):
+    def plot(
+        self,
+        axes_handles=None,
+        index=0,
+        color="r",
+        plot_now=True,
+        legend_font_color=None,
+        from_GUI=False,
+    ):
         if from_GUI:
             ax1 = axes_handles[0]
             ax2 = axes_handles[1]
-            ax1.plot(range(index,len(self.loss)),self.accuracy[index:], color,label=self.name)
+            ax1.plot(
+                range(index, len(self.loss)),
+                self.accuracy[index:],
+                color,
+                label=self.name,
+            )
             width = 0.35
             numAnimals = len(self.individual_accuracy[-1])
-            if self.name == 'training':
+            if self.name == "training":
                 ind = np.arange(numAnimals) + 1 - width
-            elif self.name == 'validation':
+            elif self.name == "validation":
                 ind = np.arange(numAnimals) + 1
 
-            ax2.bar(ind, self.individual_accuracy[-1], width, color=color, alpha=0.4,label=self.name)
-            ax2.set_xlabel('image type (individual or crossings)')
-            ax2.set_ylabel('Per class \naccuracy')
+            ax2.bar(
+                ind,
+                self.individual_accuracy[-1],
+                width,
+                color=color,
+                alpha=0.4,
+                label=self.name,
+            )
+            ax2.set_xlabel("image type (individual or crossings)")
+            ax2.set_ylabel("Per class \naccuracy")
             if index == 0:
                 legend = ax1.legend()
                 if legend_font_color is not None:
                     for text in legend.get_texts():
                         text.set_color(legend_font_color)
-                ax1.set_ylabel('Accuracy')
+                ax1.set_ylabel("Accuracy")
         else:
             ax1 = axes_handles[0]
             ax2 = axes_handles[1]
             ax3 = axes_handles[2]
-            ax1.plot(range(index,len(self.loss)), self.loss[index:], color,label=self.name)
-            ax2.plot(range(index,len(self.loss)),self.accuracy[index:], color,label=self.name)
+            ax1.plot(
+                range(index, len(self.loss)),
+                self.loss[index:],
+                color,
+                label=self.name,
+            )
+            ax2.plot(
+                range(index, len(self.loss)),
+                self.accuracy[index:],
+                color,
+                label=self.name,
+            )
             width = 0.35
             numAnimals = len(self.individual_accuracy[-1])
-            if self.name == 'training':
+            if self.name == "training":
                 ind = np.arange(numAnimals) + 1 - width
-            elif self.name == 'validation':
+            elif self.name == "validation":
                 ind = np.arange(numAnimals) + 1
 
-            ax3.bar(ind, self.individual_accuracy[-1], width, color=color, alpha=0.4,label=self.name)
-            ax3.set_xlabel('image type (individual or crossings)')
-            ax3.set_ylabel('Per class \naccuracy')
+            ax3.bar(
+                ind,
+                self.individual_accuracy[-1],
+                width,
+                color=color,
+                alpha=0.4,
+                label=self.name,
+            )
+            ax3.set_xlabel("image type (individual or crossings)")
+            ax3.set_ylabel("Per class \naccuracy")
             if index == 0:
                 legend = ax1.legend()
                 if legend_font_color is not None:
                     for text in legend.get_texts():
                         text.set_color(legend_font_color)
-                ax1.set_ylabel('Loss')
-                ax2.set_ylabel('Accuracy')
-                ax2.set_xlabel('Epochs')
+                ax1.set_ylabel("Loss")
+                ax2.set_ylabel("Accuracy")
+                ax2.set_xlabel("Epochs")
             if plot_now:
                 plt.draw()
                 plt.pause(1e-8)
 
     def save(self):
-        np.save(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), self.__dict__)
+        np.save(
+            os.path.join(
+                self._path_to_accuracy_error_data,
+                self.name + "_loss_acc_dict.npy",
+            ),
+            self.__dict__,
+        )
 
     def load(self):
-        if os.path.isfile(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')):
-            loss_accuracy_dictionary = np.load(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), allow_pickle=True).item()
+        if os.path.isfile(
+            os.path.join(
+                self._path_to_accuracy_error_data,
+                self.name + "_loss_acc_dict.npy",
+            )
+        ):
+            loss_accuracy_dictionary = np.load(
+                os.path.join(
+                    self._path_to_accuracy_error_data,
+                    self.name + "_loss_acc_dict.npy",
+                ),
+                allow_pickle=True,
+            ).item()
             self.__dict__ = loss_accuracy_dictionary

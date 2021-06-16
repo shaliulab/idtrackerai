@@ -29,20 +29,30 @@
 import os
 import sys
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logger = logging.getLogger("__main__.network_params_crossings")
 
+
 class NetworkParams_crossings(object):
-    def __init__(self,number_of_classes,
-                architecture = None,
-                learning_rate = None, keep_prob = None,
-                use_adam_optimiser = False, scopes_layers_to_optimize = None,
-                restore_folder = None, save_folder = None, knowledge_transfer_folder = None,
-                image_size = None):
+    def __init__(
+        self,
+        number_of_classes,
+        architecture=None,
+        learning_rate=None,
+        keep_prob=None,
+        use_adam_optimiser=False,
+        scopes_layers_to_optimize=None,
+        restore_folder=None,
+        save_folder=None,
+        knowledge_transfer_folder=None,
+        image_size=None,
+    ):
 
         self.number_of_classes = number_of_classes
         self.learning_rate = learning_rate

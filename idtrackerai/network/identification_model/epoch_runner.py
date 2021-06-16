@@ -30,15 +30,18 @@ import sys
 
 import numpy as np
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logger = logging.getLogger("__main__.epoch_runner")
 
+
 class EpochRunner(object):
-    """ Runs an epoch divided in batches for a given operation and a given
+    """Runs an epoch divided in batches for a given operation and a given
     data set (:class:`~get_data.DataSet`).
 
     Attributes
@@ -58,10 +61,10 @@ class EpochRunner(object):
         Number of images to be passed through the network in each bach.
 
     """
-    def __init__(self, data_set,
-                starting_epoch = 0,
-                print_flag = False,
-                batch_size = None):
+
+    def __init__(
+        self, data_set, starting_epoch=0, print_flag=False, batch_size=None
+    ):
         self._epochs_completed = 0
         self.starting_epoch = starting_epoch
         self.print_flag = print_flag
@@ -98,7 +101,10 @@ class EpochRunner(object):
         start = self._index_in_epoch
         self._index_in_epoch += batch_size
         end = self._index_in_epoch
-        return (self.data_set.images[start:end], self.data_set.labels[start:end])
+        return (
+            self.data_set.images[start:end],
+            self.data_set.labels[start:end],
+        )
 
     def run_epoch(self, name, store_loss_and_accuracy, batch_operation):
         """Performs a given `batch_operation` for an entire epoch and stores the
@@ -135,16 +141,31 @@ class EpochRunner(object):
         individual_accuracy_epoch = []
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
-            loss_acc_batch, feed_dict = batch_operation(self.next_batch(self.batch_size))
+            loss_acc_batch, feed_dict = batch_operation(
+                self.next_batch(self.batch_size)
+            )
             loss_epoch.append(loss_acc_batch[0])
             accuracy_epoch.append(loss_acc_batch[1])
             individual_accuracy_epoch.append(loss_acc_batch[2])
         loss_epoch = np.mean(np.vstack(loss_epoch))
         accuracy_epoch = np.mean(np.vstack(accuracy_epoch))
-        individual_accuracy_epoch = np.nanmean(np.vstack(individual_accuracy_epoch),axis=0)
+        individual_accuracy_epoch = np.nanmean(
+            np.vstack(individual_accuracy_epoch), axis=0
+        )
         if self.print_flag:
-            logger.info('%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s' %(name, self.starting_epoch + self._epochs_completed, loss_epoch, accuracy_epoch , individual_accuracy_epoch))
+            logger.info(
+                "%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s"
+                % (
+                    name,
+                    self.starting_epoch + self._epochs_completed,
+                    loss_epoch,
+                    accuracy_epoch,
+                    individual_accuracy_epoch,
+                )
+            )
 
         # self._index_in_epoch_train = 0
-        store_loss_and_accuracy.append_data(loss_epoch, accuracy_epoch, individual_accuracy_epoch)
+        store_loss_and_accuracy.append_data(
+            loss_epoch, accuracy_epoch, individual_accuracy_epoch
+        )
         return feed_dict

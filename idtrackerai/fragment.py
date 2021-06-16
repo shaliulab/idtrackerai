@@ -32,15 +32,18 @@ from confapp import conf
 
 from idtrackerai.utils.py_utils import delete_attributes_from_object
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logger = logging.getLogger("__main__.fragment")
 
+
 class Fragment(object):
-    """ Collects the Blob objects (:class:`~blob.Blob`) associated to the same individual or crossing.
+    """Collects the Blob objects (:class:`~blob.Blob`) associated to the same individual or crossing.
 
     Attributes
     ----------
@@ -126,18 +129,30 @@ class Fragment(object):
     number_of_coexisting_individual_fragments : int
         Number of individual fragments coexisting with self
     """
-    def __init__(self, fragment_identifier = None, start_end = None,
-                        blob_hierarchy_in_starting_frame = None, images = None,
-                        bounding_box_in_frame_coordinates = None,
-                        centroids = None, areas = None,
-                        is_an_individual = None, is_a_crossing = None,
-                        number_of_animals = None,
-                        user_generated_identities = None):
+
+    def __init__(
+        self,
+        fragment_identifier=None,
+        start_end=None,
+        blob_hierarchy_in_starting_frame=None,
+        images=None,
+        bounding_box_in_frame_coordinates=None,
+        centroids=None,
+        areas=None,
+        is_an_individual=None,
+        is_a_crossing=None,
+        number_of_animals=None,
+        user_generated_identities=None,
+    ):
         self.identifier = fragment_identifier
         self.start_end = start_end
-        self.blob_hierarchy_in_starting_frame = blob_hierarchy_in_starting_frame
+        self.blob_hierarchy_in_starting_frame = (
+            blob_hierarchy_in_starting_frame
+        )
         self.images = images
-        self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates
+        self.bounding_box_in_frame_coordinates = (
+            bounding_box_in_frame_coordinates
+        )
         self.centroids = np.asarray(centroids)
         if centroids is not None:
             self.set_distance_travelled()
@@ -159,7 +174,7 @@ class Fragment(object):
         self._accumulated_partially = False
         self._accumulation_step = None
 
-    def reset(self, roll_back_to = None):
+    def reset(self, roll_back_to=None):
         """Reset attributes of self to a specific part of the algorithm
 
         Parameters
@@ -169,9 +184,10 @@ class Fragment(object):
             'fragmentation', 'pretraining', 'accumulation', 'assignment'
 
         """
-        if roll_back_to == 'fragmentation' or roll_back_to == 'pretraining':
+        if roll_back_to == "fragmentation" or roll_back_to == "pretraining":
             self._used_for_training = False
-            if roll_back_to == 'fragmentation': self._used_for_pretraining = False
+            if roll_back_to == "fragmentation":
+                self._used_for_pretraining = False
             self._acceptable_for_training = None
             self._temporary_id = None
             self._identity = None
@@ -180,22 +196,27 @@ class Fragment(object):
             self._accumulated_globally = False
             self._accumulated_partially = False
             self._accumulation_step = None
-            attributes_to_delete = ['_frequencies',
-                                    '_P1_vector', '_certainty',
-                                    '_is_certain',
-                                    '_P1_below_random', '_non_consistent']
+            attributes_to_delete = [
+                "_frequencies",
+                "_P1_vector",
+                "_certainty",
+                "_is_certain",
+                "_P1_below_random",
+                "_non_consistent",
+            ]
             delete_attributes_from_object(self, attributes_to_delete)
-        elif roll_back_to == 'accumulation':
+        elif roll_back_to == "accumulation":
             self._identity_is_fixed = False
             attributes_to_delete = []
             if not self.used_for_training:
                 self._identity = None
                 self._identity_corrected_solving_jumps = None
-                attributes_to_delete = ['_frequencies', '_P1_vector']
-            attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',
-                                        '_certainty_P2'])
+                attributes_to_delete = ["_frequencies", "_P1_vector"]
+            attributes_to_delete.extend(
+                ["_P2_vector", "_ambiguous_identities", "_certainty_P2"]
+            )
             delete_attributes_from_object(self, attributes_to_delete)
-        elif roll_back_to == 'assignment':
+        elif roll_back_to == "assignment":
             self._user_generated_identity = None
             self._identity_corrected_solving_jumps = None
 
@@ -285,16 +306,25 @@ class Fragment(object):
 
     @property
     def final_identities(self):
-        if hasattr(self, 'user_generated_identities') and self.user_generated_identities is not None:
+        if (
+            hasattr(self, "user_generated_identities")
+            and self.user_generated_identities is not None
+        ):
             return self.user_generated_identities
         else:
             return self.assigned_identities
 
     @property
     def assigned_identities(self):
-        if hasattr(self, 'identiies_corrected_closing_gaps') and self.identities_corrected_closing_gaps is not None:
+        if (
+            hasattr(self, "identiies_corrected_closing_gaps")
+            and self.identities_corrected_closing_gaps is not None
+        ):
             return self.identiies_corrected_closing_gaps
-        elif hasattr(self, 'identity_corrected_solving_jumps') and self.identity_corrected_solving_jumps is not None:
+        elif (
+            hasattr(self, "identity_corrected_solving_jumps")
+            and self.identity_corrected_solving_jumps is not None
+        ):
             return [self.identity_corrected_solving_jumps]
         else:
             return [self.identity]
@@ -317,8 +347,15 @@ class Fragment(object):
 
     @property
     def has_enough_accumulated_coexisting_fragments(self):
-        return sum([fragment.used_for_training
-                    for fragment in self.coexisting_individual_fragments]) >= self.number_of_coexisting_individual_fragments/2
+        return (
+            sum(
+                [
+                    fragment.used_for_training
+                    for fragment in self.coexisting_individual_fragments
+                ]
+            )
+            >= self.number_of_coexisting_individual_fragments / 2
+        )
 
     def get_attribute_of_coexisting_fragments(self, attribute):
         """Retrieve a spevific attribute from the collection of fragments
@@ -335,7 +372,10 @@ class Fragment(object):
             attribute specified in `attribute` of the fragments coexisting with self
 
         """
-        return [getattr(fragment,attribute) for fragment in self.coexisting_individual_fragments]
+        return [
+            getattr(fragment, attribute)
+            for fragment in self.coexisting_individual_fragments
+        ]
 
     def set_distance_travelled(self):
         """Computes the distance travelled by the individual in the fragment.
@@ -344,9 +384,11 @@ class Fragment(object):
 
         """
         if self.centroids.shape[0] > 1:
-            self.distance_travelled = np.sum(np.sqrt(np.sum(np.diff(self.centroids, axis = 0)**2, axis = 1)))
+            self.distance_travelled = np.sum(
+                np.sqrt(np.sum(np.diff(self.centroids, axis=0) ** 2, axis=1))
+            )
         else:
-            self.distance_travelled = 0.
+            self.distance_travelled = 0.0
 
     def frame_by_frame_velocity(self):
         """Short summary.
@@ -357,7 +399,7 @@ class Fragment(object):
             Frame by frame speed of the individual in the fragment
 
         """
-        return np.sqrt(np.sum(np.diff(self.centroids, axis = 0)**2, axis = 1))
+        return np.sqrt(np.sum(np.diff(self.centroids, axis=0) ** 2, axis=1))
 
     def compute_border_velocity(self, other):
         """Velocity necessary to cover the space between two fragments. Note that
@@ -378,8 +420,8 @@ class Fragment(object):
         """
         centroids = np.asarray([self.centroids[0], other.centroids[-1]])
         if not self.start_end[0] > other.start_end[1]:
-            centroids = np.asarray([self.centroids[-1],other.centroids[0]])
-        return np.sqrt(np.sum(np.diff(centroids, axis = 0)**2, axis = 1))[0]
+            centroids = np.asarray([self.centroids[-1], other.centroids[0]])
+        return np.sqrt(np.sum(np.diff(centroids, axis=0) ** 2, axis=1))[0]
 
     def are_overlapping(self, other):
         """Short summary.
@@ -395,7 +437,7 @@ class Fragment(object):
             True if self and other coexist in at least one frame
 
         """
-        (s1,e1), (s2,e2) = self.start_end, other.start_end
+        (s1, e1), (s2, e2) = self.start_end, other.start_end
         return s1 < e2 and e1 > s2
 
     def get_coexisting_individual_fragments_indices(self, fragments):
@@ -409,12 +451,20 @@ class Fragment(object):
             List of all the fragments in the video
 
         """
-        self.coexisting_individual_fragments = [fragment for fragment in fragments
-                                            if fragment.is_an_individual and self.are_overlapping(fragment)
-                                            and fragment is not self]
-        self.number_of_coexisting_individual_fragments = len(self.coexisting_individual_fragments)
+        self.coexisting_individual_fragments = [
+            fragment
+            for fragment in fragments
+            if fragment.is_an_individual
+            and self.are_overlapping(fragment)
+            and fragment is not self
+        ]
+        self.number_of_coexisting_individual_fragments = len(
+            self.coexisting_individual_fragments
+        )
 
-    def check_consistency_with_coexistent_individual_fragments(self, temporary_id):
+    def check_consistency_with_coexistent_individual_fragments(
+        self, temporary_id
+    ):
         """Check that the temporary identity assigned to the fragment is
         consistent with respect to the identities already assigned to the
         fragments coexisting (in frame) with it
@@ -436,7 +486,9 @@ class Fragment(object):
                 return False
         return True
 
-    def compute_identification_statistics(self, predictions, softmax_probs, number_of_animals = None):
+    def compute_identification_statistics(
+        self, predictions, softmax_probs, number_of_animals=None
+    ):
         """Computes the statistics necessary to the identification of the
         fragment
 
@@ -461,11 +513,23 @@ class Fragment(object):
 
         """
         assert self.is_an_individual
-        number_of_animals = self.number_of_animals if number_of_animals is None else number_of_animals
-        self._frequencies = self.compute_identification_frequencies_individual_fragment(predictions, number_of_animals)
+        number_of_animals = (
+            self.number_of_animals
+            if number_of_animals is None
+            else number_of_animals
+        )
+        self._frequencies = (
+            self.compute_identification_frequencies_individual_fragment(
+                predictions, number_of_animals
+            )
+        )
         self._P1_vector = self.compute_P1_from_frequencies(self.frequencies)
-        median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
-        self._certainty = self.compute_certainty_of_individual_fragment(self._P1_vector,median_softmax)
+        median_softmax = self.compute_median_softmax(
+            softmax_probs, number_of_animals
+        )
+        self._certainty = self.compute_certainty_of_individual_fragment(
+            self._P1_vector, median_softmax
+        )
 
     def set_P1_vector_accumulated(self):
         """If self has been used for training its P1_vector is modified to be
@@ -474,7 +538,7 @@ class Fragment(object):
         """
         assert self.used_for_training and self.is_an_individual
         self._P1_vector = np.zeros(len(self.P1_vector))
-        self._P1_vector[self.temporary_id] = 1.
+        self._P1_vector[self.temporary_id] = 1.0
 
     @staticmethod
     def get_possible_identities(P2_vector):
@@ -493,7 +557,9 @@ class Fragment(object):
         if self.used_for_training and not self._identity_is_fixed:
             self._identity_is_fixed = True
         elif not self._identity_is_fixed:
-            possible_identities, max_P2 = self.get_possible_identities(self.P2_vector)
+            possible_identities, max_P2 = self.get_possible_identities(
+                self.P2_vector
+            )
             if len(possible_identities) > 1:
                 self._identity = 0
                 self.zero_identity_assigned_by_P2 = True
@@ -503,7 +569,7 @@ class Fragment(object):
                     self._identity_is_fixed = True
                 self._identity = possible_identities[0]
                 self._P1_vector = np.zeros(len(self.P1_vector))
-                self._P1_vector[self.identity - 1] = 1.
+                self._P1_vector[self.identity - 1] = 1.0
                 self.recompute_P2_of_coexisting_fragments()
 
     def recompute_P2_of_coexisting_fragments(self):
@@ -513,26 +579,41 @@ class Fragment(object):
         """
         # The P2 of fragments with fixed identity won't be recomputed
         # due to the condition in assign_identity() (second line)
-        [fragment.compute_P2_vector() for fragment in self.coexisting_individual_fragments]
+        [
+            fragment.compute_P2_vector()
+            for fragment in self.coexisting_individual_fragments
+        ]
 
     def compute_P2_vector(self):
-        """Computes the P2_vector related to self. It is based on :attr:`coexisting_individual_fragments`
-        """
-        coexisting_P1_vectors = np.asarray([fragment.P1_vector for fragment in self.coexisting_individual_fragments])
-        numerator = np.asarray(self.P1_vector) * np.prod(1. - coexisting_P1_vectors, axis = 0)
+        """Computes the P2_vector related to self. It is based on :attr:`coexisting_individual_fragments`"""
+        coexisting_P1_vectors = np.asarray(
+            [
+                fragment.P1_vector
+                for fragment in self.coexisting_individual_fragments
+            ]
+        )
+        numerator = np.asarray(self.P1_vector) * np.prod(
+            1.0 - coexisting_P1_vectors, axis=0
+        )
         denominator = np.sum(numerator)
         if denominator != 0:
             self._P2_vector = numerator / denominator
             P2_vector_ordered = np.sort(self.P2_vector)
             P2_first_max = P2_vector_ordered[-1]
             P2_second_max = P2_vector_ordered[-2]
-            self._certainty_P2 = conf.MAX_FLOAT if P2_second_max == 0 else P2_first_max / P2_second_max
+            self._certainty_P2 = (
+                conf.MAX_FLOAT
+                if P2_second_max == 0
+                else P2_first_max / P2_second_max
+            )
         else:
             self._P2_vector = np.zeros(self.number_of_animals)
-            self._certainty_P2 = 0.
+            self._certainty_P2 = 0.0
 
     @staticmethod
-    def compute_identification_frequencies_individual_fragment(predictions, number_of_animals):
+    def compute_identification_frequencies_individual_fragment(
+        predictions, number_of_animals
+    ):
         """Counts the argmax of predictions per row
 
         Parameters
@@ -549,8 +630,9 @@ class Fragment(object):
             many predictions have maximum components at the index i
 
         """
-        return np.asarray([np.sum(predictions == i)
-                            for i in range(1, number_of_animals+1)]) # The predictions come from 1 to number_of_animals + 1
+        return np.asarray(
+            [np.sum(predictions == i) for i in range(1, number_of_animals + 1)]
+        )  # The predictions come from 1 to number_of_animals + 1
 
     @staticmethod
     def compute_P1_from_frequencies(frequencies):
@@ -558,7 +640,14 @@ class Fragment(object):
         computer the P1 vector. P1 is the softmax of the frequencies with base 2
         for each identity.
         """
-        P1_of_fragment = 1. / np.sum(2.**(np.tile(frequencies, (len(frequencies),1)).T - np.tile(frequencies, (len(frequencies),1))), axis = 0)
+        P1_of_fragment = 1.0 / np.sum(
+            2.0
+            ** (
+                np.tile(frequencies, (len(frequencies), 1)).T
+                - np.tile(frequencies, (len(frequencies), 1))
+            ),
+            axis=0,
+        )
         return P1_of_fragment
 
     @staticmethod
@@ -583,14 +672,16 @@ class Fragment(object):
 
         """
         softmax_probs = np.asarray(softmax_probs)
-        #jumps are fragment composed by a single image, thus:
+        # jumps are fragment composed by a single image, thus:
         if len(softmax_probs.shape) == 1:
-            softmax_probs = np.expand_dims(softmax_probs, axis = 1)
-        max_softmax_probs = np.max(softmax_probs, axis = 1)
-        argmax_softmax_probs = np.argmax(softmax_probs, axis = 1)
+            softmax_probs = np.expand_dims(softmax_probs, axis=1)
+        max_softmax_probs = np.max(softmax_probs, axis=1)
+        argmax_softmax_probs = np.argmax(softmax_probs, axis=1)
         softmax_median = np.zeros(number_of_animals)
         for i in np.unique(argmax_softmax_probs):
-            softmax_median[i] = np.median(max_softmax_probs[argmax_softmax_probs == i])
+            softmax_median[i] = np.median(
+                max_softmax_probs[argmax_softmax_probs == i]
+            )
         return softmax_median
 
     @staticmethod
@@ -614,10 +705,14 @@ class Fragment(object):
         argsort_p1_vector = np.argsort(P1_vector)
         sorted_p1_vector = P1_vector[argsort_p1_vector]
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
-        certainty = np.diff(np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
+        certainty = np.diff(
+            np.multiply(sorted_p1_vector, sorted_softmax_probs)[-2:]
+        ) / np.sum(sorted_p1_vector[-2:])
         return certainty[0]
 
-    def get_neighbour_fragment(self, fragments, scope, number_of_frames_in_direction = 0):
+    def get_neighbour_fragment(
+        self, fragments, scope, number_of_frames_in_direction=0
+    ):
         """If it exist, gets the fragment in the list of all fragment whose
         identity is the identity assigned to self and whose starting frame is
         the starting frame of self + 1, or ending frame is the ending frame of
@@ -641,16 +736,28 @@ class Fragment(object):
             specified by scope if it exists. Otherwise None
 
         """
-        if scope == 'to_the_past':
-            neighbour = [fragment for fragment in fragments
-                            if fragment.is_an_individual and len(fragment.assigned_identities) == 1
-                            and fragment.assigned_identities[0] == self.assigned_identities[0]
-                            and self.start_end[0] - fragment.start_end[1] == number_of_frames_in_direction]
-        elif scope == 'to_the_future':
-            neighbour = [fragment for fragment in fragments
-                            if fragment.is_an_individual and len(fragment.assigned_identities) == 1
-                            and fragment.assigned_identities[0] == self.assigned_identities[0]
-                            and fragment.start_end[0] - self.start_end[1] == number_of_frames_in_direction]
+        if scope == "to_the_past":
+            neighbour = [
+                fragment
+                for fragment in fragments
+                if fragment.is_an_individual
+                and len(fragment.assigned_identities) == 1
+                and fragment.assigned_identities[0]
+                == self.assigned_identities[0]
+                and self.start_end[0] - fragment.start_end[1]
+                == number_of_frames_in_direction
+            ]
+        elif scope == "to_the_future":
+            neighbour = [
+                fragment
+                for fragment in fragments
+                if fragment.is_an_individual
+                and len(fragment.assigned_identities) == 1
+                and fragment.assigned_identities[0]
+                == self.assigned_identities[0]
+                and fragment.start_end[0] - self.start_end[1]
+                == number_of_frames_in_direction
+            ]
 
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None
@@ -665,7 +772,7 @@ class Fragment(object):
             Can be "global" or "partial"
 
         """
-        if accumulation_strategy == 'global':
+        if accumulation_strategy == "global":
             self._accumulated_globally = True
-        elif accumulation_strategy == 'partial':
+        elif accumulation_strategy == "partial":
             self._accumulated_partially = True

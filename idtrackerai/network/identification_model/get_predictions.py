@@ -32,12 +32,15 @@ import numpy as np
 from confapp import conf
 
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logger = logging.getLogger("__main__.get_predictions")
+
 
 class GetPrediction(object):
     """Manages the inference of the identities of a set of images
@@ -60,6 +63,7 @@ class GetPrediction(object):
         Size of the batch to send the images through the network to get the predictions
 
     """
+
     def __init__(self, data_set):
         # Data set
         self.data_set = data_set
@@ -107,8 +111,10 @@ class GetPrediction(object):
         """
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
-            softmax_probs_batch, predictions_batch = batch_operation(self.next_batch(self.batch_size))
+            softmax_probs_batch, predictions_batch = batch_operation(
+                self.next_batch(self.batch_size)
+            )
             self._softmax_probs.append(softmax_probs_batch)
             self._predictions.append(predictions_batch)
-        self._softmax_probs = np.concatenate(self._softmax_probs, axis = 0)
-        self._predictions = np.concatenate(self._predictions, axis = 0)
+        self._softmax_probs = np.concatenate(self._softmax_probs, axis=0)
+        self._predictions = np.concatenate(self._predictions, axis=0)

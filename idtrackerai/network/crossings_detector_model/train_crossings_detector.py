@@ -32,21 +32,36 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-from idtrackerai.network.crossings_detector_model.stop_training_criteria_crossings import Stop_Training
-from idtrackerai.network.crossings_detector_model.store_accuracy_and_loss_crossings import Store_Accuracy_and_Loss
-from idtrackerai.network.crossings_detector_model.epoch_runner_crossings import EpochRunner
+from idtrackerai.network.crossings_detector_model.stop_training_criteria_crossings import (
+    Stop_Training,
+)
+from idtrackerai.network.crossings_detector_model.store_accuracy_and_loss_crossings import (
+    Store_Accuracy_and_Loss,
+)
+from idtrackerai.network.crossings_detector_model.epoch_runner_crossings import (
+    EpochRunner,
+)
 
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
     from kivy.logger import Logger
+
     logger = Logger
 else:
     import logging
+
     logger = logging.getLogger("__main__.train_crossing_detector")
 
 
 class TrainDeepCrossing(object):
-    def __init__(self, net, training_dataset, validation_dataset,
-                 num_epochs=50, plot_flag=True, return_store_objects=False):
+    def __init__(
+        self,
+        net,
+        training_dataset,
+        validation_dataset,
+        num_epochs=50,
+        plot_flag=True,
+        return_store_objects=False,
+    ):
         """Build the dataset and trains the model
         The dataset is built according to
         Taken from tensorflow/contrib/learn/datasets/mnist.
@@ -59,59 +74,94 @@ class TrainDeepCrossing(object):
         self.return_store_objects = return_store_objects
         self.train_model()
 
-    def train_model(self, global_step=0,
-                    check_for_loss_plateau=None,
-                    print_flag=False,
-                    store_accuracy_and_error=False):
+    def train_model(
+        self,
+        global_step=0,
+        check_for_loss_plateau=None,
+        print_flag=False,
+        store_accuracy_and_error=False,
+    ):
         logger.info("\nTraining Deep Crossing Detector")
-        store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(self.net, name='training')
-        store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(self.net, name='validation')
+        store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(
+            self.net, name="training"
+        )
+        store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(
+            self.net, name="validation"
+        )
 
         if self.plot_flag:
             # Initialize pre-trainer plot
             plt.ion()
             fig, ax_arr = plt.subplots(3)
-            title = 'Crossing-detector'
+            title = "Crossing-detector"
             fig.canvas.set_window_title(title)
-            fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
+            fig.subplots_adjust(
+                left=None,
+                bottom=None,
+                right=None,
+                top=None,
+                wspace=None,
+                hspace=0.5,
+            )
 
         self.net.compute_loss_weights(self.training_dataset.labels)
-        trainer = EpochRunner(self.training_dataset,
-                              starting_epoch=global_step,
-                              print_flag=print_flag)
-        validator = EpochRunner(self.validation_dataset,
-                                starting_epoch=global_step,
-                                print_flag=print_flag)
+        trainer = EpochRunner(
+            self.training_dataset,
+            starting_epoch=global_step,
+            print_flag=print_flag,
+        )
+        validator = EpochRunner(
+            self.validation_dataset,
+            starting_epoch=global_step,
+            print_flag=print_flag,
+        )
         # set criteria to stop the training
-        stop_training = Stop_Training(check_for_loss_plateau=check_for_loss_plateau)
+        stop_training = Stop_Training(
+            check_for_loss_plateau=check_for_loss_plateau
+        )
         logger.debug("entering the epochs loop...")
-        while not stop_training(store_training_accuracy_and_loss_data,
-                                store_validation_accuracy_and_loss_data,
-                                trainer._epochs_completed):
+        while not stop_training(
+            store_training_accuracy_and_loss_data,
+            store_validation_accuracy_and_loss_data,
+            trainer._epochs_completed,
+        ):
             # --- Training
-            trainer.run_epoch('Training',
-                              store_training_accuracy_and_loss_data,
-                              self.net.train)
+            trainer.run_epoch(
+                "Training",
+                store_training_accuracy_and_loss_data,
+                self.net.train,
+            )
             # --- Validation
-            validator.run_epoch('Validation',
-                                store_validation_accuracy_and_loss_data,
-                                self.net.validate)
+            validator.run_epoch(
+                "Validation",
+                store_validation_accuracy_and_loss_data,
+                self.net.validate,
+            )
             # Update counter
             trainer._epochs_completed += 1
             validator._epochs_completed += 1
 
-        if (np.isnan(store_training_accuracy_and_loss_data.loss[-1]) or np.isnan(store_validation_accuracy_and_loss_data.loss[-1])):
-            logger.warn("The model diverged. Falling back to individual-crossing discrimination by average area model.")
+        if np.isnan(
+            store_training_accuracy_and_loss_data.loss[-1]
+        ) or np.isnan(store_validation_accuracy_and_loss_data.loss[-1]):
+            logger.warn(
+                "The model diverged. Falling back to individual-crossing discrimination by average area model."
+            )
             self.model_diverged = True
         else:
             self.model_diverged = False
             global_step += trainer.epochs_completed
-            logger.debug('validation losses: %s' % str(store_validation_accuracy_and_loss_data.loss))
+            logger.debug(
+                "validation losses: %s"
+                % str(store_validation_accuracy_and_loss_data.loss)
+            )
             # plot if asked
             if self.plot_flag:
-                store_training_accuracy_and_loss_data.plot(ax_arr, color='r')
-                store_validation_accuracy_and_loss_data.plot(ax_arr, color='b')
-                fig.savefig(os.path.join(self.net.params.save_folder, title + '.pdf'))
+                store_training_accuracy_and_loss_data.plot(ax_arr, color="r")
+                store_validation_accuracy_and_loss_data.plot(ax_arr, color="b")
+                fig.savefig(
+                    os.path.join(self.net.params.save_folder, title + ".pdf")
+                )
             # store training and validation losses and accuracies
             if store_accuracy_and_error:
                 store_training_accuracy_and_loss_data.save()
@@ -119,5 +169,9 @@ class TrainDeepCrossing(object):
             # Save network model
             self.net.save(global_step=global_step)
             if self.return_store_objects:
-                self.store_training_accuracy_and_loss_data = store_training_accuracy_and_loss_data
-                self.store_validation_accuracy_and_loss_data = store_validation_accuracy_and_loss_data
+                self.store_training_accuracy_and_loss_data = (
+                    store_training_accuracy_and_loss_data
+                )
+                self.store_validation_accuracy_and_loss_data = (
+                    store_validation_accuracy_and_loss_data
+                )
