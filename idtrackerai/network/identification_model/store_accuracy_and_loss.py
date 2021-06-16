@@ -199,7 +199,7 @@ class Store_Accuracy_and_Loss(object):
                 and fragment.is_an_individual
             ):
                 if (
-                    fragment.final_identities is not None
+                    fragment.final_identities[0] is not None
                     and len(fragment.final_identities) == 1
                 ):
                     blob_index = fragment.final_identities[0] - 1
