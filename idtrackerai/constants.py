@@ -165,7 +165,7 @@ MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = int(
 #######################################
 """***PLOT_ACCUMULATION_STEPS***
 """
-PLOT_ACCUMULATION_STEPS = True
+PLOT_ACCUMULATION_STEPS = False
 """***CNN_MODEL***
 Architecture for the IDCNN network. By default the model 0 is used, which correspond
 to the model of the paper. Check the different models in the module cnn_architectures.py
