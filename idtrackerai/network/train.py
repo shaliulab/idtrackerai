@@ -60,7 +60,6 @@ def train(epoch, train_loader, learner, network_params):
     # Setup learner's configuration
     # print("==== Epoch:{0} ====".format(epoch))
     learner.train()
-    learner.step_schedule(epoch)
 
     # The optimization loop
     data_timer.tic()
@@ -147,7 +146,7 @@ def train(epoch, train_loader, learner, network_params):
                         loss=losses,
                     )
                 )
-
+    learner.step_schedule(epoch)
     # print loss avg
     # print(losses.avg)
     # Loss-specific information
