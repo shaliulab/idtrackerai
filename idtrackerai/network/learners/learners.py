@@ -99,7 +99,7 @@ class Learner_Classification(nn.Module):
 
     def step_schedule(self, epoch):
         self.epoch = epoch
-        self.scheduler.step(self.epoch)
+        self.scheduler.step()
         # for param_group in self.optimizer.param_groups:
         # print("LR:", param_group["lr"])
 
