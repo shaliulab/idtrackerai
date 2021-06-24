@@ -30,27 +30,23 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
-import os
-import sys
 
-import matplotlib.pyplot as plt
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from confapp import conf
 from torch.optim.lr_scheduler import MultiStepLR
-from tqdm import tqdm
 
-from idtrackerai.network.data_loaders.identification_dataloader import (
+from idtrackerai.tracker.dataset.identification_dataloader import (
     get_training_data_loaders,
 )
-from idtrackerai.network.data_sets.identification_dataset import (
+from idtrackerai.tracker.dataset.identification_dataset import (
     split_data_train_and_validation,
 )
-from idtrackerai.network.identification_model.stop_training_criteria import (
+from idtrackerai.tracker.network.stop_training_criteria import (
     Stop_Training,
 )
-from idtrackerai.network.identification_model.trainer import (
+from idtrackerai.tracker.network.trainer import (
     TrainIdentification,
 )
 from idtrackerai.network.utils.utils import fc_weights_reinit
@@ -198,8 +194,8 @@ def pre_train_global_fragment(
         list_of_fragments.compute_ratio_of_images_used_for_pretraining()
     )
     logger.debug(
-        "limit ratio of images to be used during pretraining: "
-        "%.4f (if higher than %.2f we stop)"
+        "ratio of images used during pretraining: "
+        "%.4f (if higher than %.2f we stop pretraining)"
         % (ratio_of_pretrained_images, conf.MAX_RATIO_OF_PRETRAINED_IMAGES)
     )
 

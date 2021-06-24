@@ -29,41 +29,39 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from confapp import conf
+import logging
+
+import torch
+
+from idtrackerai.crossings_detection.dataset.crossings_dataloader import (
+    get_test_data_loader,
+)
+
+logger = logging.getLogger("__main__.get_predictions_crossings")
 
 
-class ModelArea(object):
-    """Model of the area used to perform a first discrimination between blobs
-    representing single individual and multiple touching animals (crossings)
+class GetPredictionCrossigns(object):
+    def __init__(self, video, model, blobs, network_params):
+        # Data set
+        self.model = model
+        self.network_params = network_params
+        self.loader = get_test_data_loader(video, blobs)
+        self._predictions = []
 
-    Attributes
-    ----------
+    def get_all_predictions(self):
+        self.model.eval()
+        predictions = []
+        for i, (input_, target) in enumerate(self.loader):
+            # Prepare the inputs
+            if self.network_params.use_gpu:
+                with torch.no_grad():
+                    input_ = input_.cuda()
 
-    median : float
-        median of the area of the blobs segmented from portions of the video in
-        which all the animals are visible (not touching)
-    mean : float
-        mean of the area of the blobs segmented from portions of the video in
-        which all the animals are visible (not touching)
-    std : float
-        standard deviation of the area of the blobs segmented from portions of
-        the video in which all the animals are visible (not touching)
-    std_tolerance : int
-        tolerance factor
+            # Inference
+            output = self.model(input_)
+            pred = output.argmax(1)  # find the predicted class
 
-    Methods
-    -------
-    __call__:
-      some description
-    """
+            predictions.extend(pred.cpu().numpy())
 
-    def __init__(self, mean, median, std):
-        self.median = median
-        self.mean = mean
-        self.std = std
-        self.std_tolerance = conf.STD_TOLERANCE
-
-    def __call__(self, area, std_tolerance=None):
-        if std_tolerance is not None:
-            self.std_tolerance = std_tolerance
-        return (area - self.median) < self.std_tolerance * self.std
+        del self.loader
+        return predictions

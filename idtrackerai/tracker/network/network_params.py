@@ -133,7 +133,11 @@ class NetworkParams(object):
 
     @property
     def knowledge_transfer_model_file(self):
-        return self._knowledge_transfer_model_file
+        file = os.path.join(
+            self._knowledge_transfer_model_file,
+            "supervised_identification_network_.model.pth",
+        )
+        return file
 
     @knowledge_transfer_model_file.setter
     def knowledge_transfer_model_file(self, path):

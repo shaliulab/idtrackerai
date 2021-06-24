@@ -58,7 +58,6 @@ class NetworkParams_crossings(object):
         skip_eval=False,
         epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
         plot_flag=True,
-        return_store_objects=False,
         saveid="",
         model_name="",
     ):
@@ -81,7 +80,6 @@ class NetworkParams_crossings(object):
         self.skip_eval = skip_eval
         self.epochs = epochs
         self.plot_flag = plot_flag
-        self.return_store_objects = return_store_objects
         self.saveid = saveid
         self.model_name = model_name
 

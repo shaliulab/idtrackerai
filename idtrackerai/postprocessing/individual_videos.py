@@ -77,23 +77,21 @@ def generate_individual_video(
     # Initialize video writer
     out = initialize_video_writer(video_object, height, width, identity)
     # Initialize cap reader
-    if video_object.paths_to_video_segments is not None:
+    if len(video_object.video_paths) > 1:
         current_segment = 0
-        cap = cv2.VideoCapture(
-            video_object.paths_to_video_segments[current_segment]
-        )
+        cap = cv2.VideoCapture(video_object.video_paths[current_segment])
         start = video_object._episodes_start_end[current_segment][0]
     else:
         cap = cv2.VideoCapture(video_object.video_path)
 
     for frame_number in range(video_object.number_of_frames):
         # Update cap if necessary.
-        if video_object.paths_to_video_segments is not None:
+        if len(video_object.video_paths) > 1:
             segment_number = video_object.in_which_episode(frame_number)
             if current_segment != segment_number:
-                print(video_object.paths_to_video_segments[segment_number])
+                print(video_object.video_paths[segment_number])
                 cap = cv2.VideoCapture(
-                    video_object.paths_to_video_segments[segment_number]
+                    video_object.video_paths[segment_number]
                 )
                 start = video_object._episodes_start_end[segment_number][0]
                 current_segment = segment_number
@@ -143,7 +141,9 @@ def generate_individual_videos(video_object, trajectories):
             width=width,
             height=height,
         )
-        for i in range(video_object.number_of_animals)
+        for i in range(
+            video_object.user_defined_parameters["number_of_animals"]
+        )
     )
     logger.info("Invididual videos generated")
 

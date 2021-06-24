@@ -36,6 +36,8 @@ import numpy as np
 from confapp import conf
 from tqdm import tqdm
 
+import idtrackerai
+
 logger = logging.getLogger("__main__.get_trajectories")
 
 """
@@ -237,19 +239,24 @@ def produce_output_dict(blobs_in_video, video):
         Output dictionary containing trajectories as values
 
     """
-    if not video.track_wo_identities:
+    assert len(blobs_in_video) == video.number_of_frames
+    if not video.user_defined_parameters["track_wo_identities"]:
         trajectories_info_dict = produce_trajectories(
-            blobs_in_video, video.number_of_frames, video.number_of_animals
+            blobs_in_video,
+            video.number_of_frames,
+            video.user_defined_parameters["number_of_animals"],
         )
     else:
         video._number_of_animals = np.max([len(bf) for bf in blobs_in_video])
         trajectories_info_dict = produce_trajectories_wo_identities(
-            blobs_in_video, video.number_of_frames, video.number_of_animals
+            blobs_in_video,
+            video.number_of_frames,
+            video.user_defined_parameters["number_of_animals"],
         )
 
     output_dict = {
         "trajectories": trajectories_info_dict["centroid_trajectories"],
-        "git_commit": video.git_commit,
+        "version": idtrackerai.__version__,
         "video_path": video.video_path,
         "frames_per_second": video.frames_per_second,
         "body_length": video.median_body_length_full_resolution,
@@ -286,11 +293,11 @@ def produce_output_dict(blobs_in_video, video):
     ):
         output_dict["areas"] = trajectories_info_dict["areas"]
 
-    video_variables_to_save = ["setup_points", "identities_groups"]
-
-    for video_variable in video_variables_to_save:
-
-        if hasattr(video, video_variable) and video.setup_points is not None:
-            output_dict[video_variable] = getattr(video, video_variable)
+    output_dict["setup_points"] = video.user_defined_parameters.get(
+        "setup_points", None
+    )
+    # This is only used in the validationGUI
+    if hasattr(video, "identities_groups"):
+        output_dict["identities_groups"] = video.identities_groups
 
     return output_dict

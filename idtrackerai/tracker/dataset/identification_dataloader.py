@@ -35,7 +35,7 @@ import torch
 from confapp import conf
 from torchvision import transforms
 
-from idtrackerai.network.data_sets.identification_dataset import (
+from idtrackerai.tracker.dataset.identification_dataset import (
     IdentificationDataset,
 )
 
@@ -56,7 +56,9 @@ def get_training_data_loaders(video, train_data, val_data):
         shuffle=False,
         num_workers=2,
     )
-    train_loader.num_classes = video.number_of_animals
+    train_loader.num_classes = video.user_defined_parameters[
+        "number_of_animals"
+    ]
     train_loader.image_shape = training_set[0][0].shape
 
     logger.info("Creating validation IdentificationDataset")
@@ -71,7 +73,7 @@ def get_training_data_loaders(video, train_data, val_data):
         shuffle=False,
         num_workers=2,
     )
-    val_loader.num_classes = video.number_of_animals
+    val_loader.num_classes = video.user_defined_parameters["number_of_animals"]
     val_loader.image_shape = validation_set[0][0].shape
     return train_loader, val_loader
 

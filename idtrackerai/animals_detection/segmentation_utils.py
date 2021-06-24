@@ -29,8 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from typing import Iterable, Optional, Tuple
-import os
+from typing import Iterable, Optional, Tuple, List
 import logging
 from tqdm import tqdm
 
@@ -60,7 +59,7 @@ def _update_bkg_stat(
     if stat == "mean":
         # We only sum the frames and divide by the number of samples
         # outside of the loop
-        bkg += gray
+        bkg = bkg + gray
     elif stat == "min":
         bkg = np.min(np.asarray([bkg, gray]), axis=0)
     elif stat == "max":
@@ -76,7 +75,6 @@ def _compute_bkg_for_episode(
     sigma: float,
     stat: str,
 ):
-    #
     number_of_sample_frames_in_episode = 0
     for ind in frames_range:
         logger.debug("Frame %i" % ind)
@@ -133,7 +131,12 @@ def _compute_episode_bkg(
 
 
 def compute_background(
-    video,
+    video_paths,
+    original_height,
+    original_width,
+    video_path,
+    original_ROI,
+    episodes_start_end,
     background_sampling_period=conf.BACKGROUND_SUBTRACTION_PERIOD,
     background_subtraction_stat=conf.BACKGROUND_SUBTRACTION_STAT,
     parallel_period=conf.FRAMES_PER_EPISODE,
@@ -169,7 +172,7 @@ def compute_background(
 
     """
     bkg_geq_episode_period = background_sampling_period >= parallel_period
-    single_video_file = video.paths_to_video_segments is None
+    single_video_file = video_paths is None
     if single_video_file and bkg_geq_episode_period:
         logger.warning(
             f"BACKGROUND_SUBTRACTION_PERIOD "
@@ -186,20 +189,20 @@ def compute_background(
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
     if background_subtraction_stat in ["mean", "max"]:
-        bkg = np.zeros((video.original_height, video.original_width))
+        bkg = np.zeros((original_height, original_width))
     else:
-        bkg = np.ones((video.original_height, video.original_width)) * 10
+        bkg = np.ones((original_height, original_width)) * 10
 
     set_mkl_to_single_thread()
-    if video.paths_to_video_segments is None:  # one single file
+    if video_paths is None:  # one single file
         logger.debug(
             "one single video, computing bkg in parallel from single video"
         )
         output = Parallel(n_jobs=num_jobs_parallel)(
             delayed(_compute_episode_bkg)(
-                video.video_path,
+                video_path,
                 bkg,
-                video.original_ROI,
+                original_ROI,
                 background_sampling_period,
                 stat=background_subtraction_stat,
                 sigma=sigma_gaussian_blur,
@@ -207,7 +210,7 @@ def compute_background(
                 ending_frame=ending_frame,
             )
             for (starting_frame, ending_frame) in tqdm(
-                video.episodes_start_end, desc="Computing background model"
+                episodes_start_end, desc="Computing background model"
             )
         )
         logger.debug("Finished parallel loop for bkg subtraction")
@@ -219,13 +222,13 @@ def compute_background(
             delayed(_compute_episode_bkg)(
                 video_path,
                 bkg,
-                video.original_ROI,
+                original_ROI,
                 background_sampling_period,
                 stat=background_subtraction_stat,
                 sigma=sigma_gaussian_blur,
             )
             for video_path in tqdm(
-                video.paths_to_video_segments,
+                video_paths,
                 desc="Computing bakcground model",
             )
         )
@@ -279,8 +282,11 @@ def get_frame_average_intensity(frame, mask):
     -------
 
     """
-    assert frame.shape == mask.shape
-    return np.float32(np.mean(np.ma.array(frame, mask=mask == 0)))
+    if mask is not None:
+        assert frame.shape == mask.shape
+        return np.float32(np.mean(np.ma.array(frame, mask=mask == 0)))
+    else:
+        return np.float32(np.mean(frame))
 
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
@@ -333,7 +339,9 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     return frame_segmented_and_masked
 
 
-def filter_contours_by_area(contours, min_area, max_area):
+def _filter_contours_by_area(
+    contours: List, min_area: int, max_area: int
+) -> List[np.ndarray]:  # (cnt_points, 1, 2)
     """Filters out contours which number of pixels is smaller than `min_area`
     or greater than `max_area`
 
@@ -360,8 +368,8 @@ def filter_contours_by_area(contours, min_area, max_area):
     return good_contours
 
 
-def cnt2BoundingBox(cnt, bounding_box):
-    """Transforms the coordinates of the contour in the full frame to the the
+def _cnt2BoundingBox(cnt, bounding_box):
+    """Transforms the coordinates of the contour in the full frame to the
     bounding box of the blob.
 
     Parameters
@@ -381,10 +389,16 @@ def cnt2BoundingBox(cnt, bounding_box):
     return cnt - np.asarray([bounding_box[0][0], bounding_box[0][1]])
 
 
-def get_bounding_box(cnt, width, height, crossing_detector=False):
-    """Computes the bounding box of a given contour with an extra margin of 45
-    pixels. If the function is called with the crossing_detector set to True
-    the margin of the bounding box is set to 55.
+def _get_bounding_box(
+    cnt: np.ndarray,
+    width: int,
+    height: int,
+) -> Tuple[Tuple[Tuple[int, int], Tuple[int, int]], int]:
+    """Computes the bounding box of a given contour with an extra margin of
+    constants.EXTRA_PIXELS_BBOX pixels.
+    The extra margin is given so that the image can be rotated without adding
+    artifacts in the borders. The image will be rotated when setting the
+    identification image in the crossing detector step.
 
     Parameters
     ----------
@@ -395,9 +409,6 @@ def get_bounding_box(cnt, width, height, crossing_detector=False):
         Width of the video frame
     height : int
         Height of the video frame
-    crossing_detector : bool
-        Flag to indicate whether the function is being called from the
-        crossing_detector module
 
     Returns
     -------
@@ -407,10 +418,10 @@ def get_bounding_box(cnt, width, height, crossing_detector=False):
         Diagonal of the original bounding box computed with OpenCv that serves
         as estimate for the body length of the animal.
     """
+    # TODO: rethink whether the expansion is really needed
     x, y, w, h = cv2.boundingRect(cnt)
     original_diagonal = int(np.ceil(np.sqrt(w ** 2 + h ** 2)))
-    ## TODO: add this to constans
-    n = 45 if not crossing_detector else 55
+    n = conf.EXTRA_PIXELS_BBOX
     if x - n > 0:  # We only expand the
         x = x - n
     else:
@@ -427,10 +438,11 @@ def get_bounding_box(cnt, width, height, crossing_detector=False):
         h = h + 2 * n
     else:
         h = height - y
-    return ((x, y), (x + w, y + h)), original_diagonal
+    expanded_bbox = ((x, y), (x + w, y + h))
+    return expanded_bbox, original_diagonal
 
 
-def getCentroid(cnt):
+def _getCentroid(cnt):
     """Computes the centroid of the contour
 
     Parameters
@@ -450,7 +462,7 @@ def getCentroid(cnt):
     return (x, y)
 
 
-def get_pixels(cnt, width, height):
+def _get_pixels(cnt: np.ndarray, width: int, height: int) -> np.ndarray:
     """Gets the coordinates list of the pixels inside the contour
 
     Parameters
@@ -475,7 +487,12 @@ def get_pixels(cnt, width, height):
     return np.asarray(list(zip(pts[0], pts[1])))
 
 
-def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
+def _get_bounding_box_image(
+    frame: np.ndarray,
+    cnt: np.ndarray,
+    save_pixels: str,
+    save_segmentation_image: str,
+):
     """Computes the `bounding_box_image`from a given frame and contour. It also
     returns the coordinates of the `bounding_box`, the ravelled `pixels`
     inside of the contour and the diagonal of the `bounding_box` as
@@ -502,15 +519,17 @@ def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
 
     See Also
     --------
-    get_bounding_box
-    cnt2BoundingBox
-    get_pixels
+    _get_bounding_box
+    _cnt2BoundingBox
+    _get_pixels
     """
     height = frame.shape[0]
     width = frame.shape[1]
-    bounding_box, estimated_body_length = get_bounding_box(
+    # Coordinates of an expanded bounding box
+    bounding_box, estimated_body_length = _get_bounding_box(
         cnt, width, height
     )  # the estimated body length is the diagonal of the original bounding_box
+    # Get bounding box from frame
     if save_segmentation_image == "RAM" or save_segmentation_image == "DISK":
         bounding_box_image = frame[
             bounding_box[0][1] : bounding_box[1][1],
@@ -518,9 +537,13 @@ def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
         ]
     elif save_segmentation_image == "NONE":
         bounding_box_image = None
-    contour_in_bounding_box = cnt2BoundingBox(cnt, bounding_box)
+    else:
+        raise ValueError(
+            f"Invalid `save_segmentation_image` = {save_segmentation_image}"
+        )
+    contour_in_bounding_box = _cnt2BoundingBox(cnt, bounding_box)
     if save_pixels == "RAM" or save_pixels == "DISK":
-        pixels_in_bounding_box = get_pixels(
+        pixels_in_bounding_box = _get_pixels(
             contour_in_bounding_box,
             np.abs(bounding_box[0][0] - bounding_box[1][0]),
             np.abs(bounding_box[0][1] - bounding_box[1][1]),
@@ -534,6 +557,8 @@ def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
         )
     elif save_pixels == "NONE":
         pixels_in_full_frame_ravelled = None
+    else:
+        raise
 
     return (
         bounding_box,
@@ -543,8 +568,11 @@ def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
     )
 
 
-def get_blobs_information_per_frame(
-    frame, contours, save_pixels, save_segmentation_image
+def _get_blobs_information_per_frame(
+    frame: np.ndarray,
+    contours: List[np.ndarray],
+    save_pixels: str,
+    save_segmentation_image: str,
 ):
     """Computes a set of properties for all the `contours` in a given frame.
 
@@ -572,9 +600,9 @@ def get_blobs_information_per_frame(
 
     See Also
     --------
-    get_bounding_box_image
-    getCentroid
-    get_pixels
+    _get_bounding_box_image
+    _getCentroid
+    _get_pixels
     """
     bounding_boxes = []
     bounding_box_images = []
@@ -589,7 +617,7 @@ def get_blobs_information_per_frame(
             bounding_box_image,
             pixels_in_full_frame_ravelled,
             estimated_body_length,
-        ) = get_bounding_box_image(
+        ) = _get_bounding_box_image(
             frame, cnt, save_pixels, save_segmentation_image
         )
         # bounding boxes
@@ -597,7 +625,7 @@ def get_blobs_information_per_frame(
         # bounding_box_images
         bounding_box_images.append(bounding_box_image)
         # centroids
-        centroids.append(getCentroid(cnt))
+        centroids.append(_getCentroid(cnt))
         areas.append(cv2.contourArea(cnt))
         # pixels lists
         pixels.append(pixels_in_full_frame_ravelled)
@@ -615,56 +643,27 @@ def get_blobs_information_per_frame(
 
 
 def blob_extractor(
-    segmented_frame,
-    frame,
-    min_area,
-    max_area,
-    save_pixels="DISK",
-    save_segmentation_image="DISK",
-):
-    """Given a `segmented_frame` it extracts the blobs with area greater than
-    `min_area` and smaller than `max_area` and it computes a set of relevant
-    properties for every blob.
-
-    Parameters
-    ----------
-    segmented_frame : nd.array
-        Frame with zeros and ones where ones are valid pixels.
-    frame : nd.array
-        Frame from where to extract the `bounding_box_image` of every blob
-    min_area : int
-        Minimum number of blobs above which a blob is considered to be valid
-    max_area : int
-        Maximum number of blobs below which a blob is considered to be valid
-
-    Returns
-    -------
-    bounding_boxes : list
-        List with the `bounding_box` for every contour in `contours`
-    bounding_box_images : list
-        List with the `bounding_box_image` for every contour in `contours`
-    centroids : list
-        List with the `centroid` for every contour in `contours`
-    areas : list
-        List with the `area` in pixels for every contour in `contours`
-    pixels : list
-        List with the `pixels` for every contour in `contours`
-    good_contours_in_full_frame:
-        List with the `contours` which area is in between `min_area` and
-        `max_area`
-    estimated_body_lengths : list
-        List with the `estimated_body_length` for every contour in `contours`
-
-    See Also
-    --------
-    filter_contours_by_area
-    get_blobs_information_per_frame
-    """
+    segmented_frame: np.ndarray,
+    frame: np.ndarray,
+    min_area: int,
+    max_area: int,
+    save_pixels: Optional[str] = "DISK",
+    save_segmentation_image: Optional[str] = "DISK",
+) -> Tuple[
+    List[Tuple],
+    List[np.ndarray],
+    List[Tuple],
+    List[int],
+    List[List],
+    List[List],
+    List[float],
+]:
+    # TODO: Document
     _, contours, hierarchy = cv2.findContours(
         segmented_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
     )
     # Filter contours by size
-    good_contours_in_full_frame = filter_contours_by_area(
+    good_contours_in_full_frame = _filter_contours_by_area(
         contours, min_area, max_area
     )
     # get contours properties
@@ -675,7 +674,7 @@ def blob_extractor(
         areas,
         pixels,
         estimated_body_lengths,
-    ) = get_blobs_information_per_frame(
+    ) = _get_blobs_information_per_frame(
         frame,
         good_contours_in_full_frame,
         save_pixels,

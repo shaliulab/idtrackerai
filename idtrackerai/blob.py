@@ -134,7 +134,7 @@ class Blob(object):
     -------
     add_centroid:
        some description
-    apply_model_area:
+    apply_area_and_unicity_heuristic:
       some description
     check_for_multiple_next_or_previous:
       some description
@@ -331,6 +331,12 @@ class Blob(object):
     @property
     def is_an_individual(self):
         return self._is_an_individual
+
+    @is_an_individual.setter
+    def is_an_individual(self, value: bool):
+        assert isinstance(value, bool)
+        self._is_an_individual = value
+        self._is_a_crossing = not value
 
     @property
     def is_a_crossing(self):
@@ -692,13 +698,8 @@ class Blob(object):
                 )
                 raise ValueError("non_shared_information_with_previous is nan")
 
-    def apply_model_area(
-        self,
-        video,
-        number_of_animals,
-        model_area,
-        identification_image_size,
-        number_of_blobs,
+    def apply_area_and_unicity_heuristic(
+        self, model_area, n_blobs_eq_n_animals
     ):
         """Classify self as a crossing or individual blob according to its area
 
@@ -710,23 +711,17 @@ class Blob(object):
             Number of animals to be tracked
         model_area : function
             Model of the area blobs representing individual animals
-        identification_image_size : tuple
-            Shape of the images used for the identification
         number_of_blobs : int
             Number of blobs segmented in the frame self.frame_number
 
         """
-        if (
-            model_area(self.area)
-            or number_of_blobs == number_of_animals
-            or video.number_of_animals == 1
-        ):  # Checks if area is compatible with the model area we built
-            # self.set_image_for_identification(video)
-            self._is_an_individual = True
-        else:
-            self._is_a_crossing = True
+        individual_by_area = model_area(self.area)
+        self._is_an_individual = individual_by_area or n_blobs_eq_n_animals
+        self._is_a_crossing = not self._is_an_individual
 
-    def set_image_for_identification(self, video, file_path):
+    def set_image_for_identification(
+        self, identification_image_size, height, width, file_path
+    ):
         """Set the image that will be used to identitfy the animal with the idCNN
 
         Parameters
@@ -741,7 +736,11 @@ class Blob(object):
             image_for_identification,
             self._extreme1_coordinates,
             self._extreme2_coordinates,
-        ) = self.get_image_for_identification(video)
+        ) = self.get_image_for_identification(
+            identification_image_size,
+            height,
+            width,
+        )
 
         # For RAM optimization
         with h5py.File(file_path, "a") as f:
@@ -761,7 +760,12 @@ class Blob(object):
         )
 
     def get_image_for_identification(
-        self, video, folder_to_save_for_paper_figure="", image_size=None
+        self,
+        identification_image_size,
+        height,
+        width,
+        folder_to_save_for_paper_figure="",
+        image_size=None,
     ):
         """Compute the image that will be used to identify the animal with the idCNN
 
@@ -782,11 +786,11 @@ class Blob(object):
 
         """
         if image_size is None:
-            image_size = video.identification_image_size[0]
+            image_size = identification_image_size[0]
 
         return self._get_image_for_identification(
-            video.height,
-            video.width,
+            height,
+            width,
             self.bounding_box_image,
             self.pixels,
             self.bounding_box_in_frame_coordinates,

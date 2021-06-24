@@ -156,7 +156,7 @@ def get_accuracy_wrt_groundtruth_no_gaps(
         blobs_in_video_groundtruth,
         blobs_in_video,
     )
-    number_of_animals = video.number_of_animals
+    number_of_animals = video.user_defined_parameters["number_of_animals"]
     if blobs_in_video is None:
         blobs_in_video = blobs_in_video_groundtruth
     results = compare_tracking_against_groundtruth_no_gaps(
@@ -436,7 +436,7 @@ def get_accuracy_wrt_groundtruth(
         blobs_in_video,
     )
 
-    number_of_animals = video.number_of_animals
+    number_of_animals = video.user_defined_parameters["number_of_animals"]
     if blobs_in_video is None:
         blobs_in_video = blobs_in_video_groundtruth
     results = compare_tracking_against_groundtruth(

@@ -32,13 +32,11 @@
 import os
 
 import cv2
-import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 from confapp import conf
 
 from idtrackerai.blob import Blob
-from idtrackerai.utils.segmentation_utils import blob_extractor
+from idtrackerai.animals_detection.segmentation_utils import blob_extractor
 
 """ erosion """
 
@@ -150,7 +148,9 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
             None,
             bounding_box,
             bounding_box_image=None,
-            number_of_animals=video.number_of_animals,
+            number_of_animals=video.user_defined_parameters[
+                "number_of_animals"
+            ],
             frame_number=frame_number,
             pixels=None,
             pixels_path=pixels_path,
@@ -159,7 +159,9 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
             video_width=video.width,
             video_path=video.video_path,
             pixels_are_from_eroded_blob=True,
-            resolution_reduction=video.resolution_reduction,
+            resolution_reduction=video.user_defined_parameters[
+                "resolution_reduction"
+            ],
         )
         eroded_blob.eroded_pixels = pixels
         eroded_blobs_in_frame.append(eroded_blob)

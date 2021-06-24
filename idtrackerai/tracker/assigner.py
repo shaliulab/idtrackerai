@@ -33,7 +33,7 @@ import logging
 
 import numpy as np
 
-from idtrackerai.network.identification_model.get_predictions import (
+from idtrackerai.tracker.network.get_predictions import (
     GetPredictionsIdentities,
 )
 

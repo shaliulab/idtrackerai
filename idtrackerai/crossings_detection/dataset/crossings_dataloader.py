@@ -35,7 +35,9 @@ import torch
 from confapp import conf
 from torchvision import transforms
 
-from idtrackerai.network.data_sets.crossings_dataset import CrossingDataset
+from idtrackerai.crossings_detection.dataset.crossings_dataset import (
+    CrossingDataset,
+)
 
 logger = logging.getLogger("__main__.crossings_dataloader")
 

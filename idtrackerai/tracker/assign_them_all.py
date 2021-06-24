@@ -29,10 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import collections
 import logging
-import os
-import sys
 
 import cv2
 import numpy as np
@@ -40,14 +37,11 @@ from confapp import conf
 from scipy.spatial.distance import cdist
 from tqdm import tqdm
 
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.list_of_fragments import ListOfFragments
-from idtrackerai.postprocessing.compute_velocity_model import (
+from idtrackerai.tracker.compute_velocity_model import (
     compute_model_velocity,
 )
-from idtrackerai.preprocessing.erosion import (
+from idtrackerai.tracker.erosion import (
     compute_erosion_disk,
-    erode,
     get_eroded_blobs,
 )
 
@@ -867,10 +861,12 @@ def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
     if not hasattr(video, "velocity_threshold"):
         video.velocity_threshold = compute_model_velocity(
             list_of_fragments.fragments,
-            video.number_of_animals,
+            video.user_defined_parameters["number_of_animals"],
             percentile=conf.VEL_PERCENTILE,
         )
-    possible_identities = range(1, video.number_of_animals + 1)
+    possible_identities = range(
+        1, video.user_defined_parameters["number_of_animals"] + 1
+    )
     erosion_counter = 0
     list_of_occluded_identities = [
         [] for i in range(len(list_of_blobs.blobs_in_video))

@@ -39,7 +39,6 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 from idtrackerai.blob import Blob
-from idtrackerai.preprocessing.model_area import ModelArea
 from idtrackerai.utils.py_utils import interpolate_nans
 
 logger = logging.getLogger("__main__.list_of_blobs")
@@ -85,10 +84,13 @@ class ListOfBlobs(object):
 
     """
 
-    def __init__(self, blobs_in_video=None, number_of_frames=None):
+    def __init__(self, blobs_in_video=None):
         self.blobs_in_video = blobs_in_video
         self.number_of_frames = len(self.blobs_in_video)
         self.blobs_are_connected = False
+
+    def __len__(self):
+        return len(self.blobs_in_video)
 
     def compute_overlapping_between_subsequent_frames(self):
         """Computes overlapping between self and the blobs generated during
@@ -273,107 +275,36 @@ class ListOfBlobs(object):
         )
         logger.info("total number of fragments: %i" % fragment_identifier)
 
-    def compute_model_area_and_body_length(self, number_of_animals):
-        """computes the median and standard deviation of all the blobs of the video
-        and the median_body_length estimated from the diagonal of the bounding box.
-        These values are later used to discard blobs that are not fish and potentially
-        belong to a crossing.
-        """
-        # areas are collected throughout the entire video in the cores of the global fragments
-        areas_and_body_length = np.asarray(
-            [
-                (blob.area, blob.estimated_body_length)
-                for blobs_in_frame in self.blobs_in_video
-                for blob in blobs_in_frame
-                if len(blobs_in_frame) == number_of_animals
-            ]
-        )
-        if areas_and_body_length.shape[0] == 0:
-            raise ValueError(
-                "There is not part in the video where the {} "
-                "animals are visible. "
-                "Try a different segmentation or check the "
-                "number of animals in the video.".format(number_of_animals)
-            )
-        median_area = np.median(areas_and_body_length[:, 0])
-        mean_area = np.mean(areas_and_body_length[:, 0])
-        std_area = np.std(areas_and_body_length[:, 0])
-        median_body_length = np.median(areas_and_body_length[:, 1])
-        return ModelArea(mean_area, median_area, std_area), median_body_length
-
-    def apply_model_area_to_video(
-        self, video, model_area, identification_image_size, number_of_animals
+    def set_images_for_identification(
+        self,
+        episodes_start_end,
+        identification_images_file_paths,
+        identification_image_size,
+        number_of_animals,
+        number_of_frames,
+        video_path,
+        height,
+        width,
     ):
-        """Applies `model_area` to every blob extracted from video
-
-        Parameters
-        ----------
-        video : <Video object>
-            See :class:`~video.Video`
-        model_area : <ModelArea object>
-            See :class:`~model_area.ModelArea`
-        identification_image_size : int
-            size of the identification image (see
-            :meth:`~blob.Blob.get_image_for_identification` and
-            :attr:`~blob.Blob.image_for_identification`)
-        number_of_animals : int
-            number of animals to be tracked
-        """
-
-        def apply_model_area_to_blobs_in_frame(
-            video,
-            number_of_animals,
-            blobs_in_frame,
-            model_area,
-            identification_image_size,
-        ):
-            """Applies `model_area` to the collection of Blob instances in
-            `blobs_in_frame`
-
-            Parameters
-            ----------
-            video : <Video object>
-                See :class:`~video.Video`
-            number_of_animals : int
-                number of animals to be tracked
-            blobs_in_frame : list
-                list of instances of :class:`~blob.Blob`
-            model_area : <ModelArea object>
-                See :class:`~model_area.ModelArea`
-            identification_image_size : int
-                size of the identification image (see
-                :meth:`~blob.Blob.get_image_for_identification` and
-                :attr:`~blob.Blob.image_for_identification`)
-            """
-            number_of_blobs = len(blobs_in_frame)
-            for blob in blobs_in_frame:
-                blob.apply_model_area(
-                    video,
-                    number_of_animals,
-                    model_area,
-                    identification_image_size,
-                    number_of_blobs,
-                )
-
-        for blobs_in_frame in tqdm(
-            self.blobs_in_video, desc="Applying model area"
-        ):
-            apply_model_area_to_blobs_in_frame(
-                video,
-                number_of_animals,
-                blobs_in_frame,
-                model_area,
-                identification_image_size,
-            )
-
-    def set_images_for_identification(self, video):
         Output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
             delayed(self.set_id_images_episode)(
-                video, file, self.blobs_in_video[start : end + 1]
+                identification_image_size,
+                number_of_animals,
+                number_of_frames,
+                video_path,
+                height,
+                width,
+                file,
+                self.blobs_in_video[start:end],
             )
-            for file, (start, end) in zip(
-                video.identification_images_file_paths,
-                video.episodes_start_end,
+            for file, (start, end) in tqdm(
+                list(
+                    zip(
+                        identification_images_file_paths,
+                        episodes_start_end,
+                    )
+                ),
+                desc="Setting images for identification",
             )
         )
         self.blobs_in_video = [
@@ -383,11 +314,28 @@ class ListOfBlobs(object):
         ]
 
     @staticmethod
-    def set_id_images_episode(video, file, blobs_in_episode):
-        initialize_identification_images_file(video, file)
+    def set_id_images_episode(
+        identification_image_size,
+        number_of_animals,
+        number_of_frames,
+        video_path,
+        height,
+        width,
+        file,
+        blobs_in_episode,
+    ):
+        initialize_identification_images_file(
+            identification_image_size,
+            number_of_animals,
+            number_of_frames,
+            file,
+            video_path,
+        )
         for blobs_in_frame in blobs_in_episode:
             for blob in blobs_in_frame:
-                blob.set_image_for_identification(video, file)
+                blob.set_image_for_identification(
+                    identification_image_size, height, width, file
+                )
         return blobs_in_episode
 
     def check_maximal_number_of_blob(
@@ -807,15 +755,17 @@ class ListOfBlobs(object):
         logger.info("Calling add_blob")
         if apply_resolution_reduction:
             centroid = (
-                centroid[0] * video.resolution_reduction,
-                centroid[1] * video.resolution_reduction,
+                centroid[0]
+                * video.user_defined_parameters["resolution_reduction"],
+                centroid[1]
+                * video.user_defined_parameters["resolution_reduction"],
             )
         if not (isinstance(centroid, tuple) and len(centroid) == 2):
             raise Exception("The centroid must be a tuple of length 2")
         if not (
             isinstance(identity, int)
             and identity > 0
-            and identity <= video.number_of_animals
+            and identity <= video.user_defined_parameters["number_of_animals"]
         ):
             raise Exception(
                 "The identity must be an integer between 1 and the number of "
@@ -833,28 +783,38 @@ class ListOfBlobs(object):
         new_blob.frame_number = frame_number
         new_blob._is_an_individual = True
         new_blob._is_a_crossing = False
-        new_blob._resolution_reduction = video.resolution_reduction
-        new_blob.number_of_animals = video.number_of_animals
+        new_blob._resolution_reduction = video.user_defined_parameters[
+            "resolution_reduction"
+        ]
+        new_blob.number_of_animals = video.user_defined_parameters[
+            "number_of_animals"
+        ]
         self.blobs_in_video[frame_number].append(new_blob)
         video._is_centroid_updated = True
 
 
-def initialize_identification_images_file(video, file):
-    image_shape = video.identification_image_size[0]
+def initialize_identification_images_file(
+    identification_image_size,
+    number_of_animals,
+    number_of_frames,
+    file,
+    video_path,
+):
+    image_shape = identification_image_size[0]
     with h5py.File(file, "w") as f:
         f.create_dataset(
             "identification_images",
             ((0, image_shape, image_shape)),
             chunks=(1, image_shape, image_shape),
             maxshape=(
-                video.number_of_animals * video.number_of_frames * 5,
+                number_of_animals * number_of_frames * 5,
                 image_shape,
                 image_shape,
             ),
             dtype="uint8",
         )
-        f.attrs["number_of_animals"] = video.number_of_animals
-        f.attrs["video_path"] = video.video_path
+        f.attrs["number_of_animals"] = number_of_animals
+        f.attrs["video_path"] = video_path
 
 
 def check_tracking(blobs_in_frame):

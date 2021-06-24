@@ -98,11 +98,8 @@ def apply_func_on_frame(
     centroid_trace_length=10,
 ):
     segment_number = video_object.in_which_episode(frame_number)
-    current_segment = segment_number
     if cap is None:
-        cap = cv2.VideoCapture(
-            video_object.paths_to_video_segments[segment_number]
-        )
+        cap = cv2.VideoCapture(video_object.video_paths[segment_number])
         start = video_object._episodes_start_end[segment_number][0]
         cap.set(1, frame_number - start)
     else:
@@ -134,7 +131,7 @@ def generate_trajectories_video(
         + "_tracked.avi"
     )
     colors = get_spaced_colors_util(
-        video_object.number_of_animals, black=False
+        video_object.user_defined_parameters["number_of_animals"], black=False
     )
     path_to_save_video = os.path.join(video_object._session_folder, video_name)
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
@@ -145,7 +142,7 @@ def generate_trajectories_video(
         (video_object.original_width, video_object.original_height),
     )
 
-    if video_object.paths_to_video_segments is None:
+    if len(video_object.video_paths) == 1:
         cap = cv2.VideoCapture(video_object.video_path)
     else:
         cap = None

@@ -31,12 +31,11 @@
 
 import logging
 import random
-import sys
 
 import numpy as np
 from confapp import conf
 
-from idtrackerai.assigner import assign
+from idtrackerai.tracker.assigner import assign
 from idtrackerai.list_of_fragments import load_identification_images
 
 """
@@ -94,7 +93,9 @@ class AccumulationManager(object):
         threshold_acceptable_accumulation=None,
     ):
         self.video = video
-        self.number_of_animals = video.number_of_animals
+        self.number_of_animals = video.user_defined_parameters[
+            "number_of_animals"
+        ]
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
         self.counter = 0
@@ -945,7 +946,6 @@ def get_predictions_of_candidates_fragments(
         raise
 
     assert np.sum(lengths) == assigner._predictions.shape[0]
-    print(assigner._softmax_probs.min(), assigner._softmax_probs.max())
     return (
         assigner._predictions,
         assigner._softmax_probs,

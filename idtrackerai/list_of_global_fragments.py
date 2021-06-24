@@ -30,13 +30,12 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
-import sys
 
 import numpy as np
 from confapp import conf
 
-from idtrackerai.accumulation_manager import AccumulationManager
-from idtrackerai.assigner import (
+from idtrackerai.tracker.accumulation_manager import AccumulationManager
+from idtrackerai.tracker.assigner import (
     assign,
     compute_identification_statistics_for_non_accumulated_fragments,
 )
@@ -129,7 +128,7 @@ class ListOfGlobalFragments(object):
 
     @staticmethod
     def abort_knowledge_transfer_on_same_animals(video, identification_model):
-        identities = range(video.number_of_animals)
+        identities = range(video.user_defined_parameters["number_of_animals"])
         identification_model.apply(fc_weights_reinit)
         logger.info(
             "Identity transfer failed. We proceed by transferring only the convolutional filters."
@@ -142,6 +141,7 @@ class ListOfGlobalFragments(object):
         accumulation_trial=0,
         identification_model=None,
         network_params=None,
+        knowledge_transfer_info_dict=None,
     ):
         """Selects the first global fragment to be used for accumulation
 
@@ -169,16 +169,24 @@ class ListOfGlobalFragments(object):
         except IndexError:
             return None
 
-        if not video.identity_transfer or identification_model is None:
-            identities = range(video.number_of_animals)
+        if (
+            not video.user_defined_parameters["identity_transfer"]
+            or identification_model is None
+        ):
+            identities = range(
+                video.user_defined_parameters["number_of_animals"]
+            )
         else:
             logger.info(
                 "Transferring identities from {}".format(
-                    video.knowledge_transfer_model_file
+                    video.user_defined_parameters["knowledge_transfer_folder"]
                 )
             )
             identities = self.get_transferred_identities(
-                video, identification_model, network_params
+                video,
+                identification_model,
+                network_params,
+                knowledge_transfer_info_dict,
             )
 
         for i, fragment in enumerate(
@@ -188,7 +196,9 @@ class ListOfGlobalFragments(object):
             fragment._temporary_id = identities[i]
             fragment._frequencies = (
                 self.give_me_frequencies_first_fragment_accumulated(
-                    i, video.number_of_animals, fragment
+                    i,
+                    video.user_defined_parameters["number_of_animals"],
+                    fragment,
                 )
             )
             fragment._is_certain = True
@@ -226,7 +236,11 @@ class ListOfGlobalFragments(object):
         )
 
     def get_transferred_identities(
-        self, video, identification_model, network_params
+        self,
+        video,
+        identification_model,
+        network_params,
+        knowledge_transfer_info_dict,
     ):
         """Assigns an identity to the images of the first global fragment using
         a network passed by the user to perform identity transfer
@@ -344,20 +358,21 @@ class ListOfGlobalFragments(object):
                 for fragment in self.first_global_fragment_for_accumulation.individual_fragments
             ]
             if (
-                video.number_of_animals
-                == video.knowledge_transfer_info_dict["number_of_classes"]
+                video.user_defined_parameters["number_of_animals"]
+                == knowledge_transfer_info_dict["number_of_classes"]
             ):
                 identities = (
                     video._first_global_fragment_knowledge_transfer_identities
                 )
             elif (
-                video.number_of_animals
-                < video.knowledge_transfer_info_dict["number_of_classes"]
+                video.user_defined_parameters["number_of_animals"]
+                < knowledge_transfer_info_dict["number_of_classes"]
             ):
-                identities = range(video.number_of_animals)
+                identities = range(
+                    video.user_defined_parameters["number_of_animals"]
+                )
             logger.info("Identities transferred succesfully")
 
-        # self.plot_P1s_identity_transfer(video)
         return identities
 
     def compute_maximum_number_of_images(self):

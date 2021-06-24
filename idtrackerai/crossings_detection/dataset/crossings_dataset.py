@@ -37,7 +37,7 @@ from confapp import conf
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai.list_of_fragments import load_identification_images
-from idtrackerai.network.data_sets.identification_dataset import (
+from idtrackerai.tracker.dataset.identification_dataset import (
     duplicate_PCA_images,
 )
 
@@ -126,9 +126,7 @@ class CrossingDataset(VisionDataset):
         return image, target
 
 
-def get_train_validation_and_toassign_blobs(
-    list_of_blobs, ratio_validation=0.1
-):
+def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
     """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs), and a list (toassign_blobs).
 
     :param list_of_blobs:

@@ -39,19 +39,19 @@ import torch.nn as nn
 from confapp import conf
 from torch.optim.lr_scheduler import MultiStepLR
 
-from idtrackerai.accumulation_manager import (
+from idtrackerai.tracker.accumulation_manager import (
     get_predictions_of_candidates_fragments,
 )
-from idtrackerai.network.data_loaders.identification_dataloader import (
+from idtrackerai.tracker.dataset.identification_dataloader import (
     get_training_data_loaders,
 )
-from idtrackerai.network.data_sets.identification_dataset import (
+from idtrackerai.tracker.dataset.identification_dataset import (
     split_data_train_and_validation,
 )
-from idtrackerai.network.identification_model.stop_training_criteria import (
+from idtrackerai.tracker.network.stop_training_criteria import (
     Stop_Training,
 )
-from idtrackerai.network.identification_model.trainer import (
+from idtrackerai.tracker.network.trainer import (
     TrainIdentification,
 )
 
