@@ -1256,7 +1256,7 @@ class TrackerAPI(object):
             # Call GUI function
             interpolate_crossings()
         else:
-            self.chosen_video.video.estimated_accuracy = 1.0
+            self.chosen_video.video._estimated_accuracy = 1.0
             self.chosen_video.video._has_been_assigned = True
             self.chosen_video.video._has_crossings_solved = False
             self.chosen_video.video._has_trajectories_wo_gaps = False
