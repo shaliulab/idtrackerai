@@ -68,10 +68,13 @@ def download_example_video(output_folder=""):
     return output_file_avi
 
 
-def update_json(video_path, args):
-    json_file_path = os.path.join(IDTRACKERAI_FOLDER, "utils", "test.json")
+def generate_json_file(video_path, args):
+    default_json_file_path = os.path.join(
+        IDTRACKERAI_FOLDER, "utils", "test.json"
+    )
+    updated_json_file = os.path.join(IDTRACKERAI_FOLDER, "utils", "test_.json")
 
-    with open(json_file_path) as json_file:
+    with open(default_json_file_path) as json_file:
         json_content = json.load(json_file)
 
     json_content["_video"]["value"] = video_path
@@ -80,10 +83,10 @@ def update_json(video_path, args):
     else:
         json_content["_no_ids"]["value"] = "False"
 
-    with open(json_file_path, "w") as json_file:
+    with open(updated_json_file, "w") as json_file:
         json.dump(json_content, json_file)
 
-    return json_file_path
+    return updated_json_file
 
 
 def test():
@@ -104,12 +107,13 @@ def test():
     )
     args = parser.parse_args()
     video_path = download_example_video(args.output_folder)
-    json_file_path = update_json(video_path, args)
-    os.system(
-        "idtrackerai terminal_mode --load {} --exec track_video".format(
-            json_file_path
-        )
+    json_file_path = generate_json_file(video_path, args)
+    command = (
+        f"idtrackerai terminal_mode --load {json_file_path} --exec track_video"
     )
+    print("Executting command: \n")
+    print(command)
+    os.system(command)
 
 
 if __name__ == "__main__":

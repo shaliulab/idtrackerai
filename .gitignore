@@ -35,6 +35,7 @@ docs/build/*
 !docs/Makefile
 !docs/source/_static/*
 !idtrackerai/gui/*.png
+idtrackerai/utils/test_.json
 
 #ignore idtrackerAI and videos folder because they have .png files
 videos
