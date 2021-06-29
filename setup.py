@@ -123,11 +123,9 @@ setup(
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    package_data={"idtrackerai": ["data/*.avi"]},
     entry_points={
         "console_scripts": [
             "idtrackerai_test=idtrackerai.utils.test_example_video:test",
         ],
     },
-    data_files=[("idtrackerai", ["idtrackerai/utils/test.json"])],
 )
