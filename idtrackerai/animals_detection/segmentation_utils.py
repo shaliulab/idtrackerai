@@ -89,22 +89,8 @@ def _compute_bkg_for_episode(
     return bkg, number_of_sample_frames_in_episode
 
 
-def _compute_episode_bkg(
-    video_path: str,
-    bkg: np.ndarray,
-    mask: np.ndarray,
-    period: int,
-    stat: str = "mean",
-    sigma: Optional[float] = None,
-    starting_frame: Optional[int] = 0,
-    ending_frame: Optional[int] = None,
-) -> Tuple[np.ndarray, int]:
-    cap = cv2.VideoCapture(video_path)
-    logger.debug(
-        "Adding from starting frame %i to background" % starting_frame
-    )
+def _get_episode_frames_for_bkg(cap, starting_frame, ending_frame, period):
     if ending_frame is None:
-
         # ending_frame is None when the video is splitted in chunks
         ending_frame = int(cap.get(7))  # number of frames in video
         if period > ending_frame:
@@ -117,10 +103,30 @@ def _compute_episode_bkg(
                 f"({period} > {ending_frame}). "
                 f"The effective period will be num_frames ({ending_frame})."
             )
+    return range(starting_frame, ending_frame, period)
+
+
+def _compute_episode_bkg(
+    video_path: str,
+    bkg: np.ndarray,
+    mask: np.ndarray,
+    period: int,
+    stat: str = "mean",
+    sigma: Optional[float] = None,
+    starting_frame: Optional[int] = 0,
+    ending_frame: Optional[int] = None,
+) -> Tuple[np.ndarray, int]:
+
+    cap = cv2.VideoCapture(video_path)
+
+    frames_for_bkg = _get_episode_frames_for_bkg(
+        cap, starting_frame, ending_frame, period
+    )
+
     bkg, number_of_sample_frames_in_episode = _compute_bkg_for_episode(
         cap,
         bkg,
-        range(starting_frame, ending_frame, period),
+        frames_for_bkg,
         mask,
         sigma,
         stat,
@@ -252,9 +258,11 @@ def compute_background(
     return bkg.astype("float32")
 
 
-def gaussian_blur(frame, sigma=None):
-    if sigma is not None:
-        frame = cv2.GaussianBlur(frame, (0, 0), sigma)
+def gaussian_blur(frame, kernel_size=None):
+    if kernel_size is not None and kernel_size > 0:
+        # WHen sigmaX and sigmaY are set to (0,0) sigma is computed from the
+        # kernel_size
+        frame = cv2.GaussianBlur(frame, (0, 0), kernel_size)
     return frame
 
 
