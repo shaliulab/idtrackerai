@@ -55,7 +55,7 @@ dist/*
 build/*
 .eggs/*
 
-data/*/session_*
+idtrackerai/data/*/session_*
 !*idtrackerai_video_example_compressed.avi
 
 out-parameters\.txt
