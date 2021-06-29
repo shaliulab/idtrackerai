@@ -7,4 +7,5 @@ dependencies:
   - torchvision
   - sphinx
   - numpydoc
+  - pytest
 

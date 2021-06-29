@@ -71,7 +71,6 @@ requirements = [
     "idtrackerai-app",
     "confapp",
     "gdown",
-    "pytest",
 ]
 
 
