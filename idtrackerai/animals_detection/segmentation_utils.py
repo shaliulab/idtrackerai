@@ -258,11 +258,9 @@ def compute_background(
     return bkg.astype("float32")
 
 
-def gaussian_blur(frame, kernel_size=None):
-    if kernel_size is not None and kernel_size > 0:
-        # WHen sigmaX and sigmaY are set to (0,0) sigma is computed from the
-        # kernel_size
-        frame = cv2.GaussianBlur(frame, (0, 0), kernel_size)
+def gaussian_blur(frame, sigma=None):
+    if sigma is not None and sigma > 0:
+        frame = cv2.GaussianBlur(frame, (0, 0), sigma)
     return frame
 
 
