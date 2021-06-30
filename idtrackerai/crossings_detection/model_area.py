@@ -33,6 +33,8 @@ from confapp import conf
 import numpy as np
 import logging
 
+from idtrackerai.list_of_blobs import ListOfBlobs
+
 logger = logging.getLogger("__main__.model_area")
 
 
@@ -73,11 +75,11 @@ class ModelArea(object):
         return bool((area - self.median) < self.std_tolerance * self.std)
 
 
-def compute_model_area_and_body_length(list_of_blobs, number_of_animals):
-    """computes the median and standard deviation of all the blobs of the video
-    and the median_body_length estimated from the diagonal of the bounding box.
-    These values are later used to discard blobs that are not fish and potentially
-    belong to a crossing.
+def compute_model_area_and_body_length(
+    list_of_blobs: ListOfBlobs, number_of_animals: int
+):
+    """computes the median and standard deviation of the area of all the blobs
+    in the the video and the median of the the diagonal of the bounding box.
     """
     # areas are collected throughout the entire video in the cores of the global fragments
     areas_and_body_length = np.asarray(
