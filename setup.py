@@ -126,7 +126,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "idtrackerai_test=idtrackerai.utils.test_example_video:test",
+            "idtrackerai_test=idtrackerai.utils.idtrackerai_test:test",
         ],
     },
 )

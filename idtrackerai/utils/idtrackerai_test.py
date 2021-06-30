@@ -36,7 +36,11 @@ import sys
 
 import gdown
 
-from idtrackerai.constants import IDTRACKERAI_FOLDER, TEST_VIDEO_URL
+from idtrackerai.constants import (
+    IDTRACKERAI_FOLDER,
+    TEST_VIDEO_URL,
+    COMPRESSED_VIDEO_PATH,
+)
 
 
 def create_data_folder():
@@ -106,7 +110,8 @@ def test():
         help="Flag to track without identities",
     )
     args = parser.parse_args()
-    video_path = download_example_video(args.output_folder)
+    # video_path = download_example_video(args.output_folder)
+    video_path = COMPRESSED_VIDEO_PATH
     json_file_path = generate_json_file(video_path, args)
     command = (
         f"idtrackerai terminal_mode --load {json_file_path} --exec track_video"
