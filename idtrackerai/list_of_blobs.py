@@ -128,15 +128,11 @@ class ListOfBlobs(object):
         logger.info("re-Connecting list of blob objects")
         self.compute_overlapping_between_subsequent_frames()
 
-    def save(self, video, path_to_save=None):
+    def save(self, path_to_save=None):
         """save instance"""
         self.disconnect()
         logger.info("saving blobs list at %s" % path_to_save)
         np.save(path_to_save, self)
-        if "segmented" not in path_to_save:
-            if video.has_animals_detected and not video.has_been_fragmented:
-                self.connect()
-            self.blobs_are_connected = True
 
     @staticmethod
     def load(path_to_load_blob_list_file):

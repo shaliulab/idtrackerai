@@ -1095,7 +1095,7 @@ class TrackerAPI(object):
         )
         # if False:
         #     self.list_of_blobs.compute_nose_and_head_coordinates()
-        self.list_of_blobs.save(self.video, self.video.blobs_path)
+        self.list_of_blobs.save(self.video.blobs_path)
         self.video._identify_time = time.time() - self.video.identify_time
         create_trajectories()
 
@@ -1158,10 +1158,7 @@ class TrackerAPI(object):
             self.video._has_been_assigned = True
             self.video._has_crossings_solved = False
             self.video._has_trajectories_wo_gaps = False
-            self.list_of_blobs.save(
-                self.video,
-                self.video.blobs_path,
-            )
+            self.list_of_blobs.save(self.video.blobs_path)
             # Call GUI function
             if update_and_show_happy_ending_popup:
                 update_and_show_happy_ending_popup()
@@ -1186,7 +1183,6 @@ class TrackerAPI(object):
             "blobs_collection_no_gaps.npy",
         )
         self.list_of_blobs_no_gaps.save(
-            self.video,
             path_to_save=self.video.blobs_no_gaps_path,
         )
         self.video._has_crossings_solved = True
