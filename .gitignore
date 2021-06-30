@@ -19,7 +19,7 @@
 !*.less
 !*.css_t
 !*.conf
-!*.txt
+#!*.txt
 !*.json
 
 *.pyc
@@ -34,8 +34,14 @@ docs/build/*
 !docs/make.bat
 !docs/Makefile
 !docs/source/_static/*
+
+# expect images for documentation
 !idtrackerai/gui/*.png
+
+# ignore idtrackerai unnecessary byproduct files
 idtrackerai/utils/test_.json
+tests/integration_tests/*output.txt
+
 
 #ignore idtrackerAI and videos folder because they have .png files
 videos
