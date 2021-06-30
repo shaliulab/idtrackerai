@@ -231,7 +231,7 @@ def _process_frame(
             save_segmentation_image,
         )
     except Exception as e:
-        print(f"Frame {frame_number * cons.FRAMES_PER_EPISODE}: {e}")
+        print(f"Frame {frame_number}: {e}")
         logger.info(
             "An error occurred while reading frame number : %i" % frame_number
         )
