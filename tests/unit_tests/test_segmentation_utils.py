@@ -100,9 +100,9 @@ def test_get_frame_average_intensity(test_video_frame_0_gray, mask):
 cases = [(None, "same"), (0, "same"), (10, "diff")]
 
 
-@pytest.mark.parametrize("kernel_size, expect", cases)
-def test_gaussian_blur(test_video_frame_0_gray, kernel_size, expect):
-    blurred_frame = gaussian_blur(test_video_frame_0_gray, kernel_size)
+@pytest.mark.parametrize("sigma, expect", cases)
+def test_gaussian_blur(test_video_frame_0_gray, sigma, expect):
+    blurred_frame = gaussian_blur(test_video_frame_0_gray, sigma)
     if expect == "same":
         np.testing.assert_equal(test_video_frame_0_gray, blurred_frame)
     else:  # expect == "diff"

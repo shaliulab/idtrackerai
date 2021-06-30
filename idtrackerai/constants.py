@@ -38,6 +38,12 @@ IDTRACKERAI_FOLDER = os.path.dirname(os.path.abspath(__file__))
 TEST_VIDEO_URL = (
     "https://drive.google.com/uc?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC"
 )
+DATA_PATH = os.path.join(IDTRACKERAI_FOLDER, "data")
+COMPRESSED_VIDEO_PATH = os.path.join(
+    DATA_PATH,
+    "example_video_compressed",
+    "idtrackerai_video_example_compressed.avi",
+)
 
 #######################################
 ##########       video      ###########
@@ -57,7 +63,7 @@ AVAILABLE_VIDEO_EXTENSION = [
 ###############################################################################
 FRAMES_PER_EPISODE = int(os.environ.get("FRAMES_PER_EPISODE", 100))
 BACKGROUND_SUBTRACTION_PERIOD = int(
-    os.environ.get("BACKGROUND_SUBTRACTION_PERIOD", 500)
+    os.environ.get("BACKGROUND_SUBTRACTION_PERIOD", 250)
 )
 BACKGROUND_SUBTRACTION_STAT = os.environ.get(
     "BACKGROUND_SUBTRACTION_STAT", "max"
