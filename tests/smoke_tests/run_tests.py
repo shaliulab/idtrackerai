@@ -1,20 +1,35 @@
 import os
+import argparse
 import subprocess
 from glob import glob
 from pprint import pprint
 from idtrackerai.constants import COMPRESSED_VIDEO_PATH
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--test_names", "-t", nargs="+", type=str, default=["all"])
+args = parser.parse_args()
+
 dir_name = os.path.dirname(os.path.realpath(__file__))
 
-test_folders = glob(os.path.join(dir_name, "test_*"))
+all_tests = glob(os.path.join(dir_name, "test_*"))
+
+if args.test_names != ["all"]:
+    test_folders = []
+    for test_name in args.test_names:
+        for test_folder in all_tests:
+            if test_name in test_folder:
+                test_folders.append(test_folder)
+else:
+    test_folders = all_tests
 
 outputs = {}
 for test_folder in test_folders:
     print(test_folder)
-    json_file = os.path.join(test_folder, "test.json")
+    # We change folder to read the local_settings.py if it exists
+    os.chdir(test_folder)
     command = (
         f"idtrackerai terminal_mode "
-        f"--load {json_file} "
+        f"--load test.json "
         f"--exec track_video "
         f"--_video_path {COMPRESSED_VIDEO_PATH}"
     )
