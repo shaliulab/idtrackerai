@@ -40,7 +40,7 @@ docs/build/*
 
 # ignore idtrackerai unnecessary byproduct files
 idtrackerai/utils/test_.json
-tests/integration_tests/*output.txt
+tests/smoke_tests/test_*/session_*
 
 
 #ignore idtrackerAI and videos folder because they have .png files
@@ -55,7 +55,8 @@ idtrackerai\.egg-info/
 
 docs/build/
 
-local_settings\.py
+./local_settings.py
+!tests/smoke_tests/assets/test_*/local_settings.py
 
 dist/*
 build/*

@@ -1,7 +1,7 @@
 {
   "open-multiple-files": false,
   "_session": {
-	"value": "default"
+	"value": "test"
   },
   "_video": {
 	"value": ""
@@ -53,7 +53,7 @@
   },
   "_roi": {},
   "_no_ids": {
-	"value": "False"
+	"value": "True"
   },
   "_bgsub": {
 	"value": "False"

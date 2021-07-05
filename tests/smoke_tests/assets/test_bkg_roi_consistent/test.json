@@ -1,7 +1,7 @@
 {
   "open-multiple-files": false,
   "_session": {
-	"value": "no_ids"
+	"value": "test"
   },
   "_video": {
 	"value": ""
@@ -25,7 +25,7 @@
   "_intensity": {
 	"value": [
 	  0,
-	  155
+	  170
 	],
 	"max": 255,
 	"min": 0,
@@ -34,28 +34,41 @@
   },
   "_area": {
 	"value": [
-	  150,
-	  60000
+	  90,
+	  6000
 	],
 	"max": 60000,
 	"min": 0,
 	"scale": 1.0,
 	"convert-int": false
   },
-  "_nblobs": {
+  "_number_of_animals": {
 	"value": 8
   },
   "_resreduct": {
 	"value": 1.0
   },
   "_chcksegm": {
+	"value": "True"
+  },
+  "_roi": {
+	"value": [
+	  [
+		"(7, 6), (962, 6), (962, 934), (7, 934)"
+	  ]
+	]
+  },
+  "_no_ids": {
 	"value": "False"
   },
-  "_roi": {},
-  "_no_ids": {
+  "_applyroi": {
 	"value": "True"
   },
   "_bgsub": {
+	"value": "True"
+  },
+  "_add_setup_info": {
 	"value": "False"
-  }
+  },
+  "_points_list": {}
 }

@@ -584,6 +584,7 @@ class Video(object):
         video_name = os.path.split(self._video_path)[1]
         self._video_folder = os.path.split(new_session_path)[0]
         self.video_path = os.path.join(self.video_folder, video_name)
+        assert os.path.exists(self.video_path)
         attributes_to_modify = {
             key: getattr(self, key)
             for key in self.__dict__
@@ -732,12 +733,12 @@ class Video(object):
         training a network for a certain video_path
         """
         if name == "":
-            self._session_folder = os.path.join(self.video_folder, "session")
+            session_name = "session"
         else:
-            self._session_folder = os.path.join(
-                self.video_folder, "session_" + name
-            )
+            session_name = "session_" + name
 
+        self._session_folder = os.path.join(self.video_folder, session_name)
+        logger.info(f"Creating session folder at {self._session_folder}")
         if not os.path.isdir(self._session_folder):
             os.makedirs(self._session_folder)
             self._previous_session_folder = ""

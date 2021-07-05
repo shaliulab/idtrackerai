@@ -1,15 +1,15 @@
 {
   "open-multiple-files": false,
   "_session": {
-	"value": "single_global_fragment"
+	"value": "test"
   },
   "_video": {
 	"value": ""
   },
   "_range": {
 	"value": [
-	  328,
-	  358
+	  0,
+	  508
 	],
 	"max": 508,
 	"min": 0,
@@ -25,7 +25,7 @@
   "_intensity": {
 	"value": [
 	  0,
-	  155
+	  180
 	],
 	"max": 255,
 	"min": 0,
@@ -34,7 +34,7 @@
   },
   "_area": {
 	"value": [
-	  150,
+	  90,
 	  6000
 	],
 	"max": 60000,

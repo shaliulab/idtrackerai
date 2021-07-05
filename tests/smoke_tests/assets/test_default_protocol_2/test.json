@@ -1,7 +1,7 @@
 {
   "open-multiple-files": false,
   "_session": {
-	"value": "reflexions_fails"
+	"value": "test"
   },
   "_video": {
 	"value": ""
@@ -25,7 +25,7 @@
   "_intensity": {
 	"value": [
 	  0,
-	  180
+	  155
 	],
 	"max": 255,
 	"min": 0,
@@ -34,35 +34,28 @@
   },
   "_area": {
 	"value": [
-	  90,
-	  6000
+	  150,
+	  60000
 	],
 	"max": 60000,
 	"min": 0,
 	"scale": 1.0,
 	"convert-int": false
   },
-  "_number_of_animals": {
+  "_nblobs": {
 	"value": 8
   },
   "_resreduct": {
 	"value": 1.0
   },
   "_chcksegm": {
-	"value": "True"
+	"value": "False"
   },
   "_roi": {},
   "_no_ids": {
 	"value": "False"
   },
-  "_applyroi": {
-	"value": "False"
-  },
   "_bgsub": {
 	"value": "False"
-  },
-  "_add_setup_info": {
-	"value": "False"
-  },
-  "_points_list": {}
+  }
 }
