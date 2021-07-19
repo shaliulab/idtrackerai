@@ -171,7 +171,7 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
     return trajectories_info_dict
 
 
-def produce_trajectories_wo_identities(
+def produce_trajectories_wo_identification(
     blobs_in_video, number_of_frames, number_of_animals
 ):
     centroid_trajectories = (
@@ -240,7 +240,7 @@ def produce_output_dict(blobs_in_video, video):
 
     """
     assert len(blobs_in_video) == video.number_of_frames
-    if not video.user_defined_parameters["track_wo_identities"]:
+    if not video.user_defined_parameters["track_wo_identification"]:
         trajectories_info_dict = produce_trajectories(
             blobs_in_video,
             video.number_of_frames,
@@ -248,7 +248,7 @@ def produce_output_dict(blobs_in_video, video):
         )
     else:
         video._number_of_animals = np.max([len(bf) for bf in blobs_in_video])
-        trajectories_info_dict = produce_trajectories_wo_identities(
+        trajectories_info_dict = produce_trajectories_wo_identification(
             blobs_in_video,
             video.number_of_frames,
             video.user_defined_parameters["number_of_animals"],

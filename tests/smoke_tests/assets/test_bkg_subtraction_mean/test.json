@@ -25,7 +25,7 @@
   "_intensity": {
 	"value": [
 	  0,
-	  170
+	  104
 	],
 	"max": 255,
 	"min": 0,
@@ -34,7 +34,7 @@
   },
   "_area": {
 	"value": [
-	  90,
+	  150,
 	  6000
 	],
 	"max": 60000,
@@ -51,18 +51,12 @@
   "_chcksegm": {
 	"value": "True"
   },
-  "_roi": {
-	"value": [
-	  [
-		"(7, 6), (962, 6), (962, 934), (7, 934)"
-	  ]
-	]
-  },
+  "_roi": {},
   "_no_ids": {
 	"value": "False"
   },
   "_applyroi": {
-	"value": "True"
+	"value": "False"
   },
   "_bgsub": {
 	"value": "True"

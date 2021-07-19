@@ -98,6 +98,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         self._set_identification_images()
         self._connect_list_of_blobs()
         self._train_and_apply_crossing_detector()
+        self.video._has_crossings_detected = True
 
     def _estimate_single_indiviual_size(self):
         """

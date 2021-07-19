@@ -71,7 +71,7 @@ def _compute_bkg_for_episode(
     cap: cv2.VideoCapture,
     bkg: np.ndarray,
     frames_range: Iterable,  # sample frames in the given episode
-    mask: np.ndarray,
+    mask: np.ndarray,  # values are 1 (valid) 0 (invalid)
     sigma: float,
     stat: str,
 ):
@@ -270,7 +270,7 @@ def to_gray_scale(frame):
     return frame
 
 
-def get_frame_average_intensity(frame, mask):
+def get_frame_average_intensity(frame: np.ndarray, mask: np.ndarray):
     """Computes the average intensity of a given frame considering the maks.
     Only pixels with values
     different than zero in the mask are considered to compute the average
@@ -288,11 +288,9 @@ def get_frame_average_intensity(frame, mask):
     -------
 
     """
-    if mask is not None:
-        assert frame.shape == mask.shape
-        return np.float32(np.mean(np.ma.array(frame, mask=mask == 0)))
-    else:
-        return np.float32(np.mean(frame))
+    assert mask is not None
+    assert frame.shape == mask.shape
+    return np.float32(np.mean(np.ma.array(frame, mask=mask == 0)))
 
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):

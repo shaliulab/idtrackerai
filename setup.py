@@ -49,7 +49,7 @@ install it on Python {}.{}.
     sys.exit(1)
 
 requirements = [
-    "numpy >= 1.13.0",
+    "numpy >= 1.14.5",
     "natsort >= 5.0.2",
     "matplotlib >= 2.1",
     "seaborn >= 0.8",

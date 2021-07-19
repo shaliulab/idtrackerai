@@ -42,7 +42,7 @@
 	"scale": 1.0,
 	"convert-int": false
   },
-  "_nblobs": {
+  "_number_of_animals": {
 	"value": 8
   },
   "_resreduct": {

@@ -70,3 +70,5 @@ out-parameters\.txt
 docs/idtrackerai-app\.log
 
 .pytest_cache
+
+\.vscode/

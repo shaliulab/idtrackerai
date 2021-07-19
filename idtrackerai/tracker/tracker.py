@@ -224,6 +224,11 @@ class TrackerAPI(object):
         if list_of_global_fragments.number_of_global_fragments == 1:
             logger.info("START: TRACKING SINGLE GLOBAL FRAGMENT")
             self._track_single_global_fragment_video()
+            self.list_of_fragments.save(self.video.fragments_path)
+            self.list_of_global_fragments.save(
+                self.video.global_fragments_path,
+                self.list_of_fragments.fragments,
+            )
             logger.info("FINISH: TRACKING SINGLE GLOBAL FRAGMENT")
 
         else:
@@ -267,13 +272,13 @@ class TrackerAPI(object):
         self.video._first_frame_first_global_fragment = [0]  # in case
         create_trajectories()
 
-    def track_wo_identities(self, create_trajectories=None):
+    def track_wo_identification(self, create_trajectories=None):
 
         if create_trajectories is None:
             create_trajectories = self.create_trajectories
 
         self.video._first_frame_first_global_fragment = [0]
-        self.video._track_wo_identities = True
+        self.video._track_wo_identification = True
         create_trajectories()
 
     def _track_w_identities(self):
@@ -339,7 +344,7 @@ class TrackerAPI(object):
             "residual_identification" in self.processes_to_restore
             and self.processes_to_restore["residual_identification"]
         ):
-            if self.video.user_defined_parameters["track_wo_identities"]:
+            if self.video.user_defined_parameters["track_wo_identification"]:
                 # TODO: bring restoring back to life
                 raise
                 # self.restore_trajectories()
@@ -1114,7 +1119,9 @@ class TrackerAPI(object):
             "post_processing" not in self.processes_to_restore
             or not self.processes_to_restore["post_processing"]
         ):
-            if not self.video.user_defined_parameters["track_wo_identities"]:
+            if not self.video.user_defined_parameters[
+                "track_wo_identification"
+            ]:
                 self.video.create_trajectories_folder()
                 trajectories_file = os.path.join(
                     self.video.trajectories_folder,
@@ -1125,10 +1132,10 @@ class TrackerAPI(object):
                     self.video,
                 )
             else:
-                self.video.create_trajectories_wo_identities_folder()
+                self.video.create_trajectories_wo_identification_folder()
                 trajectories_file = os.path.join(
-                    self.video.trajectories_wo_identities_folder,
-                    "trajectories_wo_identities.npy",
+                    self.video.trajectories_wo_identification_folder,
+                    "trajectories_wo_identification.npy",
                 )
                 trajectories = produce_output_dict(
                     self.list_of_blobs.blobs_in_video,
@@ -1147,7 +1154,7 @@ class TrackerAPI(object):
             trajectories_popup_dismiss()
 
         if (
-            not self.video.user_defined_parameters["track_wo_identities"]
+            not self.video.user_defined_parameters["track_wo_identification"]
             and self.video.user_defined_parameters["number_of_animals"] != 1
             and self.list_of_global_fragments.number_of_global_fragments != 1
         ):

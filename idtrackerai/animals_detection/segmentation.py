@@ -380,7 +380,7 @@ def _segment_episode(
     if save_segmentation_image == "DISK":
         bounding_box_images_path = os.path.join(
             segmentation_data_folder,
-            "episode_images_{}.hdf5".format(str(episode_number)),
+            f"episode_images_{episode_number}.hdf5",
         )
         if os.path.isfile(bounding_box_images_path):
             os.remove(bounding_box_images_path)
@@ -389,13 +389,12 @@ def _segment_episode(
     if save_pixels == "DISK":
         pixels_path = os.path.join(
             segmentation_data_folder,
-            "episode_pixels_{}.hdf5".format(str(episode_number)),
+            f"episode_pixels_{episode_number}.hdf5",
         )
         if os.path.isfile(pixels_path):
             os.remove(pixels_path)
     else:
         pixels_path = None
-
     # Read video for the episode
     cap = cv2.VideoCapture(video_path)
 
@@ -524,7 +523,8 @@ def segment(
     elif num_jobs < 0:
         num_jobs = num_cpus + 1 + num_jobs
 
-    if not video_paths:
+    if len(video_paths) == 1:
+        logger.debug("Single video paths")
         episodes_sublists = []
         for i in range(0, len(episodes_start_end), num_jobs):
             episode_numbers = range(i, i + num_jobs)
@@ -535,6 +535,7 @@ def segment(
             )
         single_video_file = True
     else:
+        logger.debug("Many video paths")
         episodes_sublists = []
         for i in range(0, len(episodes_start_end), num_jobs):
             episode_numbers = range(i, i + num_jobs)
@@ -544,7 +545,13 @@ def segment(
                 zip(episode_paths, episode_numbers, episode_start_ends)
             )
         single_video_file = False
-
+    # print("******************************************************************")
+    # print(num_jobs)
+    # print(len(episodes_start_end))
+    # print(episode_numbers)
+    # print(episode_start_ends)
+    # print([list(episodes_sublist) for episodes_sublist in episodes_sublists])
+    # print("******************************************************************")
     set_mkl_to_single_thread()
     blobs_in_video, maximum_number_of_blobs = _segment_video_in_parallel(
         episodes_sublists,

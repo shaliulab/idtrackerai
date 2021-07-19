@@ -76,6 +76,7 @@ def test_to_gray_scale(test_video_frame_0):
 mask_from_roi = np.zeros((TEST_VIDEO_PROPERTIES["shape"]))
 mask_from_roi[10:900, 10:900] = 1
 cases = [
+    mask_from_roi,
     np.ones((TEST_VIDEO_PROPERTIES["shape"])),  # No mask
     np.zeros((TEST_VIDEO_PROPERTIES["shape"])),  # All masked
 ]

@@ -61,7 +61,8 @@ AVAILABLE_VIDEO_EXTENSION = [
 ###############################################################################
 # Animal detection advanced parameters
 ###############################################################################
-FRAMES_PER_EPISODE = int(os.environ.get("FRAMES_PER_EPISODE", 100))
+# TODO: Fix compatibility frames per episode and background subtraction period
+FRAMES_PER_EPISODE = int(os.environ.get("FRAMES_PER_EPISODE", 500))
 BACKGROUND_SUBTRACTION_PERIOD = int(
     os.environ.get("BACKGROUND_SUBTRACTION_PERIOD", 250)
 )
