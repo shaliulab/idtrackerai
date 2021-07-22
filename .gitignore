@@ -56,7 +56,7 @@ idtrackerai\.egg-info/
 docs/build/
 
 ./local_settings.py
-!tests/smoke_tests/assets/test_*/local_settings.py
+!tests/smoke_tests/tests_params/test_*/local_settings.py
 
 dist/*
 build/*

@@ -1,36 +1,36 @@
+from typing import Tuple, Dict
 import os
-import pytest
 import json
 import subprocess
 import numpy as np
 from idtrackerai.constants import (
     COMPRESSED_VIDEO_PATH,
     COMPRESSED_VIDEO_PATH_2,
+    COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES,
+    COMPRESSED_VIDEO_NUM_FRAMES,
+    COMPRESSED_VIDEO_NUM_FRAMES_2,
+    COMPRESSED_VIDEO_WIDTH,
+    COMPRESSED_VIDEO_HEIGHT,
 )
+from idtrackerai.video import Video
 import tempfile
 from distutils.dir_util import copy_tree
 import shutil
 from datetime import datetime
-
+import pytest
+# Get the path to the folder where all the .json files for the tests are stored
 DIR_NAME = os.path.dirname(os.path.realpath(__file__))
-ASSETS_FOLDER = os.path.join(DIR_NAME, "assets")
+ASSETS_FOLDER = os.path.join(DIR_NAME, "tests_params")
 
-
-# Copy assets to a temporary folder where data will be stored
+# Copy the folder to a temporary folder where data will be stored
 TEMP_DIR = tempfile.mkdtemp(prefix=datetime.now().strftime("%Y%m%d_%H%M%S"))
 assert os.path.isdir(TEMP_DIR)
 copy_tree(ASSETS_FOLDER, str(TEMP_DIR))
 
-print(TEMP_DIR)
-
-COMPRESSED_VIDEO_NUM_FRAMES = 508
-COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
-COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
-COMPRESSED_VIDEO_WIDTH = 1160
-COMPRESSED_VIDEO_HEIGHT = 938
-
-
-default_protocol_2_tree = {
+# File tree for tests that use protocol 2
+# Since there are many of them that use protocol 2, we define it as a
+# global variable
+DEFAULT_PROTOCOL_2_TREE = {
     "preprocessing": [
         "blobs_collection.npy",
         "fragments.npy",
@@ -60,36 +60,55 @@ default_protocol_2_tree = {
 }
 
 
-def _get_video_object(session_folder):
+def _get_video_object(session_folder: str) -> Video:
+    """Load the video object in a given session_folder"""
     video_object_path = os.path.join(session_folder, "video_object.npy")
+    assert os.path.isfile(video_object_path)
     video_object = np.load(video_object_path, allow_pickle=True).item()
     return video_object
 
 
 def _run_idtrackerai(
     root_folder: str, video_path: str = COMPRESSED_VIDEO_PATH
-):
-    """Runs idtrackerai in terminal_mode from the root_folder"""
+) -> Tuple[Dict, bool, str]:
+    """Runs idtrackerai using the terminal mode
+
+    It moves to the `root_folder` and from there executes idtrackerai on the
+    video `video_path`. The `root_folder` must contain a file called
+    `test.json` with the parameters used to run idtrackerai. Some test can also
+    contain a file called `local_settings.py` that indicates the advanced
+    parameters to be used when running idtrackerai.
+
+    """
     # Change working directory to root_folder to read the local_settings.py
     os.chdir(root_folder)
     json_file_path = os.path.join(root_folder, "test.json")
+    assert os.path.isfile(json_file_path)
+
+    # We do not want reuse the previous a previous session folder with the
+    # same name. So we make sure we delete any previous session folder with
+    # the same name.
 
     # Get session name from test.json
     with open("test.json", "r") as f:
         input_arguments = json.load(f)
     session_name = input_arguments["_session"]["value"]
+
+    # The session folder will be generated next to the video
     video_dir = os.path.dirname(video_path)
     original_session_folder = os.path.join(
         video_dir, f"session_{session_name}"
     )
 
+    # Remove any session folder with the same name from potential previous
+    # runs
     if os.path.isdir(original_session_folder):
         shutil.rmtree(original_session_folder)
 
-    # We do not want reuse the previous session_folder
     assert not os.path.isdir(original_session_folder)
     assert os.path.isfile(json_file_path)
 
+    # Run idtracker.ai in terminal mode
     command = [
         "idtrackerai",
         "terminal_mode",
@@ -106,11 +125,13 @@ def _run_idtrackerai(
     with open(os.path.join(root_folder, "idtrackerai-app.log"), "r") as file:
         last_line = file.read().splitlines()[-1]
 
-    # Store idtracker.ai worked or not
+    # Store whether idtracker.ai worked as intended or not
     success_flag = False
     if "Success" in last_line:
         success_flag = True
 
+    # We move the session folder that is next to the video in the
+    # idtrackerai/data folder to the temporary folder
     moved_session_folder = os.path.join(root_folder, f"session_{session_name}")
     shutil.move(original_session_folder, moved_session_folder)
 
@@ -263,7 +284,7 @@ def test_default_protocol_2_run(default_protocol_2_run):
 @pytest.mark.default_protocol_2
 def test_dir_tree_default_protocol_2(default_protocol_2_run):
     _, _, session_folder = default_protocol_2_run
-    _assert_files_tree(default_protocol_2_tree, session_folder)
+    _assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
     no_tree = {
         "pretraining": [],
         "accumulation_1": [],
@@ -625,13 +646,12 @@ def test_more_blobs_than_animals_chcksegm_false_run(
     _assert_list_of_blobs_consistency(input_arguments, session_folder)
 
 
-@pytest.mark.xfail  # this is entering into protocol 3 but before was protocol 2
 @pytest.mark.more_blobs_than_animals_chcksegm_false
 def test_dir_tree_more_blobs_than_animals_chcksegm_false(
     more_blobs_than_animals_chcksegm_false_run,
 ):
     _, _, session_folder = more_blobs_than_animals_chcksegm_false_run
-    _assert_files_tree(default_protocol_2_tree, session_folder)
+    _assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
     no_tree = {
         "pretraining": [],
         "accumulation_1": [],
@@ -758,7 +778,7 @@ def test_dir_tree_background_subtraction(
     background_subtraction_run,
 ):
     _, _, session_folder = background_subtraction_run
-    _assert_files_tree(default_protocol_2_tree, session_folder)
+    _assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
     no_tree = {
         "pretraining": [],
         "accumulation_1": [],
@@ -800,7 +820,7 @@ def test_dir_tree_background_subtraction(
     background_subtraction_with_ROI_run,
 ):
     _, _, session_folder = background_subtraction_with_ROI_run
-    _assert_files_tree(default_protocol_2_tree, session_folder)
+    _assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
     no_tree = {
         "pretraining": [],
         "accumulation_1": [],
@@ -844,7 +864,7 @@ def test_dir_tree_multiple_files(
     multiple_files_run,
 ):
     _, _, session_folder = multiple_files_run
-    _assert_files_tree(default_protocol_2_tree, session_folder)
+    _assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
     no_tree = {
         "pretraining": [],
         "accumulation_1": [],

@@ -51,6 +51,15 @@ COMPRESSED_VIDEO_PATH_2 = os.path.join(
 )
 
 #######################################
+#### Constants for tests ##############
+#######################################
+COMPRESSED_VIDEO_NUM_FRAMES = 508
+COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
+COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
+COMPRESSED_VIDEO_WIDTH = 1160
+COMPRESSED_VIDEO_HEIGHT = 938
+
+#######################################
 ##########       video      ###########
 #######################################
 AVAILABLE_VIDEO_EXTENSION = [
