@@ -18,7 +18,7 @@ DATA_FOLDER = os.path.join(cons.IDTRACKERAI_FOLDER, "data")
 TEST_VIDEO_COMPRESSED_PATH = os.path.join(
     DATA_FOLDER,
     "example_video_compressed",
-    "idtrackerai_video_example_compressed.avi",
+    "conflict3and4_20120316T155032_14_compressed.avi",
 )
 TEST_VIDEO_PROPERTIES = {
     "shape": (938, 1160),

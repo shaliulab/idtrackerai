@@ -42,7 +42,12 @@ DATA_PATH = os.path.join(IDTRACKERAI_FOLDER, "data")
 COMPRESSED_VIDEO_PATH = os.path.join(
     DATA_PATH,
     "example_video_compressed",
-    "idtrackerai_video_example_compressed.avi",
+    "conflict3and4_20120316T155032_14_compressed.avi",
+)
+COMPRESSED_VIDEO_PATH_2 = os.path.join(
+    DATA_PATH,
+    "example_video_compressed",
+    "conflict3and4_20120316T155032_13_compressed.avi",
 )
 
 #######################################

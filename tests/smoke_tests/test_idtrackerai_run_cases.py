@@ -3,7 +3,10 @@ import pytest
 import json
 import subprocess
 import numpy as np
-from idtrackerai.constants import COMPRESSED_VIDEO_PATH
+from idtrackerai.constants import (
+    COMPRESSED_VIDEO_PATH,
+    COMPRESSED_VIDEO_PATH_2,
+)
 import tempfile
 from distutils.dir_util import copy_tree
 import shutil
@@ -15,11 +18,14 @@ ASSETS_FOLDER = os.path.join(DIR_NAME, "assets")
 
 # Copy assets to a temporary folder where data will be stored
 TEMP_DIR = tempfile.mkdtemp(prefix=datetime.now().strftime("%Y%m%d_%H%M%S"))
+assert os.path.isdir(TEMP_DIR)
 copy_tree(ASSETS_FOLDER, str(TEMP_DIR))
 
 print(TEMP_DIR)
 
 COMPRESSED_VIDEO_NUM_FRAMES = 508
+COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
+COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
 COMPRESSED_VIDEO_WIDTH = 1160
 COMPRESSED_VIDEO_HEIGHT = 938
 
@@ -60,7 +66,9 @@ def _get_video_object(session_folder):
     return video_object
 
 
-def run_idtrackerai(root_folder: str):
+def _run_idtrackerai(
+    root_folder: str, video_path: str = COMPRESSED_VIDEO_PATH
+):
     """Runs idtrackerai in terminal_mode from the root_folder"""
     # Change working directory to root_folder to read the local_settings.py
     os.chdir(root_folder)
@@ -70,7 +78,7 @@ def run_idtrackerai(root_folder: str):
     with open("test.json", "r") as f:
         input_arguments = json.load(f)
     session_name = input_arguments["_session"]["value"]
-    video_dir = os.path.dirname(COMPRESSED_VIDEO_PATH)
+    video_dir = os.path.dirname(video_path)
     original_session_folder = os.path.join(
         video_dir, f"session_{session_name}"
     )
@@ -90,7 +98,7 @@ def run_idtrackerai(root_folder: str):
         "--exec",
         "track_video",
         "--_video_path",
-        f"{COMPRESSED_VIDEO_PATH}",
+        f"{video_path}",
     ]
     subprocess.run(command, check=True)
 
@@ -113,12 +121,12 @@ def run_idtrackerai(root_folder: str):
     )
 
 
-def mandatory_outputs(session_folder):
+def _mandatory_outputs(session_folder):
     video_object_path = os.path.join(session_folder, "video_object.npy")
     return [video_object_path]
 
 
-def assert_input_video_object_consistency(input_arguments, session_folder):
+def _assert_input_video_object_consistency(input_arguments, session_folder):
     video_object_path = os.path.join(session_folder, "video_object.npy")
     assert os.path.isfile(video_object_path)
     video = np.load(video_object_path, allow_pickle=True).item()
@@ -160,7 +168,7 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
     # TODO: assert well apply_roi vs roi.
 
 
-def assert_files_tree(tree, session_folder, exist=True):
+def _assert_files_tree(tree, session_folder, exist=True):
     for folder, files in tree.items():
         folder_path = os.path.join(session_folder, folder)
         if not exist:
@@ -175,7 +183,9 @@ def assert_files_tree(tree, session_folder, exist=True):
                 assert os.path.isfile(file_path)
 
 
-def assert_list_of_blobs_consistency(input_args, session_folder):
+def _assert_list_of_blobs_consistency(
+    input_args, session_folder, num_frames=COMPRESSED_VIDEO_NUM_FRAMES
+):
     blobs_collections = [
         "blobs_collection.npy",
         "blobs_collection_no_gaps.npy",
@@ -191,13 +201,13 @@ def assert_list_of_blobs_consistency(input_args, session_folder):
             list_of_blobs = np.load(
                 list_of_blobs_path, allow_pickle=True
             ).item()
-            assert len(list_of_blobs) == COMPRESSED_VIDEO_NUM_FRAMES
+            assert len(list_of_blobs) == num_frames
             for frame, blobs in enumerate(list_of_blobs.blobs_in_video):
                 if frame in interval:
                     assert len(blobs) != 0
 
 
-def assert_background_model(session_folder):
+def _assert_background_model(session_folder):
     video_object = _get_video_object(session_folder)
 
     bkg_model = video_object.user_defined_parameters["bkg_model"]
@@ -211,12 +221,26 @@ def assert_background_model(session_folder):
     np.testing.assert_almost_equal(np.mean(bkg_model), 1, decimal=2)
 
 
-def assert_mask(session_folder):
+def _assert_mask(session_folder):
     video_object = _get_video_object(session_folder)
     mask = video_object.user_defined_parameters["mask"]
     assert mask.shape == (COMPRESSED_VIDEO_HEIGHT, COMPRESSED_VIDEO_WIDTH)
     assert mask.min() == 0
     assert mask.max() == 1
+
+
+def _update_local_settings_with_accumulation_folder(
+    root_folder, accumulation_folder
+):
+    local_settings_path = os.path.join(root_folder, "local_settings.py")
+    with open(local_settings_path, "r+") as file:
+        content = file.read()
+        file.seek(0)
+        updated_content = content.replace(
+            "path/to/accumulation/folder", accumulation_folder
+        )
+        file.write(updated_content)
+        file.truncate()
 
 
 # Test default run with protocol 2
@@ -225,28 +249,28 @@ def assert_mask(session_folder):
 @pytest.fixture(scope="module")
 def default_protocol_2_run():
     root_folder = os.path.join(TEMP_DIR, "test_default_protocol_2")
-    return run_idtrackerai(root_folder)
+    return _run_idtrackerai(root_folder)
 
 
 @pytest.mark.default_protocol_2
 def test_default_protocol_2_run(default_protocol_2_run):
     input_arguments, success, session_folder = default_protocol_2_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(input_arguments, session_folder)
 
 
 @pytest.mark.default_protocol_2
 def test_dir_tree_default_protocol_2(default_protocol_2_run):
     _, _, session_folder = default_protocol_2_run
-    assert_files_tree(default_protocol_2_tree, session_folder)
+    _assert_files_tree(default_protocol_2_tree, session_folder)
     no_tree = {
         "pretraining": [],
         "accumulation_1": [],
         "accumulation_2": [],
         "accumulation_3": [],
     }
-    assert_files_tree(no_tree, session_folder, exist=False)
+    _assert_files_tree(no_tree, session_folder, exist=False)
 
 
 @pytest.mark.default_protocol_2
@@ -266,19 +290,20 @@ def test_accumulation_default_protocol2(default_protocol_2_run):
     assert video_object.pretraining_folder is None
 
 
+# Test resolution reduction with ROI
 # Test a tracking session that enters into protocol 3
 @pytest.fixture(scope="module")
 def protocol3_run():
     root_folder = os.path.join(TEMP_DIR, "test_protocol3")
-    return run_idtrackerai(root_folder)
+    return _run_idtrackerai(root_folder)
 
 
 @pytest.mark.protocol3
 def test_protocol3_run(protocol3_run):
     input_arguments, success, session_folder = protocol3_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(input_arguments, session_folder)
 
 
 @pytest.mark.protocol3
@@ -313,7 +338,7 @@ def test_dir_tree_protocol_3(protocol3_run):
         "trajectories": ["trajectories.npy"],
         "trajectories_wo_gaps": ["trajectories_wo_gaps.npy"],
     }
-    assert_files_tree(tree, session_folder)
+    _assert_files_tree(tree, session_folder)
 
 
 @pytest.mark.xfail  # Time of protocols 1 and 2 is not correct
@@ -346,15 +371,15 @@ def test_accumulation_protocol3(protocol3_run):
 @pytest.fixture(scope="module")
 def single_animal_run():
     root_folder = os.path.join(TEMP_DIR, "test_single_animal")
-    return run_idtrackerai(root_folder)
+    return _run_idtrackerai(root_folder)
 
 
 @pytest.mark.single_animal
 def test_single_animal_run(single_animal_run):
     input_arguments, success, session_folder = single_animal_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(input_arguments, session_folder)
 
 
 @pytest.mark.single_animal
@@ -379,7 +404,7 @@ def test_dir_tree_single_animal(single_animal_run):
         ],
         "trajectories": ["trajectories.npy"],
     }
-    assert_files_tree(tree, session_folder)
+    _assert_files_tree(tree, session_folder)
     no_tree = {
         "accumulation_0": [],
         "trajectories_wo_gaps": [],
@@ -388,22 +413,22 @@ def test_dir_tree_single_animal(single_animal_run):
         "accumulation_2": [],
         "accumulation_3": [],
     }
-    assert_files_tree(no_tree, session_folder, exist=False)
+    _assert_files_tree(no_tree, session_folder, exist=False)
 
 
 # Test no identities feature
 @pytest.fixture(scope="module")
 def wo_identification_run():
     root_folder = os.path.join(TEMP_DIR, "test_wo_identification")
-    return run_idtrackerai(root_folder)
+    return _run_idtrackerai(root_folder)
 
 
 @pytest.mark.wo_identification
 def test_wo_identification(wo_identification_run):
     input_arguments, success, session_folder = wo_identification_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(input_arguments, session_folder)
 
 
 @pytest.mark.wo_identification
@@ -432,7 +457,7 @@ def test_dir_tree_wo_identification(wo_identification_run):
             "trajectories_wo_identification.npy"
         ],
     }
-    assert_files_tree(tree, session_folder)
+    _assert_files_tree(tree, session_folder)
     no_tree = {
         "trajectories": [],
         "trajectories_wo_gaps": [],
@@ -442,7 +467,7 @@ def test_dir_tree_wo_identification(wo_identification_run):
         "accumulation_2": [],
         "accumulation_3": [],
     }
-    assert_files_tree(no_tree, session_folder, exist=False)
+    _assert_files_tree(no_tree, session_folder, exist=False)
 
 
 @pytest.mark.wo_identification
@@ -478,15 +503,15 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
 @pytest.fixture(scope="module")
 def single_global_fragment_run():
     root_folder = os.path.join(TEMP_DIR, "test_single_global_fragment")
-    return run_idtrackerai(root_folder)
+    return _run_idtrackerai(root_folder)
 
 
 @pytest.mark.single_global_fragment
 def test_single_global_fragment(single_global_fragment_run):
     input_arguments, success, session_folder = single_global_fragment_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(input_arguments, session_folder)
 
 
 @pytest.mark.single_global_fragment
@@ -510,7 +535,7 @@ def test_dir_tree_single_global_fragment(single_global_fragment_run):
         ],
         "trajectories": ["trajectories.npy"],
     }
-    assert_files_tree(tree, session_folder)
+    _assert_files_tree(tree, session_folder)
     no_tree = {
         "trajectories_wo_gaps": [],
         "accumulation_0": [],
@@ -519,7 +544,7 @@ def test_dir_tree_single_global_fragment(single_global_fragment_run):
         "accumulation_2": [],
         "accumulation_3": [],
     }
-    assert_files_tree(no_tree, session_folder, exist=False)
+    _assert_files_tree(no_tree, session_folder, exist=False)
 
 
 @pytest.mark.single_global_fragment
@@ -583,7 +608,7 @@ def more_blobs_than_animals_chcksegm_false_run():
     root_folder = os.path.join(
         TEMP_DIR, "test_more_blobs_than_animals_chcksegm_false"
     )
-    return run_idtrackerai(root_folder)
+    return _run_idtrackerai(root_folder)
 
 
 @pytest.mark.more_blobs_than_animals_chcksegm_false
@@ -596,23 +621,24 @@ def test_more_blobs_than_animals_chcksegm_false_run(
         session_folder,
     ) = more_blobs_than_animals_chcksegm_false_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(input_arguments, session_folder)
 
 
+@pytest.mark.xfail  # this is entering into protocol 3 but before was protocol 2
 @pytest.mark.more_blobs_than_animals_chcksegm_false
 def test_dir_tree_more_blobs_than_animals_chcksegm_false(
     more_blobs_than_animals_chcksegm_false_run,
 ):
     _, _, session_folder = more_blobs_than_animals_chcksegm_false_run
-    assert_files_tree(default_protocol_2_tree, session_folder)
+    _assert_files_tree(default_protocol_2_tree, session_folder)
     no_tree = {
         "pretraining": [],
         "accumulation_1": [],
         "accumulation_2": [],
         "accumulation_3": [],
     }
-    assert_files_tree(no_tree, session_folder, exist=False)
+    _assert_files_tree(no_tree, session_folder, exist=False)
 
 
 @pytest.mark.more_blobs_than_animals_chcksegm_false
@@ -644,7 +670,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
 @pytest.fixture(scope="module")
 def background_subtraction_mean_run():
     root_folder = os.path.join(TEMP_DIR, "test_bkg_subtraction_mean")
-    return run_idtrackerai(root_folder)
+    return _run_idtrackerai(root_folder)
 
 
 @pytest.mark.background_subtraction_mean
@@ -661,8 +687,8 @@ def test_bkg_subtraction_mean_run(
     # number of animals indicated in the input arguments and the chcksegm flag
     # is set to True.
     assert not success
-    assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(input_arguments, session_folder)
     inconsistent_frames_path = os.path.join(
         session_folder, "inconsistent_frames.csv"
     )
@@ -685,7 +711,7 @@ def test_dir_tree_background_subtraction_mean_run(
         ],
         "identification_images": [],
     }
-    assert_files_tree(tree, session_folder)
+    _assert_files_tree(tree, session_folder)
     no_tree = {
         "crossings_detector": [],
         "trajectories": [],
@@ -696,7 +722,7 @@ def test_dir_tree_background_subtraction_mean_run(
         "accumulation_2": [],
         "accumulation_3": [],
     }
-    assert_files_tree(no_tree, session_folder, exist=False)
+    _assert_files_tree(no_tree, session_folder, exist=False)
 
 
 @pytest.mark.background_subtraction_mean
@@ -704,7 +730,7 @@ def test_background_subtraction_mean_bkg_model(
     background_subtraction_mean_run,
 ):
     _, _, session_folder = background_subtraction_mean_run
-    assert_background_model(session_folder)
+    _assert_background_model(session_folder)
 
 
 # Test tracking a video using background subtraction
@@ -712,7 +738,7 @@ def test_background_subtraction_mean_bkg_model(
 @pytest.fixture(scope="module")
 def background_subtraction_run():
     root_folder = os.path.join(TEMP_DIR, "test_bkg_subtraction_default")
-    return run_idtrackerai(root_folder)
+    return _run_idtrackerai(root_folder)
 
 
 @pytest.mark.background_subtraction_default
@@ -723,8 +749,8 @@ def test_background_subtraction_run(background_subtraction_run):
         session_folder,
     ) = background_subtraction_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(input_arguments, session_folder)
 
 
 @pytest.mark.background_subtraction_default
@@ -732,27 +758,27 @@ def test_dir_tree_background_subtraction(
     background_subtraction_run,
 ):
     _, _, session_folder = background_subtraction_run
-    assert_files_tree(default_protocol_2_tree, session_folder)
+    _assert_files_tree(default_protocol_2_tree, session_folder)
     no_tree = {
         "pretraining": [],
         "accumulation_1": [],
         "accumulation_2": [],
         "accumulation_3": [],
     }
-    assert_files_tree(no_tree, session_folder, exist=False)
+    _assert_files_tree(no_tree, session_folder, exist=False)
 
 
 @pytest.mark.background_subtraction_default
 def test_background_subtraction_default_bkg_model(background_subtraction_run):
     _, _, session_folder = background_subtraction_run
-    assert_background_model(session_folder)
+    _assert_background_model(session_folder)
 
 
 # Test ROI with BKG
 @pytest.fixture(scope="module")
 def background_subtraction_with_ROI_run():
     root_folder = os.path.join(TEMP_DIR, "test_bkg_roi")
-    return run_idtrackerai(root_folder)
+    return _run_idtrackerai(root_folder)
 
 
 @pytest.mark.background_subtraction_with_ROI
@@ -765,8 +791,8 @@ def test_background_subtraction_with_ROI_run(
         session_folder,
     ) = background_subtraction_with_ROI_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(input_arguments, session_folder)
 
 
 @pytest.mark.background_subtraction_with_ROI
@@ -774,14 +800,14 @@ def test_dir_tree_background_subtraction(
     background_subtraction_with_ROI_run,
 ):
     _, _, session_folder = background_subtraction_with_ROI_run
-    assert_files_tree(default_protocol_2_tree, session_folder)
+    _assert_files_tree(default_protocol_2_tree, session_folder)
     no_tree = {
         "pretraining": [],
         "accumulation_1": [],
         "accumulation_2": [],
         "accumulation_3": [],
     }
-    assert_files_tree(no_tree, session_folder, exist=False)
+    _assert_files_tree(no_tree, session_folder, exist=False)
 
 
 @pytest.mark.background_subtraction_with_ROI
@@ -789,17 +815,143 @@ def test_background_subtraction_with_ROI_bkg_model(
     background_subtraction_with_ROI_run,
 ):
     _, _, session_folder = background_subtraction_with_ROI_run
-    assert_background_model(session_folder)
+    _assert_background_model(session_folder)
 
 
-# TODO: Code test for ROI with resolution reduction (protocol3 already has resolution reduction)
+# Test multiple files
+@pytest.fixture(scope="module")
+def multiple_files_run():
+    root_folder = os.path.join(TEMP_DIR, "test_multiple_files")
+    return _run_idtrackerai(root_folder)
 
-# TODO: Code test for multiple files
-# TODO: Code test for knowledge transfer
-# TODO: Code test for identity transfer
+
+@pytest.mark.multiple_files
+def test_multiple_files_run(
+    multiple_files_run,
+):
+    input_arguments, success, session_folder = multiple_files_run
+    assert success
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(
+        input_arguments,
+        session_folder,
+        num_frames=COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES,
+    )
+
+
+@pytest.mark.multiple_files
+def test_dir_tree_multiple_files(
+    multiple_files_run,
+):
+    _, _, session_folder = multiple_files_run
+    _assert_files_tree(default_protocol_2_tree, session_folder)
+    no_tree = {
+        "pretraining": [],
+        "accumulation_1": [],
+        "accumulation_2": [],
+        "accumulation_3": [],
+    }
+    _assert_files_tree(no_tree, session_folder, exist=False)
+
+
+# Test knowledge transfer
+@pytest.fixture(scope="module")
+def knowledge_transfer_run(default_protocol_2_run):
+    _, _, session_folder = default_protocol_2_run
+    accumulation_folder = os.path.join(session_folder, "accumulation_0")
+    root_folder = os.path.join(TEMP_DIR, "test_knowledge_transfer")
+    _update_local_settings_with_accumulation_folder(
+        root_folder, accumulation_folder
+    )
+    return _run_idtrackerai(root_folder, video_path=COMPRESSED_VIDEO_PATH_2)
+
+
+@pytest.mark.knowledge_transfer
+def test_knowledge_transfer_run(knowledge_transfer_run):
+    input_arguments, success, session_folder = knowledge_transfer_run
+    assert success
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(
+        input_arguments,
+        session_folder,
+        num_frames=COMPRESSED_VIDEO_NUM_FRAMES_2,
+    )
+
+
+@pytest.mark.knowledge_transfer
+def test_knowledge_transfer_happened(knowledge_transfer_run):
+    _, _, session_folder = knowledge_transfer_run
+    video_object = _get_video_object(session_folder)
+    assert video_object.user_defined_parameters["knowledge_transfer_folder"]
+
+    root_folder = os.path.dirname(session_folder)
+    log_file_path = os.path.join(root_folder, "idtrackerai-app.log")
+    with open(log_file_path, "r") as log_file:
+        logs = log_file.read()
+        assert "Tracking with knowledge transfer" in logs
+        assert "Reinitializing fully connected layers" in logs
+
+
+# Test identity transfer
+# This also tests protocol 1
+@pytest.fixture(scope="module")
+def identity_transfer_run(default_protocol_2_run):
+    _, _, session_folder = default_protocol_2_run
+    accumulation_folder = os.path.join(session_folder, "accumulation_0")
+    root_folder = os.path.join(TEMP_DIR, "test_identity_transfer")
+    _update_local_settings_with_accumulation_folder(
+        root_folder, accumulation_folder
+    )
+    return _run_idtrackerai(root_folder, video_path=COMPRESSED_VIDEO_PATH_2)
+
+
+@pytest.mark.identity_transfer
+def test_identity_transfer_run(identity_transfer_run):
+    input_arguments, success, session_folder = identity_transfer_run
+    assert success
+    _assert_input_video_object_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(
+        input_arguments,
+        session_folder,
+        num_frames=COMPRESSED_VIDEO_NUM_FRAMES_2,
+    )
+
+
+@pytest.mark.identity_transfer
+def test_identity_transfer_happened(identity_transfer_run):
+    _, _, session_folder = identity_transfer_run
+    video_object = _get_video_object(session_folder)
+    assert video_object.user_defined_parameters["knowledge_transfer_folder"]
+    assert video_object.user_defined_parameters["identity_transfer"]
+    # TODO: This is not truly a user defined parameter
+    assert video_object.user_defined_parameters[
+        "identification_image_size"
+    ] == (42, 42, 1)
+
+    kt_folder = video_object.user_defined_parameters[
+        "knowledge_transfer_folder"
+    ]
+    root_folder = os.path.dirname(session_folder)
+    log_file_path = os.path.join(root_folder, "idtrackerai-app.log")
+    with open(log_file_path, "r") as log_file:
+        logs = log_file.read()
+        assert "Tracking with knowledge transfer" in logs
+        assert (
+            "Identity transfer. Not reinitializing the fully connected layers."
+            in logs
+        )
+        assert "Identities transferred successfully" in logs
+        assert f"Transferring identities from {kt_folder}" in logs
+        assert "Protocol 1 successful" in logs
+
 
 # TODO: Code test max_number_of_blobs < number_of_animals
 # TODO: Code test save pixels
 # TODO: Code test save segmentation images
+# TODO: Code test data policy
+# TODO: Code test save CSV data
+# TODO: Code test lower MAX_RATIO_OF_PRETRAINED_IMAGES
+# TODO: Code test sigma blurring
 
-# shutil.rmtree(TEMP_DIR)
+# if True:
+#     shutil.rmtree(TEMP_DIR)

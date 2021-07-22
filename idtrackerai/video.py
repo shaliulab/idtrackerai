@@ -931,6 +931,8 @@ class Video(object):
             episodes_start_end = list(zip(start, end))
             number_of_episodes = len(episodes_start_end)
         else:  # multiple video files
+            logger.info("Tracking multiple files:")
+            logger.info(f"{video_paths}")
             num_frames_in_video_segments = [
                 int(cv2.VideoCapture(video_segment).get(7))
                 for video_segment in video_paths

@@ -51,12 +51,18 @@
   "_chcksegm": {
 	"value": "False"
   },
-  "_roi": {},
+  "_roi": {
+	"value": [
+	  [
+		"(8, 7), (967, 7), (967, 930), (8, 930)"
+	  ]
+	]
+  },
   "_no_ids": {
 	"value": "False"
   },
   "_applyroi": {
-	"value": "False"
+	"value": "True"
   },
   "_bgsub": {
 	"value": "False"

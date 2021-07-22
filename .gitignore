@@ -63,7 +63,8 @@ build/*
 .eggs/*
 
 idtrackerai/data/*/session_*
-!*idtrackerai_video_example_compressed.avi
+!*conflict3and4_20120316T155032_13_compressed.avi
+!*conflict3and4_20120316T155032_14_compressed.avi
 
 out-parameters\.txt
 
