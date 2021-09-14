@@ -146,7 +146,34 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     return bkg, number_of_frames_for_bkg_in_episode
 
 
-def cumpute_background(video):
+def cumpute_background_median(video):
+    bkg = np.zeros((video.original_height, video.original_width))
+
+    set_mkl_to_single_thread()
+
+    if video.paths_to_video_segments is None:
+
+        cap = cv2.VideoCapture(video.video_path)
+        numFrame = int(cap.get(7))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        step_size = fps * 10 # 10 second steps
+        i = 0
+        j = 0
+        frames = []
+        while i < numFrame and j < 100:
+            ret, frame = cap.read()
+            i += 1
+            if i % step_size  == 0 and ret:
+                frames.append(frame)
+                j += 1
+
+        bkg = np.median(frame)
+        return bkg
+
+    else:
+        return cumpute_background_original(video)
+
+def cumpute_background_original(video):
     """Computes a model of the background by averaging multiple frames of the video.
     In particular 1 every 100 frames is used for the computation.
 
@@ -204,6 +231,8 @@ def cumpute_background(video):
     bkg = np.true_divide(bkg, totNumFrame)
     return bkg.astype("float32")
 
+def cumpute_background(*args, **kwargs):
+    return cumpute_background_median(*args, **kwargs)
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the
