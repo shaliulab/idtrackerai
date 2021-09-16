@@ -27,6 +27,7 @@
 # Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import sys
+import os.path
 
 import cv2
 import numpy as np
@@ -199,12 +200,10 @@ def cumpute_background_median_quick(video):
         from tqdm import tqdm
         pb = tqdm(total=total)
         positions = np.arange(0, min(numFrame, total*step_size), step_size)
-        print(positions)
-
         while i < total:
             ret, frame = cap.read()
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            frames.append(np.true_divide(gray, np.mean(gray)))
+            frames.append(gray)
             pb.update(1)
             i += 1
             if i == total:
@@ -213,7 +212,7 @@ def cumpute_background_median_quick(video):
 
         logger.info(f"{len(frames)} frames will be used to compute median frame")
 
-        bkg = np.array(np.median(frames,axis=0), np.uint8)
+        bkg = np.float32(np.median(frames,axis=0))
         return bkg
 
     else:
@@ -281,8 +280,15 @@ def cumpute_background_original(video):
     bkg = np.true_divide(bkg, totNumFrame)
     return bkg.astype("float32")
 
-def cumpute_background(*args, **kwargs):
-    return cumpute_background_median(*args, **kwargs)
+def cumpute_background(video, *args, **kwargs):
+
+    bg_path = video.video_path + ".bg.png"
+    if os.path.exists(bg_path):
+        return np.float32(cv2.cvtColor(cv2.imread(bg_path), cv2.COLOR_BGR2GRAY))
+    else:
+        bkg = cumpute_background_median(video, *args, **kwargs)
+        cv2.imwrite(bg_path, bkg)
+        return bkg
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the
@@ -313,9 +319,6 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     """
 
     if useBkg:
-        if conf.DEBUG:
-            import ipdb; ipdb.set_trace()
-
         frame = cv2.absdiff(
             bkg, frame
         )  # only step where frame normalization is important, because the background is normalised

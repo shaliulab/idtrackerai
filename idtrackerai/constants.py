@@ -436,4 +436,4 @@ GUI_MINIMUM_WIDTH = 1000
 ################################################
 
 DEBUG = True
-MEDIAN_DATA_LENGTH = 5
+MEDIAN_DATA_LENGTH = 20

@@ -178,7 +178,7 @@ def get_blobs_in_frame(
             frameGray / avIntensity,
             segmentation_thresholds["min_threshold"],
             segmentation_thresholds["max_threshold"],
-            video.bkg,
+            video.bkg / avIntensity,
             video.ROI,
             video.subtract_bkg,
         )
