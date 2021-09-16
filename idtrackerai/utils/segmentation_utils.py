@@ -203,7 +203,8 @@ def cumpute_background_median_quick(video):
 
         while i < total:
             ret, frame = cap.read()
-            frames.append(frame)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frames.append(np.true_divide(gray, np.mean(gray)))
             pb.update(1)
             i += 1
             if i == total:
