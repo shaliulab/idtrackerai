@@ -146,7 +146,7 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     return bkg, number_of_frames_for_bkg_in_episode
 
 
-def cumpute_background_median(video):
+def cumpute_background_median_slow(video):
     bkg = np.zeros((video.original_height, video.original_width))
 
     set_mkl_to_single_thread()
@@ -160,18 +160,67 @@ def cumpute_background_median(video):
         i = 0
         j = 0
         frames = []
-        while i < numFrame and j < 100:
+        TOTAL=10
+        from tqdm import tqdm
+        pb = tqdm(total=TOTAL)
+        while i < numFrame and j < TOTAL:
             ret, frame = cap.read()
             i += 1
             if i % step_size  == 0 and ret:
+                print(i)
                 frames.append(frame)
                 j += 1
+                pb.update(1)
 
-        bkg = np.median(frame)
+        logger.info(f"{len(frames)} frames will be used to compute median frame")
+
+        bkg = np.array(np.median(frames,axis=0), np.uint8)
         return bkg
 
     else:
         return cumpute_background_original(video)
+
+
+def cumpute_background_median_quick(video):
+    bkg = np.zeros((video.original_height, video.original_width))
+
+    set_mkl_to_single_thread()
+
+    if video.paths_to_video_segments is None:
+
+        cap = cv2.VideoCapture(video.video_path)
+        numFrame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        step_size = fps * 10 # 10 second steps
+        i = 0
+        frames = []
+        
+        total=conf.MEDIAN_DATA_LENGTH
+        from tqdm import tqdm
+        pb = tqdm(total=total)
+        positions = np.arange(0, min(numFrame, total*step_size), step_size)
+        print(positions)
+
+        while i < total:
+            ret, frame = cap.read()
+            frames.append(frame)
+            pb.update(1)
+            i += 1
+            if i == total:
+                break
+            cap.set(cv2.CAP_PROP_POS_FRAMES, positions[i])
+
+        logger.info(f"{len(frames)} frames will be used to compute median frame")
+
+        bkg = np.array(np.median(frames,axis=0), np.uint8)
+        return bkg
+
+    else:
+        return cumpute_background_original(video)
+
+def cumpute_background_median(video):
+    return cumpute_background_median_quick(video)
+
 
 def cumpute_background_original(video):
     """Computes a model of the background by averaging multiple frames of the video.
@@ -261,12 +310,23 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         Frame with zeros and ones after applying the thresholding and the mask.
         Pixels with value 1 are valid pixels given the thresholds and the mask.
     """
+
     if useBkg:
+        if conf.DEBUG:
+            import ipdb; ipdb.set_trace()
+
         frame = cv2.absdiff(
             bkg, frame
         )  # only step where frame normalization is important, because the background is normalised
         p99 = np.percentile(frame, 99.95) * 1.001
         frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
+
+        if conf.DEBUG:
+            from cv2utils import imshow
+            imshow("frame", frame)
+            imshow("bkg", bkg)
+            cv2.waitKey(0)
+
         frame_segmented = cv2.inRange(
             frame, min_threshold, max_threshold
         )  # output: 255 in range, else 0
@@ -280,6 +340,12 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     frame_segmented_and_masked = cv2.bitwise_and(
         frame_segmented, frame_segmented, mask=ROI
     )  # Applying the mask
+
+    if conf.DEBUG:
+        from cv2utils import imshow
+        imshow("segmented frame", frame_segmented_and_masked)
+        cv2.waitKey(0)
+
     return frame_segmented_and_masked
 
 

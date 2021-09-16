@@ -429,3 +429,11 @@ GUI_MINIMUM_HEIGHT = 500
 Only functional if NEW_GUI_LAYOUT is True
 """
 GUI_MINIMUM_WIDTH = 1000
+
+
+################################################
+################# DEBUG ########################
+################################################
+
+DEBUG = True
+MEDIAN_DATA_LENGTH = 5
