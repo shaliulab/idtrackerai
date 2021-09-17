@@ -325,11 +325,11 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         p99 = np.percentile(frame, 99.95) * 1.001
         frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
 
-        if conf.DEBUG:
-            from cv2utils import imshow
-            imshow("frame", frame)
-            imshow("bkg", bkg)
-            cv2.waitKey(0)
+        # if conf.DEBUG:
+        #     from cv2utils import imshow
+        #     imshow("frame", frame)
+        #     imshow("bkg", bkg)
+        #     cv2.waitKey(0)
 
         frame_segmented = cv2.inRange(
             frame, min_threshold, max_threshold
@@ -345,10 +345,10 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         frame_segmented, frame_segmented, mask=ROI
     )  # Applying the mask
 
-    if conf.DEBUG:
-        from cv2utils import imshow
-        imshow("segmented frame", frame_segmented_and_masked)
-        cv2.waitKey(0)
+    # if conf.DEBUG:
+    #     from cv2utils import imshow
+    #     imshow("segmented frame", frame_segmented_and_masked)
+    #     cv2.waitKey(0)
 
     return frame_segmented_and_masked
 
@@ -676,6 +676,13 @@ def blob_extractor(
     filter_contours_by_area
     get_blobs_information_per_frame
     """
+
+
+    if conf.DEBUG:
+        from cv2utils import imshow
+        imshow("input to blob_extractor", np.uint8(128 * (segmented_frame / segmented_frame.mean())))
+        cv2.waitKey(0)
+
     _, contours, hierarchy = cv2.findContours(
         segmented_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
     )

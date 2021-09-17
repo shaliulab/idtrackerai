@@ -415,17 +415,17 @@ CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON = bool(
 ################################################
 ################    GUI   ######################
 ################################################
-""" ***NEW_GUI_LAYOUT*** 
-Activates new GUI horizontal Layout and sets the width and height of the GUI 
+""" ***NEW_GUI_LAYOUT***
+Activates new GUI horizontal Layout and sets the width and height of the GUI
 window following the values of the variables GUI_MINIMUM_HEIGHT and
 GUI_MINIMUM_WIDTH below.
 """
 NEW_GUI_LAYOUT = False
-""" ***GUI_MINIMUM_HEIGHT*** 
+""" ***GUI_MINIMUM_HEIGHT***
 Only functional if NEW_GUI_LAYOUT is True
 """
 GUI_MINIMUM_HEIGHT = 500
-""" ***GUI_MINIMUM_HEIGHT*** 
+""" ***GUI_MINIMUM_HEIGHT***
 Only functional if NEW_GUI_LAYOUT is True
 """
 GUI_MINIMUM_WIDTH = 1000
@@ -435,5 +435,5 @@ GUI_MINIMUM_WIDTH = 1000
 ################# DEBUG ########################
 ################################################
 
-DEBUG = True
+DEBUG = False
 MEDIAN_DATA_LENGTH = 20
