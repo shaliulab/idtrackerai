@@ -174,11 +174,21 @@ def get_blobs_in_frame(
         avIntensity = np.float32(
             np.mean(np.ma.array(frameGray, mask=video.ROI == 0))
         )
+
+        if video.bkg is None and video.subtract_bkg is False:
+            bkg = video.bkg
+        elif video.bkg is None and video.subtract_bkg is True:
+            logger.warning("The background has not been set. So I will not subtract it")
+            video._subtract_bkg = False
+            bkg = video.bkg
+        else:
+            bkg = video.bkg / avIntensity
+
         segmentedFrame = segment_frame(
             frameGray / avIntensity,
             segmentation_thresholds["min_threshold"],
             segmentation_thresholds["max_threshold"],
-            video.bkg / avIntensity,
+            bkg,
             video.ROI,
             video.subtract_bkg,
         )

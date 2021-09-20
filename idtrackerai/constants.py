@@ -75,7 +75,7 @@ FRAMES_PER_EPISODE = int(os.environ.get("FRAMES_PER_EPISODE", 500))
 """***NUMBER_OF_ANIMALS_DEFAULT
 Number of animals to be tracked
 """
-NUMBER_OF_ANIMALS_DEFAULT = int(os.environ.get("FRAMES_PER_EPISODE", 8))
+NUMBER_OF_ANIMALS_DEFAULT = int(os.environ.get("NUMBER_OF_ANIMALS_DEFAULT", 8))
 """***MIN_AREA_LOWER, MIN_AREA_UPPER***
 Lower and upper bounds for the minimum area slider
 """
@@ -412,6 +412,8 @@ CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON = bool(
     )
 )
 
+NUMBER_OF_JOBS_FOR_VIDEO_GENERATION = 5
+
 ################################################
 ################    GUI   ######################
 ################################################
@@ -434,6 +436,4 @@ GUI_MINIMUM_WIDTH = 1000
 ################################################
 ################# DEBUG ########################
 ################################################
-
-DEBUG = False
 MEDIAN_DATA_LENGTH = 20

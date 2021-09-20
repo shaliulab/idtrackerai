@@ -30,6 +30,11 @@ import os
 import numpy as np
 import cv2
 from tqdm import tqdm
+import logging
+logger = logging.getLogger(__name__)
+from confapp import conf
+conf += "idtrackerai.constants"
+
 from idtrackerai.utils.py_utils import get_spaced_colors_util
 
 
@@ -87,23 +92,33 @@ def apply_func_on_frame(
     video_object,
     trajectories,
     frame_number,
-    video_writer,
     colors,
     cap=None,
     func=None,
     centroid_trace_length=10,
 ):
+
+    # logger.warning("Call")
     segment_number = video_object.in_which_episode(frame_number)
     current_segment = segment_number
+    if not video_object.paths_to_video_segments:
+        video_path = video_object.video_path
+    else:
+        video_path = video_object.paths_to_video_segments[segment_number]
+
     if cap is None:
-        cap = cv2.VideoCapture(
-            video_object.paths_to_video_segments[segment_number]
-        )
-        start = video_object._episodes_start_end[segment_number][0]
+        cap = cv2.VideoCapture(video_path)
+        if not video_object.paths_to_video_segments:
+            start = 0
+        else:
+            start = video_object._episodes_start_end[segment_number][0]
         cap.set(1, frame_number - start)
     else:
         cap.set(1, frame_number)
+    
     ret, frame = cap.read()
+
+    # logger.warning("Ready")
     if ret:
         if video_object.resolution_reduction != 1:
             frame = cv2.resize(
@@ -121,6 +136,7 @@ def apply_func_on_frame(
             centroid_trace_length,
             colors,
         )
+        # logger.warning((frame_number, frame.shape))
         return frame
 
 
@@ -157,21 +173,58 @@ def generate_trajectories_video(
     if ending_frame is None:
         ending_frame = len(trajectories)
 
+    compile_video(
+        starting_frame, ending_frame,
+        video_object=video_object, trajectories=trajectories, video_writer=video_writer, colors=colors,
+        cap=cap, func=writeIds, centroid_trace_length=centroid_trace_length
+    )
+
+
+def compile_video_seq(starting_frame, ending_frame, video_writer, *args, **kwargs):
+    
     for frame_number in tqdm(
         range(starting_frame, ending_frame),
         desc="Generating video with trajectories...",
     ):
         frame = apply_func_on_frame(
-            video_object,
-            trajectories,
-            frame_number,
-            video_writer,
-            colors,
-            cap=cap,
-            func=writeIds,
-            centroid_trace_length=centroid_trace_length,
+            *args, frame_number=frame_number, **kwargs
         )
+
         video_writer.write(frame)
+
+def compile_video_para(starting_frame, ending_frame, video_writer, *args, **kwargs):
+    from joblib import Parallel, delayed
+
+    kwargs.pop("cap", None)
+    cap = None
+
+    while starting_frame < ending_frame:
+
+        block_end = min(starting_frame + conf.FRAMES_PER_EPISODE, ending_frame)
+
+        output = Parallel(
+            n_jobs=conf.NUMBER_OF_JOBS_FOR_VIDEO_GENERATION
+        )(
+            delayed(apply_func_on_frame)(*args, frame_number=frame_number, cap=None, **kwargs)
+            for frame_number in tqdm(range(starting_frame, block_end), desc="Annotation progress", total=ending_frame-starting_frame)
+        )
+
+        for frame in output:
+            video_writer.write(frame)
+
+        starting_frame = block_end
+    
+
+def compile_video(*args, **kwargs):
+
+    if conf.NUMBER_OF_JOBS_FOR_VIDEO_GENERATION == 1:
+        compile_vide_seq(*args, **kwargs)
+    
+    else:
+        compile_video_para(*args, **kwargs)
+
+    logger.info("Video writing finished")
+
 
 
 def main(args):

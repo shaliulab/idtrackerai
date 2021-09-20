@@ -1264,48 +1264,8 @@ class TrackerAPI(object):
         interpolate_crossings_popups_actions()
 
     def create_trajectories_wo_gaps(self):
-        self.chosen_video.video.create_trajectories_wo_gaps_folder()
-        logger.info(
-            "Generating trajectories. The trajectories files are stored in %s"
-            % self.chosen_video.video.trajectories_wo_gaps_folder
-        )
-        trajectories_wo_gaps_file = os.path.join(
-            self.chosen_video.video.trajectories_wo_gaps_folder,
-            "trajectories_wo_gaps.npy",
-        )
-        trajectories_wo_gaps = produce_output_dict(
-            self.chosen_video.list_of_blobs_no_gaps.blobs_in_video,
-            self.chosen_video.video,
-        )
-        np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
-        if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
-            logger.info("Saving trajectories in csv format...")
-            convert_trajectories_file_to_csv_and_json(
-                trajectories_wo_gaps_file
-            )
-        self.chosen_video.video._has_trajectories_wo_gaps = True
-        logger.info("Saving trajectories")
-        self.chosen_video.list_of_blobs = (
-            assign_zeros_with_interpolation_identities(
-                self.chosen_video.list_of_blobs,
-                self.chosen_video.list_of_blobs_no_gaps,
-            )
-        )
-        trajectories_file = os.path.join(
-            self.chosen_video.video.trajectories_folder, "trajectories.npy"
-        )
-        trajectories = produce_output_dict(
-            self.chosen_video.list_of_blobs.blobs_in_video,
-            self.chosen_video.video,
-        )
-        np.save(trajectories_file, trajectories)
-        if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
-            logger.info("Saving trajectories in csv format...")
-            convert_trajectories_file_to_csv_and_json(trajectories_file)
-        self.chosen_video.video.save()
-        self.chosen_video.video._create_trajectories_time = (
-            time.time() - self.chosen_video.video.create_trajectories_time
-        )
+        return create_trajectories_wo_gaps(self.chosen_video)
+
 
     def update_and_show_happy_ending_popup(self):
         if not hasattr(self.chosen_video.video, "overall_P2"):
@@ -1348,3 +1308,49 @@ class TrackerAPI(object):
             else "None"
         )
         # self.kt_conv_layers_to_discard = self.accumulation_network_params.kt_conv_layers_to_discard if self.accumulation_network_params.kt_conv_layers_to_discard is not None else 'None'
+
+
+def create_trajectories_wo_gaps(chosen_video):
+        
+        chosen_video.video.create_trajectories_wo_gaps_folder()
+        logger.info(
+            "Generating trajectories. The trajectories files are stored in %s"
+            % chosen_video.video.trajectories_wo_gaps_folder
+        )
+        trajectories_wo_gaps_file = os.path.join(
+            chosen_video.video.trajectories_wo_gaps_folder,
+            "trajectories_wo_gaps.npy",
+        )
+        trajectories_wo_gaps = produce_output_dict(
+            chosen_video.list_of_blobs_no_gaps.blobs_in_video,
+            chosen_video.video,
+        )
+        np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
+        if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
+            logger.info("Saving trajectories in csv format...")
+            convert_trajectories_file_to_csv_and_json(
+                trajectories_wo_gaps_file
+            )
+        chosen_video.video._has_trajectories_wo_gaps = True
+        logger.info("Saving trajectories")
+        chosen_video.list_of_blobs = (
+            assign_zeros_with_interpolation_identities(
+                chosen_video.list_of_blobs,
+                chosen_video.list_of_blobs_no_gaps,
+            )
+        )
+        trajectories_file = os.path.join(
+            chosen_video.video.trajectories_folder, "trajectories.npy"
+        )
+        trajectories = produce_output_dict(
+            chosen_video.list_of_blobs.blobs_in_video,
+            chosen_video.video,
+        )
+        np.save(trajectories_file, trajectories)
+        if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
+            logger.info("Saving trajectories in csv format...")
+            convert_trajectories_file_to_csv_and_json(trajectories_file)
+        chosen_video.video.save()
+        chosen_video.video._create_trajectories_time = (
+            time.time() - chosen_video.video.create_trajectories_time
+        )
