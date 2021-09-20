@@ -183,6 +183,8 @@ def train(
 
     global_step0 = global_step
 
+    import ipdb; ipdb.set_trace()
+
     while not stop_training(
         store_training_accuracy_and_loss_data,
         store_validation_accuracy_and_loss_data,

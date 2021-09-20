@@ -69,15 +69,18 @@ class TrackerAPI(object):
         protocol3_pretraining_call=None,
         protocols1_and_2_call=None,
         not_protocols1_and_2_call=None,
+        multitracker_anyway=False,
     ):
 
-        if self.chosen_video.video.number_of_animals == 1:
+        # if there is only one animal (according to the user) 
+        if self.chosen_video.video.number_of_animals == 1 and not multitracker_anyway:
             # GUI CALL
             if one_animal_call:
                 one_animal_call()
             else:
                 self.track_single_animal()
 
+        # if there is a single global fragment (i.e. looks like only one animal?) 
         elif (
             self.chosen_video.list_of_global_fragments.number_of_global_fragments
             == 1
@@ -88,6 +91,7 @@ class TrackerAPI(object):
             else:
                 self.track_single_global_fragment_video()
 
+        #multiple animals
         else:
             tf.compat.v1.reset_default_graph()
             self.chosen_video.video.accumulation_trial = 0

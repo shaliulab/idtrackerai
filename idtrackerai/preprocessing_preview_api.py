@@ -271,9 +271,8 @@ class PreprocessingPreviewAPI(object):
             )
 
     def generate_list_of_fragments_and_global_fragments(self):
-        self.chosen_video.video._fragmentation_time = time.time()
-
-        if self.chosen_video.video.number_of_animals != 1:
+        self.chosen_video.video._fragmentation_time = time.time()       
+        if self.chosen_video.video.number_of_animals != 1 or True:
             self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
             self.chosen_video.list_of_blobs.compute_fragment_identifier_and_blob_index(
                 max(
@@ -341,7 +340,7 @@ class PreprocessingPreviewAPI(object):
             self.chosen_video.video.blobs_path,
             number_of_chunks=self.chosen_video.video.number_of_frames,
         )
-        if self.chosen_video.video.number_of_animals != 1:
+        if self.chosen_video.video.number_of_animals != 1 or True:
             self.list_of_global_fragments.save(
                 self.chosen_video.video.global_fragments_path,
                 self.list_of_fragments.fragments,
