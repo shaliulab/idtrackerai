@@ -189,7 +189,7 @@ def cumpute_background_median_slow(video):
         return cumpute_background_original(video)
 
 
-def cumpute_background_median_quick(video):
+def cumpute_background_median_quick(video, progress=True):
     bkg = np.zeros((video.original_height, video.original_width))
 
     set_mkl_to_single_thread()
@@ -204,14 +204,16 @@ def cumpute_background_median_quick(video):
         frames = []
         
         total=conf.MEDIAN_DATA_LENGTH
-        from tqdm import tqdm
-        pb = tqdm(total=total)
+        if progress:
+            from tqdm import tqdm
+            pb = tqdm(total=total)
         positions = np.arange(0, min(numFrame, total*step_size), step_size)
         while i < total:
             ret, frame = cap.read()
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             frames.append(gray)
-            pb.update(1)
+            if progress:
+                pb.update(1)
             i += 1
             if i == total:
                 break
@@ -225,8 +227,8 @@ def cumpute_background_median_quick(video):
     else:
         return cumpute_background_original(video)
 
-def cumpute_background_median(video):
-    return cumpute_background_median_quick(video)
+def cumpute_background_median(video, *args, **kwargs):
+    return cumpute_background_median_quick(video, *args, **kwargs)
 
 
 def cumpute_background_original(video):
