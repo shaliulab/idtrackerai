@@ -293,11 +293,14 @@ def cumpute_background(video, *args, **kwargs):
 
     bg_path = video.video_path + ".bg.png"
     if os.path.exists(bg_path):
-        return np.float32(cv2.cvtColor(cv2.imread(bg_path), cv2.COLOR_BGR2GRAY))
+        bkg = np.float32(cv2.cvtColor(cv2.imread(bg_path), cv2.COLOR_BGR2GRAY))
     else:
         bkg = cumpute_background_median(video, *args, **kwargs)
         cv2.imwrite(bg_path, bkg)
-        return bkg
+
+    bkg = bkg / bkg.mean()
+    return bkg
+
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the
@@ -333,13 +336,6 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         )  # only step where frame normalization is important, because the background is normalised
         p99 = np.percentile(frame, 99.95) * 1.001
         frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
-
-
-        # if True:
-        #     from cv2utils import imshow
-        #     imshow("frame", frame)
-        #     imshow("bkg", bkg)
-        #     cv2.waitKey(10)
 
         frame_segmented = cv2.inRange(
             frame, min_threshold, max_threshold
