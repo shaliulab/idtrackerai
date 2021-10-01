@@ -18,6 +18,7 @@ from distutils.dir_util import copy_tree
 import shutil
 from datetime import datetime
 import pytest
+
 # Get the path to the folder where all the .json files for the tests are stored
 DIR_NAME = os.path.dirname(os.path.realpath(__file__))
 ASSETS_FOLDER = os.path.join(DIR_NAME, "tests_params")
