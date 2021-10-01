@@ -371,7 +371,7 @@ class ListOfGlobalFragments(object):
                 identities = range(
                     video.user_defined_parameters["number_of_animals"]
                 )
-            logger.info("Identities transferred succesfully")
+            logger.info("Identities transferred successfully")
 
         return identities
 

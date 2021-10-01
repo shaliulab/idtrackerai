@@ -155,7 +155,7 @@ def assign_remaining_fragments(
         list_of_fragments.get_number_of_unidentified_individual_fragments()
     )
     logger.info(
-        "Number of unidentifier individual fragments: {}".format(
+        "Number of unidentified individual fragments: {}".format(
             number_of_unidentified_individual_fragments
         )
     )

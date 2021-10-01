@@ -42,8 +42,22 @@ DATA_PATH = os.path.join(IDTRACKERAI_FOLDER, "data")
 COMPRESSED_VIDEO_PATH = os.path.join(
     DATA_PATH,
     "example_video_compressed",
-    "idtrackerai_video_example_compressed.avi",
+    "conflict3and4_20120316T155032_14_compressed.avi",
 )
+COMPRESSED_VIDEO_PATH_2 = os.path.join(
+    DATA_PATH,
+    "example_video_compressed",
+    "conflict3and4_20120316T155032_13_compressed.avi",
+)
+
+#######################################
+#### Constants for tests ##############
+#######################################
+COMPRESSED_VIDEO_NUM_FRAMES = 508
+COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
+COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
+COMPRESSED_VIDEO_WIDTH = 1160
+COMPRESSED_VIDEO_HEIGHT = 938
 
 #######################################
 ##########       video      ###########
@@ -61,7 +75,8 @@ AVAILABLE_VIDEO_EXTENSION = [
 ###############################################################################
 # Animal detection advanced parameters
 ###############################################################################
-FRAMES_PER_EPISODE = int(os.environ.get("FRAMES_PER_EPISODE", 100))
+# TODO: Fix compatibility frames per episode and background subtraction period
+FRAMES_PER_EPISODE = int(os.environ.get("FRAMES_PER_EPISODE", 500))
 BACKGROUND_SUBTRACTION_PERIOD = int(
     os.environ.get("BACKGROUND_SUBTRACTION_PERIOD", 250)
 )

@@ -40,7 +40,7 @@ docs/build/*
 
 # ignore idtrackerai unnecessary byproduct files
 idtrackerai/utils/test_.json
-tests/integration_tests/*output.txt
+tests/smoke_tests/test_*/session_*
 
 
 #ignore idtrackerAI and videos folder because they have .png files
@@ -55,17 +55,21 @@ idtrackerai\.egg-info/
 
 docs/build/
 
-local_settings\.py
+./local_settings.py
+!tests/smoke_tests/tests_params/test_*/local_settings.py
 
 dist/*
 build/*
 .eggs/*
 
 idtrackerai/data/*/session_*
-!*idtrackerai_video_example_compressed.avi
+!*conflict3and4_20120316T155032_13_compressed.avi
+!*conflict3and4_20120316T155032_14_compressed.avi
 
 out-parameters\.txt
 
 docs/idtrackerai-app\.log
 
 .pytest_cache
+
+\.vscode/

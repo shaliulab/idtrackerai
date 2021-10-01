@@ -104,6 +104,7 @@ class Video(object):
         self._number_of_frames = None
         self._number_of_episodes = None
         self._episodes_start_end = None
+        self._user_defined_parameters = None  # has a setter
 
         # Get some other video properties
         self._open_multiple_files = open_multiple_files
@@ -356,14 +357,6 @@ class Video(object):
         return self._has_crossings_detected
 
     @property
-    def has_model_area(self):
-        return self._has_model_area
-
-    @property
-    def has_identification_images(self):
-        return self._has_identification_images
-
-    @property
     def has_been_fragmented(self):
         return self._has_been_fragmented
 
@@ -583,7 +576,16 @@ class Video(object):
         old_session_path = self.session_folder
         video_name = os.path.split(self._video_path)[1]
         self._video_folder = os.path.split(new_session_path)[0]
-        self.video_path = os.path.join(self.video_folder, video_name)
+        video_path = os.path.join(self.video_folder, video_name)
+        if os.path.isfile(video_path):
+            self.video_path = video_path
+        else:
+            logger.warning(
+                f"video_path: {video_path} does not exists. "
+                f"The original video_path {self.video_path}. "
+                f"We will keep the original video_path"
+            )
+
         attributes_to_modify = {
             key: getattr(self, key)
             for key in self.__dict__
@@ -732,12 +734,12 @@ class Video(object):
         training a network for a certain video_path
         """
         if name == "":
-            self._session_folder = os.path.join(self.video_folder, "session")
+            session_name = "session"
         else:
-            self._session_folder = os.path.join(
-                self.video_folder, "session_" + name
-            )
+            session_name = "session_" + name
 
+        self._session_folder = os.path.join(self.video_folder, session_name)
+        logger.info(f"Creating session folder at {self._session_folder}")
         if not os.path.isdir(self._session_folder):
             os.makedirs(self._session_folder)
             self._previous_session_folder = ""
@@ -892,17 +894,17 @@ class Video(object):
                 "the folder %s has been created" % self.trajectories_folder
             )
 
-    def create_trajectories_wo_identities_folder(self):
+    def create_trajectories_wo_identification_folder(self):
         """Folder in which trajectories without identites are stored"""
-        self.trajectories_wo_identities_folder = os.path.join(
-            self.session_folder, "trajectories_wo_identities"
+        self.trajectories_wo_identification_folder = os.path.join(
+            self.session_folder, "trajectories_wo_identification"
         )
-        if not os.path.isdir(self.trajectories_wo_identities_folder):
+        if not os.path.isdir(self.trajectories_wo_identification_folder):
             logger.info("Creating trajectories folder...")
-            os.makedirs(self.trajectories_wo_identities_folder)
+            os.makedirs(self.trajectories_wo_identification_folder)
             logger.info(
                 "the folder %s has been created"
-                % self.trajectories_wo_identities_folder
+                % self.trajectories_wo_identification_folder
             )
 
     def create_trajectories_wo_gaps_folder(self):
@@ -929,6 +931,8 @@ class Video(object):
             episodes_start_end = list(zip(start, end))
             number_of_episodes = len(episodes_start_end)
         else:  # multiple video files
+            logger.info("Tracking multiple files:")
+            logger.info(f"{video_paths}")
             num_frames_in_video_segments = [
                 int(cv2.VideoCapture(video_segment).get(7))
                 for video_segment in video_paths

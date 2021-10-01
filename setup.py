@@ -49,7 +49,7 @@ install it on Python {}.{}.
     sys.exit(1)
 
 requirements = [
-    "numpy >= 1.13.0",
+    "numpy >= 1.14.5",
     "natsort >= 5.0.2",
     "matplotlib >= 2.1",
     "seaborn >= 0.8",
@@ -100,7 +100,7 @@ setup(
     license="GPLv3+",
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
-    package_data={"idtrackerai": ["data/*.avi"]},
+    package_data={"idtrackerai": ["data/example_video_compressed/*.avi"]},
     install_requires=requirements,
     extras_require={
         "gui": [

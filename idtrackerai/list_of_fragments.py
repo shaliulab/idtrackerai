@@ -70,6 +70,9 @@ class ListOfFragments(object):
             identification_images_file_paths
         )
 
+    def __len__(self):
+        return len(self.fragments)
+
     def get_fragment_identifier_to_index_list(self):
         """Creates a mapping between the attribute :attr:`fragments` and
         their identifiers build from the :class:`~list_of_blobs.ListOfBlobs`
