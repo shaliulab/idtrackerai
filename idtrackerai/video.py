@@ -131,7 +131,9 @@ class Video(object):
         self._identities_groups = {}  # updated later
 
         # Paths and folders
-        self._blobs_path = None  # string: path to the saved list of blob objects
+        self._blobs_path = (
+            None  # string: path to the saved list of blob objects
+        )
         self._blobs_path_segmented = None
         self._blobs_path_interpolated = None
         self._accumulation_folder = None
@@ -337,7 +339,8 @@ class Video(object):
             factor defined by the user.
         """
         return np.round(
-            self.original_width * self.user_defined_parameters["resolution_reduction"]
+            self.original_width
+            * self.user_defined_parameters["resolution_reduction"]
         ).astype(int)
 
     @property
@@ -352,7 +355,8 @@ class Video(object):
             factor.
         """
         return np.round(
-            self.original_height * self.user_defined_parameters["resolution_reduction"]
+            self.original_height
+            * self.user_defined_parameters["resolution_reduction"]
         ).astype(int)
 
     @property
@@ -659,7 +663,9 @@ class Video(object):
     def fragments_path(self):
         """get the path to save the list of global fragments after
         fragmentation"""
-        self._fragments_path = os.path.join(self.preprocessing_folder, "fragments.npy")
+        self._fragments_path = os.path.join(
+            self.preprocessing_folder, "fragments.npy"
+        )
         return self._fragments_path
 
     @property
@@ -708,7 +714,9 @@ class Video(object):
         # TODO: Do not save full objects. Save ad dictionary and reconstruct
         # the object in the load method.
         logger.info("saving video object in %s" % self.path_to_video_object)
-        logger.debug(f"Video.save(open_multiple_files={self.open_multiple_files})")
+        logger.debug(
+            f"Video.save(open_multiple_files={self.open_multiple_files})"
+        )
         np.save(self.path_to_video_object, self)
 
     @staticmethod
@@ -774,7 +782,9 @@ class Video(object):
             logger.info("Updating video_paths")
             new_paths_to_video_segments = []
             for path in self.video_paths:
-                new_path = os.path.join(self.video_folder, os.path.split(path)[1])
+                new_path = os.path.join(
+                    self.video_folder, os.path.split(path)[1]
+                )
                 new_paths_to_video_segments.append(new_path)
             self._video_paths = new_paths_to_video_segments
 
@@ -826,7 +836,9 @@ class Video(object):
                         else:
                             logger.warn(
                                 "No checkpoint found in %s "
-                                % os.path.join(getattr(self, folder), sub_folder)
+                                % os.path.join(
+                                    getattr(self, folder), sub_folder
+                                )
                             )
 
         attributes_to_modify = {
@@ -959,22 +971,28 @@ class Video(object):
         if not os.path.isdir(self._segmentation_data_folder):
             os.makedirs(self._segmentation_data_folder)
             logger.info(
-                "the folder %s has been created" % self._segmentation_data_folder
+                "the folder %s has been created"
+                % self._segmentation_data_folder
             )
 
         if not os.path.isdir(self._identification_images_folder):
             os.makedirs(self._identification_images_folder)
             logger.info(
-                "the folder %s has been created" % self._identification_images_folder
+                "the folder %s has been created"
+                % self._identification_images_folder
             )
 
     def create_preprocessing_folder(self):
         """If it does not exist creates a folder called preprocessing
         in the video folder"""
-        self._preprocessing_folder = os.path.join(self.session_folder, "preprocessing")
+        self._preprocessing_folder = os.path.join(
+            self.session_folder, "preprocessing"
+        )
         if not os.path.isdir(self.preprocessing_folder):
             os.makedirs(self.preprocessing_folder)
-            logger.info("the folder %s has been created" % self._preprocessing_folder)
+            logger.info(
+                "the folder %s has been created" % self._preprocessing_folder
+            )
 
     def create_crossings_detector_folder(self):
         """If it does not exist creates a folder called crossing_detector
@@ -985,7 +1003,8 @@ class Video(object):
         )
         if not os.path.isdir(self.crossings_detector_folder):
             logger.info(
-                "the folder %s has been created" % self.crossings_detector_folder
+                "the folder %s has been created"
+                % self.crossings_detector_folder
             )
             os.makedirs(self.crossings_detector_folder)
 
@@ -993,7 +1012,9 @@ class Video(object):
         """Creates a folder named pretraining in video_folder where the model
         trained during the pretraining is stored
         """
-        self._pretraining_folder = os.path.join(self.session_folder, "pretraining")
+        self._pretraining_folder = os.path.join(
+            self.session_folder, "pretraining"
+        )
         if not os.path.isdir(self.pretraining_folder):
             os.makedirs(self.pretraining_folder)
         elif delete:
@@ -1024,11 +1045,15 @@ class Video(object):
 
     def create_trajectories_folder(self):
         """Folder in which trajectories files are stored"""
-        self.trajectories_folder = os.path.join(self.session_folder, "trajectories")
+        self.trajectories_folder = os.path.join(
+            self.session_folder, "trajectories"
+        )
         if not os.path.isdir(self.trajectories_folder):
             logger.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_folder)
-            logger.info("the folder %s has been created" % self.trajectories_folder)
+            logger.info(
+                "the folder %s has been created" % self.trajectories_folder
+            )
 
     def create_trajectories_wo_identification_folder(self):
         """Folder in which trajectories without identites are stored"""
@@ -1052,7 +1077,8 @@ class Video(object):
             logger.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_wo_gaps_folder)
             logger.info(
-                "the folder %s has been created" % self.trajectories_wo_gaps_folder
+                "the folder %s has been created"
+                % self.trajectories_wo_gaps_folder
             )
 
     # Some methods related to the accumulation process
@@ -1091,7 +1117,9 @@ class Video(object):
         + 1,
     ):
         if not hasattr(self, "accumulation_statistics"):
-            self.accumulation_statistics = [None] * number_of_possible_accumulation
+            self.accumulation_statistics = [
+                None
+            ] * number_of_possible_accumulation
         self.accumulation_statistics[accumulation_trial] = [
             getattr(self, stat_attr)
             for stat_attr in self.accumulation_statistics_attributes_list
@@ -1240,7 +1268,9 @@ class Video(object):
     # TODO: to list_of_global_fragments.py, list_of_blobs.py, or tracker.py
     def get_first_frame(self, list_of_blobs):
         if self.user_defined_parameters["number_of_animals"] != 1:
-            return self.first_frame_first_global_fragment[self.accumulation_trial]
+            return self.first_frame_first_global_fragment[
+                self.accumulation_trial
+            ]
         elif self.user_defined_parameters["number_of_animals"] == 1:
             return 0
         else:
