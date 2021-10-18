@@ -464,7 +464,9 @@ class Video(object):
     # TODO: move to crossings_detection.py
     @property
     def median_body_length_full_resolution(self):
-        """Median body length in pixels in full frame resolution (i.e. without considering the resolution reduction factor)"""
+        """Median body length in pixels in full frame resolution
+        (i.e. without considering the resolution reduction factor)
+        """
         return (
             self.median_body_length
             / self.user_defined_parameters["resolution_reduction"]
