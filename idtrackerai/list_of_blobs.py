@@ -194,7 +194,6 @@ class ListOfBlobs(object):
                     ):
                         blob.next[0]._fragment_identifier = counter
                         blob.next[0]._blob_index = blob_index
-                        # blob.next[0].compute_overlapping_with_previous_blob()
                         if blob.next[0].is_an_individual_in_a_fragment:
                             blob = blob.next[0]
 
@@ -205,8 +204,6 @@ class ListOfBlobs(object):
                                 blob = blob.next[0]
                                 blob._fragment_identifier = counter
                                 blob._blob_index = blob_index
-                                # compute_overlapping_with_previous_blob
-                                # blob.compute_overlapping_with_previous_blob()
 
                             if (
                                 len(blob.next) == 1
@@ -215,7 +212,6 @@ class ListOfBlobs(object):
                             ):
                                 blob.next[0]._fragment_identifier = counter
                                 blob.next[0]._blob_index = blob_index
-                                # blob.next[0].compute_overlapping_with_previous_blob()
                     counter += 1
 
         self.number_of_individual_fragments = counter
@@ -329,7 +325,7 @@ class ListOfBlobs(object):
         )
         for blobs_in_frame in blobs_in_episode:
             for blob in blobs_in_frame:
-                blob.set_image_for_identification(
+                blob.save_image_for_identification(
                     identification_image_size, height, width, file
                 )
         return blobs_in_episode
