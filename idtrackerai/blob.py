@@ -29,8 +29,6 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from __future__ import absolute_import, division, print_function
-
 import logging
 import os
 
@@ -45,8 +43,65 @@ logger = logging.getLogger("__main__.blob")
 class Blob(object):
     """Represents a segmented blob (collection of pixels) from a given frame.
 
-    A blob represent a single animal or multiple animals during an occlusion
-    or crossing.
+    A blob can represent a single animal or multiple animals during an
+    occlusion or crossing.
+
+    Parameters
+    ----------
+
+    centroid : tuple
+        Tuple (float, float) with the pixels coordinates of the blob center
+        of mass.
+    contour : numpy array
+        Array with the points that define the contour of the blob. The
+        array is of the form [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]].
+    area : int
+        Number of pixels that conform the blob.
+    bounding_box_in_frame_coordinates : list
+        Coordinates of the bounding box that encloses the segmented blob
+        [(x, y), (x + bounding_box_width, y + bounding_box_height)]. Note
+        that this bouding box is expanded some pixels with respect to the
+        original bounding box obtained with OpenCV.
+    bounding_box_image : numpy array or None, optional
+        Bonding box image that encloses the blob, by default None.
+    bounding_box_images_path : str, optional
+        Path to the file where the bounding box images are stored, by
+        default None.
+    estimated_body_length : float, optional
+        Body length of the animal estimated from the diagonal of the
+        original bounding box, by default None.
+    pixels : list, optional
+        List of pixels that define the blob, by default None.
+    number_of_animals : int, optional
+        Number of animals in the video as defined by the user,
+        by default None.
+    frame_number : int, optional
+        Frame number in the video from which the blob was segmented,
+        by default None.
+    frame_number_in_video_path : int, optional
+        Frame number in the video path from which the blob was segmented,
+        by default None.
+    in_frame_index : int, optional
+        Index of the blob in the frame where it was segmented,
+        by default None. This index comes from OpenCV and is defined by the
+        hierarchy of the countours found in the frame.
+    pixels_path : str, optional
+        Path to the file were the pixels of the blob are stored,
+        by default None.
+    video_height : int, optional
+        Height of the video considering the resolution reduction factor,
+        by default None.
+    video_width : [type], optional
+        Width of the video considering the resolution reduction factor,
+            by default None.
+    video_path : str, optional
+        Path to the video file from which the blob was segmented,
+        by default None.
+    pixels_are_from_eroded_blob : bool, optional
+        Flag to indicate if the pixels of the blobs come from from an
+        eroded blob, by default False.
+    resolution_reduction : float, optional
+        Resolution reductio factor as defined by the user, by default 1.0.
     """
 
     def __init__(
@@ -70,64 +125,6 @@ class Blob(object):
         pixels_are_from_eroded_blob=False,
         resolution_reduction=1.0,
     ):
-        """[summary]
-
-        Parameters
-        ----------
-        centroid : tuple
-            Tuple (float, float) with the pixels coordinates of the blob center
-            of mass.
-        contour : numpy array
-            Array with the points that define the contour of the blob. The
-            array is of the form [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]].
-        area : int
-            Number of pixels that conform the blob.
-        bounding_box_in_frame_coordinates : list
-            Coordinates of the bounding box that encloses the segmented blob
-            [(x, y), (x + bounding_box_width, y + bounding_box_height)]. Note
-            that this bouding box is expanded some pixels with respect to the
-            original bounding box obtained with OpenCV.
-        bounding_box_image : numpy array or None, optional
-            Bonding box image that encloses the blob, by default None.
-        bounding_box_images_path : str, optional
-            Path to the file where the bounding box images are stored, by
-            default None.
-        estimated_body_length : float, optional
-            Body length of the animal estimated from the diagonal of the
-            original bounding box, by default None.
-        pixels : list, optional
-            List of pixels that define the blob, by default None.
-        number_of_animals : int, optional
-            Number of animals in the video as defined by the user,
-            by default None.
-        frame_number : int, optional
-            Frame number in the video from which the blob was segmented,
-            by default None.
-        frame_number_in_video_path : int, optional
-            Frame number in the video path from which the blob was segmented,
-            by default None.
-        in_frame_index : int, optional
-            Index of the blob in the frame where it was segmented,
-            by default None. This index comes from OpenCV and is defined by the
-            hierarchy of the countours found in the frame.
-        pixels_path : str, optional
-            Path to the file were the pixels of the blob are stored,
-            by default None.
-        video_height : int, optional
-            Height of the video considering the resolution reduction factor,
-            by default None.
-        video_width : [type], optional
-            Width of the video considering the resolution reduction factor,
-             by default None.
-        video_path : str, optional
-            Path to the video file from which the blob was segmented,
-            by default None.
-        pixels_are_from_eroded_blob : bool, optional
-            Flag to indicate if the pixels of the blobs come from from an
-            eroded blob, by default False.
-        resolution_reduction : float, optional
-            Resolution reductio factor as defined by the user, by default 1.0.
-        """
         # Attributed from the input arguments
         self.centroid = centroid
         self.contour = contour
@@ -321,7 +318,7 @@ class Blob(object):
 
         See Also
         --------
-        idtrackerai.fragment.Fragment
+        :class:`~fragment.Fragment`
         """
         return self._fragment_identifier
 
@@ -699,12 +696,6 @@ class Blob(object):
             Video width considering the resolution reduction factor.
         file_path : str
             Path to the hdf5 file where the images will be stored.
-
-        See Also
-        --------
-        idtrackerai.fragments.load_identification_images
-        idtrackerai.crossings_detection.datasets.crossigns_dataset.
-            CrossingDataset.get_images_indices()
         """
         image_for_identification = self.get_image_for_identification(
             identification_image_size,
@@ -984,6 +975,21 @@ class Blob(object):
     # trajectories obtained after tracking.
     # TODO: Consider removing this from this class. Maybe move to valdiation.
     def removable_identity(self, identity_to_remove, blobs_in_frame):
+        """[Validation] Checks if the identity can be removed.
+
+        Parameters
+        ----------
+        identity_to_remove : int
+            Identity to be removed
+        blobs_in_frame : list
+            List of Blob objects in the frame where the identity is going to
+            be removed
+
+        Returns
+        -------
+        bool
+            True if the identity can be removed.
+        """
         for blob in blobs_in_frame:
             if blob != self:
                 if (
@@ -998,7 +1004,7 @@ class Blob(object):
         return False
 
     def update_centroid(self, video, old_centroid, new_centroid, identity):
-        """Updates the `old_centroid` of the blob with the `new_centroid`.
+        """[Validation] Updates the centroid of the blob.
 
         Parameters
         ----------
@@ -1072,7 +1078,7 @@ class Blob(object):
         blobs_in_frame,
         apply_resolution_reduction=True,
     ):
-        """[summary]
+        """[Validation] Deletes a centroid of the blob.
 
         Parameters
         ----------
@@ -1155,7 +1161,7 @@ class Blob(object):
     def add_centroid(
         self, video, centroid, identity, apply_resolution_reduction=True
     ):
-        """Adds a centroid with a given identity to the blob.
+        """[Validation] Adds a centroid with a given identity to the blob.
 
         This method is used in the validation GUI. It is useful to add
         centroids for crossing blobs that are missing some centroids, or to
@@ -1225,8 +1231,7 @@ class Blob(object):
         video.is_centroid_updated = True
 
     def update_identity(self, old_identity, new_identity, centroid):
-        """Updates the `old_identity` with the `new_identity` for a given
-        `centroid` of the blob.
+        """[Validation] Updates the identity of the blob.
 
         This method is used during the validation GUI.
         It populates the private attributes `_user_generated_identities`
@@ -1288,8 +1293,7 @@ class Blob(object):
         )
 
     def propagate_identity(self, old_identity, new_identity, centroid):
-        """Updates `old_identity` with `new_identity` for all previous
-        and next blobs.
+        """[Validation] Propagates the new identity to next and previous blobs.
 
         This method called in the validation GUI when the used updates the
         identity of a given blob.
@@ -1400,9 +1404,7 @@ class Blob(object):
 
     @property
     def summary(self):
-        """Returns a summary string for some attributes of the blob.
-
-        This method is used in in the validation GUI.
+        """[Validation] Returns a summary string for some blob attributes.
 
         Returns
         -------
@@ -1468,9 +1470,7 @@ class Blob(object):
     def draw(
         self, frame, colors_lst=None, selected_id=None, is_selected=False
     ):
-        """Draw the blob in a given frame of the video.
-
-        This method is used in in the validation GUI.
+        """[Validation] Draw the blob in a given frame of the video.
 
         Parameters
         ----------

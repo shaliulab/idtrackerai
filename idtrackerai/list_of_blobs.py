@@ -45,46 +45,24 @@ logger = logging.getLogger("__main__.list_of_blobs")
 
 
 class ListOfBlobs(object):
-    """Collects all the instances of the class :class:`~blob.Blob` generated
-    from the blobs extracted from the video during segmentation
-    (see :mod:`~segmentation`)
+    """Contains all the instances of the class :class:`~blob.Blob` for all
+    frames in the video.
 
-    Attributes
+    Notes
+    -----
+    Only frames in the tracking interval defined by the user can have blobs.
+    The frames ouside of such interval will be empty.
+
+
+    Parameters
     ----------
-
     blobs_in_video : list
-        List of instances of :class:`~blob.Blob` segmented from the video and
-        organised framewise
-    number_of_frames : int
-        number of frames in the video
-    blobs_are_connected :bool
-        True if the blobs have already being organised in fragments (see
-        :class:`~fragment.Fragment`). False otherwise
-
-    Methods
-    -------
-    compute_overlapping_between_subsequent_frames:
-       some description
-    disconnect:
-      some description
-    connect:
-      some description
-    reconnect:
-      some description
-    save:
-      some description
-    load:
-      some description
-    compute_fragment_identifier_and_blob_index:
-      some description
-    compute_crossing_fragment_identifier:
-      some description
-
-
-
+        List of lists of blobs. Each element in the outer list represents
+        a frame. Each elemtn in each inner list represents a blob in
+        the frame.
     """
 
-    def __init__(self, blobs_in_video=None):
+    def __init__(self, blobs_in_video):
         self.blobs_in_video = blobs_in_video
         self.number_of_frames = len(self.blobs_in_video)
         self.blobs_are_connected = False
@@ -93,8 +71,14 @@ class ListOfBlobs(object):
         return len(self.blobs_in_video)
 
     def compute_overlapping_between_subsequent_frames(self):
-        """Computes overlapping between self and the blobs generated during
-        segmentation in the next frames
+        """Computes overlapping between blobs in consecutive frames.
+
+        Two blobs in consecutive frames overlap if the intersection of the list
+        of pixels of both blobs is not empty.
+
+        See Also
+        --------
+        :meth:`blob.Blob.overlaps_with`
         """
         self.disconnect()
         for frame_i in tqdm(
@@ -108,45 +92,56 @@ class ListOfBlobs(object):
         self.blobs_are_connected = True
 
     def disconnect(self):
-        """Reinitialise the previous and next list of blobs
-        (see :attr:`~blob.Blob.next` and :attr:`~blob.Blob.previous`)
+        """Reinitialise the previous and next attributes of each blob.
+
+        See Also
+        --------
+        :attr:`blob.Blob.next`
+        :attr:`blob.Blob.previous`
         """
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
         self.blobs_are_connected = False
 
-    def connect(self):
-        """Connects blobs in subsequent frames by computing their overlapping"""
-        logger.info("Connecting list of blob objects")
-        self.compute_overlapping_between_subsequent_frames()
+    # TODO: Check if used. Otherwise delete
+    # def connect(self):
+    #     """Connects blobs in subsequent frames by computing their overlapping"""
+    #     logger.info("Connecting list of blob objects")
+    #     self.compute_overlapping_between_subsequent_frames()
 
-    def reconnect(self):
-        """Connects blobs in subsequent frames by computing their overlapping
-        and sets blobs_are_connected to True
-        """
-        logger.info("re-Connecting list of blob objects")
-        self.compute_overlapping_between_subsequent_frames()
+    # TODO: call compute_overlapping_between_subsequent_frames instead
+    # def reconnect(self):
+    #     """Connects blobs in subsequent frames by computing their overlapping
+    #     and sets blobs_are_connected to True
+    #     """
+    #     logger.info("re-Connecting list of blob objects")
+    #     self.compute_overlapping_between_subsequent_frames()
 
     def save(self, path_to_save=None):
-        """save instance"""
+        """Saves instance of the class
+
+        Parameters
+        ----------
+        path_to_save : str, optional
+            Path where to save the object, by default None
+        """
         self.disconnect()
         logger.info("saving blobs list at %s" % path_to_save)
         np.save(path_to_save, self)
 
     @staticmethod
     def load(path_to_load_blob_list_file):
-        """Short summary.
+        """Loads an instance of a clase saved in a .npy file.
 
         Parameters
         ----------
         path_to_load_blob_list_file : str
-            path to load a list of blobs
+            path to a saved instance of a ListOfBlobs object
 
         Returns
         -------
-        <ListOfBlobs object>
-            an instance of ListOfBlobs
+        An instance of :class:`ListOfBlobs`.
 
         """
         logger.info("loading blobs list from %s" % path_to_load_blob_list_file)
@@ -156,17 +151,17 @@ class ListOfBlobs(object):
         list_of_blobs.blobs_are_connected = False
         return list_of_blobs
 
+    # TODO: This is part of fragmentation it should be somewhere else.
     def compute_fragment_identifier_and_blob_index(self, number_of_animals):
-        """Associates a unique fragment identifier to the fragments computed by
-        overlapping see method
-        :meth:`compute_overlapping_between_subsequent_frames` and sets the blob
-        index as the hierarchy of the blob in the first frame of the fragment to
-        which blob belongs to.
+        """Associates a unique fragment identifier to individual blobs
+        conneted with its next and previous blobs.
+
+        Blobs must be connected and classified as individuals or crossings.
 
         Parameters
         ----------
         number_of_animals : int
-            number of animals to be tracked
+            Number of animals to be tracked as defined by the user
         """
         counter = 0
         possible_blob_indices = range(number_of_animals)
@@ -217,21 +212,16 @@ class ListOfBlobs(object):
         self.number_of_individual_fragments = counter
         logger.info("number_of_individual_fragments, %i" % counter)
 
+    # TODO: This is part of fragmentation it should be somewhere else.
     def compute_crossing_fragment_identifier(self):
-        """Assign a unique identifier to fragments associated to a crossing"""
+        """Assign a unique identifier to fragments associated to crossing
+        blobs.
 
-        def propagate_crossing_identifier(blob, fragment_identifier):
-            """Propagates the identifier throughout the entire fragment to which
-            blob belongs to. It crawls by overlapping in both the past and
-            future "overlapping histories" of blob
+        Fragment identifiers of crossings fragments start from the last
+        fragment identifier of the individual fragments.
+        """
 
-            Parameters
-            ----------
-            blob : <Blob object>
-                an instance of :class:`~blob.Blob`
-            fragment_identifier : int
-                unique fragment identifier associated
-            """
+        def _propagate_crossing_identifier(blob, fragment_identifier):
             assert blob.fragment_identifier is None
             blob._fragment_identifier = fragment_identifier
             cur_blob = blob
@@ -259,7 +249,7 @@ class ListOfBlobs(object):
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
                 if blob.is_a_crossing and blob.fragment_identifier is None:
-                    propagate_crossing_identifier(blob, fragment_identifier)
+                    _propagate_crossing_identifier(blob, fragment_identifier)
                     fragment_identifier += 1
         logger.info(
             "number_of_crossing_fragments: %i"
@@ -267,6 +257,8 @@ class ListOfBlobs(object):
         )
         logger.info("total number of fragments: %i" % fragment_identifier)
 
+    # TODO: this should be part of crossing detector.
+    # TODO: the term identification_image should be changed.
     def set_images_for_identification(
         self,
         episodes_start_end,
@@ -278,8 +270,34 @@ class ListOfBlobs(object):
         height,
         width,
     ):
+        """Computes and saves the images used to classify blobs as crossings
+        and individuals and to identify the animals along the video.
+
+        Parameters
+        ----------
+        episodes_start_end : list
+            List of tuples of integers indncating the starting and ending
+            frames of each episode.
+        identification_images_file_paths : list
+            List of strings indicating the paths to the files where the
+            identification images of each episode are stored.
+        identification_image_size : tuple
+            Tuple indicating the width, height and number of channels of the
+            identification images.
+        number_of_animals : int
+            Number of animals to be tracked as indicated by the user.
+        number_of_frames : int
+            Number of frames in the video
+        video_path : str
+            Path to the video file
+        height : int
+            Height of a video frame considering the resolution reduction
+            factor.
+        width : int
+            Width of a video frame considering the resolution reduction factor.
+        """
         Output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
-            delayed(self.set_id_images_episode)(
+            delayed(self._set_identification_images_per_episode)(
                 identification_image_size,
                 number_of_animals,
                 number_of_frames,
@@ -306,7 +324,7 @@ class ListOfBlobs(object):
         ]
 
     @staticmethod
-    def set_id_images_episode(
+    def _set_identification_images_per_episode(
         identification_image_size,
         number_of_animals,
         number_of_frames,
@@ -333,20 +351,22 @@ class ListOfBlobs(object):
     def check_maximal_number_of_blob(
         self, number_of_animals, return_maximum_number_of_blobs=False
     ):
-        """Checks that the amount of blobs per frame is not greater than the
-        number of animals to track
+        """Checks that the number of blobs per frame is not greater than the
+        number of animals to be tracked.
 
         Parameters
         ----------
         number_of_animals : int
-            number of animals to be tracked
+            Number of animals to be tracked
+        return_maximum_number_of_blobs : bool, optional
+            Boolean indicating whether the maximum number of blobs detected
+            in a frame must be returned, by default False
 
         Returns
         -------
         list
             List of indices of frames in which more blobs than animals to track
             have been segmented
-
         """
         maximum_number_of_blobs = 0
         frames_with_more_blobs_than_animals = []
@@ -369,12 +389,24 @@ class ListOfBlobs(object):
                 "Frames with more blobs than animals: %s"
                 % str(frames_with_more_blobs_than_animals)
             )
+
+        # TODO: it is not good practice to have two different outputs
         if return_maximum_number_of_blobs:
             return frames_with_more_blobs_than_animals, maximum_number_of_blobs
         else:
             return frames_with_more_blobs_than_animals
 
+    # TODO: maybe move to crossing detector
     def update_identification_image_dataset_with_crossings(self, video):
+        """Adds a array to the identification images files indicating whether
+        each image is an individual or a crossing.
+
+        Parameters
+        ----------
+        video : :class:`idtrackerai.video.Video`
+            Video object with information about the video and the tracking
+            process.
+        """
         for file in video.identification_images_file_paths:
             with h5py.File(file, "a") as f:
                 f.create_dataset(
@@ -395,17 +427,20 @@ class ListOfBlobs(object):
     def update_from_list_of_fragments(
         self, fragments, fragment_identifier_to_index
     ):
-        """Updates the blobs objects generated from the video with the attributes
-        computed for each fragment
+        """Updates the blobs objects generated from the video with the
+        attributes computed for each fragment
 
         Parameters
         ----------
         fragments : list
             List of all the fragments
         fragment_identifier_to_index : int
-            index to retrieve the fragment corresponding to a certain fragment
-            identifier (see
-            :meth:`~blob.Blob.compute_fragment_identifier_and_blob_index`)
+            Index to retrieve the fragment corresponding to a certain fragment
+            identifier
+
+        See Also
+        --------
+        :meth:`blob.Blob.compute_fragment_identifier_and_blob_index`
 
         """
         attributes = [
@@ -433,9 +468,9 @@ class ListOfBlobs(object):
                     if hasattr(fragment, attribute)
                 ]
 
+    # TODO: consider moving to validation
     def next_frame_to_validate(self, current_frame, direction):
-        """Returns the next frame to be validated given the current frame an
-        the direction to iterate
+        """[Validation] Returns the next frame to be validated.
 
         Parameters
         ----------
@@ -470,18 +505,23 @@ class ListOfBlobs(object):
                 if check_tracking(blobs_in_frame):
                     return blob.frame_number
 
+    # TODO: consider moving to validation
     def interpolate_from_user_generated_centroids(
         self, video, identity, start_frame, end_frame
     ):
         """
-        Interpolates linearly the centroids of the blobs of identity identity between
-        start_frame and end_frame. The interpolation is done using the
-        user_generated_centroids. The centroid of the blobs without
+        [Validation] Interpolates the centroids of blobs of a given `identity`.
+
+        The interpolation is done using the
+        `user_generated_centroids`. The centroid of the blobs without
         user_generated_centroids are assumed to be nan and are interpolated
         accordingly.
 
         Parameters
         ----------
+        video : :class:`video.Video`
+            Video object with information of the video to be tracked and the
+            tracking process
         identity : int
             Identity of the blobs to be interpolated
         start_frame : int
@@ -490,7 +530,7 @@ class ListOfBlobs(object):
             Frame where to end the interpolation
         """
 
-        def check_extreme_blob(extreme_blob):
+        def _check_extreme_blob(extreme_blob):
             if extreme_blob and len(extreme_blob) > 1:
                 raise Exception(
                     "The identity must be unique in the first and last frames"
@@ -518,8 +558,8 @@ class ListOfBlobs(object):
             if identity in blob.final_identities
         ]
 
-        check_extreme_blob(first_blobs)
-        check_extreme_blob(last_blobs)
+        _check_extreme_blob(first_blobs)
+        _check_extreme_blob(last_blobs)
 
         # Check if they exited or are generated
         both_generated_blobs = (
@@ -643,15 +683,21 @@ class ListOfBlobs(object):
 
         video.is_centroid_updated = True
 
+    # TODO: Consider moving to validation
     def reset_user_generated_identities_and_centroids(
         self, video, start_frame, end_frame, identity=None
     ):
         """
+        [Validation] Resets the identities and centroids generetad by the user.
+
         Resets the identities and centroids generetad by the user to the ones
-         assigned by the software
+        computed by the tracking algorithm.
 
         Parameters
         ----------
+        video : :class:`video.Video`
+            Video object with information of the video to be tracked and the
+            tracking process
         start_frame : int
             Frame from which to start reseting identities and centroids
         end_frame : int
@@ -662,10 +708,12 @@ class ListOfBlobs(object):
         """
         if start_frame > end_frame:
             raise Exception(
-                "Initial frame number must be smaller than the final frame number"
+                "Initial frame number must be smaller than"
+                "the final frame number"
             )
         if not (identity is None or identity >= 0):
-            # missing identity <= self.number_of_animals but the attribute does not exist
+            # missing identity <= self.number_of_animals but the attribute
+            # does not exist
             raise Exception(
                 "Identity must be None, zero or a positive integer"
             )
@@ -717,6 +765,7 @@ class ListOfBlobs(object):
             ]
         )
 
+    # TODO: Consider moving to validation
     def add_blob(
         self,
         video,
@@ -725,8 +774,7 @@ class ListOfBlobs(object):
         identity,
         apply_resolution_reduction=True,
     ):
-        """
-        Adds a Blob object the frame number.
+        """[Validation] Adds a Blob object the frame number.
 
         Adds a Blob object to a given frame_number with a given centroid and
         identity. Note that this Blob won't have most of the features (e.g.
@@ -743,6 +791,28 @@ class ListOfBlobs(object):
             Exception: If `identity` is greater of the number of animals in the
             video.
 
+        Parameters
+        ----------
+        video : :class:`video.Video`
+            Video object with information of the video to be tracked and the
+            tracking process
+        frame_number : int
+            Frame in which the new blob will be added
+        centroid : tuple
+            The centroid of the new blob
+        identity : int
+            Identity of the new blob
+        apply_resolution_reduction : bool, optional
+            Indicates whether resolution reduction must be applied to the given
+            centroid, by default True
+
+        Raises
+        ------
+        Exception
+            If the `centroid` is not a tuple of length 2.
+        Exception
+            If the `identity` is not a number between 1 and the number of
+            animals in the video.
         """
         logger.info("Calling add_blob")
         if apply_resolution_reduction:
@@ -792,6 +862,22 @@ def initialize_identification_images_file(
     file,
     video_path,
 ):
+    """Initializes a file where identificatio images will be stored
+
+    Parameters
+    ----------
+    identification_image_size : tuple
+        Tuple indicating the width, height and number of channels of the
+        identification image.
+    number_of_animals : int
+        Number of animals to be tracked as indicated by the user.
+    number_of_frames : int
+        Number of frames in the video.
+    file : str
+        Path to of file that is going to be initialized.
+    video_path : str
+        Path to the video file.
+    """
     image_shape = identification_image_size[0]
     with h5py.File(file, "w") as f:
         f.create_dataset(
@@ -809,19 +895,22 @@ def initialize_identification_images_file(
         f.attrs["video_path"] = video_path
 
 
+# TODO: consider moving to validation
 def check_tracking(blobs_in_frame):
-    """Returns True if the list of blobs blobs_in_frame needs to be checked.
+    """Returns True if the list of blobs `blobs_in_frame` needs to be
+    validated.
+
+    A list of blobs of a frame need to be validated if some blobs are crossings
+    or if there is some missing identity.
 
     Parameters
     ----------
     blobs_in_frame : list
-        List of Blob objects
+        List of Blob objects in a given frame of the video.
 
     Returns
     -------
     check_tracking_flag : boolean
-
-
     """
     there_are_crossings = any(
         [blob.is_a_crossing for blob in blobs_in_frame]
