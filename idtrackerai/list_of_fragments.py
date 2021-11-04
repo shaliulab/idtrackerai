@@ -47,20 +47,15 @@ logger = logging.getLogger("__main__.list_of_fragments")
 
 
 class ListOfFragments(object):
-    """Collects all the instances of the class :class:`~fragment.Fragment`
-    generated from the blobs extracted from the video during segmentation
-    (see :mod:`~segmentation`) after having assigned to each Blob instance
-    a fragment identifier by using the method
-    :meth:`~list_of_blobs.compute_fragment_identifier_and_blob_index`
+    """Contains all the instances of the class :class:`fragment.Fragment`.
 
-    Attributes
+    Parameters
     ----------
-
     fragments : list
-        list of instances of the class :class:`~fragment.Fragment`
-    number_of_fragments : int
-        number of fragments computed by the method
-        :meth:`~list_of_blobs.compute_fragment_identifier_and_blob_index`
+        List of instances of the class :class:`fragment.Fragment`.
+    identification_images_file_paths : list
+        List of strings with the paths to the files where the identification
+        images are stored.
     """
 
     def __init__(self, fragments, identification_images_file_paths):
@@ -73,9 +68,10 @@ class ListOfFragments(object):
     def __len__(self):
         return len(self.fragments)
 
+    # TODO: Check if the generated list is used at all.
     def get_fragment_identifier_to_index_list(self):
         """Creates a mapping between the attribute :attr:`fragments` and
-        their identifiers build from the :class:`~list_of_blobs.ListOfBlobs`
+        their identifiers build from the :class:`list_of_blobs.ListOfBlobs`
 
         Returns
         -------
@@ -91,19 +87,31 @@ class ListOfFragments(object):
         fragments_identifiers_argsort = np.argsort(fragments_identifiers)
         return fragment_identifier_to_index[fragments_identifiers_argsort]
 
-    def reset(self, roll_back_to=None):
-        """Resets all the fragment by using the method
-        :meth:`~fragment.Fragment.roll_back_to`
+    # TODO: if the resume feature is not active, this does not make sense|
+    def reset(self, roll_back_to):
+        """Resets all the fragment to a given processing step.
+
+        Parameters
+        ----------
+        roll_back_to : str
+            Name of the step at which the fragments should be reset.
+            It can be 'fragmentation', 'pretraining', 'accumulation' or
+            'assignment'
+
+        See Also
+        --------
+        :meth:`fragment.Fragment.reset`
         """
         logger.warning("Reseting list_of_fragments")
         for fragment in self.fragments:
             fragment.reset(roll_back_to)
         logger.warning("Done")
 
+    # TODO: maybe this should go to the accumulator manager
     def get_images_from_fragments_to_assign(self):
         """Take all the fragments that have not been used to train the idCNN
         and that are associated with an individual, and concatenates their
-        images in order to feed them to the idCNN and get predictions
+        images in order to feed them to the identification netowkr.
 
         Returns
         -------
@@ -122,6 +130,8 @@ class ListOfFragments(object):
             )
         )
 
+    # TODO: The following methods could be properties.
+    # TODO: The following methods depend on the identification strategy.
     def compute_number_of_unique_images_used_for_pretraining(self):
         """Returns the number of images used for pretraining
         (without repetitions)
@@ -157,7 +167,8 @@ class ListOfFragments(object):
         )
 
     def compute_total_number_of_images_in_global_fragments(self):
-        """Sets the number of images available in global fragments (without repetitions)"""
+        """Sets the number of images available in global fragments
+        (without repetitions)"""
         self.number_of_images_in_global_fragments = sum(
             [
                 fragment.number_of_images
@@ -197,7 +208,7 @@ class ListOfFragments(object):
 
     def compute_P2_vectors(self):
         """Computes the P2_vector associated to every individual fragment. See
-        :meth:`~fragment.Fragment.compute_P2_vector`
+        :meth:`fragment.Fragment.compute_P2_vector`
         """
         [
             fragment.compute_P2_vector()
@@ -223,15 +234,14 @@ class ListOfFragments(object):
         )
 
     def get_next_fragment_to_identify(self):
-        """Returns the next fragment to be identified after the fingerprint
-        protocols cascade by sorting according to the certainty computed with
-        P2. See :attr:`~fragment.Fragment.certainty_P2`
+        """Returns the next fragment to be identified after the cascade of
+        training and identitication protocols by sorting according to the
+        certainty computed with P2. See :attr:fragment.Fragment.certainty_P2`
 
         Returns
         -------
-        <Fragment object>
-            an instance of the class :class:`~fragment.Fragment`
-
+        :class:`fragment.Fragment`
+            An instance of the class :class:`fragment.Fragment`
         """
         fragments = [
             fragment
@@ -243,7 +253,9 @@ class ListOfFragments(object):
         return fragments[0]
 
     def update_identification_images_dataset(self):
-
+        """Updates the identification images files with the identity assigned
+        to each fragment during the tracking process.
+        """
         for file in self.identification_images_file_paths:
             with h5py.File(file, "a") as f:
                 f.create_dataset(
@@ -264,7 +276,7 @@ class ListOfFragments(object):
                         f["identities"][image] = fragment.identity
 
     def get_ordered_list_of_fragments(
-        self, scope=None, first_frame_first_global_fragment=None
+        self, scope, first_frame_first_global_fragment
     ):
         """Sorts the fragments starting from the frame number
         `first_frame_first_global_fragment`. According to `scope` the sorting
@@ -303,8 +315,12 @@ class ListOfFragments(object):
         return fragments_subset
 
     def save(self, fragments_path):
-        """saves an instance of ListOfFragments in the path specified by
-        `fragments_path`
+        """Save an instance of the object in disk,
+
+        Parameters
+        ----------
+        fragments_path : str
+            Path where the instance of the object will be stored.
         """
         logger.info("saving list of fragments at %s" % fragments_path)
         for fragment in self.fragments:
@@ -317,7 +333,7 @@ class ListOfFragments(object):
 
     @staticmethod
     def load(path_to_load):
-        """Loads a previously saved (see :meth:`load`) from the path
+        """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
         logger.info("loading list of fragments from %s" % path_to_load)
@@ -328,8 +344,10 @@ class ListOfFragments(object):
             )
         return list_of_fragments
 
+    # TODO: Consider not saving light list of fragments. Fragments now are light
     def create_light_list(self, attributes=None):
-        """Creates a light version of an instance of ListOfFragments by storing
+        """Creates a light version of an instance of
+        :class:`list_of_fragments.ListOfFragments` by storing
         only the attributes listed in `attributes` in a list of dictionaries
 
         Parameters
@@ -359,7 +377,7 @@ class ListOfFragments(object):
 
     def save_light_list(self, accumulation_folder):
         """Saves a list of dictionaries created with the method
-        :meth:`create_light_list` in the folder `accumulation_folder`
+        :meth:`create_light_list` in the folder `accumulation_folder`.
         """
         np.save(
             os.path.join(accumulation_folder, "light_list_of_fragments.npy"),
@@ -369,7 +387,7 @@ class ListOfFragments(object):
     def load_light_list(self, accumulation_folder):
         """Loads a list of dictionaries created with the method
         :meth:`create_light_list` and saved with :meth:`save_light_list` from
-        the folder `accumulation_folder`
+        the folder `accumulation_folder`.
         """
         list_of_dictionaries = np.load(
             os.path.join(accumulation_folder, "light_list_of_fragments.npy"),
@@ -378,8 +396,8 @@ class ListOfFragments(object):
         self.update_fragments_dictionary(list_of_dictionaries)
 
     def update_fragments_dictionary(self, list_of_dictionaries):
-        """Update fragment objects (see :class:`~fragment.Fragment`) by
-        considering a list of dictionaries
+        """Update fragment objects (see :class:`fragment.Fragment`) by
+        considering a list of dictionaries.
         """
         assert len(list_of_dictionaries) == len(self.fragments)
         [
@@ -392,12 +410,12 @@ class ListOfFragments(object):
     def get_new_images_and_labels_for_training(self):
         """Extract images and creates labels from every individual fragment
         that has not been used to train the network during the fingerprint
-        protocols cascade
+        protocols cascade.
 
         Returns
         -------
         list
-            images
+            List of numpy arrays with shape [width, height, num channels]
         list
             labels
         """
@@ -422,14 +440,14 @@ class ListOfFragments(object):
         self, list_of_global_fragments
     ):
         """Gets the unique identifiers associated to individual fragments that
-        can be accumulated
+        can be accumulated.
 
         Parameters
         ----------
-        list_of_global_fragments : <ListOfGlobalFragments object>
+        list_of_global_fragments : :class:`list_of_global_fragments.ListOfGlobalFragments`
             Object collecting the global fragment objects (instances of the
-            class :class:`~global_fragment.GlobalFragment`) detected in the
-            entire video
+            class :class:`globalfragment.GlobalFragment`) detected in the
+            entire video.
 
         """
         self.accumulable_individual_fragments = set(
@@ -444,14 +462,14 @@ class ListOfFragments(object):
         self, list_of_global_fragments
     ):
         """Gets the unique identifiers associated to individual fragments that
-        cannot be accumulated
+        cannot be accumulated.
 
         Parameters
         ----------
-        list_of_global_fragments : <ListOfGlobalFragments object>
+        list_of_global_fragments : :class:`list_of_global_fragments.ListOfGlobalFragments`
             Object collecting the global fragment objects (instances of the
-            class :class:`~global_fragment.GlobalFragment`) detected in the
-            entire video
+            class :class:`globalfragment.GlobalFragment`) detected in the
+            entire video.
 
         """
         self.not_accumulable_individual_fragments = (
@@ -466,7 +484,7 @@ class ListOfFragments(object):
         )
 
     def set_fragments_as_accumulable_or_not_accumulable(self):
-        """Set the attribute :attr:`~fragment.accumulable`"""
+        """Set the attribute :attr:`fragment.Fragment.accumulable`"""
         for fragment in self.fragments:
             if fragment.identifier in self.accumulable_individual_fragments:
                 setattr(fragment, "_accumulable", True)
@@ -478,40 +496,40 @@ class ListOfFragments(object):
             else:
                 setattr(fragment, "_accumulable", None)
 
+    # TODO: list_of_global_fragments is not needed here
     def get_stats(self, list_of_global_fragments):
-        """Collects the following statistics from both fragments and global
-        fragments:
+        """Collects the following counters from the fragments.
 
-        *number_of_fragments
-        *number_of_crossing_fragments
-        *number_of_individual_fragments
-        *number_of_individual_fragments_not_in_a_global_fragment
-        *number_of_accumulable_individual_fragments
-        *number_of_not_accumulable_individual_fragments
-        *number_of_accumualted_individual_fragments
-        *number_of_globally_accumulated_individual_fragments
-        *number_of_partially_accumulated_individual_fragments
-        *number_of_blobs
-        *number_of_crossing_blobs
-        *number_of_individual_blobs
-        *number_of_individual_blobs_not_in_a_global_fragment
-        *number_of_accumulable_individual_blobs
-        *number_of_not_accumulable_individual_blobs
-        *number_of_accumualted_individual_blobs
-        *number_of_globally_accumulated_individual_blobs
-        *number_of_partially_accumulated_individual_blobs
+        * number_of_fragments
+        * number_of_crossing_fragments
+        * number_of_individual_fragments
+        * number_of_individual_fragments_not_in_a_global_fragment
+        * number_of_accumulable_individual_fragments
+        * number_of_not_accumulable_individual_fragments
+        * number_of_accumualted_individual_fragments
+        * number_of_globally_accumulated_individual_fragments
+        * number_of_partially_accumulated_individual_fragments
+        * number_of_blobs
+        * number_of_crossing_blobs
+        * number_of_individual_blobs
+        * number_of_individual_blobs_not_in_a_global_fragment
+        * number_of_accumulable_individual_blobs
+        * number_of_not_accumulable_individual_blobs
+        * number_of_accumualted_individual_blobs
+        * number_of_globally_accumulated_individual_blobs
+        * number_of_partially_accumulated_individual_blobs
 
         Parameters
         ----------
-        list_of_global_fragments : <ListOfGlobalFragments object>
+        list_of_global_fragments : :class:`list_of_global_fragments.ListOfGlobalFragments`
             Object collecting the global fragment objects (instances of the
-            class :class:`~global_fragment.GlobalFragment`) detected in the
+            class :class:`global_fragment.GlobalFragment`) detected in the
             entire video
 
         Returns
         -------
         dict
-            dictionary of statistics
+            Dictionary with the counters mentioned above
 
         """
         # number of fragments per class
@@ -691,21 +709,21 @@ class ListOfFragments(object):
 
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):
-    """Generate a list of instances of :class:`~fragment.Fragment` collecting
+    """Generate a list of instances of :class:`fragment.Fragment` collecting
     all the fragments in the video.
 
     Parameters
     ----------
     blobs_in_video : list
-        list of the blob objects (see class :class:`~blob.Blob`) generated
+        list of the blob objects (see class :class:`blob.Blob`) generated
         from the blobs segmented in the video
     number_of_animals : int
-        Number of animals to track
+        Number of animals to track as defined by the user
 
     Returns
     -------
     list
-        list of instances of :class:`~fragment.Fragment`
+        list of instances of :class:`fragment.Fragment`
 
     """
     attributes_to_set = ["_image_for_identification", "_next", "_previous"]
@@ -740,29 +758,17 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                     == current_fragment_identifier
                 ):
                     current = current.next[0]
-                    bounding_box_in_frame_coordinates = (
-                        [current.bounding_box_in_frame_coordinates]
-                        if current.is_a_crossing
-                        else []
-                    )
-                    (
-                        images,
-                        bounding_boxes,
-                        centroids,
-                        areas,
-                        episodes,
-                    ) = append_values_to_lists(
+                    (images, centroids, episodes) = append_values_to_lists(
                         [
                             current.identification_image_index,
-                            bounding_box_in_frame_coordinates,
                             current.centroid,
-                            current.area,
-                            current.episode,
+                            current.episode
                         ],
-                        [images, bounding_boxes, centroids, areas, episodes],
+                        [images, centroids, episodes],
                     )
 
                 end = current.frame_number
+
                 fragment = Fragment(
                     current_fragment_identifier,
                     (
@@ -771,14 +777,11 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                     ),  # it is not inclusive to follow Python convention
                     blob.blob_index,
                     images,
-                    bounding_boxes,
                     centroids,
-                    areas,
                     episodes,
                     blob.is_an_individual,
                     blob.is_a_crossing,
                     number_of_animals,
-                    user_generated_identities=blob.user_generated_identities,
                 )
                 used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
@@ -797,6 +800,22 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
 def load_identification_images(
     identification_images_file_paths, images_indices
 ):
+    """Loads the identification images from disk.
+
+    Parameters
+    ----------
+    identification_images_file_paths : list
+        List of strings with the paths to the files where the images are
+        stored.
+    images_indices : list
+        List of tuples (image_index, episode) that indicate each of the images
+        to be loaded
+
+    Returns
+    -------
+    Numpy array
+        Numpy array of shape [number of images, width, height]
+    """
     images = []
     for (image, episode) in tqdm(
         images_indices, desc="Reading identification images from the disk"
