@@ -762,7 +762,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                         [
                             current.identification_image_index,
                             current.centroid,
-                            current.episode
+                            current.episode,
                         ],
                         [images, centroids, episodes],
                     )
