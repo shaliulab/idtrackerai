@@ -42,14 +42,15 @@ from idtrackerai.crossings_detection.dataset.crossings_dataset import (
 
 logger = logging.getLogger("__main__.crossings_dataloader")
 
-if os.name == 'nt': # windows
+if os.name == "nt":  # windows
     # Using multipricessing in Windows causes a
     # recursion limit error difficut to debug
-    num_workers_train=0
-    num_workers_val=0
+    num_workers_train = 0
+    num_workers_val = 0
 else:
-    num_workers_train=4
-    num_workers_val=4
+    num_workers_train = 4
+    num_workers_val = 4
+
 
 def get_training_data_loaders(video, train_blobs, val_blobs):
     logger.info("Creating training and validation data loaders")
