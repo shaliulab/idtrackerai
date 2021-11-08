@@ -87,6 +87,7 @@ class Learner_Classification(nn.Module):
 
     def forward_with_criterion(self, inputs, targets, **kwargs):
         out = self.forward(inputs)
+        targets = targets.long()
         return self.criterion(out, targets), out
 
     def learn(self, inputs, targets, **kwargs):
