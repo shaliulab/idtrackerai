@@ -10,15 +10,10 @@ import re
 
 sys.path.insert(0, os.path.abspath(".."))
 sys.path.insert(0, os.path.abspath("../../idtrackerai"))
-sys.path.insert(0, os.path.abspath("../../idtrackerai/utils"))
-sys.path.insert(0, os.path.abspath("../../idtrackerai/preprocessing"))
-sys.path.insert(0, os.path.abspath("../../idtrackerai/network"))
-sys.path.insert(
-    0, os.path.abspath("../../idtrackerai/network/crossings_detector_model")
-)
-sys.path.insert(
-    0, os.path.abspath("../../idtrackerai/network/identification_model")
-)
+sys.path.insert(0, os.path.abspath("../../idtrackerai/animals_detection"))
+sys.path.insert(0, os.path.abspath("../../idtrackerai/crossings_detection"))
+sys.path.insert(0, os.path.abspath("../../idtrackerai/fragmentation"))
+sys.path.insert(0, os.path.abspath("../../idtrackerai/tracker"))
 sys.path.insert(0, os.path.abspath("../../idtrackerai/postprocessing"))
 
 version = ""
@@ -113,3 +108,19 @@ texinfo_documents = [
 
 # google analytics
 googleanalytics_id = "UA-114600635-1"
+# autoclass_content = "both"
+
+# def skip(app, what, name, obj, would_skip, options):
+#     if name == "__init__":
+#         return False
+#     return would_skip
+
+# def setup(app):
+#     app.connect("autodoc-skip-member", skip)
+
+# autodoc_default_options = {
+#     'members': True,
+#     'member-order': 'bysource',
+#     'special-members': '__init__',
+#     'undoc-members': False,
+# }

@@ -26,22 +26,22 @@ Smoothed trajectories
 .. image:: _static/trajectories.png
 
 Velocities and accelerations
----------------------
+----------------------------
 
 .. image:: _static/velocity_and_acceleration.png
 
 Density of neighbours around a focal fish
----------------------
+-----------------------------------------
 
 .. image:: _static/density_of_neighbours.png
 
 Polar distributions of positions, turnings and accelerations
----------------------
+------------------------------------------------------------
 
 .. image:: _static/polar_plots.png
 
 Inter-individual distance histograms compared with shuffled trajectories
----------------------
+------------------------------------------------------------------------
 
 .. image:: _static/distances_vs_random.png
 

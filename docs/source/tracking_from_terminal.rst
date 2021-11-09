@@ -116,7 +116,7 @@ Copy the following code in a file a name it "idtrackerai_batch_tracking.py".
 
 Execute the script using the following command.
 
-.. code-blob:: bash
+.. code-block:: bash
 
     python idtrackerai_batch_tracking.py /path/to/mainFolder/with/all/videos
 

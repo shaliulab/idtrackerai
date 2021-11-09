@@ -8,6 +8,7 @@ Here you have some photos of our juvenile zebrafish setup and a raw frame from t
 
 .. image:: /_static/fish_setup_LR.png
     :width: 800
+
 **Zebrafish video setup**.
 The main tank was placed inside a
 box built with matte white acrylic walls (Supplementary Fig. 3a). The lighting was
@@ -62,4 +63,4 @@ designed a portable setup that fitted protective flight case:
 Here you can find `the model <https://drive.google.com/file/d/1A03xqPhAgvf_JaEwE_k0dk9mVJ9owGE0/view?usp=sharing>`_,
 `the dimensions of the aluminium rails structure <https://drive.google.com/file/d/14t8sZYDJGtiiNhgNcYu2zxoeg32lL6Tf/view?usp=sharing>`_,
 `the 300mm circular tank model <https://drive.google.com/file/d/194aQ7kSj_1-dxdHAYkZAO6oHifPPkQOM/view?usp=sharing>`_,
-and `the tank holder and light diffuser frame models <https://drive.google.com/file/d/1FqDSqmR1O4TYBdPS15AgC4FjIfS4v9nK/view?usp=sharing>`_,
+and `the tank holder and light diffuser frame models <https://drive.google.com/file/d/1FqDSqmR1O4TYBdPS15AgC4FjIfS4v9nK/view?usp=sharing>`_.
