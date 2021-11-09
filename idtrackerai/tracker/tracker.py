@@ -512,7 +512,7 @@ class TrackerAPI(object):
             )
         )
 
-        # TODO: Perform identity transfer here instead of in the previous method 
+        # TODO: Perform identity transfer here instead of in the previous method
 
         # Order global fragments by distance to the first global fragment for the accumulation
         logger.info("Setting first global fragment for accumulation")
