@@ -151,6 +151,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
         """
         speed_of_candidate_identities = []
         for identity in available_identities:
+            # TODO: This should not be called _user_generated_identity.
             fragment._user_generated_identity = identity
             neighbour_fragment_past = fragment.get_neighbour_fragment(
                 fragments, "to_the_past"

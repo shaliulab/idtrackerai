@@ -512,6 +512,8 @@ class TrackerAPI(object):
             )
         )
 
+        # TODO: Perform identity transfer here instead of in the previous method 
+
         # Order global fragments by distance to the first global fragment for the accumulation
         logger.info("Setting first global fragment for accumulation")
         self.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(

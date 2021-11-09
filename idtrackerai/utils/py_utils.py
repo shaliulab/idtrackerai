@@ -86,7 +86,7 @@ def delete_attributes_from_object(object_to_modify, list_of_attributes):
 
 ### Dict utils ###
 def flatten(list_):
-    """ flatten a list of lists """
+    """flatten a list of lists"""
     try:
         ans = [inner for outer in list_ for inner in outer]
     except TypeError:

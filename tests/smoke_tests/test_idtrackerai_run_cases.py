@@ -684,6 +684,8 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
     )
 
 
+# TODO: Code more_blobs_than_animals_chcksegm_true
+
 # Forcing background subtraction to use the mean statistic creates
 # more blobs than animals in some frames
 # Test a segmentation with more blobs than number of animals where the flag

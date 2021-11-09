@@ -36,13 +36,13 @@ import time
 
 from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
-from .segmentation import segment
+from idtrackerai.animals_detection.segmentation import segment
 
 logger = logging.getLogger(__name__)
 
 
 class AnimalsDetectionABC(ABC):
-    def __init__(self, video: Video):
+     def __init__(self, video: Video):
         """
         This class generates a ListOfBlobs object and updates the video
         object with information about the process.

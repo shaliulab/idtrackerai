@@ -106,7 +106,7 @@ setup(
         "gui": [
             "pyforms-gui",
             "python-video-annotator",
-            "python-video-annotator-module-idtrackerai==0.6.64",
+            "python-video-annotator-module-idtrackerai==1.0.0a0",
         ],
         "gpu": ["pytorch", "torchvision"],
     },
