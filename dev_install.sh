@@ -1,4 +1,4 @@
-pip install -e .
+pip install -e .[dev]
 cd idtrackerai-app
 pip install -e .
 cd pyforms-gui

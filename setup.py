@@ -68,9 +68,8 @@ requirements = [
     "tables >= 3.3.0",
     "dask >= 0.17.0",
     "opencv-python == 3.4.5.20",
-    "idtrackerai-app",
-    "confapp",
-    "gdown",
+    "confapp >= 1.1.11",
+    "gdown >= 3.10.0",
 ]
 
 
@@ -103,12 +102,15 @@ setup(
     package_data={"idtrackerai": ["data/example_video_compressed/*.avi"]},
     install_requires=requirements,
     extras_require={
+        "cli": ["idtrackerai-app == 1.0.0a0"],
         "gui": [
-            "pyforms-gui",
-            "python-video-annotator",
-            "python-video-annotator-module-idtrackerai==1.0.0a0",
+            "idtrackerai-app == 1.0.0a0",
+            "pyforms-gui==4.904.152",
+            "python-video-annotator==3.306",
+            "python-video-annotator-module-idtrackerai == 1.0.0a0",
         ],
-        "gpu": ["pytorch", "torchvision"],
+        "gpu": ["pytorch==1.8.1", "torchvision==0.9.1"],
+        "dev": ["pytest", "black", "sphinx", "numpydoc"],
     },
     zip_safe=False,
     classifiers=[
