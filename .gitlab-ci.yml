@@ -5,7 +5,7 @@ testbuild:
   script:
     - apt-get update
     - apt-get install -y g++
-    - conda env create -f dev-environment.yml python=3.7
+    - conda env create -f test-environment.yml python=3.7
     - source activate idtrackerai_dev
     - python setup.py install
     - pip install black==20.8b1 flake8
