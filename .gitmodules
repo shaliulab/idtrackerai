@@ -4,3 +4,6 @@
 [submodule "idtrackerai-app"]
 	path = idtrackerai-app
 	url = https://gitlab.com/polavieja_lab/idtrackerai-app.git
+[submodule "idmatcherai"]
+	path = idmatcherai
+	url = https://gitlab.com/polavieja_lab/idmatcherai
