@@ -41,76 +41,69 @@ logger = logging.getLogger("__main__.globalfragment")
 
 
 class GlobalFragment(object):
-    """A global fragment is a collection of instances of the class
-    :class:`~fragment.Fragment`. Such fragments are collected from a part of the
-    video in which all animals are visible.
+    """Representes a collection of :class:`fragment.Fragment` N different
+    animals. Where N is the number of animals in the video as defined by the
+    user.
 
-    Attributes
+        Parameters
     ----------
-
-    index_beginning_of_fragment : int
-        minimum frame number in which all the individual fragments (see
-        :class:`~fragment.Fragment`) are all coexisting
-    individual_fragments_identifiers : list
-        list of the fragment identifiers associated to the individual fragments
-        composing the global fragment (see :class:`~fragment.Fragment`)
+    blobs_in_video : list
+        List of lists of instances of :class:`blob.Blob`.
+    fragments : list
+        List of lists of instances of the class :class:`fragment.Fragment`
+    first_frame_of_the_core : int
+        First frame of the core of the global fragment. See also
+        :func:`list_of_global_fragments.detect_global_fragments_core_first_frame`.
+        This also acts as a unique identifier of the global fragment.
     number_of_animals : int
-        number of animals to be tracked
-    _is_unique : bool
-        True if each of the individual fragments have been assigned to a unique
-        identity
-    _is_certain : bool
-        True if each of the individual fragments have scored a certaninty above
-        the threshold :const:`conf.CERTAINTY_THRESHOLD`
-    _ids_assigned : ndarray
-        shape [1, number_of_animals] each componenents correspond to the
-        identity assigned by the algorithm to each of the individual fragments
-    _temporary_ids : ndarray
-        shape [1, number_of_animals] temporary ids assigned during the
-        fingerprinting protocol to each of the fragments composing the global
-        fragment
-    _repeated_ids : list
-        list of identities repeated during the identification of the fragments
-        in the individual fragment
-    _missing_ids : list
-        list of identities not assigned in the global fragment (since in a
-        global fragment all animals are visible, all the identities should be
-        assigned)
-    predictions : list
-        list of :attr:`~fragment.Fragment.predictions` for every individual
-        fragment
-    softmax_probs_median : list
-        list of :attr:`~fragment.Fragment.softmax_probs_median` for every
-        individual fragment
-
+        Number of animals to be tracked as defined by the user.
     """
 
     def __init__(
         self,
         blobs_in_video,
         fragments,
-        index_beginning_of_fragment,
+        first_frame_of_the_core,
         number_of_animals,
     ):
-        self.index_beginning_of_fragment = index_beginning_of_fragment
+        self.first_frame_of_the_core = first_frame_of_the_core
+        self.number_of_animals = number_of_animals
         self.individual_fragments_identifiers = [
             blob.fragment_identifier
-            for blob in blobs_in_video[index_beginning_of_fragment]
+            for blob in blobs_in_video[first_frame_of_the_core]
         ]
-        self.get_list_of_attributes_from_individual_fragments(fragments)
-        self.set_minimum_distance_travelled()
-        self.set_candidate_for_accumulation()
-        self.number_of_animals = number_of_animals
-        self.reset(roll_back_to="fragmentation")
-        self._is_unique = False
-        self._is_certain = False
 
+        # Copies some attributes of the fragments as attributes that are lists
+        # For example, a list of the distances travelled in each fragment,
+        # or a list of the number of images of each fragment
+        self._get_list_of_attributes_from_individual_fragments(
+            fragments, ["distance_travelled", "number_of_images"]
+        )
+        self._set_minimum_distance_travelled()
+
+        # TODO: this should be part of the accumulation module
+        self._set_candidate_for_accumulation()
+
+        # Initializes some attributes that will be used in other processes
+        # during the cascade of training and identification profocols
+        self._init_attributes()
+
+        # TODO: add property and a warning if they are not linked.
+        self.individual_fragments = None
+
+    # TODO: This should be part of the accumulation module
     @property
     def candidate_for_accumulation(self):
+        """Boolean indicating whether the global fragment is a candidate
+        for accomulation in the cascade of training and identification
+         protocols.
+        """
         return self._candidate_for_accumulation
 
     @property
     def used_for_training(self):
+        """Booleand indicating if all the fragments in the global fragment
+        have been used for training the identification network"""
         return all(
             [
                 fragment.used_for_training
@@ -120,44 +113,53 @@ class GlobalFragment(object):
 
     @property
     def is_unique(self):
+        """Boolean indicating that the global fragment has unique
+        identities, i.e. it does not have duplications."""
         self.check_uniqueness(scope="global")
         return self._is_unique
 
     @property
     def is_partially_unique(self):
+        """Boolean indicating that a subset of the fragments in the global
+        fragment have unique identities"""
         self.check_uniqueness(scope="partial")
         return self._is_partially_unique
 
+    def _init_attributes(self):
+        """Initializes some attributes required for the cascade of
+        training and identification protocols"""
+        self._ids_assigned = np.nan * np.ones(self.number_of_animals)
+        self._temporary_ids = np.arange(self.number_of_animals)
+        self._score = None
+        self._is_unique = False
+        self._is_certain = False
+        self._uniqueness_score = None
+        self._repeated_ids = []
+        self._missing_ids = []
+        self.predictions = []
+        self.softmax_probs_median = []
+
     def reset(self, roll_back_to):
         """Resets attributes to the fragmentation step in the algorithm,
-        allowing for example to start a new accumulation
+        allowing for example to start a new accumulation.
 
         Parameters
         ----------
         roll_back_to : str
             "fragmentation"
-
         """
         if roll_back_to == "fragmentation":
-            self._ids_assigned = np.nan * np.ones(self.number_of_animals)
-            self._temporary_ids = np.arange(self.number_of_animals)
-            self._score = None
-            self._is_unique = False
-            self._uniqueness_score = None
-            self._repeated_ids = []
-            self._missing_ids = []
-            self.predictions = []
-            self.softmax_probs_median = []
+            self._init_attributes()
 
-    def get_individual_fragments_of_global_fragment(self, fragments):
-        """Get the individual fragments in the global fragments by using their
-        unique identifiers
+    def set_individual_fragments(self, fragments):
+        """Gets the list of instances of the class :class:`fragment.Fragment`
+        that constitute the global fragment and sets an attribute with such
+        list.
 
         Parameters
         ----------
         fragments : list
-            all the fragments extracted from the video
-            (see :class:`~fragment.Fragment`)
+            All the fragments extracted from the video.
 
         """
         self.individual_fragments = [
@@ -166,28 +168,23 @@ class GlobalFragment(object):
             if fragment.identifier in self.individual_fragments_identifiers
         ]
 
-    def get_list_of_attributes_from_individual_fragments(
+    def _get_list_of_attributes_from_individual_fragments(
         self,
         fragments,
         list_of_attributes=["distance_travelled", "number_of_images"],
     ):
-        """Given a set of attributes available in the instances of the class
-        :class:`~fragment.Fragment` it copies them in the global fragment.
-        For instance the attribute number_of_images belonging to the individual
-        fragments in the global fragment will be set as
-        `global_fragment.number_of_images_per_individual_fragment`, where each
-        element of the list corresponds to the number_of_images of each
-        individual fragment preserving the order with which the global fragment
-        has been initialised
+        """Gets the attributes in `list_of_attributes` from the fragments that
+        constitute the global fragment and sets new attributes in the class
+        containing such values in a list.
 
         Parameters
         ----------
-        fragments : <Fragment object>
-            See :class:`~fragment.Fragment`
+        fragments : list
+            Lits of instances of :class:`fragment.Fragment`.
         list_of_attributes : list
-            List of attributes to be transferred from the individual fragments
-            to the global fragment
-
+            List of strings indicating the names of the attributes
+            to be transferred from the individual fragments to the global
+            fragment.
         """
         [
             setattr(self, attribute + "_per_individual_fragment", [])
@@ -202,14 +199,15 @@ class GlobalFragment(object):
                         self, attribute + "_per_individual_fragment"
                     ).append(getattr(fragment, attribute))
 
-    def set_minimum_distance_travelled(self):
-        """Sets the minum distance travelled attribute"""
+    def _set_minimum_distance_travelled(self):
+        """Sets the `minimum_distance_travelled` attribute."""
         self.minimum_distance_travelled = min(
             self.distance_travelled_per_individual_fragment
         )
 
-    def set_candidate_for_accumulation(self):
-        """Sets the global fragment to be eligible for accumulation"""
+    def _set_candidate_for_accumulation(self):
+        """Sets the attributes `_candidate_for_accumulation` which indicates
+        that the global fragment to be eligible for accumulation."""
         self._candidate_for_accumulation = True
         if (
             np.min(self.number_of_images_per_individual_fragment)
@@ -217,24 +215,23 @@ class GlobalFragment(object):
         ):
             self._candidate_for_accumulation = False
 
-    # def get_total_number_of_images(self):
-    #     return sum([fragment.number_of_images for fragment in self.individual_fragments])
-
     def acceptable_for_training(self, accumulation_strategy):
         """Returns True if the global fragment is acceptable for training.
-        See :attr:`~fragment.Fragment.acceptable_for_training` for every
-        individual fragment in the global fragment
+
+
+        See :attr:`fragment.Fragment.acceptable_for_training` for every
+        individual fragment in the global fragment.
 
         Parameters
         ----------
         accumulation_strategy : str
-            can be either "global" or "partial"
+            Can be either "global" or "partial"
 
         Returns
         -------
         bool
-            True if the global fragment is accceptable for training
-
+            True if the global fragment is accceptable for training the
+            identification neural network.
         """
         if accumulation_strategy == "global":
             return all(
@@ -253,12 +250,12 @@ class GlobalFragment(object):
 
     def check_uniqueness(self, scope):
         """Checks that the identities assigned to the individual fragments are
-        unique
+        unique.
 
         Parameters
         ----------
         scope : str
-            Either "global" or "partial"
+            Either "global" or "partial".
 
         """
         all_identities = range(self.number_of_animals)
@@ -310,8 +307,28 @@ class GlobalFragment(object):
     def get_images_and_labels(
         self, identification_images_file_paths, scope="pretraining"
     ):
-        """Arrange the images and identities in the global fragment as a
-        labelled dataset in order to train the idCNN
+        """Gets the images and identities in the global fragment as a
+        labelled dataset in order to train the identification neural network
+
+        If the scope is "pretraining" the identities of each fragment
+        will be arbitrary.
+        If the scope is "identity_transfer" then the labels will be
+        empty as they will be infered by the identification network selected
+        by the user to perform the transferring of identities.
+
+        Parameters
+        ----------
+        identification_images_file_paths : list
+            List of paths (str) where the identification images are stored.
+        scope : str, optional
+            Whether the images are going to be used for training the
+            identification network or for "pretraining", by default
+            "pretraining".
+
+        Returns
+        -------
+        Tuple
+            Tuple with two Numpy arrays with the images and their labels.
         """
         images = []
         labels = []
@@ -331,29 +348,16 @@ class GlobalFragment(object):
             np.asarray(labels),
         )
 
-    # def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
-    #     """
-    #
-    #     Parameters
-    #     ----------
-    #     blobs_in_video : list
-    #         list of the blob objects (see :class:`~blob.Blob`) segmented from
-    #         the video
-    #
-    #     """
-    #     self.starts_ends_individual_fragments = [blob.compute_fragment_start_end()
-    #         for blob in blobs_in_video[self.index_beginning_of_fragment]]
-
     def update_individual_fragments_attribute(self, attribute, value):
-        """Update `attribute` in every individual fragment in the global
-        fragment by setting it at `value`
+        """Updates a given `attribute` in every individual fragment in the
+        global fragment by setting it at `value`
 
         Parameters
         ----------
         attribute : str
-            attribute to be updated
-        value : list, int, float
-            value of `attribute`
+            Attribute to be updated in each fragment of the global fragment.
+        value : any
+            Value to be set to the attribute of each fragment.
 
         """
         [

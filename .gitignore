@@ -19,7 +19,7 @@
 !*.less
 !*.css_t
 !*.conf
-!*.txt
+#!*.txt
 !*.json
 
 *.pyc
@@ -34,8 +34,14 @@ docs/build/*
 !docs/make.bat
 !docs/Makefile
 !docs/source/_static/*
+
+# expect images for documentation
 !idtrackerai/gui/*.png
+
+# ignore idtrackerai unnecessary byproduct files
 idtrackerai/utils/test_.json
+tests/smoke_tests/test_*/session_*
+
 
 #ignore idtrackerAI and videos folder because they have .png files
 videos
@@ -49,16 +55,21 @@ idtrackerai\.egg-info/
 
 docs/build/
 
-local_settings\.py
+./local_settings.py
+!tests/smoke_tests/tests_params/test_*/local_settings.py
 
 dist/*
 build/*
 .eggs/*
 
-data/
+idtrackerai/data/*/session_*
+!*conflict3and4_20120316T155032_13_compressed.avi
+!*conflict3and4_20120316T155032_14_compressed.avi
 
 out-parameters\.txt
 
 docs/idtrackerai-app\.log
 
 .pytest_cache
+
+\.vscode/

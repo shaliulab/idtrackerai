@@ -1,0 +1,61 @@
+{
+  "open-multiple-files": false,
+  "_session": {
+	"value": "test"
+  },
+  "_video": {
+	"value": ""
+  },
+  "_range": {
+	"value": [
+	  0,
+	  508
+	],
+	"max": 508,
+	"min": 0,
+	"scale": 1.0,
+	"convert-int": false
+  },
+  "_rangelst": {
+	"value": ""
+  },
+  "_multiple_range": {
+	"value": "False"
+  },
+  "_intensity": {
+	"value": [
+	  0,
+	  155
+	],
+	"max": 255,
+	"min": 0,
+	"scale": 1.0,
+	"convert-int": false
+  },
+  "_area": {
+	"value": [
+	  150,
+	  60000
+	],
+	"max": 60000,
+	"min": 0,
+	"scale": 1.0,
+	"convert-int": false
+  },
+  "_number_of_animals": {
+	"value": 8
+  },
+  "_resreduct": {
+	"value": 1.0
+  },
+  "_chcksegm": {
+	"value": "False"
+  },
+  "_roi": {},
+  "_no_ids": {
+	"value": "True"
+  },
+  "_bgsub": {
+	"value": "False"
+  }
+}

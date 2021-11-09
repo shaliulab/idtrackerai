@@ -292,7 +292,10 @@ def check_gt_video_consistency(video, gt_video):
             "are different. The ground truth file cannot be reused"
         )
 
-    if video.number_of_animals != gt_video.number_of_animals:
+    if (
+        video.user_defined_parameters["number_of_animals"]
+        != gt_video.user_defined_parameters["number_of_animals"]
+    ):
         raise ValueError(
             "The number of animals in the video and in the ground truth video "
             "are different. The ground truth file cannot be reused"
@@ -348,11 +351,17 @@ def get_permutation_of_identities(
         gt_blobs_in_frame = gt_blobs_in_video[fff_global_fragment]
         blobs_in_frame = blobs_in_video[fff_global_fragment]
 
-        if len(gt_blobs_in_frame) == video.number_of_animals:
+        if (
+            len(gt_blobs_in_frame)
+            == video.user_defined_parameters["number_of_animals"]
+        ):
             ids_perm_dict = get_ids_perm_dict(
                 gt_blobs_in_frame, blobs_in_frame
             )
-            if len(ids_perm_dict) == video.number_of_animals:
+            if (
+                len(ids_perm_dict)
+                == video.user_defined_parameters["number_of_animals"]
+            ):
                 permutation_found = True
             else:
                 fff_global_fragment += 1
@@ -362,7 +371,10 @@ def get_permutation_of_identities(
         if fff_global_fragment > video.number_of_frames:
             raise Exception("No identities permutation found")
     logger.info(f"The identities permutation is {ids_perm_dict}")
-    assert len(ids_perm_dict) == video.number_of_animals
+    assert (
+        len(ids_perm_dict)
+        == video.user_defined_parameters["number_of_animals"]
+    )
     return ids_perm_dict
 
 
@@ -476,7 +488,7 @@ def get_accuracy_wrt_groundtruth(
     blobs_in_video=None,
     identities_dictionary_permutation=None,
 ):
-    number_of_animals = video.number_of_animals
+    number_of_animals = video.user_defined_parameters["number_of_animals"]
     if blobs_in_video is None:
         blobs_in_video = gt_blobs_in_video
 
@@ -521,7 +533,7 @@ def reduce_resolution_gt_blobs(video, gt_blobs_in_video):
                 video.original_height,
                 video.width,
                 video.height,
-                video.resolution_reduction,
+                video.user_defined_parameters["resolution_reduction"],
             )
 
 
@@ -553,7 +565,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, gt_type=None):
 
     check_gt_video_consistency(video, ground_truth.video)
 
-    if video.resolution_reduction != 1:
+    if video.user_defined_parameters["resolution_reduction"] != 1:
         reduce_resolution_gt_blobs(video, ground_truth.blobs_in_video)
 
     accumulation_number = int(video.accumulation_folder[-1])

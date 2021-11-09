@@ -1,5 +1,1 @@
-include idtrackerai/gui/logo.png
-include idtrackerai/gui/help_button.png
-include idtrackerai/gui/help_button_off.png
-include idtrackerai/gui/single_animal.png
-include idtrackerai/gui/idtrackerai.kv
+include idtrackerai/data/example_video_compressed/idtrackerai_video_example.avi

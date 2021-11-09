@@ -12,3 +12,4 @@ testbuild:
     - flake8 idtrackerai --select=E5,E7,E9,W6,F63,F7,F82 --max-line-length=120 --show-source --statistics
     - black . -l 79 --check
     - black idtrackerai -l 79 --check
+    - pytest tests/unit_tests
