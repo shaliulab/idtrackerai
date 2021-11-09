@@ -1,1 +1,1 @@
-KNOWLEDGE_TRANSFER_FOLDER_IDCNN = "path/to/accumulation/folder"
+KNOWLEDGE_TRANSFER_FOLDER_IDCNN = r"path/to/accumulation/folder"

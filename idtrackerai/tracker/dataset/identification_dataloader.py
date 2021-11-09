@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import os
 import logging
 
 import torch
@@ -40,6 +41,15 @@ from idtrackerai.tracker.dataset.identification_dataset import (
 )
 
 logger = logging.getLogger("__main__.crossings_dataloader")
+
+if os.name == "nt":  # windows
+    # Using multipricessing in Windows causes a
+    # recursion limit error difficut to debug
+    num_workers_train = 0
+    num_workers_val = 0
+else:
+    num_workers_train = 4
+    num_workers_val = 4
 
 
 def get_training_data_loaders(video, train_data, val_data):
@@ -54,7 +64,7 @@ def get_training_data_loaders(video, train_data, val_data):
         training_set,
         batch_size=conf.BATCH_SIZE_IDCNN,
         shuffle=False,
-        num_workers=2,
+        num_workers=num_workers_train,
     )
     train_loader.num_classes = video.user_defined_parameters[
         "number_of_animals"
@@ -71,7 +81,7 @@ def get_training_data_loaders(video, train_data, val_data):
         validation_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
         shuffle=False,
-        num_workers=2,
+        num_workers=num_workers_val,
     )
     val_loader.num_classes = video.user_defined_parameters["number_of_animals"]
     val_loader.image_shape = validation_set[0][0].shape
@@ -89,7 +99,7 @@ def get_test_data_loader(test_data, number_of_classes):
         test_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
         shuffle=False,
-        num_workers=2,
+        num_workers=num_workers_val,
     )
     test_loader.num_classes = number_of_classes
     test_loader.image_shape = test_set[0][0].shape
