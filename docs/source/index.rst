@@ -21,7 +21,7 @@ recorded in laboratory conditions.
     :target: https://www.youtube.com/watch?v=dT28-VcXaCc
 
 New pre-release: idtracker.ai v4
-****************************
+********************************
 
 * Works with Python 3.7 and Pytorch 1.10.0 and CUDA 10.2 or 11.3.
 * New horizontal GUI layout.
