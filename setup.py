@@ -99,7 +99,12 @@ setup(
     license="GPLv3+",
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
-    package_data={"idtrackerai": ["data/example_video_compressed/*.avi"]},
+    package_data={
+        "idtrackerai": [
+            "data/example_video_compressed/*.avi",
+            "utils/test.json",
+        ]
+    },
     install_requires=requirements,
     extras_require={
         "cli": ["idtrackerai-app == 1.0.0a0"],
