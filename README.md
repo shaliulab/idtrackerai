@@ -9,40 +9,37 @@ This work has been published in
 ## What is new in idtrackerai v4?
 
 - Works with Python 3.7.
-- Remove Kivy submodules and support for old Kivy GUI
-- Neural network training is done with Pytorch
-- Identification images are saved as uint 8
-- Improve data pipeline for the crossing detector
-- Parallel saving and loading of identification images
-- Background subtraction considers the ROI
-- Add 'Add setup points' button in the tracking GUI. 
-This allows to mark points that might be important for the analysis
-of the trajectories. 
-These points will be stored in the trajectories.npy and 
-trajectories_wo_gaps.npy dictioanries.
-- Allow to save trajectories as csv with the advance parameter 
-`CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON` (using the 
-`local_settings.py` file)
-- Allow to change the output width (and height) of the individual videos with 
-the advance parameter `INDIVIDUAL_VIDEO_WIDTH_HEIGHT` 
-(using the `local_settings.py` file)
-- Horizontal layout for graphical user interface (GUI). This layout can be
-deactivated using the `local_settings.py` setting  `NEW_GUI_LAYOUT=False`.
-- New GUI allows to mark landmark points in the video frame that will be stored
-in the `trajectories.npy` and `trajectories_wo_gaps.npy` in the key
- `setup_poitns`. 
-- Width and height of GUI can be change using the `local_settings.py` using the
-`GUI_MINIMUM_HEIGHT` and `GUI_MINIMUM_WIDTH` variables.
-- Add ground truth button to validation GUI
-- Neural network training works with PyTorch 1.8.1. See installation
- instructions.
+- Remove Kivy submodules and stop support for old Kivy GUI.
+- Neural network training is done with Pytorch 1.10.0.
+- Identification images are saved as uint 8.
 - Crossing detector images are the same as the identification images. This
- safes computing time and makes the process of generating the images faster.
+ saves computing time and makes the process of generating the images faster.
+- Improve data pipeline for the crossing detector.
+- Parallel saving and loading of identification images (only for Linux)
 - Simplify code for connecting blobs from frame to frame.
 - Remove unnecessary execution of the blobs connection algorithm.
+- Background subtraction considers the ROI
+- Allows to save trajectories as csv with the advanced parameter 
+`CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON` (using the 
+`local_settings.py` file).
+- Allows to change the output width (and height) of the individual-centered 
+videos with the advanced parameter `INDIVIDUAL_VIDEO_WIDTH_HEIGHT` 
+(using the `local_settings.py` file).
+- Horizontal layout for graphical user interface (GUI). This layout can be
+deactivated using the `local_settings.py` setting  `NEW_GUI_LAYOUT=False`.
+- Width and height of GUI can be changed using the `local_settings.py` using 
+the `GUI_MINIMUM_HEIGHT` and `GUI_MINIMUM_WIDTH` variables.
+- Add ground truth button to validation GUI.
+- Added "Add setup points" featrue to store landmark points in the video frame 
+that will be stored in the `trajectories.npy` and `trajectories_wo_gaps.npy` 
+in the key `setup_poitns`. Users can use this points to perform behavioural
+analysis that requires landmarks of the experimental setup.
 - Improved code formatting using the black formatter.
 - Better factorization of the TrackerApi.
 - Some bugs fixed.
+- Better documentation of main idtracker.ai objects (`video`, `blob`, 
+`list_of_blobs`, `fragment`, `list_of_fragments`, 
+`global_fragment` and `list_of_global_fragments`)
 
 ## Hardware requirements
 
@@ -50,13 +47,14 @@ idtracker.ai (v4) has been tested in computers with the following
  specifications:
 
 - Operating system: 64bit GNU/linux Mint 19.1 and Ubuntu 18.4
-- CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
+- CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K 
+CPU @3.40GHz 4 core
 - GPU: Nvidia TITAN X or GeForce GTX 1080 Ti
 - RAM: 32Gb-128Gb (depending on the needs of the video).
 - Disk: 1TB SSD
 
 idtracker.ai is coded in python 3.7 and uses Pytorch libraries
-(version 1.8.1). 
+(version 1.10.0). 
 Due to the intense use of deep neural networks, we recommend using a
  computer with a dedicated NVIDA GPU supporting compute capability 3.0 
  or higher. 
@@ -68,51 +66,17 @@ Note that the parts of the algorithm using Tensorflow libraries will run
 Check a more complete version of the 
 [installation instructions in the documentation](https://idtrackerai.readthedocs.io/en/latest/how_to_install.html).
 
-The most stable version of idtracker.ai can be installed from the PyPI using
- one of the following options:
+The recomended way to install idtracker.ai v4 is using the following commands:
 
-1.**GUI and GPU support (I)**: This option will install idtrackerai (this
- repository), the 
- [idtrackerai-app](https://gitlab.com/polavieja_lab/idtrackerai-app) and
-  PyTorch 1.8 with GPU support. Note that you will need to have the NVIDIA
-   drivers, CUDA 10.0 and cuDNN 7.6 for it to work properly.
+    conda create -n idtrackerai python=3.7
+    pip install idtrackerai[gui] --pre
+    conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
 
-    pip install idtrackerai[gui,gpu]
+If your computer does not have support for GPU computing, then install 
+pytorch with the `cpuonly` mode activated. So, you just need to change the
+last line by:
 
-2.**GUI and GPU support (II)**: If you do not want to install CUDA 10.0 and
- cuDNN 7.6 by yourself, you can install idtracker.ai in a Conda environment
-  and then install PyTorch 1.8 with GPU support from the Conda package
-   manager.
-
-    pip install idtrackerai[gui]
-    conda install -c pytorch pytorch torchvision
-
-3.**No GUI and GPU support.**: Use this option if you are installing
- idtrackerai in a computer where you plan to run it only from th  terminal
-  (see how to do this below).
-
-    pip install idtrackerai[gpu]
-
-If you don't want to install CUDA 10.0 and cuDNN by yourself, install
- idtrackerai inside of a conda environment and then install PyTorch 1.8 with
-  GPU support from the Conda package manager.
-
-    pip install idtrackerai
-    conda install -c pytorch pytorch torchvision
-
-4.**GUI and no GPU support**: Use this option if you only want to use the
- GUI to save *.json* parameters files, or if you want to track animals using
-  the "track without identities" feature. In this cases you don't need the GPU.
-
-    pip install idtrackerai[gui]
-
-
-5.**no GUI and no GPU support**: Use this option if you want to use
- idtracker.ai only to manipulate idtracker.ai objects or as an add on to
-  another project:
-
-    pip install idtrackerai
-
+    conda install pytorch torchvision cpuonly -c pytorch
 
 ## Test the installation.
 
@@ -128,56 +92,49 @@ Once idtracker.ai is installed, you can test the installation running one of
 
     idtrackerai_test --no_identities
 
-This test will download a example video of around 500Mb and will execute
- idtracker.ai with default values for the parameters. 
- To save the video and the results of th test in a specific 
- folder add the following option to the command.
-
-    idtrackerai_test -o path/to/folder/where/to/save/results
-
 ## Installation for developers.
 
-1.- Clone the repository and give it a name other than *idtrackerai*. 
- In Windows, run this step in the Git Shell.
+1.- Clone the repository. In Windows, run this step in the Git Shell:
 
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git idtrackerai_dev
 
-2.- Initialize all the submodules. In Windows, run this step in the Git Shell.
+2.- Initialize all the submodules. In Windows, run this step in the Git Shell:
     
     cd idtrackerai_dev 
     git checkout v4-dev
     git submodule update --init --recursive
     
-3.- Create a new conda environment and activate it. In Windows, 
- run the following steps in the Anaconda Prompt terminal.
+3.- Create a conda environment using the `dev-environment.yml` file
+ and activate it. In Windows, run the following steps in the Anaconda Prompt 
+ terminal:
 
     conda env create -f dev-environment.yml python=3.7
     conda activate idtrackerai_dev 
        
-4.- Execute the dev_install.sh file
+4.- Execute the dev_install.sh file:
 
     sh dev_install.sh
 
 ## Open or run idtracker.ai
 
-If you installed idtracker.ai with GUI support, you can run the following
- commands to start the GUI.
+To run idtracker.ai just execute the following command inside of the 
+corresponding conda environment:
 
     idtrackerai
 
-If you installed idtracker.ai without the GUI support but want to launch it
- from the terminal, you can run the following commands
+If you want to execute idtracker.ai using the `terminal_mode` and loading a 
+`.json` file where the parameters are stored using the following command:
 
     idtrackerai terminal_mode --load your-parameters-file.json --exec track_video
 
 Go to the 
 [Quick start](https://idtrackerai.readthedocs.io/en/latest/quickstart.html)  
- and follow the instructions to track a simple example video or to learnt to
-  save the preprocessing parameters to a *.json* file.
+ and follow the instructions to track a simple example video and learn to
+  save the preprocessing parameters to a `.json` file.
 
 ## Documentation and examples of tracked videos
 
-https://idtrackerai.readthedocs.io/en/latest/index.html
+Check more information in the [idtracker.ai webpage](https://idtrackerai.readthedocs.io/en/latest/index.html)
 
 ## Contributors
 * Francisco Romero-Ferrero (2015-)
