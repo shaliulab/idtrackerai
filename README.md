@@ -40,6 +40,7 @@ analysis that requires landmarks of the experimental setup.
 - Better documentation of main idtracker.ai objects (`video`, `blob`, 
 `list_of_blobs`, `fragment`, `list_of_fragments`, 
 `global_fragment` and `list_of_global_fragments`)
+- Dropped support for MacOS
 
 ## Hardware requirements
 
@@ -63,20 +64,27 @@ Note that the parts of the algorithm using Tensorflow libraries will run
 
 ## Installation.
 
-Check a more complete version of the 
-[installation instructions in the documentation](https://idtrackerai.readthedocs.io/en/latest/how_to_install.html).
+Frist of all, make sure that you have the latest version of the CUDA driver 
+installed (currenly tested with 495.44)
 
 The recomended way to install idtracker.ai v4 is using the following commands:
 
     conda create -n idtrackerai python=3.7
     pip install idtrackerai[gui] --pre
-    conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
+    conda install pytorch torchvision -c pytorch
 
-If your computer does not have support for GPU computing, then install 
+This will install the latest version of pytorch (1.10.0) and torchvision (0.11.1)
+and the cudatoolkit (version 11.3.1).
+
+> NOTE: You can install a lower version of the cudatoolkit using the command
+> `conda isntall pytorch torchvision cudatoolkit=10.2 -c pytorch`
+
+> NOTE: If your computer does not have support for GPU computing, then install 
 pytorch with the `cpuonly` mode activated. So, you just need to change the
-last line by:
+last line by: `conda install pytorch torchvision cpuonly -c pytorch`
 
-    conda install pytorch torchvision cpuonly -c pytorch
+> NOTE: Check a more complete version of the installation instructions 
+> in the [documentation](https://idtrackerai.readthedocs.io/en/latest/how_to_install.html).
 
 ## Test the installation.
 
@@ -132,6 +140,23 @@ Go to the
  and follow the instructions to track a simple example video and learn to
   save the preprocessing parameters to a `.json` file.
 
+  
+## Notes for delevopers
+
+This repository contains idtracker.ai's algorithm, the repository (submodule)
+[idtrackerai-app](https://gitlab.com/polavieja_lab/idtrackerai-app) contains 
+the CLI and GUI to track videos using the idtracker.ai's algorithm.
+
+The validation GUI used to check the results of the tracking is integrated 
+inside of a bigger project called 
+[Python-Video-Annotator](https://pythonvideoannotator.readthedocs.io/en/master/).
+The idtracker.ai's validation GUI is a plugin inside of this bigger project,
+but it has its own repository, the 
+[pythonvideoannotator-module-idtrackerai](https://github.com/video-annotator/pythonvideoannotator-module-idtrackerai)].
+
+We coded idtracker.ai's GUI in this way so that in the future other CLI or GUI
+can be coded without affecting the idtracker.ai algorithm, or the algorithm
+can be modified without affecting the current GUI and CLI.
 ## Documentation and examples of tracked videos
 
 Check more information in the [idtracker.ai webpage](https://idtrackerai.readthedocs.io/en/latest/index.html)

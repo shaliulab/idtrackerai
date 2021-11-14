@@ -1,7 +1,8 @@
 Welcome to idtracker.ai's documentation!
 ===========================================
 
-idtracker.ai allows to track groups of up to 100 unmarked animals from videos recorded in laboratory conditions.
+idtracker.ai allows to track groups of up to 100 unmarked animals from videos 
+recorded in laboratory conditions.
 
 .. image:: /_static/fish_tracked.png
     :width: 150
@@ -22,11 +23,14 @@ idtracker.ai allows to track groups of up to 100 unmarked animals from videos re
 New release: idtracker.ai v4
 ****************************
 
-* Works with Python 3.7 and Pytorch 1.8.1.
+* Works with Python 3.7 and Pytorch 1.10.0.
 * New horizontal GUI layout.
 * "Add setup points" feature allows to annotate groups of points in the frame that can be useful for analysis. These groups of points are stored together with the trajectories in the `trajectories.npy` and `trajectories_wo_gaps.npy` files.
+* Save trajectories as CSV files using the advanced parameters.
 
-Check :doc:`what_is_new` and join the `idtracker.ai users group <https://groups.google.com/forum/#!forum/idtrackerai_users>`_ to get announcements about new releases.
+Check :doc:`what_is_new` and join the 
+`idtracker.ai users group <https://groups.google.com/forum/#!forum/idtrackerai_users>`_ 
+to get announcements about new releases.
 
 Start using idtracker.ai
 ************************
