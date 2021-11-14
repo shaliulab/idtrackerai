@@ -1,7 +1,7 @@
 Quickstart
 ==========
 
-In this page we explain how to start tracking a video with idtracker.ai v3. 
+In this page we explain how to start tracking a video with idtracker.ai v4. 
 For more information about the different functionalities of this new version 
 visit the pages :doc:`./GUI_explained`, :doc:`tracking_from_terminal` and 
 :doc:`advanced_parameters`.
@@ -9,7 +9,9 @@ visit the pages :doc:`./GUI_explained`, :doc:`tracking_from_terminal` and
 The full process of tracking this example video takes around 5-7 minutes in
  one of our computers (:doc:`./requirements`). 
  The time varies with the amount of interaction with the GUI 
- that the user needs to explore the video and set the parameters.
+ that the user needs to explore the video and set the parameters and the 
+ advanced settings `SAVE_PIXELS` and `SAVE_SEGMENTATION_IMAG` 
+ (see :doc:`advanced_parameters`).
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 0. Install idtracker.ai
@@ -44,9 +46,9 @@ Run the command:
 This command will download a small example video and will execute idtracker.ai 
 with default parameters.
 
-By default this command will download an example video in a subfolder 
-called */data* in the same folder where idtracker.ai is installed. 
-If you want t download the video and save the results of the tracking in a 
+By default this command will use an example video that is a subfolder 
+called `idtrackerai/data` in the same folder where idtracker.ai is installed. 
+If you want to download the video and save the results of the tracking in a 
 different folder you can run the command:
 
 .. code-block:: bash
@@ -57,9 +59,8 @@ where you should substitute the *absolute/path/to/the/save_folder* with the
 path of the folder where you want the data to be downloaded and saved.
 
 In an installation with GPU support the test took around 6 minutes in our 
-computers with a download speed of 45.7MB/s. In an installation without 
-GPU support the test took 37 minutes in our computers with a download 
-speed of 28.6MB/s. At the end of the test, the terminal should have an 
+computers In an installation with no-GPU support the test took 37 minutes in 
+our computers. At the end of the test, the terminal should have an 
 output similar to this one:
 
 .. figure:: ./_static/quickstart/output_test.png
@@ -105,8 +106,8 @@ Step 3. Copy the video to an adequate location
 Copy the video to a folder where you want the output files to be placed. 
 Depending on the length of the video, the number of animals, and the number 
 of pixels per animal, idtracker.ai will generate different amounts of data, 
-so there must be free space on the disk to allocate the output files. We 
-recommend using solid state disks (SSD) as the saving and loading of the 
+so there must be enough free space on the disk to allocate the output files. 
+We recommend using solid state disks (SSD) as the saving and loading of the 
 multiple objects that idtracker.ai generates will be faster.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -148,7 +149,7 @@ Step 5. Set the preprocessing parameters
 a good tracking performance for this video. Modifying them might imply a 
 decrease on the tracking performance*
 
-It is very important for this tracking system to know the number of animals 
+It is very important for idtracker.ai to know the number of animals 
 to be tracked. Make sure that the value in the box **Number of animals**
 is equal to the number of animals that appear in the video (8 in this case). 
 For a good performance of the algorithm, there must be multiple parts in the
@@ -164,11 +165,12 @@ this one:
    :align: center
    :alt: area graph
 
-If only see a white windows, move to a different frame for the graph to update.
+If you only see a white window, move to a different frame for the graph to 
+update the graph.
 
 The title of the graph indicates the the number of blobs detected, together 
 with the area of the smallest blob. In the graph, each bar indicates the area 
-in pixels of all the detected blobs. The horizontal gray line indicates the 
+in pixels of each of the detected blobs. The horizontal gray line indicates the 
 minimum area.
 
 Check the :doc:`./GUI_explained` section to get more information about the 
@@ -177,9 +179,9 @@ Check the :doc:`./GUI_explained` section to get more information about the
 There are four main parameters that affect the number of blobs detected in a 
 given frame. The **Intensity thresholds** (minimum and maximum) and the 
 **Area thresholds** (minimum and maximum). Connected pixels which intensity 
-values are inside of the range defined by the intensity thresholds will be 
-detected as a blob if the number of pixels that define the blob (area of the 
-blob) is inside of the range defined by the area thresholds.
+values are within the range defined by the intensity thresholds will be 
+detected as a blob if the number of pixels that define the blob (the area of 
+the blob) is within of the range defined by the area thresholds.
 
 To modify the different thresholds, you can type the new value inside of the 
 text box, scroll up/down with the cursor placed on top of the box, or drag 
@@ -244,8 +246,8 @@ session in the top right *Session* text box. The results of the tracking will
 be saved in a folder with the name "Session_sessionname" where "sessionname" 
 will be the text that appear in the *Session* text box.
 
-This new version allow the user to save the preprocessing parameters as they 
-appear in the main windows. This can be done with the **Save parameters** 
+idtracker.ai allows the user to save the preprocessing parameters as they 
+appear in the main window. This can be done with the **Save parameters** 
 button. Saving the preprocessing parameters is useful to track the video 
 later from the command line. Check the :doc:`tracking_from_terminal.rst` 
 section to get more information about how to save the parameters and track 
@@ -284,7 +286,7 @@ has finished and the estimated accuracy. Also, the terminal will show a
 message indicating the estimated accuracy and the value of the DATA_POLICY 
 advanced parameter (see :doc:`advanced_parameters`).
 
-.. figure:: ./_static/quickstart/finished_terminal.png
+.. figure:: ./_static/quickstart/output_test.png
    :scale: 100 %
    :align: right
    :alt: finished terminal
