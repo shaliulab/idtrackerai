@@ -128,7 +128,7 @@ browse to the folder where you saved the example video and double click to
 open it.
 
 .. figure:: ./_static/quickstart/video_playing.png
-   :scale: 100 %
+   :scale: 80 %
    :align: center
    :alt: idtrackerai init
 
