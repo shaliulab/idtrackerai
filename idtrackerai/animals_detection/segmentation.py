@@ -461,7 +461,10 @@ def _segment_video_in_parallel(
     blobs_in_video = []
     maximum_number_of_blobs_in_episode = []
     logger.info("There is only one path, segmenting by frame indices")
-
+    logger.info(f"Pixels stored in {conf.SAVE_PIXELS}")
+    logger.info(
+        f"Segmentation images stored in {conf.SAVE_SEGMENTATION_IMAGE}"
+    )
     for episodes_sublist in tqdm(episodes_sublists, desc="Segmenting video"):
         OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
             delayed(_segment_episode)(

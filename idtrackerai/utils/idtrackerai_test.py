@@ -32,7 +32,7 @@
 import argparse
 import json
 import os
-import sys
+import shutil
 
 import gdown
 
@@ -94,8 +94,6 @@ def generate_json_file(video_path, args):
 
 
 def test():
-    import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-o",
@@ -110,8 +108,15 @@ def test():
         help="Flag to track without identities",
     )
     args = parser.parse_args()
-    # video_path = download_example_video(args.output_folder)
-    video_path = COMPRESSED_VIDEO_PATH
+
+    if args.output_folder:
+        print("Copying test video file to: {args.output_folder}")
+        _, video_name = os.path.split(COMPRESSED_VIDEO_PATH)
+        video_path = os.path.join(args.output_folder, video_name)
+        shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
+    else:
+        video_path = COMPRESSED_VIDEO_PATH
+
     json_file_path = generate_json_file(video_path, args)
     command = (
         f"idtrackerai terminal_mode --load {json_file_path} --exec track_video"
