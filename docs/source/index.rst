@@ -20,10 +20,10 @@ recorded in laboratory conditions.
     :width: 150
     :target: https://www.youtube.com/watch?v=dT28-VcXaCc
 
-New release: idtracker.ai v4
+New pre-release: idtracker.ai v4
 ****************************
 
-* Works with Python 3.7 and Pytorch 1.10.0.
+* Works with Python 3.7 and Pytorch 1.10.0 and CUDA 10.2 or 11.3.
 * New horizontal GUI layout.
 * "Add setup points" feature allows to annotate groups of points in the frame that can be useful for analysis. These groups of points are stored together with the trajectories in the `trajectories.npy` and `trajectories_wo_gaps.npy` files.
 * Save trajectories as CSV files using the advanced parameters.
