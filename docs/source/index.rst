@@ -23,7 +23,7 @@ New pre-release: idtracker.ai v4
 ****************************
 
 This webpage has information about v3. 
-Check more information about v4 and how to install it `here <https://idtrackerai.readthedocs.io/en/v4-dev/>`
+Check more information about v4 and how to install it `here <https://idtrackerai.readthedocs.io/en/v4-dev/>`_.
 
 Start using idtracker.ai
 ************************
