@@ -19,14 +19,11 @@ idtracker.ai allows to track groups of up to 100 unmarked animals from videos re
     :width: 150
     :target: https://www.youtube.com/watch?v=dT28-VcXaCc
 
-New release: idtracker.ai v3
+New pre-release: idtracker.ai v4
 ****************************
 
-* A more robust :doc:`GUI_explained`.
-* Possibility of :doc:`tracking_from_terminal` which allow for a higher throughput pipeline.
-* Modify :doc:`advanced_parameters` to optimize memory management and other features of the algorithm.
-
-Check :doc:`what_is_new` and join the `idtracker.ai users group <https://groups.google.com/forum/#!forum/idtrackerai_users>`_ to get announcements about new releases.
+This webpage has information about v3. 
+Check more information about v4 and how to install it [here](https://idtrackerai.readthedocs.io/en/v4-dev/)
 
 Start using idtracker.ai
 ************************
