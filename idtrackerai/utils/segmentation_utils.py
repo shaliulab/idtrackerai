@@ -205,7 +205,7 @@ def cumpute_background(video):
     return bkg.astype("float32")
 
 
-def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
+def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg, av_intensity=127, correct=True):
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the
     mask (`ROI`) to a given frame. If `useBkg` is True, the background subtraction
     operation is applied before thresholding with the given `bkg`.
@@ -236,13 +236,19 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         frame = cv2.absdiff(
             bkg, frame
         )  # only step where frame normalization is important, because the background is normalised
-        p99 = np.percentile(frame, 99.95) * 1.001
-        frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
+        if correct:
+            p99 = np.percentile(frame, 99.95) * 1.001
+            frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
+        else:
+            frame = np.clip(255 - frame * av_intensity, 0, 255)
         frame_segmented = cv2.inRange(
             frame, min_threshold, max_threshold
         )  # output: 255 in range, else 0
     elif not useBkg:
-        p99 = np.percentile(frame, 99.95) * 1.001
+        if correct:
+            p99 = np.percentile(frame, 99.95) * 1.001
+        else:
+            p99 = 255 / av_intensity
         frame_segmented = cv2.inRange(
             np.clip(frame * (255.0 / p99), 0, 255),
             min_threshold,
