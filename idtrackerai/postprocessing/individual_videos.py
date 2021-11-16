@@ -34,6 +34,9 @@ from math import sqrt
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
+from idtrackerai.utils.py_utils import get_spaced_colors_util
+
+
 from confapp import conf
 
 if sys.argv[0] == "idtrackeraiApp.py" or "idtrackeraiGUI" in sys.argv[0]:
@@ -74,7 +77,7 @@ def initialize_video_writer(video_object, height, width, identity):
 
 
 def generate_individual_video(
-    video_object, trajectories, identity, width, height
+    video_object, trajectories, identity, width, height, label="identity", color=(0,0,0)
 ):
     # Initialize video writer
     out = initialize_video_writer(video_object, height, width, identity)
@@ -109,8 +112,15 @@ def generate_individual_video(
         individual_frame = get_frame(
             frame, trajectories[frame_number, identity - 1], height, width
         )
+
+        individual_frame = individual_frame.astype("uint8")
+
+        if not label is None:
+            label = vars()[label]
+            cv2.putText(individual_frame, label, (int(width*0.1), int(height)*0.1), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 3, cv2.LINE_AA)
+
         # Write frame in video
-        out.write(individual_frame.astype("uint8"))
+        out.write(individual_frame)
     cap.release()
     out.release()
     cv2.destroyAllWindows()
@@ -126,7 +136,7 @@ def compute_width_height_individual_video(video_object):
     return height, width
 
 
-def generate_individual_videos(video_object, trajectories):
+def generate_individual_videos(video_object, trajectories, **kwargs):
     """
     Generates one individual-centered video for every individual in the video.
     The video will contain black frames where the trajectories have NaN, or when
@@ -137,6 +147,9 @@ def generate_individual_videos(video_object, trajectories):
     # Calculate width and height of the video from the estimated body length
     height, width = compute_width_height_individual_video(video_object)
     logger.info("Generating individual videos ...")
+    colors = get_spaced_colors_util(
+        video_object.number_of_animals, black=False
+    )
     Parallel(n_jobs=-2)(
         delayed(generate_individual_video)(
             video_object,
@@ -144,6 +157,8 @@ def generate_individual_videos(video_object, trajectories):
             identity=i + 1,
             width=width,
             height=height,
+            color=colors[i]
+            **kwargs,
         )
         for i in range(video_object.number_of_animals)
     )
