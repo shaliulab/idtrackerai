@@ -127,7 +127,6 @@ def generate_groundtruth(
     """
     logger.info("Generating ground truth file")
     # make sure the video has been succesfully tracked
-    assert video.has_been_assigned
     blobs_in_video_groundtruth = []
 
     for blobs_in_frame in blobs_in_video:
