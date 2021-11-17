@@ -143,8 +143,15 @@ def generate_individual_videos(video_object, trajectories, **kwargs):
     # Calculate width and height of the video from the estimated body length
     height, width = compute_width_height_individual_video(video_object)
     logger.info("Generating individual videos ...")
+   
+    number_of_animals = video_object._number_of_animals
+    if number_of_animals is None:
+        number_of_animals = video_object.user_defined_parameters["number_of_animals"]
+    if number_of_animals is None:
+        number_of_animals = int(input("Please enter number of animals!"))
+
     colors = get_spaced_colors_util(
-        video_object.number_of_animals, black=False
+        number_of_animals, black=False
     )
     Parallel(n_jobs=-2)(
         delayed(generate_individual_video)(
