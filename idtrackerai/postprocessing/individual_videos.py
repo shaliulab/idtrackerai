@@ -114,10 +114,11 @@ def generate_individual_video(
         )
 
         individual_frame = individual_frame.astype("uint8")
+        color = tuple([int(c) for c in color])
 
         if not label is None:
-            label = vars()[label]
-            cv2.putText(individual_frame, label, (int(width*0.1), int(height)*0.1), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 3, cv2.LINE_AA)
+            text = str(vars()[label])
+            cv2.putText(individual_frame, text, (int(width*0.1), int(height*0.2)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 3, cv2.LINE_AA)
 
         # Write frame in video
         out.write(individual_frame)
@@ -157,8 +158,8 @@ def generate_individual_videos(video_object, trajectories, **kwargs):
             identity=i + 1,
             width=width,
             height=height,
-            color=colors[i]
-            **kwargs,
+            color=colors[i],
+            **kwargs
         )
         for i in range(video_object.number_of_animals)
     )
