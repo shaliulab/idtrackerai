@@ -26,19 +26,20 @@ def build_idtrackerai_call(experiment_folder, chunk, config_file):
     return idtrackerai_call
 
 
-def write_jobfile(idtrackerai_call, jobfile, environment="idtrackerai", knowledge_transfer=None):
+def write_jobfile(idtrackerai_call, jobfile, chunk="000000", environment="idtrackerai", knowledge_transfer=None):
     
     lines = [
         "#! /bin/bash",
         f"source ~/.bashrc_conda && conda activate {environment}",
-        idtrackerai_call     
     ]
 
     if knowledge_transfer:
-        lines.append('echo "IDENTITY_TRANSFER=True" > local_settings.py')
-        lines.append(f'echo "KNOWLEDGE_TRANSFER_FOLDER_IDCNN={knowledge_transfer}" > local_settings.py')
-        local_settings_py_backup = os.path.join(os.path.dirname(jobfile), "local_settings.py")
+        lines.append('echo IDENTITY_TRANSFER=True > local_settings.py')
+        lines.append(f'echo KNOWLEDGE_TRANSFER_FOLDER_IDCNN=\\"{knowledge_transfer}\\" >> local_settings.py')
+        local_settings_py_backup = os.path.join(os.path.dirname(jobfile), f"session_{chunk}-local_settings.py")
         lines.append(f"cp local_settings.py {local_settings_py_backup}")
+
+    lines.append(idtrackerai_call)     
 
     with open(jobfile, "w") as fh:
         for line in lines:
@@ -54,7 +55,7 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
 
     # save the call together with a setup block into a script
     jobfile = os.path.join(experiment_folder, f"session_{chunk}.sh")     
-    write_jobfile(idtrackerai_call, jobfile, **kwargs)
+    write_jobfile(idtrackerai_call, jobfile, chunk=chunk, **kwargs)
     
     # add the qsub flags
     output_file = os.path.join(experiment_folder, f"session_{chunk}_output.txt")
@@ -89,8 +90,12 @@ def main(args=None):
     experiment_folder = os.path.join(DATA_DIR, args.datetime)
 
     for i in range(*args.interval, 1):
-       chunk = str(i).zfill(6)
-       run_one_loop(experiment_folder, chunk, config_file, environment=args.environment)
+        chunk = str(i).zfill(6)
+        run_one_loop(
+            experiment_folder, chunk, config_file,
+            environment=args.environment,
+            knowledge_transfer=args.knowledge_transfer
+        )
 
 
 def loop(*args, **kwargs):
