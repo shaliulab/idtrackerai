@@ -1,5 +1,6 @@
 import argparse
 import os.path
+import re
 import subprocess
 
 CONFIG_DIR = "/Users/Antonio/idtrackerai/config"
@@ -67,10 +68,25 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
 
 def run_one_loop(experiment_folder, chunk, config_file, **kwargs):
     
-    qsub_call = build_qsub_call(experiment_folder, chunk, config_file, **kwargs)    
+    qsub_call = build_qsub_call(experiment_folder, chunk, config_file, **kwargs)
     process = subprocess.Popen(qsub_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
+        stdout, stderr = process.communicate()
     return stdout, stderr
+
+
+def get_network_folder(datetime_str, i):
+
+    session_folder = os.path.join(DATA_DIR, datetime_str, f"session_{str(i).zfill(6)}")
+    folders_in_session = os.listdir(session_folder)
+    accumulation_folders = [os.path.join(session_folder, folder) for folder in folders_in_sessions if re.search("accumulation_[0-9]", folder)]
+    if len(accumulation_folders) == 0:
+        if i > 0:
+            return get_network_folder(datetime_str, i-1)
+        else:
+            return None
+    else:
+        last_network = sorted(accumulation_folders)[-1]
+        return last_network
 
 
 def main(args=None):
@@ -91,10 +107,16 @@ def main(args=None):
 
     for i in range(*args.interval, 1):
         chunk = str(i).zfill(6)
+        if args.knowledge_transfer == "previous":
+            knowledge_transfer = get_network_folder(i-1)
+
+        elif os.path.exists(args.knowledge_transfer):
+            knowledge_transfer=args.knowledge_transfer
+
         run_one_loop(
             experiment_folder, chunk, config_file,
             environment=args.environment,
-            knowledge_transfer=args.knowledge_transfer
+            knowledge_transfer=knowledge_transfer
         )
 
 
