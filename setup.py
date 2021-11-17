@@ -112,7 +112,7 @@ setup(
             "idtrackerai-app == 1.0.0a0",
             "pyforms-gui==4.904.152",
             "python-video-annotator==3.306",
-            "python-video-annotator-module-idtrackerai == 1.0.0a0",
+            "python-video-annotator-module-idtrackerai == 1.0.1a0",
         ],
         "gpu": ["pytorch", "torchvision"],
         "dev": ["pytest", "black", "sphinx", "numpydoc"],
