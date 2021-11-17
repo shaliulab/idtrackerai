@@ -136,6 +136,15 @@ def _compute_episode_bkg(
     return bkg, number_of_sample_frames_in_episode
 
 
+def read_background(filename, original_ROI):
+    frame = cv2.imread(filename)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = gray / get_frame_average_intensity(gray, original_ROI)
+    # ensure it is float32
+    gray.astype(np.float32)
+    return gray
+
+
 def compute_background(
     video_paths,
     original_height,
