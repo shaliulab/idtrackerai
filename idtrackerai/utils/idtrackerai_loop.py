@@ -48,6 +48,9 @@ def write_jobfile(idtrackerai_call, jobfile, chunk="000000", environment="idtrac
             lines.append('echo IDENTITY_TRANSFER=True > local_settings.py')
             lines.append(f'echo KNOWLEDGE_TRANSFER_FOLDER_IDCNN=\\"{knowledge_transfer}\\" >> local_settings.py')
 
+        lines.append("echo 'print(IDENTITY_TRANSFER)' >> local_settings.py")
+        lines.append("echo 'print(KNOWLEDGE_TRANSFER_FOLDER_IDCNN)' >> local_settings.py")
+
         local_settings_py_backup = os.path.join(os.path.dirname(jobfile), f"session_{chunk}-local_settings.py")
         lines.append(f"cp local_settings.py {local_settings_py_backup}")
 
