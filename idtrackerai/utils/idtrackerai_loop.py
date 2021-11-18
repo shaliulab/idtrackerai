@@ -1,4 +1,5 @@
 import argparse
+import warnings
 import os.path
 import re
 import subprocess
@@ -34,9 +35,19 @@ def write_jobfile(idtrackerai_call, jobfile, chunk="000000", environment="idtrac
         f"source ~/.bashrc_conda && conda activate {environment}",
     ]
 
+    datetime_str = os.path.basename(os.path.dirname(jobfile.strip("/")).strip("/"))
+
+
     if knowledge_transfer:
-        lines.append('echo IDENTITY_TRANSFER=True > local_settings.py')
-        lines.append(f'echo KNOWLEDGE_TRANSFER_FOLDER_IDCNN=\\"{knowledge_transfer}\\" >> local_settings.py')
+
+        if knowledge_transfer == "previous":
+            lines.append('echo "from idtrackerai.utils.idtrackerai_loop import setup_knowledge_transfer" > local_settings.py')
+            function_call = f'setup_knowledge_transfer("{datetime_str}",{int(chunk)-1})'
+            lines.append(f"echo 'IDENTITY_TRANSFER, KNOWLEDGE_TRANSFER_FOLDER_IDCNN={function_call}' >> local_settings.py")
+        else:
+            lines.append('echo IDENTITY_TRANSFER=True > local_settings.py')
+            lines.append(f'echo KNOWLEDGE_TRANSFER_FOLDER_IDCNN=\\"{knowledge_transfer}\\" >> local_settings.py')
+
         local_settings_py_backup = os.path.join(os.path.dirname(jobfile), f"session_{chunk}-local_settings.py")
         lines.append(f"cp local_settings.py {local_settings_py_backup}")
 
@@ -74,9 +85,26 @@ def run_one_loop(experiment_folder, chunk, config_file, **kwargs):
     return stdout, stderr
 
 
+
+def setup_knowledge_transfer(*args, **kwargs):
+
+    network_folder = get_network_folder(*args, **kwargs)
+    if network_folder is None:
+        return False, None
+    else:
+        return True, network_folder
+
 def get_network_folder(datetime_str, i):
 
+    if i < 0:
+        return None
+
     session_folder = os.path.join(DATA_DIR, datetime_str, f"session_{str(i).zfill(6)}")
+
+    if not os.path.exists(session_folder):
+        warnings.warn(f"{session_folder} does not exist")
+        return None
+
     folders_in_session = os.listdir(session_folder)
     accum_folders = []
     for folder in folders_in_session:
@@ -84,10 +112,7 @@ def get_network_folder(datetime_str, i):
             accum_folders.append(os.path.join(session_folder, folder))
 
     if len(accum_folders) == 0:
-        if i > 0:
-            return get_network_folder(datetime_str, i-1)
-        else:
-            return None
+        return get_network_folder(datetime_str, i-1)
     else:
         last_network = sorted(accum_folders)[-1]
         return last_network
@@ -111,16 +136,10 @@ def main(args=None):
 
     for i in range(*args.interval, 1):
         chunk = str(i).zfill(6)
-        if args.knowledge_transfer == "previous":
-            knowledge_transfer = get_network_folder(args.datetime, i-1)
-
-        elif os.path.exists(args.knowledge_transfer):
-            knowledge_transfer=args.knowledge_transfer
-
         run_one_loop(
             experiment_folder, chunk, config_file,
             environment=args.environment,
-            knowledge_transfer=knowledge_transfer
+            knowledge_transfer=args.knowledge_transfer
         )
 
 
