@@ -4,9 +4,6 @@ import os.path
 import re
 import subprocess
 
-CONFIG_DIR = "/Users/Antonio/idtrackerai/config"
-DATA_DIR = "/Dropbox/FlySleepLab_Dropbox/Data/flyhostel_data/videos"
-
 def get_parser():
 
     ap = argparse.ArgumentParser()
@@ -15,7 +12,10 @@ def get_parser():
     ap.add_argument("--environment", default="idtrackerai4")
     ap.add_argument("--knowledge-transfer", dest="knowledge_transfer", default=None)
     ap.add_argument("--interval", nargs="+", type=int,required=True)
+    ap.add_argument("--data-dir", dest="data_dir", required=True)
+    ap.add_argument("--config-dir", dest="config_dir", required=True)
     return ap
+
 
 def build_idtrackerai_call(experiment_folder, chunk, config_file):
     idtrackerai_call = "idtrackerai terminal_mode"
@@ -88,7 +88,6 @@ def run_one_loop(experiment_folder, chunk, config_file, **kwargs):
     return stdout, stderr
 
 
-
 def setup_knowledge_transfer(*args, **kwargs):
 
     network_folder = get_network_folder(*args, **kwargs)
@@ -97,12 +96,13 @@ def setup_knowledge_transfer(*args, **kwargs):
     else:
         return True, network_folder
 
+
 def get_network_folder(datetime_str, i):
 
     if i < 0:
         return None
 
-    session_folder = os.path.join(DATA_DIR, datetime_str, f"session_{str(i).zfill(6)}")
+    session_folder = os.path.join(args.data_dir, datetime_str, f"session_{str(i).zfill(6)}")
 
     if not os.path.exists(session_folder):
         warnings.warn(f"{session_folder} does not exist")
@@ -134,8 +134,8 @@ def main(args=None):
     else:
         side_code = ""
 
-    config_file = os.path.join(CONFIG_DIR, args.datetime + side_code + ".conf")
-    experiment_folder = os.path.join(DATA_DIR, args.datetime)
+    config_file = os.path.join(args.config_dir, args.datetime + side_code + ".conf")
+    experiment_folder = os.path.join(args.data_dir, args.datetime)
 
     for i in range(*args.interval, 1):
         chunk = str(i).zfill(6)
