@@ -357,7 +357,6 @@ class TrackerAPI(object):
                 raise
                 # logger.info("Restoring residual identification")
                 # self.restore_identification()
-                # self.video._has_been_assigned = True
                 # self.create_trajectories()
 
         elif (
@@ -1070,7 +1069,6 @@ class TrackerAPI(object):
             self.identification_model,
             self.accumulation_network_params,
         )
-        self.video._has_been_assigned = True
         self.video.save()
 
     """ Post processing """
@@ -1167,7 +1165,6 @@ class TrackerAPI(object):
             interpolate_crossings()
         else:
             self.video._estimated_accuracy = 1.0
-            self.video._has_been_assigned = True
             self.video._has_crossings_solved = False
             self.video._has_trajectories_wo_gaps = False
             self.list_of_blobs.save(self.video.blobs_path)

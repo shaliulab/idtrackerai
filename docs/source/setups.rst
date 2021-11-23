@@ -52,8 +52,53 @@ increase the contrast between the animals and the background.
 We separate the tanks around 2-5 cm from each other (vertically), and fill also the white tank with water.
 This avoids reflections of the animals in the walls of the tank.
 
-Zebrafish (in summer courses)
-*****************************
+Zebrafish (in interal summer courses)
+*************************************
+
+For the course of the 
+`INPDP <https://fchampalimaud.org/champalimaud-research/education/inpdp>`_
+PhD programme in the Champalimuad and for the 
+`CAJAL behaviour summer courses <http://cajal-training.org/on-site/qab2022/>`_ 
+we designed a easy to replicate setup so that we could have 10 of 
+them working in the Teaching lab in parallel.
+
+.. image:: /_static/teachinglab_setup.png
+    :width: 800
+
+The setup consists of an experimental box of (80 x 110 x 70 cm) with white 
+matte walls and a white blackout courtine (see panel a above). 
+Different to the lab setup (above), which uses a diffuser, in this setup we
+use indirect light from 4 white LED spot light reflected on the white walls 
+(see panel b above). 
+
+The experimental arena is a 
+`custom-made 30 cm transparent acrylic circular tank <https://drive.google.com/file/d/194aQ7kSj_1-dxdHAYkZAO6oHifPPkQOM/view?usp=sharing>`_
+made of transparent acrylic (see panels b, d and e above). 
+To improve the contrast between the animals and the background the setup has 
+a `custom-made white matte acrylic 30 cm circular bowl <https://drive.google.com/file/d/1OKbenIEwPYo_TYkD8cdkEN0NmpijmBqE/view?usp=sharing>`_ 
+tank that is placed (see panels d and e above).
+Both the transparent arena and the white bowl are held an rectangular 
+plastic tank with a `custom-made white acrylic holder <https://drive.google.com/file/d/1kLnaceYK_k2TCQ6RhC6KYev6bhvp6knn/view?usp=sharing>`_.
+For long recording, this rectangular tank can also contain water and a aquarium
+heater an pump to provide stable terperature conditions 
+(after sufficient time, the water in all recipients will be at the same 
+temperature by convection).
+
+To provide a stable surface to hold the experimental tank, we build a 
+custom-made acrylic platform that fits on top of the Thorlabs breadboad 
+(see panel c above, see also the models `here <https://drive.google.com/file/d/1X6MoQolks9Kzmp0x6fL8zCgPtBxzFYEc/view?usp=sharing>`_
+and `here <https://drive.google.com/file/d/1l8b1UrUxK3VbxnkMloT7lAsVyzs8jM-P/view?usp=sharing>`_).
+
+The arena is recorded from above with a 
+`PointGrey Chameleon 3 camera <https://www.flir.eu/products/chameleon3-usb3/>`_ 
+connected to a computer outside of the box (see panel a above) and a 
+Fujinon lens 2.8-8mm f1.2.
+The camera is held to a Thorlabs pole, which at the same time is held into a 
+30x30cm Thorlabs breadborad (see panel c above).
+
+
+Zebrafish (in external summer courses)
+**************************************
 For the `2018 QBIO Summer research course @KITP, UCSB <https://www.kitp.ucsb.edu/qbio/2018-course-description>`_ we
 designed a portable setup that fitted protective flight case:
 
