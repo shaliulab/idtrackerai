@@ -32,6 +32,7 @@
 import itertools
 import logging
 
+import joblib
 import h5py
 import numpy as np
 from confapp import conf
@@ -42,6 +43,13 @@ from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
 
 logger = logging.getLogger("__main__.list_of_blobs")
+
+def compute_overlapping_between_two_subsequent_frames(blobs_before, blobs_after):
+        for (blob_0, blob_1) in itertools.product(
+            blobs_before, blobs_after
+        ):
+            if blob_0.overlaps_with(blob_1):
+                blob_0.now_points_to(blob_1)
 
 
 class ListOfBlobs(object):
@@ -70,7 +78,56 @@ class ListOfBlobs(object):
     def __len__(self):
         return len(self.blobs_in_video)
 
-    def compute_overlapping_between_subsequent_frames(self):
+
+    def compute_overlapping_between_subsequent_frames(self, n_jobs=-2):
+
+        if n_jobs == 1:
+            return self.compute_overlapping_between_subsequent_frames_non_parallel()
+        if n_jobs != 1:
+            return self.compute_overlapping_between_subsequent_frames_parallel(n_jobs)
+
+
+    def compute_overlapping_between_subsequent_frames_parallel(self, n_jobs=-2):
+    
+        self.disconnect()
+        PARALLEL_QUEUE_SIZE=600
+
+        starts = list(range(0, self.number_of_frames, PARALLEL_QUEUE_SIZE))
+        ends = list(range(PARALLEL_QUEUE_SIZE, self.number_of_frames, PARALLEL_QUEUE_SIZE))
+        if ends[-1] != self.number_of_frames: ends.append(self.number_of_frames)
+
+        # NOTE
+        # For some reason, all threads dont start at the same time
+        # Actually the last thread may start even after the first one finished
+        # so we are not saving that much time unfortunately
+        output = joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(
+                self.compute_overlapping_between_subsequent_frames_single_thread
+            )(start=starts[i],end=ends[i], blobs_in_video=self.blobs_in_video)
+            for i in range(len(starts))
+        )
+
+        # stitch together the result of the independent threads
+        for i in tqdm(range(len(starts)-1)):
+            compute_overlapping_between_two_subsequent_frames(
+                self.blobs_in_video[ends[i]],
+                self.blobs_in_video[starts[i+1]]
+            )
+        
+        self.blobs_are_connected = True
+
+    
+    @staticmethod
+    def compute_overlapping_between_subsequent_frames_single_thread(start, end, blobs_in_video):
+
+        for frame_i in tqdm(
+                range(start, end), desc="Connecting blobs "
+        ):
+            compute_overlapping_between_two_subsequent_frames(
+                blobs_in_video[frame_i - 1], blobs_in_video[frame_i]
+            )
+      
+
+    def compute_overlapping_between_subsequent_frames_non_parallel(self):
         """Computes overlapping between blobs in consecutive frames.
 
         Two blobs in consecutive frames overlap if the intersection of the list

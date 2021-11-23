@@ -90,6 +90,9 @@ NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION = -2
 # (see segmentation.py module for details)
 NUMBER_OF_JOBS_FOR_SEGMENTATION = -2
 SIGMA_GAUSSIAN_BLURRING = None
+
+NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS = -2
+
 ##################################################
 # Data storage advanced parameters
 ##################################################
