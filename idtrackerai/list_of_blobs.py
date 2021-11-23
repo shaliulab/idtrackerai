@@ -94,7 +94,8 @@ class ListOfBlobs(object):
 
         starts = list(range(0, self.number_of_frames, PARALLEL_QUEUE_SIZE))
         ends = list(range(PARALLEL_QUEUE_SIZE, self.number_of_frames, PARALLEL_QUEUE_SIZE))
-        if ends[-1] != self.number_of_frames: ends.append(self.number_of_frames)
+        if ends[-1] != self.number_of_frames:
+            ends.append(self.number_of_frames)
 
         # NOTE
         # For some reason, all threads dont start at the same time
