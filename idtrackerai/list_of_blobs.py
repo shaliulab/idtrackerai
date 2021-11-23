@@ -79,7 +79,7 @@ class ListOfBlobs(object):
         return len(self.blobs_in_video)
 
 
-    def compute_overlapping_between_subsequent_frames(self, n_jobs=-2):
+    def compute_overlapping_between_subsequent_frames(self, n_jobs=NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS):
 
         if n_jobs == 1:
             return self.compute_overlapping_between_subsequent_frames_non_parallel()
