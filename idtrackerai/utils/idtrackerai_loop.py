@@ -21,7 +21,7 @@ def get_parser():
     )
     ap.add_argument(
         "--environment",
-        default="idtrackerai4",
+        default=None,
         help="Conda environment to use when running idtrackerai",
     )
     ap.add_argument(
