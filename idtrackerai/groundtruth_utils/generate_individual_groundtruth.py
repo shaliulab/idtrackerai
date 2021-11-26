@@ -114,7 +114,6 @@ def generate_individual_groundtruth(
     """Generates a list of light blobs_in_video, given a video object corresponding to a
     tracked video
     """
-    assert video.has_been_assigned
     individual_blobs_in_video_groundtruth = []
 
     for blobs_in_frame in blobs_in_video:
