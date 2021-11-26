@@ -28,7 +28,8 @@ def get_parser():
         "--knowledge-transfer",
         dest="knowledge_transfer",
         default=None,
-        help="Whether to enable knowledge transfer during the analysis of consecutive chunks",
+        help="""Whether to enable knowledge transfer during the analysis of consecutive chunks.
+        If you want to enable this, please pass previous (to enable transfer from the previous chunk).""",
     )
     ap.add_argument(
         "--interval",
@@ -176,13 +177,6 @@ def main(args=None):
     if args is None:
         ap = get_parser()
         args = ap.parse_args()
-
-    if args.side == "left":
-        side_code = "_1"
-    elif args.side == "right":
-        side_code = "_2"
-    else:
-        side_code = ""
 
     experiment_name = os.path.basename(args.input.strip("/"))
     config_file = os.path.join(
