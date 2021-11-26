@@ -35,14 +35,13 @@ def write_jobfile(idtrackerai_call, jobfile, chunk="000000", environment="idtrac
         f"source ~/.bashrc_conda && conda activate {environment}",
     ]
 
-    datetime_str = os.path.basename(os.path.dirname(jobfile.strip("/")).strip("/"))
-
+    experiment_folder = os.path.dirname(jobfile.strip("/")).strip("/")
 
     if knowledge_transfer:
 
         if knowledge_transfer == "previous":
             lines.append('echo "from idtrackerai.utils.idtrackerai_loop import setup_knowledge_transfer" > local_settings.py')
-            function_call = f'setup_knowledge_transfer("{datetime_str}",{int(chunk)-1})'
+            function_call = f'setup_knowledge_transfer(experiment_folder="{experiment_folder}", i={int(chunk)-1})'
             lines.append(f"echo 'IDENTITY_TRANSFER, KNOWLEDGE_TRANSFER_FOLDER_IDCNN={function_call}' >> local_settings.py")
         else:
             lines.append('echo IDENTITY_TRANSFER=True > local_settings.py')
@@ -97,12 +96,12 @@ def setup_knowledge_transfer(*args, **kwargs):
         return True, network_folder
 
 
-def get_network_folder(datetime_str, i):
+def get_network_folder(experiment_folder, i):
 
     if i < 0:
         return None
 
-    session_folder = os.path.join(args.data_dir, datetime_str, f"session_{str(i).zfill(6)}")
+    session_folder = os.path.join(experiment_folder, f"session_{str(i).zfill(6)}")
 
     if not os.path.exists(session_folder):
         warnings.warn(f"{session_folder} does not exist")
@@ -115,7 +114,7 @@ def get_network_folder(datetime_str, i):
             accum_folders.append(os.path.join(session_folder, folder))
 
     if len(accum_folders) == 0:
-        return get_network_folder(datetime_str, i-1)
+        return get_network_folder(experiment_folder, i-1)
     else:
         last_network = sorted(accum_folders)[-1]
         return last_network
