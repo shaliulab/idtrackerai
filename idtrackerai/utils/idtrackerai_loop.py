@@ -72,7 +72,7 @@ def write_jobfile(
         f'echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=1 > local_settings.py'
      )
 
-    experiment_folder = os.path.dirname(jobfile.strip("/")).strip("/")
+    experiment_folder = os.path.dirname(jobfile)
 
     if knowledge_transfer:
 
@@ -131,6 +131,7 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
 
 
 def run_one_loop(experiment_folder, chunk, config_file, **kwargs):
+
 
     qsub_call = build_qsub_call(
         experiment_folder, chunk, config_file, **kwargs
