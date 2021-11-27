@@ -41,6 +41,13 @@ from tqdm import tqdm
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
+from confapp import conf
+
+try:
+    import local_settings
+    conf += local_settings
+    conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=getattr(local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", 1)
+
 
 logger = logging.getLogger("__main__.list_of_blobs")
 
