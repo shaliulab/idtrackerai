@@ -43,13 +43,17 @@ from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
 from confapp import conf
 
+logger = logging.getLogger("__main__.list_of_blobs")
 try:
     import local_settings
     conf += local_settings
     conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=getattr(local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", 1)
+    logger.info(f"NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS = {conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS}")
+
+except ImportError:
+    logger.info("Local settings file not available.")
 
 
-logger = logging.getLogger("__main__.list_of_blobs")
 
 def compute_overlapping_between_two_subsequent_frames(blobs_before, blobs_after):
         for (blob_0, blob_1) in itertools.product(
@@ -95,7 +99,7 @@ class ListOfBlobs(object):
 
 
     def compute_overlapping_between_subsequent_frames_parallel(self, n_jobs=-2):
-    
+
         self.disconnect()
         PARALLEL_QUEUE_SIZE=600
 
@@ -120,10 +124,10 @@ class ListOfBlobs(object):
                 self.blobs_in_video[ends[i]],
                 self.blobs_in_video[starts[i+1]]
             )
-        
+
         self.blobs_are_connected = True
 
-    
+
     @staticmethod
     def compute_overlapping_between_subsequent_frames_single_thread(start, end, blobs_in_video):
 
@@ -133,7 +137,7 @@ class ListOfBlobs(object):
             compute_overlapping_between_two_subsequent_frames(
                 blobs_in_video[frame_i - 1], blobs_in_video[frame_i]
             )
-      
+
 
     def compute_overlapping_between_subsequent_frames_non_parallel(self):
         """Computes overlapping between blobs in consecutive frames.
