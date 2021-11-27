@@ -67,13 +67,18 @@ def write_jobfile(
     if environment is not None:
         lines.append(f"source ~/.bashrc_conda && conda activate {environment}")
 
+    # this is the first line!
+    lines.append(
+        f'echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=1 > local_settings.py'
+     )
+
     experiment_folder = os.path.dirname(jobfile.strip("/")).strip("/")
 
     if knowledge_transfer:
 
         if knowledge_transfer == "previous":
             lines.append(
-                'echo "from idtrackerai.utils.idtrackerai_loop import setup_knowledge_transfer" > local_settings.py'
+                'echo "from idtrackerai.utils.idtrackerai_loop import setup_knowledge_transfer" >> local_settings.py'
             )
             function_call = f'setup_knowledge_transfer(experiment_folder="{experiment_folder}", i={int(chunk)-1})'
             lines.append(
