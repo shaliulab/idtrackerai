@@ -61,6 +61,8 @@ class ListOfBlobs(object):
         a frame. Each elemtn in each inner list represents a blob in
         the frame.
     """
+    PROCESSS_SIZE = 100
+
 
     def __init__(self, blobs_in_video):
         self.blobs_in_video = blobs_in_video
@@ -70,7 +72,77 @@ class ListOfBlobs(object):
     def __len__(self):
         return len(self.blobs_in_video)
 
-    def compute_overlapping_between_subsequent_frames(self):
+
+    def partition_blobs_across_processes(self):
+        starts = list(range(0, self.number_of_frames, self.PROCESSS_SIZE))
+        ends = list(
+            range(
+                self.PROCESSS_SIZE, self.number_of_frames, self.PROCESSS_SIZE
+            )
+        )
+
+        if len(ends) == 0:
+            ends.append(self.number_of_frames)
+
+        if ends[-1] != self.number_of_frames:
+            ends.append(self.number_of_frames)
+
+        return starts, ends
+
+
+
+    def compute_overlapping_between_subsequent_frames(self, n_jobs):
+
+        if n_jobs == 1:
+            return self.compute_overlapping_between_subsequent_frames_original()
+        else:
+            return self.compute_overlapping_between_subsequent_frames_parallel(n_jobs)
+    
+    def compute_overlapping_between_subsequent_frames_parallel(self, n_jobs):
+        self.disconnect()
+
+        import multiprocessing
+        
+        starts, ends = self.partition_blobs_across_processes()            
+        
+        # init processes
+        processes = {}
+        import ipdb; ipdb.set_trace()
+        for i in range(len(starts)):
+            process_name = f"Process [{starts[i]} - {ends[i]})"
+            process = multiprocessing.Process(
+                target=self.compute_overlapping_between_subsequent_frames_single_thread,
+                name = process_name,
+                args = (self.blobs_in_video[starts[i]:ends[i]])
+            )
+
+            processes[process_name] = process
+
+        import ipdb; ipdb.set_trace()
+        # run processes
+        for process_name, process in processes.items():
+            process.start()
+
+        for process_name, process in processes.items():
+            process.join()
+        
+
+    @staticmethod
+    def compute_overlapping_between_subsequent_frames_single_thread(blobs_in_video):
+        
+        start = 1
+        end = len(blobs_in_video)
+        for frame_i in tqdm(
+            range(start, end), desc="Connecting blobs "
+        ):
+            for (blob_0, blob_1) in itertools.product(
+                blobs_in_video[frame_i - 1], blobs_in_video[frame_i]
+            ):
+                if blob_0.overlaps_with(blob_1):
+                    blob_0.now_points_to(blob_1)
+
+
+    def compute_overlapping_between_subsequent_frames_original(self):
         """Computes overlapping between blobs in consecutive frames.
 
         Two blobs in consecutive frames overlap if the intersection of the list
