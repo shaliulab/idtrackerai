@@ -43,14 +43,24 @@ from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
 
 logger = logging.getLogger("__main__.list_of_blobs")
+from idtrackerai.constants import NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
+try:
+    import local_settings
+    conf += local_settings
+    conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=getattr(local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS)
+
+import ctypes
+
 
 
 def compute_overlapping_between_two_subsequent_frames(
     blobs_before, blobs_after
 ):
-    for (blob_0, blob_1) in itertools.product(blobs_before, blobs_after):
+    for (blob_0, blob_1) in itertools.product(blobs_before, enumerate(blobs_after)):
         if blob_0.overlaps_with(blob_1):
-            blob_0.now_points_to(blob_1)
+            actual_blob_0 = ctypes.cast(blob_0._original_RAM_id, ctypes.py_object).value
+            actual_blob_1 = ctypes.cast(blob_1._original_RAM_id, ctypes.py_object).value
+            actual_blob_0.now_points_to(actual_blob_1)
 
 
 class ListOfBlobs(object):
@@ -97,7 +107,7 @@ class ListOfBlobs(object):
     ):
 
         self.disconnect()
-        PARALLEL_QUEUE_SIZE = 600
+        PARALLEL_QUEUE_SIZE = 100
 
         starts = list(range(0, self.number_of_frames, PARALLEL_QUEUE_SIZE))
         ends = list(
@@ -105,8 +115,14 @@ class ListOfBlobs(object):
                 PARALLEL_QUEUE_SIZE, self.number_of_frames, PARALLEL_QUEUE_SIZE
             )
         )
+
+        if len(ends) == 0:
+            ends.append(self.number_of_frames)
+
         if ends[-1] != self.number_of_frames:
             ends.append(self.number_of_frames)
+
+        assert len(starts) == len(ends)
 
         # NOTE
         # For some reason, all threads dont start at the same time
@@ -119,10 +135,13 @@ class ListOfBlobs(object):
             for i in range(len(starts))
         )
 
+        import ipdb; ipdb.set_trace()
+
         # stitch together the result of the independent threads
-        for i in tqdm(range(len(starts) - 1)):
+        for i in tqdm(range(len(ends)-1)):
+            assert (ends[i]-1+1) == starts[i+1]
             compute_overlapping_between_two_subsequent_frames(
-                self.blobs_in_video[ends[i]],
+                self.blobs_in_video[ends[i]-1],
                 self.blobs_in_video[starts[i + 1]],
             )
 
@@ -133,9 +152,9 @@ class ListOfBlobs(object):
         start, end, blobs_in_video
     ):
 
-        for frame_i in tqdm(range(start, end), desc="Connecting blobs "):
+        for frame_i in tqdm(range(start, end-1), desc="Connecting blobs "):
             compute_overlapping_between_two_subsequent_frames(
-                blobs_in_video[frame_i - 1], blobs_in_video[frame_i]
+                blobs_in_video[frame_i], blobs_in_video[frame_i+1]
             )
 
     def compute_overlapping_between_subsequent_frames_non_parallel(self):
