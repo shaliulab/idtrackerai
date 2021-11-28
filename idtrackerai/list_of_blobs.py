@@ -42,6 +42,11 @@ from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
 
 logger = logging.getLogger("__main__.list_of_blobs")
+from idtrackerai.constants import NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
+try:
+    import local_settings
+    conf += local_settings
+    conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=getattr(local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS)
 
 
 class ListOfBlobs(object):
@@ -91,7 +96,7 @@ class ListOfBlobs(object):
 
 
 
-    def compute_overlapping_between_subsequent_frames(self, n_jobs):
+    def compute_overlapping_between_subsequent_frames(self, n_jobs=1):
 
         if n_jobs == 1:
             return self.compute_overlapping_between_subsequent_frames_original()
