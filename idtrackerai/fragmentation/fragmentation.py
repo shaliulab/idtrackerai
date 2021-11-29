@@ -47,15 +47,16 @@ from confapp import conf
 
 try:
     import local_settings
+
     conf += local_settings
-    conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=getattr(
-        local_settings,
-        "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS",
-        NJOBS
+    conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS = getattr(
+        local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", NJOBS
     )
-    logger.info(f"""
+    logger.info(
+        f"""
     Using {conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS} jobs for parallel blob connection
-    """)
+    """
+    )
 
 except ImportError:
     logger.info("Local settings file not available.")
@@ -95,7 +96,9 @@ class FragmentationAPI(FragmentationABC):
     def _generate_list_of_fragments(self):
         if not self.list_of_blobs.blobs_are_connected:
             # If the list of of blobs has been loaded
-            self.list_of_blobs.compute_overlapping_between_subsequent_frames(conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS)
+            self.list_of_blobs.compute_overlapping_between_subsequent_frames(
+                conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
+            )
 
         self.list_of_blobs.compute_fragment_identifier_and_blob_index(
             max(
