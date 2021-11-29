@@ -44,17 +44,19 @@ logger = logging.getLogger(__name__)
 
 from confapp import conf
 from idtrackerai.constants import NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS as NJOBS
+
 try:
     import local_settings
+
     conf += local_settings
-    conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=getattr(
-        local_settings,
-        "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS",
-        NJOBS
+    conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS = getattr(
+        local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", NJOBS
     )
-    logger.info(f"""
+    logger.info(
+        f"""
     Using {conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS} jobs for parallel blob connection
-    """)
+    """
+    )
 
 except ImportError:
     logger.info("Local settings file not available.")
@@ -170,7 +172,9 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
             "(crossing detector overlapping heuristic)"
         )
         if not self.list_of_blobs.blobs_are_connected:
-            self.list_of_blobs.compute_overlapping_between_subsequent_frames(conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS)
+            self.list_of_blobs.compute_overlapping_between_subsequent_frames(
+                conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
+            )
 
     def _train_and_apply_crossing_detector(self):
         """
