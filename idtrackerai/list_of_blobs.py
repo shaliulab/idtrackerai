@@ -31,6 +31,10 @@
 
 import itertools
 import logging
+import multiprocessing
+import time
+
+
 
 import h5py
 import numpy as np
@@ -47,7 +51,12 @@ try:
     import local_settings
     conf += local_settings
     conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=getattr(local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS)
+    logger.info(f"Using {conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS} jobs for parallel blob connection")
 
+except ImportError:
+    logger.info("Local settings file not available.")
+
+links = {}
 
 class ListOfBlobs(object):
     """Contains all the instances of the class :class:`~blob.Blob` for all
@@ -102,49 +111,83 @@ class ListOfBlobs(object):
             return self.compute_overlapping_between_subsequent_frames_original()
         else:
             return self.compute_overlapping_between_subsequent_frames_parallel(n_jobs)
-    
+
+    def run_queue(self, queue):
+        while queue.qsize() != 0:
+            ((frame_i, frame_i_index), (frame_ip1, frame_ip1_index)) = queue.get()
+            blob_0 = self.blobs_in_video[frame_i][frame_i_index]
+            blob_1 = self.blobs_in_video[frame_ip1][frame_ip1_index]
+            blob_0.now_points_to(blob_1)
+            if queue.qsize() == 0:
+                time.sleep(0.1)
+
+        return 0
+
+
     def compute_overlapping_between_subsequent_frames_parallel(self, n_jobs):
         self.disconnect()
 
-        import multiprocessing
-        
-        starts, ends = self.partition_blobs_across_processes()            
-        
+        starts, ends = self.partition_blobs_across_processes()
+
         # init processes
         processes = {}
-        import ipdb; ipdb.set_trace()
+        queue = multiprocessing.Queue(maxsize=0)
         for i in range(len(starts)):
             process_name = f"Process [{starts[i]} - {ends[i]})"
             process = multiprocessing.Process(
                 target=self.compute_overlapping_between_subsequent_frames_single_thread,
                 name = process_name,
-                args = (self.blobs_in_video[starts[i]:ends[i]])
+                args = (
+                    self.blobs_in_video[starts[i]:ends[i]],
+                    self.compute_overlapping_between_two_subsequent_frames,
+                    queue,
+                )
             )
 
             processes[process_name] = process
 
-        import ipdb; ipdb.set_trace()
         # run processes
         for process_name, process in processes.items():
             process.start()
 
+
+        self.run_queue(queue)
+
+        # make sure the queue fills up a bit at least
+        time.sleep(1)
+        # run processes
         for process_name, process in processes.items():
             process.join()
-        
+
+
+        for i in tqdm(range(len(ends)-1)):
+            assert (ends[i]-1+1) == starts[i+1]
+            self.compute_overlapping_between_two_subsequent_frames(
+                self.blobs_in_video[ends[i]-1],
+                self.blobs_in_video[starts[i + 1]],
+                queue
+            )
+
+        self.blobs_are_connected = True
 
     @staticmethod
-    def compute_overlapping_between_subsequent_frames_single_thread(blobs_in_video):
-        
+    def compute_overlapping_between_subsequent_frames_single_thread(blobs_in_video, f, queue):
+
         start = 1
         end = len(blobs_in_video)
         for frame_i in tqdm(
             range(start, end), desc="Connecting blobs "
         ):
-            for (blob_0, blob_1) in itertools.product(
-                blobs_in_video[frame_i - 1], blobs_in_video[frame_i]
+            f(blobs_in_video[frame_i-1], blobs_in_video[frame_i], queue)
+
+    @staticmethod
+    def compute_overlapping_between_two_subsequent_frames(blobs_before, blobs_after, queue):
+            for ((blob_0_i, blob_0), (blob_1_i, blob_1)) in itertools.product(
+                enumerate(blobs_before), enumerate(blobs_after)
             ):
                 if blob_0.overlaps_with(blob_1):
-                    blob_0.now_points_to(blob_1)
+                    queue.put(((blob_0.frame_number, blob_0_i), (blob_1.frame_number, blob_1_i)))
+
 
 
     def compute_overlapping_between_subsequent_frames_original(self):
