@@ -69,7 +69,6 @@ try:
 except ImportError:
     logger.info("Local settings file not available.")
 
-links = {}
 
 class ListOfBlobs(object):
     """Contains all the instances of the class :class:`~blob.Blob` for all
