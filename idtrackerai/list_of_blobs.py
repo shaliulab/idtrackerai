@@ -116,7 +116,11 @@ class ListOfBlobs(object):
         return starts, ends
 
 
-    def compute_overlapping_between_subsequent_frames(self, n_jobs=1):
+    def compute_overlapping_between_subsequent_frames(self, n_jobs=None):
+
+        if n_jobs is None:
+            n_jobs = conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
+
 
         if n_jobs == 1:
             return self.compute_overlapping_between_subsequent_frames_original()
