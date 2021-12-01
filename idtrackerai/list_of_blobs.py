@@ -59,9 +59,9 @@ try:
     # It is there to ensure the local_settings confiug
     # is passed on to conf
     # We need to figure out why conf += local_settings is not enough
-    conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS = getattr(
-        local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", NJOBS
-    )
+    # conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS = getattr(
+    #     local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", NJOBS
+    # )
     logger.info(
         f"""
     Using {conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS} jobs for parallel blob connection
