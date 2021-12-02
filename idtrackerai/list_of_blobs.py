@@ -46,22 +46,11 @@ from idtrackerai.utils.py_utils import interpolate_nans
 from confapp import conf
 
 logger = logging.getLogger("__main__.list_of_blobs")
-from idtrackerai.constants import NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS as NJOBS
 
 try:
     import local_settings
 
     conf += local_settings
-    # TODO This line is present in:
-    # * list_of_blobs.py
-    # * fragmentation.py
-    # * crossings_detection.py
-    # It is there to ensure the local_settings confiug
-    # is passed on to conf
-    # We need to figure out why conf += local_settings is not enough
-    conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS = getattr(
-        local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", NJOBS
-    )
     logger.info(
         f"""
     Using {conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS} jobs for parallel blob connection
@@ -185,9 +174,6 @@ class ListOfBlobs(object):
 
         self.run_queue(queue)
 
-        # make sure the queue fills up a bit at least
-        time.sleep(1)
-
         for process_name, process in processes.items():
             process.join()
 
@@ -199,7 +185,7 @@ class ListOfBlobs(object):
             self.compute_overlapping_between_two_subsequent_frames(
                 self.blobs_in_video[ends[i] - 1],
                 self.blobs_in_video[starts[i + 1]],
-                queue,
+                None,
             )
 
         self.blobs_are_connected = True
