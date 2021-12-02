@@ -909,8 +909,7 @@ class TrackerAPI(object):
         if self.video.user_defined_parameters["identity_transfer"]:
             logger.info("Load model for identity transfer")
             self.identification_model = self.learner_class.load_model(
-                self.accumulation_network_params,
-                scope = "knowledge_transfer"
+                self.accumulation_network_params, scope="knowledge_transfer"
             )
         else:
             self.identification_model = None
