@@ -810,6 +810,9 @@ class TrackerAPI(object):
             ],
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.pretraining_folder,
+            knowledge_transfer_model_file=self.video.user_defined_parameters[
+                "knowledge_transfer_folder"
+            ],
             saveid="",
             model_name="identification_network",
             image_size=self.video.identification_image_size,
