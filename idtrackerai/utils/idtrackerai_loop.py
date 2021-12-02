@@ -174,8 +174,15 @@ def get_network_folder(experiment_folder, i):
     if len(accum_folders) == 0:
         return get_network_folder(experiment_folder, i - 1)
     else:
-        last_network = sorted(accum_folders)[-1]
-        return last_network
+        #last_network = sorted(accum_folders)[-1]
+        #return last_network
+        # TODO
+        # Once this issue is solved, find the right way to select the best network
+        # https://gitlab.com/polavieja_lab/idtrackerai/-/issues/65
+        first_network = sorted(accum_folders)[0]
+        assert os.path.exists(os.path.join(first_network, "model_params.npy"))
+        return first_network
+
 
 
 def main(args=None):
