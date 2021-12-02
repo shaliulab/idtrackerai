@@ -46,7 +46,6 @@ from idtrackerai.utils.py_utils import interpolate_nans
 from confapp import conf
 
 logger = logging.getLogger("__main__.list_of_blobs")
-from idtrackerai.constants import NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS as NJOBS
 
 try:
     import local_settings

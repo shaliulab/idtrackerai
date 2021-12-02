@@ -42,16 +42,12 @@ from idtrackerai.list_of_fragments import (
 
 logger = logging.getLogger(__name__)
 
-from idtrackerai.constants import NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS as NJOBS
 from confapp import conf
 
 try:
     import local_settings
 
     conf += local_settings
-    # conf._modules[0].NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS = getattr(
-    #     local_settings, "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS", NJOBS
-    # )
     logger.info(
         f"""
     Using {conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS} jobs for parallel blob connection
