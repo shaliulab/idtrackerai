@@ -48,6 +48,7 @@ logger = logging.getLogger("__main__.list_of_blobs")
 
 try:
     import local_settings
+
     conf += local_settings
     logger.info(
         f"""
