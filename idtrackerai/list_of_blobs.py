@@ -172,9 +172,6 @@ class ListOfBlobs(object):
 
         self.run_queue(queue)
 
-        # make sure the queue fills up a bit at least
-        time.sleep(1)
-
         for process_name, process in processes.items():
             process.join()
 
@@ -186,7 +183,7 @@ class ListOfBlobs(object):
             self.compute_overlapping_between_two_subsequent_frames(
                 self.blobs_in_video[ends[i] - 1],
                 self.blobs_in_video[starts[i + 1]],
-                queue,
+                None,
             )
 
         self.blobs_are_connected = True
