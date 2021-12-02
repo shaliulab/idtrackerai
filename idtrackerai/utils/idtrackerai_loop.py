@@ -69,8 +69,13 @@ def write_jobfile(
 
     # this is the first line!
     lines.append(
-        f'echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=-2 > local_settings.py'
+        'echo SETTINGS_PRIORITY=1 > local_settings.py'
+    )
+
+    lines.append(
+        f'echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=-2 >> local_settings.py'
      )
+
 
     experiment_folder = os.path.dirname(jobfile)
 
