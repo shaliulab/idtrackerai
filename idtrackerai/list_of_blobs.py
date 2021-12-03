@@ -100,7 +100,7 @@ class ListOfBlobs(object):
         following Python's convention of declaring closed-open intervals. i.e. [start, end)
 
         """
-        
+
         starts = list(range(0, self.number_of_frames, self.PROCESSS_SIZE))
         ends = list(
             range(
@@ -167,8 +167,7 @@ class ListOfBlobs(object):
                 # and the program will hang
 
         return 0
-    
-    
+
     def stitch_parallel_blocks(self, starts, ends):
         """
         For every pair of consecutive frames in ends[i] and starts[i+1]
@@ -231,7 +230,9 @@ class ListOfBlobs(object):
         self.process_blob_overlap_queue(queue)
 
         if queue.qsize() != 0:
-            logger.warning("Not all blobs have been annotated. idtrackerai may hang")
+            logger.warning(
+                "Not all blobs have been annotated. idtrackerai may hang"
+            )
 
         for process_name, process in processes.items():
             # if the queue still has stuff in it, the program
