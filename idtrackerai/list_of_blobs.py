@@ -90,6 +90,18 @@ class ListOfBlobs(object):
         return len(self.blobs_in_video)
 
     def partition_blobs_across_processes(self):
+        """
+        Given a total number of frames and a number of frames to be processed on each parallel process,
+        this function computes the start and end of the frame intervals that should be used
+        to split the dataset and process it in parallel
+
+        so:
+        * starts[i] is the first frame to be processed on the ith parallel process
+        * ends[i] is the frame following the last frame to be to be processed on the ith parallel process
+        following Python's convention of declaring closed-open intervals. i.e. [start, end)
+
+        """
+
         starts = list(range(0, self.number_of_frames, self.PROCESSS_SIZE))
         ends = list(
             range(
@@ -106,6 +118,12 @@ class ListOfBlobs(object):
         return starts, ends
 
     def compute_overlapping_between_subsequent_frames(self, n_jobs=None):
+        """
+        Here we decide whether the blob overlap step should be done
+        1. Single threaded
+        2. Using multiprocessing, which allows idtrackerai to use more than 1 CPU,
+        which speeds up the computation
+        """
 
         if n_jobs is None:
             n_jobs = conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
@@ -119,7 +137,20 @@ class ListOfBlobs(object):
                 n_jobs
             )
 
-    def run_queue(self, queue):
+    def process_blob_overlap_queue(self, queue):
+        """
+        Process the queue in the main thread
+        This queue is filled by all the parallel process
+        which are computing which blob is next to previous to any given blob
+        However, the annotation is only applied here,
+        because that step can only
+        be done in the main thread.
+        Fortunately, the time consuming and CPU intensive step is the computation
+        (encapsulated in overlaps_with)
+        and not the annotation (encapsulated in now_points_to)
+        so it's fine to run the latter in only one thread (the main)
+        """
+
         while queue.qsize() != 0:
             (
                 (frame_i, frame_i_index),
@@ -129,9 +160,31 @@ class ListOfBlobs(object):
             blob_1 = self.blobs_in_video[frame_ip1][frame_ip1_index]
             blob_0.now_points_to(blob_1)
             if queue.qsize() == 0:
-                time.sleep(0.1)
+                time.sleep(2)
+                # make extra sure the queue
+                # has had time to get anything new
+                # before exiting this function
+                # once, we exit, anything new will stay there
+                # and the program will hang
 
         return 0
+
+    def stitch_parallel_blocks(self, starts, ends):
+        """
+        For every pair of consecutive frames in ends[i] and starts[i+1]
+        compute the blob overlap
+        This function is useful to connect blobs occurring in frames either
+        at the start or the end of a block of frames processed in parallel
+        The result is these blocks are "stitched" together
+        """
+
+        for i in tqdm(range(len(ends) - 1)):
+            assert (ends[i] - 1 + 1) == starts[i + 1]
+            self.compute_overlapping_between_two_subsequent_frames(
+                self.blobs_in_video[ends[i] - 1],
+                self.blobs_in_video[starts[i + 1]],
+                None,
+            )
 
     # TODO Right now, the n_jobs argument is ignored
     # (only whether it is 1 or not, to choose multiprocessing or not)
@@ -164,30 +217,30 @@ class ListOfBlobs(object):
 
             processes[process_name] = process
 
-        # run processes
+        # compute the blob overlap in parallel
         for process_name, process in processes.items():
+            # this call starts a process / worker in the background
+            # so this whole for loop takes ms to run
             process.start()
             # Here we need to figure out when n_jobs processes have
             # been started and dont start more until one of them is done
             # Ideally the queue and the remaining processes start can be managed
             # in the same function
 
-        self.run_queue(queue)
+        # receive the results of the parallel processes!!
+        self.process_blob_overlap_queue(queue)
 
-        for process_name, process in processes.items():
-            process.join()
-
-        # connect the blobs on frames located at the start or end of
-        # the interval processed by the processes
-        # i.e. stitch together the result of the processes
-        for i in tqdm(range(len(ends) - 1)):
-            assert (ends[i] - 1 + 1) == starts[i + 1]
-            self.compute_overlapping_between_two_subsequent_frames(
-                self.blobs_in_video[ends[i] - 1],
-                self.blobs_in_video[starts[i + 1]],
-                None,
+        if queue.qsize() != 0:
+            logger.warning(
+                "Not all blobs have been annotated. idtrackerai may hang"
             )
 
+        for process_name, process in processes.items():
+            # if the queue still has stuff in it, the program
+            # hangs here
+            process.join()
+
+        self.stitch_parallel_blocks(starts, ends)
         self.blobs_are_connected = True
 
     @staticmethod
