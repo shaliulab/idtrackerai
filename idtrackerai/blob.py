@@ -173,19 +173,21 @@ class Blob(object):
         self._user_generated_identities = None
         self._user_generated_centroids = None
 
-
     def getstate_safe(self):
         previous_blobs = getattr(self, "previous", [])
-        previous_blobs = [(blob.frame_number, blob.in_frame_index) for blob in previous_blobs]
+        previous_blobs = [
+            (blob.frame_number, blob.in_frame_index) for blob in previous_blobs
+        ]
 
         next_blobs = getattr(self, "next", [])
-        next_blobs = [(blob.frame_number, blob.in_frame_index) for blob in next_blobs]
+        next_blobs = [
+            (blob.frame_number, blob.in_frame_index) for blob in next_blobs
+        ]
 
         self._now_points_to_blob_fn_index = {
             "previous": previous_blobs,
-            "next": previous_blobs
+            "next": previous_blobs,
         }
-
 
     def __getstate__(self):
 
@@ -196,7 +198,6 @@ class Blob(object):
         d["previous"] = []
         d["next"] = []
         return d
-
 
     @property
     def bounding_box_image(self):

@@ -168,12 +168,16 @@ class ListOfBlobs(object):
                 # if there is no next blob, this for loop does not run
                 # if there is > 1, it runs > 1 accordingly
                 for next_blob in blob._now_points_to_blob_fn_index["next"]:
-                    next_blob_fn, next_blob_index = (next_blob[0], next_blob[1])
-                    a_next_blob = self.blobs_in_video[next_blob_fn][next_blob_index]
+                    next_blob_fn, next_blob_index = (
+                        next_blob[0],
+                        next_blob[1],
+                    )
+                    a_next_blob = self.blobs_in_video[next_blob_fn][
+                        next_blob_index
+                    ]
                     blob.now_points_to(a_next_blob)
 
         self.blobs_are_connected = True
-
 
     # TODO: This is part of fragmentation it should be somewhere else.
     def compute_fragment_identifier_and_blob_index(self, number_of_animals):
