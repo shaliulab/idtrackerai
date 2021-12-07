@@ -126,12 +126,12 @@ class ListOfBlobs(object):
         path_to_save : str, optional
             Path where to save the object, by default None
         """
-        self.disconnect()
+        # self.disconnect()
         logger.info("saving blobs list at %s" % path_to_save)
         np.save(path_to_save, self)
 
     @staticmethod
-    def load(path_to_load_blob_list_file):
+    def load(path_to_load_blob_list_file, reconnect_from_cache=False):
         """Loads an instance of a clase saved in a .npy file.
 
         Parameters
@@ -149,7 +149,31 @@ class ListOfBlobs(object):
             path_to_load_blob_list_file, allow_pickle=True
         ).item()
         list_of_blobs.blobs_are_connected = False
+        if reconnect_from_cache:
+            list_of_blobs.reconnect_from_cache()
+
         return list_of_blobs
+
+    def reconnect_from_cache(self):
+
+        # this should run much faster than
+        # compute_overlapping_between_subsequent_frames
+
+        # go through each frame
+        for blobs_in_frame in self.blobs_in_video:
+            # go through each blob in the frame
+            for blob in blobs_in_frame:
+                # go through each of the next blobs of the current blob
+                # (> 99% of the time there is only one next blob, sometimes none or > 1)
+                # if there is no next blob, this for loop does not run
+                # if there is > 1, it runs > 1 accordingly
+                for next_blob in blob._now_points_to_blob_fn_index["next"]:
+                    next_blob_fn, next_blob_index = next_blob.frame_number, next_blob.in_frame_index
+                    a_next_blob = self.blobs_in_video[next_blob_fn][next_blob_index]
+                    blob.now_points_to(a_next_blob)
+
+        self.blobs_are_connected = True
+
 
     # TODO: This is part of fragmentation it should be somewhere else.
     def compute_fragment_identifier_and_blob_index(self, number_of_animals):
