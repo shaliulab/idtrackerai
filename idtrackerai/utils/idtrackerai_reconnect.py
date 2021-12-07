@@ -25,7 +25,7 @@ def get_parser(ap=None):
     if ap is None:
         ap = argparse.ArgumentParser()
 
-    ap.add_argument("session_folder", required=True, type=str)
+    ap.add_argument("session_folder", type=str)
     ap.add_argument("--n_jobs", dest="n_jobs", required=False, type=int, default=None)
     return ap
 
