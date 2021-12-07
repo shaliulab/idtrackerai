@@ -33,7 +33,7 @@ def get_parser(ap=None):
     ap.add_argument(
         "--n_jobs", dest="n_jobs", required=False, type=int, default=None
     )
-    ap.add_argument("--replace", store_action="true", default=False)
+    ap.add_argument("--replace", action="store_true", default=False)
     return ap
 
 
