@@ -134,6 +134,7 @@ setup(
     entry_points={
         "console_scripts": [
             "idtrackerai_test=idtrackerai.utils.idtrackerai_test:test",
+            "idtrackerai_reconnect=idtrackerai.utils.idtrackerai_reconnect:reconnect",
         ],
     },
 )
