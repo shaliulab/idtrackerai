@@ -168,7 +168,7 @@ class ListOfBlobs(object):
                 # if there is no next blob, this for loop does not run
                 # if there is > 1, it runs > 1 accordingly
                 for next_blob in blob._now_points_to_blob_fn_index["next"]:
-                    next_blob_fn, next_blob_index = next_blob.frame_number, next_blob.in_frame_index
+                    next_blob_fn, next_blob_index = (next_blob[0], next_blob[1])
                     a_next_blob = self.blobs_in_video[next_blob_fn][next_blob_index]
                     blob.now_points_to(a_next_blob)
 

@@ -146,7 +146,7 @@ class Blob(object):
         self.video_path = video_path
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
         self._resolution_reduction = resolution_reduction
-        self._now_points_to_blob_fn_index = None
+        self._now_points_to_blob_fn_index = {"next": [], "previous": []}
 
         # Attributes populated at different points of the tracking
         # During crossing detection
@@ -182,20 +182,19 @@ class Blob(object):
         next_blobs = [(blob.frame_number, blob.in_frame_index) for blob in next_blobs]
 
         self._now_points_to_blob_fn_index = {
-            "previous": previous_blob,
-            "next": next_blob
+            "previous": previous_blobs,
+            "next": previous_blobs
         }
 
 
     def __getstate__(self):
-        if self._now_points_to_blob_fn_index is None:
-            self.getstate_safe()
 
-        super().__getstate__(self)
+        self.getstate_safe()
+        d = self.__dict__
         # remove all (direct) references to other blobs
         # to avoid infinite recursiveness
-        d.pop("previous")
-        d.pop("next")
+        d["previous"] = []
+        d["next"] = []
         return d
 
 
