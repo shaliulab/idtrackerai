@@ -1073,8 +1073,9 @@ class ListOfBlobs(object):
             centroid=None,
             contour=None,
             area=None,
-            bounding_box_in_frame_coordinates=None,
+            bounding_box_in_frame_coordinates=None
         )
+
         new_blob._user_generated_centroids = [(centroid[0], centroid[1])]
         new_blob._user_generated_identities = [identity]
         new_blob.frame_number = frame_number
@@ -1087,7 +1088,9 @@ class ListOfBlobs(object):
             "number_of_animals"
         ]
         self.blobs_in_video[frame_number].append(new_blob)
+        new_blob.in_frame_index = len(self.blobs_in_video[frame_number]) - 1
         video._is_centroid_updated = True
+        return new_blob
 
 
 def initialize_identification_images_file(
