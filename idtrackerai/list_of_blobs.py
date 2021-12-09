@@ -1073,7 +1073,7 @@ class ListOfBlobs(object):
             centroid=None,
             contour=None,
             area=None,
-            bounding_box_in_frame_coordinates=None
+            bounding_box_in_frame_coordinates=None,
         )
 
         new_blob._user_generated_centroids = [(centroid[0], centroid[1])]

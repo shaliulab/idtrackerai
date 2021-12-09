@@ -74,7 +74,13 @@ def initialize_video_writer(video_object, height, width, identity):
 
 
 def generate_individual_video(
-    video_object, trajectories, identity, width, height, label="identity", color=(0,0,0)
+    video_object,
+    trajectories,
+    identity,
+    width,
+    height,
+    label="identity",
+    color=(0, 0, 0),
 ):
     # Initialize video writer
     out = initialize_video_writer(video_object, height, width, identity)
@@ -113,7 +119,16 @@ def generate_individual_video(
 
         if not label is None:
             text = str(vars()[label])
-            cv2.putText(individual_frame, text, (int(width*0.1), int(height*0.2)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 3, cv2.LINE_AA)
+            cv2.putText(
+                individual_frame,
+                text,
+                (int(width * 0.1), int(height * 0.2)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                color,
+                3,
+                cv2.LINE_AA,
+            )
 
         # Write frame in video
         out.write(individual_frame)
@@ -143,16 +158,16 @@ def generate_individual_videos(video_object, trajectories, **kwargs):
     # Calculate width and height of the video from the estimated body length
     height, width = compute_width_height_individual_video(video_object)
     logger.info("Generating individual videos ...")
-   
+
     number_of_animals = video_object._number_of_animals
     if number_of_animals is None:
-        number_of_animals = video_object.user_defined_parameters["number_of_animals"]
+        number_of_animals = video_object.user_defined_parameters[
+            "number_of_animals"
+        ]
     if number_of_animals is None:
         number_of_animals = int(input("Please enter number of animals!"))
 
-    colors = get_spaced_colors_util(
-        number_of_animals, black=False
-    )
+    colors = get_spaced_colors_util(number_of_animals, black=False)
     Parallel(n_jobs=-2)(
         delayed(generate_individual_video)(
             video_object,

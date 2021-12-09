@@ -105,7 +105,9 @@ class TrackerAPI(object):
                 kt_info_dict_path, allow_pickle=True
             ).item()
 
-            logger.info(f"Performing knowledge transfer from {kt_info_dict_path}")
+            logger.info(
+                f"Performing knowledge transfer from {kt_info_dict_path}"
+            )
 
         else:
             self.knowledge_transfer_info_dict = None

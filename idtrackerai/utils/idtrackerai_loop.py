@@ -68,14 +68,11 @@ def write_jobfile(
         lines.append(f"source ~/.bashrc_conda && conda activate {environment}")
 
     # this is the first line!
+    lines.append("echo SETTINGS_PRIORITY=1 > local_settings.py")
+
     lines.append(
-        'echo SETTINGS_PRIORITY=1 > local_settings.py'
+        f"echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=-2 >> local_settings.py"
     )
-
-    lines.append(
-        f'echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=-2 >> local_settings.py'
-     )
-
 
     experiment_folder = os.path.dirname(jobfile)
 
@@ -137,7 +134,6 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
 
 def run_one_loop(experiment_folder, chunk, config_file, **kwargs):
 
-
     qsub_call = build_qsub_call(
         experiment_folder, chunk, config_file, **kwargs
     )
@@ -179,15 +175,14 @@ def get_network_folder(experiment_folder, i):
     if len(accum_folders) == 0:
         return get_network_folder(experiment_folder, i - 1)
     else:
-        #last_network = sorted(accum_folders)[-1]
-        #return last_network
+        # last_network = sorted(accum_folders)[-1]
+        # return last_network
         # TODO
         # Once this issue is solved, find the right way to select the best network
         # https://gitlab.com/polavieja_lab/idtrackerai/-/issues/65
         first_network = sorted(accum_folders)[0]
         assert os.path.exists(os.path.join(first_network, "model_params.npy"))
         return first_network
-
 
 
 def main(args=None):

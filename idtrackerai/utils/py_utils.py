@@ -145,3 +145,19 @@ def _nan_helper(y):
     """
 
     return np.isnan(y), lambda z: z.nonzero()[0]
+
+
+def is_idtrackerai_folder(folder):
+
+    has_video_object = os.path.exists(os.path.join(folder, "video_object.npy"))
+    has_blobs = os.path.exists(
+        os.path.join(folder, "preprocessing", "blobs_collection_no_gaps.npy")
+    ) or os.path.exists(
+        os.path.join(folder, "preprocessing", "blobs_collection.npy")
+    )
+
+    has_fragments = os.path.exists(
+        os.path.join(folder, "preprocessing", "fragments.npy")
+    )
+
+    return has_video_object and has_blobs and has_fragments
