@@ -1,3 +1,6 @@
+"""
+Functionality to quickly check the accuracy of many sessions
+"""
 import argparse
 import logging
 import re
@@ -19,11 +22,11 @@ def list_accuracy(folders):
                 if not line:
                     break
                 match = re.match(
-                    r"Estimated accuracy: ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)",
+                    r".*Estimated accuracy: ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?).*",
                     line,
                 )
                 if match:
-                    accuracy = match.group(0)
+                    accuracy = float(match.group(1))
 
         accuracies[session_folder] = accuracy
 
@@ -57,6 +60,8 @@ def main(args=None, ap=None):
     if args is None:
         ap = get_parser(ap)
         ap.parse_args()
+
+    args = ap.parse_args()
 
     folders = validate_sessions(args.interval)
     accuracies = list_accuracy(folders)

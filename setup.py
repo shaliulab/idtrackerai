@@ -136,6 +136,7 @@ setup(
             "idtrackerai_test=idtrackerai.utils.idtrackerai_test:test",
             "idtrackerai-loop=idtrackerai.utils.idtrackerai_loop:loop",
             "idtrackerai_reconnect=idtrackerai.utils.idtrackerai_reconnect:reconnect",
+            "idtrackerai_multiplex=idtrackerai.utils.idtrackerai_multiplex:main",
         ],
     },
 )
