@@ -1319,7 +1319,7 @@ class Blob(object):
             centroid[1],
         )
 
-    def propagate_identity(self, old_identity, new_identity, centroid):
+    def propagate_identity(self, old_identity, new_identity, centroid, direction="all"):
         """[Validation] Propagates the new identity to next and previous blobs.
 
         This method called in the validation GUI when the used updates the
@@ -1341,93 +1341,96 @@ class Blob(object):
         current = self
         current_centroid = np.asarray(centroid)
 
-        while (
-            len(current.next) == 1
-            and current.next[0].fragment_identifier == self.fragment_identifier
-        ):
-            # There is only one next blob and we are in the same fragment
-            if len(current.next[0].final_centroids) > 1:
-                # The next blob has multiple centroids, i.e. a crossing.
+        if direction == "all" or direction == "future":
 
-                # Find the index of the centroid that correspond to the
-                # identity that we want to modify
-                index_same_identities = np.where(
-                    np.asarray(current.next[0].final_identities)
-                    == old_identity
-                )[0]
-                if index_same_identities.size == 1:
-                    # there is only one centroid with the old identity
-                    next_centroid = current.next[0].final_centroids[
-                        index_same_identities[0]
-                    ]
-                else:
-                    # there are several centroids in the blob with the same
-                    # identity
-                    next_centroids = np.asarray(
-                        current.next[0].final_centroids
-                    )
-                    index_centroid = np.argmin(
-                        np.sqrt(
-                            np.sum((current_centroid - next_centroids) ** 2)
+            while (
+                len(current.next) == 1
+                and current.next[0].fragment_identifier == self.fragment_identifier
+            ):
+                # There is only one next blob and we are in the same fragment
+                if len(current.next[0].final_centroids) > 1:
+                    # The next blob has multiple centroids, i.e. a crossing.
+
+                    # Find the index of the centroid that correspond to the
+                    # identity that we want to modify
+                    index_same_identities = np.where(
+                        np.asarray(current.next[0].final_identities)
+                        == old_identity
+                    )[0]
+                    if index_same_identities.size == 1:
+                        # there is only one centroid with the old identity
+                        next_centroid = current.next[0].final_centroids[
+                            index_same_identities[0]
+                        ]
+                    else:
+                        # there are several centroids in the blob with the same
+                        # identity
+                        next_centroids = np.asarray(
+                            current.next[0].final_centroids
                         )
-                    )
-                    next_centroid = current.next[0].final_centroids[
-                        index_centroid
-                    ]
-            else:
-                # The next blob has a single centroid, i.e. an individual.
-                next_centroid = current.next[0].final_centroids[0]
-            current.next[0].update_identity(
-                old_identity, new_identity, next_centroid
-            )
-            current = current.next[0]
-            current_centroid = np.asarray(next_centroid)
-            count_future_corrections += 1
-
-        current = self
-
-        while (
-            len(current.previous) == 1
-            and current.previous[0].fragment_identifier
-            == self.fragment_identifier
-        ):
-            # There is only one previous blob and we are in the same fragment
-            if len(current.previous[0].final_centroids) > 1:
-                # There are multiple centroids, i.e. a crossing.
-                index_same_identities = np.where(
-                    np.asarray(current.previous[0].final_identities)
-                    == old_identity
-                )[0]
-                if index_same_identities.size == 1:
-                    # there is only one centroid with the old identity
-                    previous_centroid = current.previous[0].final_centroids[
-                        index_same_identities[0]
-                    ]
-                else:
-                    # there are several centroids in the blob with the same
-                    # identity
-                    previous_centroids = np.asarray(
-                        current.previous[0].final_centroids
-                    )
-                    index_centroid = np.argmin(
-                        np.sqrt(
-                            np.sum(
-                                (current_centroid - previous_centroids) ** 2
+                        index_centroid = np.argmin(
+                            np.sqrt(
+                                np.sum((current_centroid - next_centroids) ** 2)
                             )
                         )
-                    )
-                    previous_centroid = current.previous[0].final_centroids[
-                        index_centroid
-                    ]
-            else:
-                # There is a single centroid, i.e. and individual blob
-                previous_centroid = current.previous[0].final_centroids[0]
-            current.previous[0].update_identity(
-                old_identity, new_identity, previous_centroid
-            )
-            current = current.previous[0]
-            current_centroid = np.asarray(previous_centroid)
-            count_past_corrections += 1
+                        next_centroid = current.next[0].final_centroids[
+                            index_centroid
+                        ]
+                else:
+                    # The next blob has a single centroid, i.e. an individual.
+                    next_centroid = current.next[0].final_centroids[0]
+                current.next[0].update_identity(
+                    old_identity, new_identity, next_centroid
+                )
+                current = current.next[0]
+                current_centroid = np.asarray(next_centroid)
+                count_future_corrections += 1
+
+        if direction == "all" or direction == "past":
+
+            current = self
+            while (
+                len(current.previous) == 1
+                and current.previous[0].fragment_identifier
+                == self.fragment_identifier
+            ):
+                # There is only one previous blob and we are in the same fragment
+                if len(current.previous[0].final_centroids) > 1:
+                    # There are multiple centroids, i.e. a crossing.
+                    index_same_identities = np.where(
+                        np.asarray(current.previous[0].final_identities)
+                        == old_identity
+                    )[0]
+                    if index_same_identities.size == 1:
+                        # there is only one centroid with the old identity
+                        previous_centroid = current.previous[0].final_centroids[
+                            index_same_identities[0]
+                        ]
+                    else:
+                        # there are several centroids in the blob with the same
+                        # identity
+                        previous_centroids = np.asarray(
+                            current.previous[0].final_centroids
+                        )
+                        index_centroid = np.argmin(
+                            np.sqrt(
+                                np.sum(
+                                    (current_centroid - previous_centroids) ** 2
+                                )
+                            )
+                        )
+                        previous_centroid = current.previous[0].final_centroids[
+                            index_centroid
+                        ]
+                else:
+                    # There is a single centroid, i.e. and individual blob
+                    previous_centroid = current.previous[0].final_centroids[0]
+                current.previous[0].update_identity(
+                    old_identity, new_identity, previous_centroid
+                )
+                current = current.previous[0]
+                current_centroid = np.asarray(previous_centroid)
+                count_past_corrections += 1
 
     @property
     def summary(self):
