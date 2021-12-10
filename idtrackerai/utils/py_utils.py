@@ -33,6 +33,7 @@ import glob
 import logging
 import multiprocessing
 import os
+import os.path
 import re
 
 import numpy as np
@@ -161,3 +162,30 @@ def is_idtrackerai_folder(folder):
     )
 
     return has_video_object and has_blobs and has_fragments
+
+
+def pick_blob_collection(folder):
+    
+    base_pattern = "blobs_collection.*.npy$"
+    timestamped_pattern = "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}_" + base_pattern
+
+    if is_idtrackerai_folder(folder):
+        preprocessing_folder = os.path.join(folder, "preprocessing")
+        stuff = sorted(os.listdir(preprocessing_folder))
+
+        selected_timestamp = []
+        selected_no_timestamp = []
+        for thing in stuff:
+            if re.match(timestamped_pattern, thing):
+                selected_timestamp.append(thing)
+
+            elif re.match(base_pattern, thing):
+                selected_no_timestamp.append(thing)
+
+        selected_no_timestamp = sorted(selected_no_timestamp, reverse=True)
+        selected_timestamp = sorted(selected_timestamp, reverse=True)
+        selected = selected_timestamp + selected_no_timestamp
+
+        return os.path.join(preprocessing_folder, selected[0])
+    else:
+        logger.warning(f"{folder} is corrupted")
