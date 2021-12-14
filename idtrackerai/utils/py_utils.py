@@ -165,7 +165,7 @@ def is_idtrackerai_folder(folder):
 
 
 def pick_blob_collection(folder):
-    
+
     base_pattern = "blobs_collection.*.npy$"
     timestamped_pattern = "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}_" + base_pattern
 

@@ -192,9 +192,15 @@ def main(args=None):
         args = ap.parse_args()
 
     experiment_name = os.path.basename(args.input.strip("/"))
-    config_file = os.path.join(
-        args.input, experiment_name + "_" + args.suffix + ".conf"
-    )
+    if args.suffix != "":
+        config_file = os.path.join(
+            args.input, experiment_name + "_" + args.suffix + ".conf"
+        )
+    else:
+        config_file = os.path.join(
+            args.input, experiment_name + ".conf"
+        )
+
 
     for i in range(*args.interval, 1):
         chunk = str(i).zfill(6)
