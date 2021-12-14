@@ -44,7 +44,7 @@ def get_parser():
 def build_idtrackerai_call(experiment_folder, chunk, config_file):
     idtrackerai_call = "idtrackerai terminal_mode"
     idtrackerai_call += f" --_session {chunk}"
-    idtrackerai_call += f" --_video {experiment_folder}/{chunk}.avi"
+    idtrackerai_call += f" --_video {experiment_folder}/idtrackerai/{chunk}.avi"
     idtrackerai_call += f" --load  {config_file}"
     idtrackerai_call += " --exec track_video"
     print(idtrackerai_call)
@@ -60,6 +60,9 @@ def write_jobfile(
     knowledge_transfer=None,
 ):
 
+    analysis_folder = os.path.dirname(jobfile)
+    experiment_folder = os.path.dirname(analysis_folder)
+
     lines = [
         "#! /bin/bash",
     ]
@@ -67,14 +70,20 @@ def write_jobfile(
     if environment is not None:
         lines.append(f"source ~/.bashrc_conda && conda activate {environment}")
 
-    # this is the first line!
+    lines.append(f"mkdir -p {analysis_folder}")
+    lines.append(f"cd {analysis_folder}")
+
+    # this is the first line of the local_settings.py!
+    # please make sure it has the > character once
+    # all other appends to local_settings.py should have >>
+
     lines.append("echo SETTINGS_PRIORITY=1 > local_settings.py")
 
     lines.append(
         f"echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=-2 >> local_settings.py"
     )
 
-    experiment_folder = os.path.dirname(jobfile)
+
 
     if knowledge_transfer:
 
@@ -82,7 +91,7 @@ def write_jobfile(
             lines.append(
                 'echo "from idtrackerai.utils.idtrackerai_loop import setup_knowledge_transfer" >> local_settings.py'
             )
-            function_call = f'setup_knowledge_transfer(experiment_folder="{experiment_folder}", i={int(chunk)-1})'
+            function_call = f'setup_knowledge_transfer(experiment_folder="{analysis_folder}", i={int(chunk)-1})'
             lines.append(
                 f"echo 'IDENTITY_TRANSFER, KNOWLEDGE_TRANSFER_FOLDER_IDCNN={function_call}' >> local_settings.py"
             )
@@ -101,6 +110,8 @@ def write_jobfile(
             os.path.dirname(jobfile), f"session_{chunk}-local_settings.py"
         )
         lines.append(f"cp local_settings.py {local_settings_py_backup}")
+        
+        lines.append(f"ln -s {experiment_folder}/{chunk}.avi {analysis_folder}/{chunk}.avi")
 
     lines.append(idtrackerai_call)
 
@@ -119,14 +130,16 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
     )
 
     # save the call together with a setup block into a script
-    jobfile = os.path.join(experiment_folder, f"session_{chunk}.sh")
+    idtrackerai_folder = os.path.join(experiment_folder, "idtrackerai")
+
+    jobfile = os.path.join(idtrackerai_folder, f"session_{chunk}.sh")
     write_jobfile(idtrackerai_call, jobfile, chunk=chunk, **kwargs)
 
     # add the qsub flags
     output_file = os.path.join(
-        experiment_folder, f"session_{chunk}_output.txt"
+        idtrackerai_folder, f"session_{chunk}_output.txt"
     )
-    error_file = os.path.join(experiment_folder, f"session_{chunk}_error.txt")
+    error_file = os.path.join(idtrackerai_folder, f"session_{chunk}_error.txt")
     job_name = f"session_{chunk}"
     cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} {jobfile}"
     return cmd.split(" ")
