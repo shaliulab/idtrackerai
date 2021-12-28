@@ -24,3 +24,18 @@ class VideoImgstore(Video):
             video_path = self._store.current_video_path,
             open_multiple_files=False
         )
+
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        store = d.pop("_store")
+        d["full_path"] = store.full_path
+        return d
+    
+    def __setstate__(self, d):
+        full_path = d.pop("full_path")
+        d["_store"] = new_for_filename(
+            full_path,
+            [d["chunk"]]
+        )
+        return super().__setstate__(d)
