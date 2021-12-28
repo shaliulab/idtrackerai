@@ -129,6 +129,7 @@ MIN_AREA_DEFAULT, MAX_AREA_DEFAULT = 150, 6000
 MIN_THRESHOLD, MAX_THRESHOLD = 0, 255
 MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT = 0, 155
 EXTRA_PIXELS_BBOX = 45
+PLAYER_ANNOTATE=False
 ###############################################################################
 # Crossing detector advanced parameters
 ###############################################################################
