@@ -150,22 +150,33 @@ def _nan_helper(y):
 
 def is_idtrackerai_folder(folder):
 
-    has_video_object = os.path.exists(os.path.join(folder, "video_object.npy"))
-    has_blobs = os.path.exists(
-        os.path.join(folder, "preprocessing", "blobs_collection_no_gaps.npy")
-    ) or os.path.exists(
-        os.path.join(folder, "preprocessing", "blobs_collection.npy")
-    )
+    video_object_path = os.path.join(folder, "video_object.npy")
+    has_video_object = os.path.exists(video_object_path)
 
-    has_fragments = os.path.exists(
-        os.path.join(folder, "preprocessing", "fragments.npy")
-    )
+    if has_video_object:
+        video = np.load(video_object_path, allow_pickle=True).item()
+
+        has_blobs = os.path.exists(
+            os.path.join(folder, "preprocessing", "blobs_collection_no_gaps.npy")
+        ) or os.path.exists(
+            os.path.join(folder, "preprocessing", "blobs_collection.npy")
+        )
+
+        if video.user_defined_parameters["number_of_animals"] == 1:
+            # actually it does not have the file
+            # but it's ok, because its only 1 animal!          
+            has_fragments = True
+
+        else:
+            has_fragments = os.path.exists(
+                os.path.join(folder, "preprocessing", "fragments.npy")
+            )
 
     return has_video_object and has_blobs and has_fragments
 
 
 def pick_blob_collection(folder):
-    
+
     base_pattern = "blobs_collection.*.npy$"
     timestamped_pattern = "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}_" + base_pattern
 

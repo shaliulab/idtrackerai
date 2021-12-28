@@ -268,6 +268,8 @@ class Blob(object):
                         + "-eroded"
                     )
                 return f[dataset_name][:]
+        elif self.contour is None:
+            return None
         else:
             cimg = np.zeros((self.video_height, self.video_width))
             cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
@@ -528,7 +530,17 @@ class Blob(object):
             intersection
         """
         overlaps = False
-        intersection = np.isin(self.pixels, other.pixels, assume_unique=True)
+        if self.pixels is None:
+            logger.warning(f"Blob in frame {self.frame_number} and identity {self.identity} has no pixels")
+            return False
+        elif other.pixels is None:
+            logger.warning(f"Blob in frame {other.frame_number} and identity {other.identity} has no pixels")
+            return False
+        try:
+            intersection = np.isin(self.pixels, other.pixels, assume_unique=True)
+        except Exception as error:
+            logger.error(error)
+            return False
         if any(intersection):
             overlaps = True
         return overlaps
