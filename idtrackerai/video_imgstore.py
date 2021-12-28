@@ -36,6 +36,6 @@ class VideoImgstore(Video):
         full_path = d.pop("full_path")
         d["_store"] = new_for_filename(
             full_path,
-            [d["chunk"]]
+            [d["_chunk"]]
         )
         return super().__setstate__(d)
