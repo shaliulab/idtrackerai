@@ -131,7 +131,7 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
 
     # save the call together with a setup block into a script
     idtrackerai_folder = os.path.join(experiment_folder, "idtrackerai")
-    os.makedirs(idtrackerai_folder)
+    os.makedirs(idtrackerai_folder, exist_ok=True)
 
     jobfile = os.path.join(idtrackerai_folder, f"session_{chunk}.sh")
     write_jobfile(idtrackerai_call, jobfile, chunk=chunk, **kwargs)
