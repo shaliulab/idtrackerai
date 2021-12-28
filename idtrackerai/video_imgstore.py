@@ -43,3 +43,7 @@ class VideoImgstore(Video):
         self.__dict__ = d
 
         #return super(VideoImgstore, self).__setstate__(d)
+
+    def get_first_frame(self, *args, **kwargs):
+        self._store.reset_to_first_frame()
+        return self._store._chunk_md["frame_number"][0]
