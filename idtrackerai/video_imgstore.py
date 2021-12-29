@@ -18,6 +18,7 @@ class VideoImgstore(Video):
 
         self._store = MultiStore.new_for_filename(
             store,
+            ref_chunk=chunk,
             chunk_numbers=chunk_numbers
         )
 
@@ -38,6 +39,7 @@ class VideoImgstore(Video):
         full_path = d.pop("full_path")
         d["_store"] = MultiStore.new_for_filename(
             full_path,
+            ref_chunk=d["_chunk"],
             chunk_numbers=d["_chunk_numbers"]
         )
         self.__dict__ = d
