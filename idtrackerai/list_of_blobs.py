@@ -558,6 +558,10 @@ class ListOfBlobs(object):
             for blobs_in_frame in blobs_in_episode
         ]
 
+    @property
+    def blobs_in_video_generic(self):
+        return self.blobs_in_video
+
     @staticmethod
     def _set_identification_images_per_episode(
         identification_image_size,

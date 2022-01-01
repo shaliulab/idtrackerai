@@ -173,6 +173,11 @@ class Blob(object):
         self._user_generated_identities = None
         self._user_generated_centroids = None
 
+
+    @property
+    def frame_number_generic(self):
+        return self.frame_number
+
     def getstate_safe(self):
         previous_blobs = getattr(self, "previous", [])
         previous_blobs = [
