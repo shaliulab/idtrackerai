@@ -41,10 +41,16 @@ def get_parser():
     return ap
 
 
-def build_idtrackerai_call(experiment_folder, chunk, config_file):
+def build_idtrackerai_call(experiment_folder, chunk, config_file, api="imgstore"):
     idtrackerai_call = "idtrackerai terminal_mode"
     idtrackerai_call += f" --_session {chunk}"
-    idtrackerai_call += f" --_video {experiment_folder}/idtrackerai/{chunk}.avi"
+
+    assert api in ["imgstore", "cv2"]
+
+    if api=="imgstore":
+        idtrackerai_call += f"--_imgstore {experiment_folder}/metadata.yaml --_chunk {chunk}"
+    elif api=="cv2":
+        idtrackerai_call += f" --_video {experiment_folder}/idtrackerai/{chunk}.avi"
     idtrackerai_call += f" --load  {config_file}"
     idtrackerai_call += " --exec track_video"
     print(idtrackerai_call)
