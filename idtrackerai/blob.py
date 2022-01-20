@@ -39,6 +39,14 @@ from sklearn.decomposition import PCA
 
 logger = logging.getLogger("__main__.blob")
 
+import re
+
+def remove_rootdir(path):
+    match = re.match(".*/[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}_ROI_[0-9]/(.*)", path)
+    if match is None:
+        return path
+    else:
+        return match.group(1).lstrip("/")
 
 class Blob(object):
     """Represents a segmented blob (collection of pixels) from a given frame.
@@ -222,6 +230,7 @@ class Blob(object):
         """
         if self._bounding_box_image is not None:
             return self._bounding_box_image
+
         elif self.bounding_box_images_path is not None and os.path.isfile(
             self.bounding_box_images_path
         ):
@@ -230,6 +239,8 @@ class Blob(object):
                     str(self.frame_number) + "-" + str(self.in_frame_index)
                 ][:]
         else:
+            if not os.path.exists(self.video_path) and os.path.exists(remove_rootdir(self.video_path)):
+                self.video_path = remove_rootdir(self.video_path)
             cap = cv2.VideoCapture(self.video_path)
             cap.set(1, self.frame_number_in_video_path)
             ret, frame = cap.read()
@@ -256,11 +267,11 @@ class Blob(object):
             that represent the blob.
         """
         if self._pixels is not None:
+            # print("Returning pixels from RAM")
             return self._pixels
-        elif self._pixels_path is not None and os.path.isfile(
-            self._pixels_path
-        ):
-            with h5py.File(self._pixels_path, "r") as f:
+        elif self.pixels_path is not None and os.path.isfile(self.pixels_path):
+            # print("Loading pixels from DISK with h5py")
+            with h5py.File(self.pixels_path, "r") as f:
                 if not self.pixels_are_from_eroded_blob:
                     dataset_name = (
                         str(self.frame_number) + "-" + str(self.in_frame_index)
@@ -276,6 +287,7 @@ class Blob(object):
         elif self.contour is None:
             return None
         else:
+            # print("Computing pixels from data")
             cimg = np.zeros((self.video_height, self.video_width))
             cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
             pts = np.where(cimg == 255)
@@ -304,10 +316,10 @@ class Blob(object):
         """
         if self._eroded_pixels is not None:
             return self._pixels
-        elif self._pixels_path is not None and os.path.isfile(
-            self._pixels_path
+        elif self.pixels_path is not None and os.path.isfile(
+            self.pixels_path
         ):
-            with h5py.File(self._pixels_path, "r") as f:
+            with h5py.File(self.pixels_path, "r") as f:
                 return f[
                     str(self.frame_number)
                     + "-"
@@ -330,8 +342,8 @@ class Blob(object):
 
     @eroded_pixels.setter
     def eroded_pixels(self, eroded_pixels):
-        if self._pixels_path is not None:  # is saving in disk
-            with h5py.File(self._pixels_path, "a") as f:
+        if self.pixels_path is not None:  # is saving in disk
+            with h5py.File(self.pixels_path, "a") as f:
                 dataset_name = (
                     str(self.frame_number)
                     + "-"
@@ -344,6 +356,18 @@ class Blob(object):
         else:
             self._eroded_pixels = eroded_pixels
         self.has_eroded_pixels = True
+
+    @property
+    def pixels_path(self):
+        if not os.path.isfile(self._pixels_path):
+            try:
+                pixels_relative_path = remove_rootdir(self._pixels_path)
+                if os.path.isfile(pixels_relative_path):
+                    return pixels_relative_path
+            except:
+                return self._pixels_path
+        else:
+            return self._pixels_path
 
     @property
     def fragment_identifier(self):
@@ -559,6 +583,7 @@ class Blob(object):
         other : <Blob object>
             An instance of the class Blob
         """
+        assert self is not other
         self.next.append(other)
         other.previous.append(self)
 

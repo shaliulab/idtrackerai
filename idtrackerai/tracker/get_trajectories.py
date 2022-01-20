@@ -239,7 +239,13 @@ def produce_output_dict(blobs_in_video, video):
         Output dictionary containing trajectories as values
 
     """
-    assert len(blobs_in_video) == video.number_of_frames
+    if not len(blobs_in_video) == video.number_of_frames:
+        import ipdb; ipdb.set_trace()
+        raise Exception(
+            f"Number of frames of video ({video.number_of_frames})"
+            " does not match number of frames in this list of blobs"
+            f" {len(blobs_in_video)}"
+        )
     if not video.user_defined_parameters["track_wo_identification"]:
         trajectories_info_dict = produce_trajectories(
             blobs_in_video,

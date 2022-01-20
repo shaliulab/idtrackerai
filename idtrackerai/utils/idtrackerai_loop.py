@@ -3,7 +3,9 @@ import warnings
 import os.path
 import re
 import subprocess
+import json
 
+FORBIDDEN_FIELDS = ["session", "_chunk", "_video"]
 
 def get_parser():
 
@@ -39,6 +41,14 @@ def get_parser():
         help="Chunks to analyze from first to last (last does not count). Example to analyze 0-10 pass 0 11",
     )
     return ap
+
+
+def check_forbidden_fields(config, fields):
+    for field in fields:
+        if field in config:
+            raise Exception(f"Please remove {field} from the config file and run again")
+
+
 
 
 def build_idtrackerai_call(experiment_folder, chunk, config_file, api="imgstore"):
@@ -116,7 +126,7 @@ def write_jobfile(
             os.path.dirname(jobfile), f"session_{chunk}-local_settings.py"
         )
         lines.append(f"cp local_settings.py {local_settings_py_backup}")
-        
+
         lines.append(f"ln -s {experiment_folder}/{chunk}.avi {analysis_folder}/{chunk}.avi")
 
     lines.append(idtrackerai_call)
@@ -220,6 +230,10 @@ def main(args=None):
         config_file = os.path.join(
             args.input, experiment_name + ".conf"
         )
+
+    with open(config_file, "r") as filehandle:
+        config = json.load(filehandle)
+    check_forbidden_fields(config, FORBIDDEN_FIELDS)
 
 
     for i in range(*args.interval, 1):

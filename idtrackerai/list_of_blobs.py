@@ -257,12 +257,21 @@ class ListOfBlobs(object):
     def compute_overlapping_between_two_subsequent_frames(
         blobs_before, blobs_after, queue=None
     ):
+        start = time.time()
         for ((blob_0_i, blob_0), (blob_1_i, blob_1)) in itertools.product(
             enumerate(blobs_before), enumerate(blobs_after)
         ):
-            if blob_0.overlaps_with(blob_1):
+            start_overlap = time.time()
+            overlaps = blob_0.overlaps_with(blob_1)
+            end_overlap = time.time()
+            # print(f"Overlap computed in {end_overlap - start_overlap} seconds")
+            if overlaps:
                 if queue is None:
+                    start_pointing = time.time()
                     blob_0.now_points_to(blob_1)
+                    end_pointing = time.time()
+                    # print(f"Pointing computed in {end_pointing - start_pointing} seconds")
+
                 else:
                     queue.put(
                         (
@@ -270,6 +279,9 @@ class ListOfBlobs(object):
                             (blob_1.frame_number, blob_1_i),
                         )
                     )
+        end = time.time()
+        # print(f"Done in {end - start} seconds")
+
 
     def compute_overlapping_between_subsequent_frames_original(self):
         """Computes overlapping between blobs in consecutive frames.

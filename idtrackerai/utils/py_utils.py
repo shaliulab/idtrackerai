@@ -148,7 +148,7 @@ def _nan_helper(y):
     return np.isnan(y), lambda z: z.nonzero()[0]
 
 
-def is_idtrackerai_folder(folder):
+def is_idtrackerai_folder(folder, trajectories=True):
 
     video_object_path = os.path.join(folder, "video_object.npy")
     has_video_object = os.path.exists(video_object_path)
@@ -172,7 +172,16 @@ def is_idtrackerai_folder(folder):
                 os.path.join(folder, "preprocessing", "fragments.npy")
             )
 
-    return has_video_object and has_blobs and has_fragments
+        if trajectories:
+
+            has_trajectories = os.path.exists(
+                os.path.join(folder, "trajectories", "trajectories.npy")
+            )
+        else:
+            has_trajectories = True
+            
+
+    return has_video_object and has_blobs and has_fragments and has_trajectories
 
 
 def pick_blob_collection(folder):
