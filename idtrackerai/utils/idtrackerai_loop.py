@@ -6,6 +6,10 @@ import subprocess
 import json
 
 FORBIDDEN_FIELDS = ["session", "_chunk", "_video"]
+ANALYSIS_FOLDER_NAME="idtrackerai"
+
+def get_analysis_folder(folder):
+    return os.path.join(folder, ANALYSIS_FOLDER_NAME)
 
 def get_parser():
 
@@ -13,7 +17,9 @@ def get_parser():
     ap.add_argument(
         "--input",
         required=True,
-        help="Name of imgstore repository or folder with multiple videos",
+        help=
+        "Name of imgstore repository or folder with multiple videos. If the input has structure X/./Y is passed in it,"
+        " all paths will be relative to X (and not absolute i.e. relative to /)",
     )
     ap.add_argument(
         "--suffix",
@@ -70,15 +76,13 @@ def build_idtrackerai_call(experiment_folder, chunk, config_file, api="imgstore"
 
 def write_jobfile(
     idtrackerai_call,
+    experiment_folder,
     jobfile,
     chunk="000000",
     environment="idtrackerai",
     knowledge_transfer=None,
 ):
-
-    analysis_folder = os.path.dirname(jobfile)
-    experiment_folder = os.path.dirname(analysis_folder)
-
+    analysis_folder = get_analysis_folder(experiment_folder)
     lines = [
         "#! /bin/bash",
     ]
@@ -141,22 +145,28 @@ def write_jobfile(
 def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
 
     # prepare the call to idtrackerai
+    folder_split = experiment_folder.split("/./")
+    if len(folder_split) == 1:
+        relative_experiment_folder = folder_split[0]
+    else:
+        relative_experiment_folder = folder_split[1]
+
     idtrackerai_call = build_idtrackerai_call(
-        experiment_folder, chunk, config_file
+        relative_experiment_folder, chunk, config_file
     )
 
     # save the call together with a setup block into a script
-    idtrackerai_folder = os.path.join(experiment_folder, "idtrackerai")
-    os.makedirs(idtrackerai_folder, exist_ok=True)
-
-    jobfile = os.path.join(idtrackerai_folder, f"session_{chunk}.sh")
-    write_jobfile(idtrackerai_call, jobfile, chunk=chunk, **kwargs)
+    analysis_folder = get_analysis_folder(experiment_folder)
+    os.makedirs(analysis_folder, exist_ok=True)
+    jobfile = os.path.join(analysis_folder, f"session_{chunk}.sh")
+    
+    write_jobfile(idtrackerai_call, relative_experiment_folder, jobfile, chunk=chunk, **kwargs)
 
     # add the qsub flags
     output_file = os.path.join(
-        idtrackerai_folder, f"session_{chunk}_output.txt"
+        analysis_folder, f"session_{chunk}_output.txt"
     )
-    error_file = os.path.join(idtrackerai_folder, f"session_{chunk}_error.txt")
+    error_file = os.path.join(analysis_folder, f"session_{chunk}_error.txt")
     job_name = f"session_{chunk}"
     cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} {jobfile}"
     return cmd.split(" ")
@@ -221,7 +231,7 @@ def main(args=None):
         ap = get_parser()
         args = ap.parse_args()
 
-    experiment_name = os.path.basename(args.input.strip("/"))
+    experiment_name = os.path.basename(args.input.rstrip("/"))
     if args.suffix != "":
         config_file = os.path.join(
             args.input, experiment_name + "_" + args.suffix + ".conf"
