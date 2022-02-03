@@ -1,5 +1,6 @@
 import argparse
 import warnings
+import os
 import os.path
 import re
 import subprocess
@@ -75,6 +76,7 @@ def build_idtrackerai_call(experiment_folder, chunk, config_file, api="imgstore"
 
 
 def write_jobfile(
+    lines,
     idtrackerai_call,
     experiment_folder,
     jobfile,
@@ -83,15 +85,12 @@ def write_jobfile(
     knowledge_transfer=None,
 ):
     analysis_folder = get_analysis_folder(experiment_folder)
-    lines = [
-        "#! /bin/bash",
-    ]
+    
 
     if environment is not None:
         lines.append(f"source ~/.bashrc_conda && conda activate {environment}")
 
     lines.append(f"mkdir -p {analysis_folder}")
-    lines.append(f"cd {analysis_folder}")
 
     # this is the first line of the local_settings.py!
     # please make sure it has the > character once
@@ -102,8 +101,6 @@ def write_jobfile(
     lines.append(
         f"echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=-2 >> local_settings.py"
     )
-
-
 
     if knowledge_transfer:
 
@@ -127,7 +124,7 @@ def write_jobfile(
         )
 
         local_settings_py_backup = os.path.join(
-            os.path.dirname(jobfile), f"session_{chunk}-local_settings.py"
+            experiment_folder, f"session_{chunk}-local_settings.py"
         )
         lines.append(f"cp local_settings.py {local_settings_py_backup}")
 
@@ -147,20 +144,26 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
     # prepare the call to idtrackerai
     folder_split = experiment_folder.split("/./")
     if len(folder_split) == 1:
+        working_directory = os.environ["HOME"]
         relative_experiment_folder = folder_split[0]
     else:
+        working_directory = folder_split[0]
         relative_experiment_folder = folder_split[1]
 
     idtrackerai_call = build_idtrackerai_call(
-        relative_experiment_folder, chunk, config_file
+        relative_experiment_folder, chunk, config_file.replace(working_directory, "").lstrip("/")
     )
 
     # save the call together with a setup block into a script
     analysis_folder = get_analysis_folder(experiment_folder)
     os.makedirs(analysis_folder, exist_ok=True)
     jobfile = os.path.join(analysis_folder, f"session_{chunk}.sh")
-    
-    write_jobfile(idtrackerai_call, relative_experiment_folder, jobfile, chunk=chunk, **kwargs)
+    lines = [
+        "#! /bin/bash",
+        f"cd {working_directory}",
+    ]
+
+    write_jobfile(lines, idtrackerai_call, relative_experiment_folder, jobfile, chunk=chunk, **kwargs)
 
     # add the qsub flags
     output_file = os.path.join(
@@ -168,7 +171,8 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
     )
     error_file = os.path.join(analysis_folder, f"session_{chunk}_error.txt")
     job_name = f"session_{chunk}"
-    cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} {jobfile}"
+    cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} -cwd {jobfile}"
+    print(cmd)
     return cmd.split(" ")
 
 
@@ -244,7 +248,6 @@ def main(args=None):
     with open(config_file, "r") as filehandle:
         config = json.load(filehandle)
     check_forbidden_fields(config, FORBIDDEN_FIELDS)
-
 
     for i in range(*args.interval, 1):
         chunk = str(i).zfill(6)
