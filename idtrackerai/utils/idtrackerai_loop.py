@@ -47,6 +47,9 @@ def get_parser():
         required=True,
         help="Chunks to analyze from first to last (last does not count). Example to analyze 0-10 pass 0 11",
     )
+    ap.add_argument(
+        "--jobs", default=-2, type=int, dest="jobs", help="Number of jobs to spawn in idtrackerai"
+    )
     return ap
 
 
@@ -83,6 +86,7 @@ def write_jobfile(
     chunk="000000",
     environment="idtrackerai",
     knowledge_transfer=None,
+    jobs=-2
 ):
     analysis_folder = get_analysis_folder(experiment_folder)
     
@@ -97,9 +101,15 @@ def write_jobfile(
     # all other appends to local_settings.py should have >>
 
     lines.append("echo SETTINGS_PRIORITY=1 > local_settings.py")
+    lines.append(
+        f"echo NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION={jobs} >> local_settings.py"
+    )
+    lines.append(
+        f"echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS={jobs} >> local_settings.py"
+    )
 
     lines.append(
-        f"echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=-2 >> local_settings.py"
+        f"echo NUMBER_OF_JOBS_FOR_SEGMENTATION={jobs} >> local_settings.py"
     )
 
     if knowledge_transfer:
@@ -135,11 +145,12 @@ def write_jobfile(
     with open(jobfile, "w") as fh:
         for line in lines:
             fh.write(f"{line}\n")
-
+    
+    os.chmod(jobfile, 0o764)
     return
 
 
-def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
+def build_async_call(experiment_folder, chunk, config_file, backend="task-spooler", **kwargs):
 
     # prepare the call to idtrackerai
     folder_split = experiment_folder.split("/./")
@@ -155,7 +166,7 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
     )
 
     # save the call together with a setup block into a script
-    analysis_folder = get_analysis_folder(experiment_folder)
+    analysis_folder = get_analysis_folder(relative_experiment_folder)
     os.makedirs(analysis_folder, exist_ok=True)
     jobfile = os.path.join(analysis_folder, f"session_{chunk}.sh")
     lines = [
@@ -171,18 +182,25 @@ def build_qsub_call(experiment_folder, chunk, config_file, **kwargs):
     )
     error_file = os.path.join(analysis_folder, f"session_{chunk}_error.txt")
     job_name = f"session_{chunk}"
-    cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} -cwd {jobfile}"
-    print(cmd)
-    return cmd.split(" ")
 
+    if backend == "sge":
+        cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} -cwd {jobfile}"
+        return cmd.split(" ")
+    elif backend == "task-spooler":
+        cmd_ts = f'ts -L {job_name} bash -c'
+        cmd_bash = f"{jobfile} > {output_file} 2>&1"
+        cmd = cmd_ts.split(" ")
+        cmd += [f"{cmd_bash}"]
+        return cmd
+        
 
 def run_one_loop(experiment_folder, chunk, config_file, **kwargs):
 
-    qsub_call = build_qsub_call(
+    async_call = build_async_call(
         experiment_folder, chunk, config_file, **kwargs
     )
     process = subprocess.Popen(
-        qsub_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        async_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = process.communicate()
     return stdout, stderr
@@ -257,6 +275,7 @@ def main(args=None):
             config_file,
             environment=args.environment,
             knowledge_transfer=args.knowledge_transfer,
+            jobs=args.jobs
         )
 
 
