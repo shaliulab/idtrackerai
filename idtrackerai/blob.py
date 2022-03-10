@@ -500,10 +500,24 @@ class Blob(object):
             True if the lists of pixels of both blobs have non-empty
             intersection
         """
+
+
+
         overlaps = False
-        intersection = np.isin(self.pixels, other.pixels, assume_unique=True)
-        if any(intersection):
-            overlaps = True
+
+        # Check bounding box overlapping between blobs S (self) and O (other)
+        (S_xmin, S_ymin), (S_xmax, S_ymax) = self.bounding_box_in_frame_coordinates
+        (O_xmin, O_ymin), (O_xmax, O_ymax) = other.bounding_box_in_frame_coordinates
+        x_overlap = S_xmax >= O_xmin and O_xmax >= S_xmin
+        y_overlap = S_ymax >= O_ymin and O_ymax >= S_ymin
+        bbox_overlaps = x_overlap and y_overlap
+
+        # If bounding boxes overlap, then compute pixel-to-pixel overlapping check
+        if bbox_overlaps:
+            intersection = np.isin(
+                self.pixels, other.pixels, assume_unique=True)
+            if any(intersection):
+                overlaps = True
         return overlaps
 
     def now_points_to(self, other):
