@@ -502,7 +502,6 @@ class Blob(object):
         """
 
 
-
         overlaps = False
 
         # Check bounding box overlapping between blobs S (self) and O (other)
