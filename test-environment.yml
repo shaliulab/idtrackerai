@@ -6,4 +6,5 @@ dependencies:
   - pytorch
   - torchvision
   - pytest
+  - cython
 
