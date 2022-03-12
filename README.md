@@ -70,7 +70,7 @@ installed (currenly tested with 495.44)
 The recomended way to install idtracker.ai v4 is using the following commands:
 
     conda create -n idtrackerai python=3.7
-    pip install idtrackerai[gui] --pre
+    pip install idtrackerai[gui]
     conda install pytorch torchvision -c pytorch
 
 This will install the latest version of pytorch (1.10.0) and torchvision (0.11.1)
