@@ -63,7 +63,7 @@ requirements = [
     "msgpack-numpy >= 0.3.9",
     "msgpack-python >= 0.4.8",
     "pandas >= 0.20.2",
-    "scipy >= 0.19.0",
+    "scipy < 1.8.0",
     "sklearn >= 0.0",
     "tables >= 3.3.0",
     "dask >= 0.17.0",
