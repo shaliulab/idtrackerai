@@ -129,9 +129,7 @@ class Blob(object):
         self.centroid = centroid
         self.contour = contour
         self.area = area
-        self.bounding_box_in_frame_coordinates = (
-            bounding_box_in_frame_coordinates
-        )
+        self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates
         self._bounding_box_image = bounding_box_image
         self.bounding_box_images_path = bounding_box_images_path
         self.estimated_body_length = estimated_body_length
@@ -194,9 +192,7 @@ class Blob(object):
             self.bounding_box_images_path
         ):
             with h5py.File(self.bounding_box_images_path, "r") as f:
-                return f[
-                    str(self.frame_number) + "-" + str(self.in_frame_index)
-                ][:]
+                return f[str(self.frame_number) + "-" + str(self.in_frame_index)][:]
         else:
             cap = cv2.VideoCapture(self.video_path)
             cap.set(1, self.frame_number_in_video_path)
@@ -225,9 +221,7 @@ class Blob(object):
         """
         if self._pixels is not None:
             return self._pixels
-        elif self._pixels_path is not None and os.path.isfile(
-            self._pixels_path
-        ):
+        elif self._pixels_path is not None and os.path.isfile(self._pixels_path):
             with h5py.File(self._pixels_path, "r") as f:
                 if not self.pixels_are_from_eroded_blob:
                     dataset_name = (
@@ -270,15 +264,10 @@ class Blob(object):
         """
         if self._eroded_pixels is not None:
             return self._pixels
-        elif self._pixels_path is not None and os.path.isfile(
-            self._pixels_path
-        ):
+        elif self._pixels_path is not None and os.path.isfile(self._pixels_path):
             with h5py.File(self._pixels_path, "r") as f:
                 return f[
-                    str(self.frame_number)
-                    + "-"
-                    + str(self.in_frame_index)
-                    + "-eroded"
+                    str(self.frame_number) + "-" + str(self.in_frame_index) + "-eroded"
                 ][:]
         else:
             # TODO: Check that if the blob is eroded the contour is updated.
@@ -299,10 +288,7 @@ class Blob(object):
         if self._pixels_path is not None:  # is saving in disk
             with h5py.File(self._pixels_path, "a") as f:
                 dataset_name = (
-                    str(self.frame_number)
-                    + "-"
-                    + str(self.in_frame_index)
-                    + "-eroded"
+                    str(self.frame_number) + "-" + str(self.in_frame_index) + "-eroded"
                 )
                 if dataset_name in f:
                     del f[dataset_name]
@@ -424,10 +410,7 @@ class Blob(object):
         while len(getattr(current, direction)) == 1:
 
             current = getattr(current, direction)[0]
-            if (
-                len(getattr(current, opposite_direction)) > 1
-                and current.is_a_crossing
-            ):
+            if len(getattr(current, opposite_direction)) > 1 and current.is_a_crossing:
                 return True
         return False
 
@@ -449,9 +432,7 @@ class Blob(object):
             has_crossing_in_past = self.check_for_crossing_in_next_or_previous(
                 "previous"
             )
-            has_crossing_in_future = (
-                self.check_for_crossing_in_next_or_previous("next")
-            )
+            has_crossing_in_future = self.check_for_crossing_in_next_or_previous("next")
             if has_crossing_in_past and has_crossing_in_future:
                 return True
         else:
@@ -465,21 +446,11 @@ class Blob(object):
         -------
         bool
         """
-        if self.is_a_crossing and (
-            len(self.previous) > 1 or len(self.next) > 1
-        ):
+        if self.is_a_crossing and (len(self.previous) > 1 or len(self.next) > 1):
             return True
-        elif (
-            self.is_a_crossing
-            and len(self.previous) == 1
-            and len(self.next) == 1
-        ):
-            has_multiple_previous = self.check_for_multiple_next_or_previous(
-                "previous"
-            )
-            has_multiple_next = self.check_for_multiple_next_or_previous(
-                "next"
-            )
+        elif self.is_a_crossing and len(self.previous) == 1 and len(self.next) == 1:
+            has_multiple_previous = self.check_for_multiple_next_or_previous("previous")
+            has_multiple_next = self.check_for_multiple_next_or_previous("next")
             if has_multiple_previous and has_multiple_next:
                 return True
         else:
@@ -501,7 +472,6 @@ class Blob(object):
             intersection
         """
 
-
         overlaps = False
 
         # Check bounding box overlapping between blobs S (self) and O (other)
@@ -513,8 +483,7 @@ class Blob(object):
 
         # If bounding boxes overlap, then compute pixel-to-pixel overlapping check
         if bbox_overlaps:
-            intersection = np.isin(
-                self.pixels, other.pixels, assume_unique=True)
+            intersection = np.isin(self.pixels, other.pixels, assume_unique=True)
             if any(intersection):
                 overlaps = True
         return overlaps
@@ -546,9 +515,7 @@ class Blob(object):
             Squared distance between centroids
         """
         if isinstance(other, Blob):
-            return np.sum(
-                (np.asarray(self.centroid) - np.asarray(other.centroid)) ** 2
-            )
+            return np.sum((np.asarray(self.centroid) - np.asarray(other.centroid)) ** 2)
         elif isinstance(other, (tuple, list, np.ndarray)):
             return np.sum((np.asarray(self.centroid) - np.asarray(other)) ** 2)
 
@@ -674,16 +641,13 @@ class Blob(object):
             # Note that sometimes len(user_generated_identities)
             # > len(assigned_identities)
             final_identities = []
-            for i, user_generated_identity in enumerate(
-                self.user_generated_identities
-            ):
+            for i, user_generated_identity in enumerate(self.user_generated_identities):
                 if user_generated_identity is None and i < len(
                     self.assigned_identities
                 ):
                     final_identities.append(self.assigned_identities[i])
                 elif (
-                    user_generated_identity is not None
-                    and user_generated_identity >= 0
+                    user_generated_identity is not None and user_generated_identity >= 0
                 ):
                     final_identities.append(user_generated_identity)
 
@@ -729,9 +693,7 @@ class Blob(object):
             )
             dset[i, ...] = image_for_identification
         self.identification_image_index = i
-        self.episode = int(
-            os.path.basename(file_path).split(".")[0].split("_")[-1]
-        )
+        self.episode = int(os.path.basename(file_path).split(".")[0].split("_")[-1])
 
     def get_image_for_identification(
         self,
@@ -817,10 +779,7 @@ class Blob(object):
         pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
         pca.fit(pxs1)
         rot_ang = (
-            np.arctan(pca.components_[0][1] / pca.components_[0][0])
-            * 180
-            / np.pi
-            + 45
+            np.arctan(pca.components_[0][1] / pca.components_[0][0]) * 180 / np.pi + 45
         )
         # we substract 45 so that the fish is aligned in the diagonal.
         # This way we have smaller frames
@@ -831,9 +790,7 @@ class Blob(object):
         center = np.array([int(center[0]), int(center[1])])
 
         # rotate
-        diag = np.sqrt(
-            np.sum(np.asarray(bounding_box_image.shape) ** 2)
-        ).astype(int)
+        diag = np.sqrt(np.sum(np.asarray(bounding_box_image.shape) ** 2)).astype(int)
         diag = (diag, diag)
         M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
         minif_rot = cv2.warpAffine(
@@ -847,9 +804,9 @@ class Blob(object):
         crop_distance = int(image_size / 2)
         x_range = range(center[0] - crop_distance, center[0] + crop_distance)
         y_range = range(center[1] - crop_distance, center[1] + crop_distance)
-        image_for_identification = minif_rot.take(
-            y_range, mode="wrap", axis=0
-        ).take(x_range, mode="wrap", axis=1)
+        image_for_identification = minif_rot.take(y_range, mode="wrap", axis=0).take(
+            x_range, mode="wrap", axis=1
+        )
 
         return image_for_identification
 
@@ -947,9 +904,7 @@ class Blob(object):
             # Note that sometimes len(user_generated_centroids) >
             # len(assigned_centroids)
             final_centroids = []
-            for i, user_generated_centroid in enumerate(
-                self.user_generated_centroids
-            ):
+            for i, user_generated_centroid in enumerate(self.user_generated_centroids):
                 # TODO: missing else
                 if user_generated_centroid[0] is None and i < len(
                     self.assigned_centroids
@@ -1047,36 +1002,24 @@ class Blob(object):
             raise Exception("The new centroid must be a tuple of length 2")
 
         if self.user_generated_centroids is None:
-            self._user_generated_centroids = [(None, None)] * len(
-                self.final_centroids
-            )
+            self._user_generated_centroids = [(None, None)] * len(self.final_centroids)
         if self.user_generated_identities is None:
-            self._user_generated_identities = [None] * len(
-                self.final_centroids
-            )
+            self._user_generated_identities = [None] * len(self.final_centroids)
 
         try:
             if old_centroid in self.user_generated_centroids:
-                centroid_index = self.user_generated_centroids.index(
-                    old_centroid
-                )
+                centroid_index = self.user_generated_centroids.index(old_centroid)
                 identity = self.user_generated_identities[centroid_index]
             elif old_centroid in self.assigned_centroids:
                 if self.assigned_centroids.count(old_centroid) > 1:
                     centroid_index = self.assigned_identities.index(identity)
                 else:
-                    centroid_index = self.assigned_centroids.index(
-                        old_centroid
-                    )
+                    centroid_index = self.assigned_centroids.index(old_centroid)
                 identity = self.assigned_identities[centroid_index]
             else:
-                raise Exception(
-                    "There is no centroid with the values of old_centroid"
-                )
+                raise Exception("There is no centroid with the values of old_centroid")
         except ValueError:
-            raise Exception(
-                "There is no centroid with the values of old_centroid"
-            )
+            raise Exception("There is no centroid with the values of old_centroid")
 
         self.user_generated_centroids[centroid_index] = new_centroid
         self.user_generated_identities[centroid_index] = identity
@@ -1141,16 +1084,10 @@ class Blob(object):
                 centroid[1] * self.resolution_reduction,
             )
 
-        if (
-            self.user_generated_centroids is None
-        ):  # removing a centroid from a crossing
-            self._user_generated_centroids = [(None, None)] * len(
-                self.final_centroids
-            )
+        if self.user_generated_centroids is None:  # removing a centroid from a crossing
+            self._user_generated_centroids = [(None, None)] * len(self.final_centroids)
         if self.user_generated_identities is None:
-            self._user_generated_identities = [None] * len(
-                self.final_identities
-            )
+            self._user_generated_identities = [None] * len(self.final_identities)
 
         try:
             if centroid in self.user_generated_centroids:
@@ -1161,9 +1098,7 @@ class Blob(object):
                 else:
                     centroid_index = self.assigned_centroids.index(centroid)
             else:
-                raise Exception(
-                    "There is no centroid with the values of centroid"
-                )
+                raise Exception("There is no centroid with the values of centroid")
         except ValueError:
             raise Exception("There is no centroid with the values of centroid")
 
@@ -1171,9 +1106,7 @@ class Blob(object):
         self._user_generated_identities[centroid_index] = -1
         video.is_centroid_updated = True
 
-    def add_centroid(
-        self, video, centroid, identity, apply_resolution_reduction=True
-    ):
+    def add_centroid(self, video, centroid, identity, apply_resolution_reduction=True):
         """[Validation] Adds a centroid with a given identity to the blob.
 
         This method is used in the validation GUI. It is useful to add
@@ -1230,13 +1163,9 @@ class Blob(object):
             )
 
         if self.user_generated_centroids is None:
-            self._user_generated_centroids = [(None, None)] * len(
-                self.final_centroids
-            )
+            self._user_generated_centroids = [(None, None)] * len(self.final_centroids)
         if self.user_generated_identities is None:
-            self._user_generated_identities = [None] * len(
-                self.final_identities
-            )
+            self._user_generated_identities = [None] * len(self.final_identities)
 
         self._user_generated_centroids.append(centroid)
         self._user_generated_identities.append(identity)
@@ -1273,13 +1202,9 @@ class Blob(object):
 
         # We prepare to also modify the centroid
         if self.user_generated_centroids is None:
-            self._user_generated_centroids = [(None, None)] * len(
-                self.final_centroids
-            )
+            self._user_generated_centroids = [(None, None)] * len(self.final_centroids)
         if self.user_generated_identities is None:
-            self._user_generated_identities = [None] * len(
-                self.final_identities
-            )
+            self._user_generated_identities = [None] * len(self.final_identities)
 
         # TODO: review this piece of code, not sure I need the try/except
         try:
@@ -1287,15 +1212,11 @@ class Blob(object):
                 centroid_index = self.user_generated_centroids.index(centroid)
             elif centroid in self.assigned_centroids:
                 if self.assigned_centroids.count(centroid) > 1:
-                    centroid_index = self.assigned_identities.index(
-                        old_identity
-                    )
+                    centroid_index = self.assigned_identities.index(old_identity)
                 else:
                     centroid_index = self.assigned_centroids.index(centroid)
             else:
-                raise Exception(
-                    "There is no centroid with the values of centroid"
-                )
+                raise Exception("There is no centroid with the values of centroid")
         except ValueError:
             raise Exception("There is no centroid with the values of centroid")
 
@@ -1338,8 +1259,7 @@ class Blob(object):
                 # Find the index of the centroid that correspond to the
                 # identity that we want to modify
                 index_same_identities = np.where(
-                    np.asarray(current.next[0].final_identities)
-                    == old_identity
+                    np.asarray(current.next[0].final_identities) == old_identity
                 )[0]
                 if index_same_identities.size == 1:
                     # there is only one centroid with the old identity
@@ -1349,23 +1269,15 @@ class Blob(object):
                 else:
                     # there are several centroids in the blob with the same
                     # identity
-                    next_centroids = np.asarray(
-                        current.next[0].final_centroids
-                    )
+                    next_centroids = np.asarray(current.next[0].final_centroids)
                     index_centroid = np.argmin(
-                        np.sqrt(
-                            np.sum((current_centroid - next_centroids) ** 2)
-                        )
+                        np.sqrt(np.sum((current_centroid - next_centroids) ** 2))
                     )
-                    next_centroid = current.next[0].final_centroids[
-                        index_centroid
-                    ]
+                    next_centroid = current.next[0].final_centroids[index_centroid]
             else:
                 # The next blob has a single centroid, i.e. an individual.
                 next_centroid = current.next[0].final_centroids[0]
-            current.next[0].update_identity(
-                old_identity, new_identity, next_centroid
-            )
+            current.next[0].update_identity(old_identity, new_identity, next_centroid)
             current = current.next[0]
             current_centroid = np.asarray(next_centroid)
             count_future_corrections += 1
@@ -1374,15 +1286,13 @@ class Blob(object):
 
         while (
             len(current.previous) == 1
-            and current.previous[0].fragment_identifier
-            == self.fragment_identifier
+            and current.previous[0].fragment_identifier == self.fragment_identifier
         ):
             # There is only one previous blob and we are in the same fragment
             if len(current.previous[0].final_centroids) > 1:
                 # There are multiple centroids, i.e. a crossing.
                 index_same_identities = np.where(
-                    np.asarray(current.previous[0].final_identities)
-                    == old_identity
+                    np.asarray(current.previous[0].final_identities) == old_identity
                 )[0]
                 if index_same_identities.size == 1:
                     # there is only one centroid with the old identity
@@ -1392,15 +1302,9 @@ class Blob(object):
                 else:
                     # there are several centroids in the blob with the same
                     # identity
-                    previous_centroids = np.asarray(
-                        current.previous[0].final_centroids
-                    )
+                    previous_centroids = np.asarray(current.previous[0].final_centroids)
                     index_centroid = np.argmin(
-                        np.sqrt(
-                            np.sum(
-                                (current_centroid - previous_centroids) ** 2
-                            )
-                        )
+                        np.sqrt(np.sum((current_centroid - previous_centroids) ** 2))
                     )
                     previous_centroid = current.previous[0].final_centroids[
                         index_centroid
@@ -1442,19 +1346,14 @@ class Blob(object):
         was_a_crossing = f"was_a_crossing: {self.was_a_crossing}\n"
         id = f"identity: {self.identity}\n"
         id_correcting_jumps = (
-            f"identity correcting jumps "
-            f"{self.identity_corrected_solving_jumps}\n"
+            f"identity correcting jumps " f"{self.identity_corrected_solving_jumps}\n"
         )
         correcting_gaps_id = (
             f"id correcting gaps: {self.identities_corrected_closing_gaps}\n"
         )
-        assigned_identities = (
-            f"assigned identities: {self.assigned_identities}\n"
-        )
+        assigned_identities = f"assigned identities: {self.assigned_identities}\n"
         assigned_centroids = f"assigned centroids: {self.assigned_centroids}\n"
-        user_identities = (
-            f"user identities: {self.user_generated_identities}\n"
-        )
+        user_identities = f"user identities: {self.user_generated_identities}\n"
         user_centroids = f"user centroids: {self.user_generated_centroids}\n"
         final_identities = f"final identities: {self.final_identities}\n"
         final_centroids = f"final centroids: {self.final_centroids}\n"
@@ -1480,9 +1379,7 @@ class Blob(object):
         )
         return summary_str
 
-    def draw(
-        self, frame, colors_lst=None, selected_id=None, is_selected=False
-    ):
+    def draw(self, frame, colors_lst=None, selected_id=None, is_selected=False):
         """[Validation] Draw the blob in a given frame of the video.
 
         Parameters
@@ -1508,23 +1405,15 @@ class Blob(object):
             pos = int(round(centroid[0], 0)), int(round(centroid[1], 0))
 
             if colors_lst:
-                color = (
-                    colors_lst[identity]
-                    if identity is not None
-                    else colors_lst[0]
-                )
+                color = colors_lst[identity] if identity is not None else colors_lst[0]
             else:
                 color = (0, 0, 255)
 
             if contour is not None:
                 if not is_selected:
-                    cv2.polylines(
-                        frame, np.array([contour]), True, (0, 255, 0), 1
-                    )
+                    cv2.polylines(frame, np.array([contour]), True, (0, 255, 0), 1)
                 else:
-                    cv2.polylines(
-                        frame, np.array([contour]), True, (0, 255, 0), 2
-                    )
+                    cv2.polylines(frame, np.array([contour]), True, (0, 255, 0), 2)
 
             # cv2.circle(frame, pos, 8, (255, 255, 255), -1, lineType=cv2.LINE_AA)
             cv2.circle(frame, pos, 6, color, -1, lineType=cv2.LINE_AA)
@@ -1532,9 +1421,7 @@ class Blob(object):
             if identity is not None:
 
                 if identity == selected_id:
-                    cv2.circle(
-                        frame, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA
-                    )
+                    cv2.circle(frame, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA)
                 idroot = ""
                 if (
                     self.user_generated_identities is not None
@@ -1573,22 +1460,16 @@ class Blob(object):
 
                 if idroot == "c-" and bounding_box is not None:
                     rect_color = (
-                        self.rect_color
-                        if hasattr(self, "rect_color")
-                        else (255, 0, 0)
+                        self.rect_color if hasattr(self, "rect_color") else (255, 0, 0)
                     )
                     cv2.rectangle(
                         frame, bounding_box[0], bounding_box[1], rect_color, 2
                     )
             elif bounding_box is not None:
                 rect_color = (
-                    self.rect_color
-                    if hasattr(self, "rect_color")
-                    else (255, 0, 0)
+                    self.rect_color if hasattr(self, "rect_color") else (255, 0, 0)
                 )
-                cv2.rectangle(
-                    frame, bounding_box[0], bounding_box[1], rect_color, 2
-                )
+                cv2.rectangle(frame, bounding_box[0], bounding_box[1], rect_color, 2)
 
                 idstr = "0"
                 text_size = cv2.getTextSize(
@@ -1651,15 +1532,13 @@ def _mask_background_pixels(
     temp_image = np.zeros_like(bounding_box_image).astype("uint8")
     temp_image[pxs[0, :], pxs[1, :]] = 255
 
-    temp_image = cv2.dilate(
-        temp_image, np.ones((3, 3)).astype("uint8"), iterations=1
-    )
+    temp_image = cv2.dilate(temp_image, np.ones((3, 3)).astype("uint8"), iterations=1)
 
     rows, columns = np.where(temp_image == 255)
     dilated_pixels = np.array([rows, columns])
-    temp_image[
+    temp_image[dilated_pixels[0, :], dilated_pixels[1, :]] = bounding_box_image[
         dilated_pixels[0, :], dilated_pixels[1, :]
-    ] = bounding_box_image[dilated_pixels[0, :], dilated_pixels[1, :]]
+    ]
 
     return temp_image
 
@@ -1683,6 +1562,5 @@ def _transform_to_bbox_coordinates(point, bounding_box):
 
     """
     return tuple(
-        np.asarray(point)
-        - np.asarray([bounding_box[0][0], bounding_box[0][1]])
+        np.asarray(point) - np.asarray([bounding_box[0][0], bounding_box[0][1]])
     )
