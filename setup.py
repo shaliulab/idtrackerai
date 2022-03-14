@@ -67,7 +67,7 @@ requirements = [
     "sklearn >= 0.0",
     "tables >= 3.3.0",
     "dask >= 0.17.0",
-    "opencv-python == 3.4.5.20",
+    "opencv-python >= 3.4.5.20",
     "confapp >= 1.1.11",
     "gdown >= 3.10.0",
 ]
@@ -114,7 +114,7 @@ setup(
             "python-video-annotator==3.306",
             "python-video-annotator-module-idtrackerai == 1.0.1a0",
         ],
-        "gpu": ["pytorch", "torchvision"],
+        "gpu": ["torch", "torchvision"],
         "dev": ["pytest", "black", "sphinx", "numpydoc"],
     },
     zip_safe=False,
