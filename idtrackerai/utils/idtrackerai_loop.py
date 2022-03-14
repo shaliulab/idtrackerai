@@ -5,6 +5,7 @@ import os.path
 import re
 import subprocess
 import json
+import shlex
 
 FORBIDDEN_FIELDS = ["session", "_chunk", "_video"]
 ANALYSIS_FOLDER_NAME="idtrackerai"
@@ -186,13 +187,12 @@ def build_async_call(experiment_folder, chunk, config_file, backend="task-spoole
 
     if backend == "sge":
         cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} -cwd {jobfile}"
-        return cmd.split(" ")
+        return shlex.split(cmd)
     elif backend == "task-spooler":
-        gpu_requirement = "-G"
-        cmd_ts = f'ts {gpu_requirement} -L {job_name} bash -c'
-        cmd_bash = f"{jobfile} > {output_file} 2>&1"
-        cmd = cmd_ts.split(" ")
-        cmd += [f"{cmd_bash}"]
+        gpu_requirement = "-G 1"
+        cmd_ts = shlex.split(f'ts {gpu_requirement} -L {job_name} bash -c')
+        cmd_bash = shlex.split(f"{jobfile} > {output_file} 2>&1")
+        cmd = cmd_ts + cmd_bash
         return cmd
         
 
@@ -201,6 +201,9 @@ def run_one_loop(experiment_folder, chunk, config_file, **kwargs):
     async_call = build_async_call(
         experiment_folder, chunk, config_file, **kwargs
     )
+
+    print(" ".join(async_call))
+
     process = subprocess.Popen(
         async_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
