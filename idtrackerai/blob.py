@@ -504,14 +504,10 @@ class Blob(object):
         overlaps = False
 
         # Check bounding box overlapping between blobs S (self) and O (other)
-        (S_xmin, S_ymin), (
-            S_xmax,
-            S_ymax,
-        ) = self.bounding_box_in_frame_coordinates
-        (O_xmin, O_ymin), (
-            O_xmax,
-            O_ymax,
-        ) = other.bounding_box_in_frame_coordinates
+        (S_xmin, S_ymin) = self.bounding_box_in_frame_coordinates[0]
+        (S_xmax, S_ymax) = self.bounding_box_in_frame_coordinates[1]
+        (O_xmin, O_ymin) = other.bounding_box_in_frame_coordinates[0]
+        (O_xmax, O_ymax) = other.bounding_box_in_frame_coordinates[1]
         x_overlap = S_xmax >= O_xmin and O_xmax >= S_xmin
         y_overlap = S_ymax >= O_ymin and O_ymax >= S_ymin
         bbox_overlaps = x_overlap and y_overlap
