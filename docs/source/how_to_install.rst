@@ -206,7 +206,7 @@ terminal or in the Anaconda Powershell Prompt in Windows):
 
     conda create -n idtrackerai python=3.7
     conda activate idtrackerai
-    pip install idtrackerai[gui] --pre
+    pip install idtrackerai[gui]
     conda install pytorch torchvision -c pytorch
 
 Below we give more detailed installation instructions for the different usage 
@@ -220,7 +220,7 @@ you can install idtracker.ai with GUI support with the following command
 
 .. code-block:: bash
 
-    pip install idtrackerai[gui] --pre
+    pip install idtrackerai[gui]
 
 To get GPU support without having to manually install the CUDA 10.2 or 11.3,
 you can install PyTorch with GPU support from the Conda package manager with the following command:

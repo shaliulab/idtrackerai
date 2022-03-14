@@ -6,4 +6,3 @@ dependencies:
   - pytorch
   - torchvision
   - pytest
-
