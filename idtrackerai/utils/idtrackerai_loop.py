@@ -183,11 +183,13 @@ def build_async_call(experiment_folder, chunk, config_file, backend="task-spoole
     error_file = os.path.join(analysis_folder, f"session_{chunk}_error.txt")
     job_name = f"session_{chunk}"
 
+
     if backend == "sge":
         cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} -cwd {jobfile}"
         return cmd.split(" ")
     elif backend == "task-spooler":
-        cmd_ts = f'ts -L {job_name} bash -c'
+        gpu_requirement = "-G"
+        cmd_ts = f'ts {gpu_requirement} -L {job_name} bash -c'
         cmd_bash = f"{jobfile} > {output_file} 2>&1"
         cmd = cmd_ts.split(" ")
         cmd += [f"{cmd_bash}"]
