@@ -79,7 +79,7 @@ class ListOfBlobs(object):
         the frame.
     """
 
-    PROCESSS_SIZE = 500
+    PROCESSS_SIZE = 1000
 
     def __init__(self, blobs_in_video):
         self.blobs_in_video = blobs_in_video
