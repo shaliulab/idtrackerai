@@ -184,15 +184,15 @@ def build_async_call(experiment_folder, chunk, config_file, backend="task-spoole
     error_file = os.path.join(analysis_folder, f"session_{chunk}_error.txt")
     job_name = f"session_{chunk}"
 
-
     if backend == "sge":
         cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} -cwd {jobfile}"
         return shlex.split(cmd)
     elif backend == "task-spooler":
         gpu_requirement = "-G 1"
-        cmd_ts = shlex.split(f'ts {gpu_requirement} -L {job_name} bash -c')
-        cmd_bash = shlex.split(f"{jobfile} > {output_file} 2>&1")
+        cmd_ts = shlex.split(f'ts -n {gpu_requirement} -L {job_name}')
+        cmd_bash = shlex.split(f'bash -c "{jobfile} > {output_file} 2>&1"')
         cmd = cmd_ts + cmd_bash
+        print(cmd)
         return cmd
         
 
@@ -205,7 +205,7 @@ def run_one_loop(experiment_folder, chunk, config_file, **kwargs):
     print(" ".join(async_call))
 
     process = subprocess.Popen(
-        async_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        async_call
     )
     stdout, stderr = process.communicate()
     return stdout, stderr
