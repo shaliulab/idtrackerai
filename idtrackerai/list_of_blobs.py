@@ -217,10 +217,18 @@ class ListOfBlobs(object):
 
             processes[process_name] = process
 
+        processes_names = list(processes.keys())
+        completed = 0
+        started = 0
+        n_processes = len(processes)
+
         # compute the blob overlap in parallel
-        for process_name, process in processes.items():
+        for i in range(n_jobs):
+            process_name = processes_names[i]
+            process = processes[process_name]
             # this call starts a process / worker in the background
             # so this whole for loop takes ms to run
+            started += 1
             process.start()
             # Here we need to figure out when n_jobs processes have
             # been started and dont start more until one of them is done
@@ -235,10 +243,18 @@ class ListOfBlobs(object):
                 "Not all blobs have been annotated. idtrackerai may hang"
             )
 
-        for process_name, process in processes.items():
+        for i in range(n_processes):
             # if the queue still has stuff in it, the program
             # hangs here
+            process_name = processes_names[i]
+            process = processes[process_name]
             process.join()
+            completed += 1
+            if started < n_processes:
+                processes[processes_names[started]].start()
+                started+=1
+
+
 
         self.stitch_parallel_blocks(starts, ends)
         self.blobs_are_connected = True
