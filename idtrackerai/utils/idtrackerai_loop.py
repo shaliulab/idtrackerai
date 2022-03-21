@@ -1,5 +1,5 @@
 import argparse
-import warnings
+import logging
 import os
 import os.path
 import re
@@ -9,6 +9,8 @@ import shlex
 
 FORBIDDEN_FIELDS = ["session", "_chunk", "_video"]
 ANALYSIS_FOLDER_NAME="idtrackerai"
+
+logger = logging.getLogger(__name__)
 
 def get_analysis_folder(folder):
     return os.path.join(folder, ANALYSIS_FOLDER_NAME)
@@ -102,16 +104,20 @@ def write_jobfile(
     # all other appends to local_settings.py should have >>
 
     lines.append("echo SETTINGS_PRIORITY=1 > local_settings.py")
-    lines.append(
-        f"echo NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION={jobs} >> local_settings.py"
-    )
-    lines.append(
-        f"echo NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS={jobs} >> local_settings.py"
-    )
+    
+    number_of_job_properties = [
+        "NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION",
+        "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS",
+        "NUMBER_OF_JOBS_FOR_SEGMENTATION",
+        "NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES"
+    ]
 
-    lines.append(
-        f"echo NUMBER_OF_JOBS_FOR_SEGMENTATION={jobs} >> local_settings.py"
-    )
+    for property in number_of_job_properties:
+
+        lines.append(
+            f"echo {property}={jobs} >> local_settings.py"
+        )
+        
 
     if knowledge_transfer:
 
@@ -230,7 +236,7 @@ def get_network_folder(experiment_folder, i):
     )
 
     if not os.path.exists(session_folder):
-        warnings.warn(f"{session_folder} does not exist")
+        logger.warning(f"{session_folder} does not exist")
         return None
 
     folders_in_session = os.listdir(session_folder)

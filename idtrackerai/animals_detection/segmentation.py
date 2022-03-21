@@ -465,8 +465,17 @@ def _segment_video_in_parallel(
     logger.info(
         f"Segmentation images stored in {conf.SAVE_SEGMENTATION_IMAGE}"
     )
+    
+    n_cpus=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
+
     for episodes_sublist in tqdm(episodes_sublists, desc="Segmenting video"):
-        OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
+        episodes_sublist = list(episodes_sublist)
+        n_jobs = len(episodes_sublist)
+
+        logger.info(f"Number of CPUs for video segmentation = {n_cpus}")
+        logger.info(f"Number of jobs for video segmentation = {n_jobs}")
+
+        OupPutParallel = Parallel(n_jobs=n_cpus)(
             delayed(_segment_episode)(
                 episode_number,
                 start_end[0],
@@ -486,6 +495,7 @@ def _segment_video_in_parallel(
             [out[1] for out in OupPutParallel]
         )
         blobs_in_video.append(blobs_in_episode)
+
     return blobs_in_video, maximum_number_of_blobs_in_episode
 
 
@@ -556,6 +566,7 @@ def segment(
     # print([list(episodes_sublist) for episodes_sublist in episodes_sublists])
     # print("******************************************************************")
     set_mkl_to_single_thread()
+
     blobs_in_video, maximum_number_of_blobs = _segment_video_in_parallel(
         episodes_sublists,
         segmentation_data_folder,

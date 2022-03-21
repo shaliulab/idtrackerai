@@ -33,7 +33,7 @@ import itertools
 import logging
 import multiprocessing
 import time
-
+import math
 
 import h5py
 import numpy as np
@@ -79,8 +79,6 @@ class ListOfBlobs(object):
         the frame.
     """
 
-    PROCESSS_SIZE = 1000
-
     def __init__(self, blobs_in_video):
         self.blobs_in_video = blobs_in_video
         self.number_of_frames = len(self.blobs_in_video)
@@ -89,7 +87,7 @@ class ListOfBlobs(object):
     def __len__(self):
         return len(self.blobs_in_video)
 
-    def partition_blobs_across_processes(self):
+    def partition_blobs_across_processes(self, n_jobs):
         """
         Given a total number of frames and a number of frames to be processed on each parallel process,
         this function computes the start and end of the frame intervals that should be used
@@ -102,19 +100,10 @@ class ListOfBlobs(object):
 
         """
 
-        starts = list(range(0, self.number_of_frames, self.PROCESSS_SIZE))
-        ends = list(
-            range(
-                self.PROCESSS_SIZE, self.number_of_frames, self.PROCESSS_SIZE
-            )
-        )
+        process_size = math.ceil(self.number_of_frames / n_jobs)
 
-        if len(ends) == 0:
-            ends.append(self.number_of_frames)
-
-        if ends[-1] != self.number_of_frames:
-            ends.append(self.number_of_frames)
-
+        starts = list(range(0, self.number_of_frames, process_size))
+        ends = [starts[i] + process_size for i in range(len(starts))]
         return starts, ends
 
     def compute_overlapping_between_subsequent_frames(self, n_jobs=None):
@@ -188,7 +177,7 @@ class ListOfBlobs(object):
 
     # TODO Right now, the n_jobs argument is ignored
     # (only whether it is 1 or not, to choose multiprocessing or not)
-    # Instead, as many processes as self.number_frames / self.PROCESSS_SIZE jobs
+    # Instead, as many processes as self.number_frames / process_size jobs
     # are instantiated and ran at the same time
     # This is fine if that number is less than the number of CPUs,
     # otherwise it leads to overuse of the CPUs
@@ -198,7 +187,7 @@ class ListOfBlobs(object):
     ):
 
         self.disconnect()
-        starts, ends = self.partition_blobs_across_processes()
+        starts, ends = self.partition_blobs_across_processes(n_jobs)
 
         # init processes
         processes = {}
@@ -220,7 +209,10 @@ class ListOfBlobs(object):
         processes_names = list(processes.keys())
         completed = 0
         started = 0
-        n_processes = len(processes)
+
+        print(
+            f"idtrackerai will run the blob connection algorithm in {len(processes)} parallel processes"
+        )
 
         # compute the blob overlap in parallel
         for i in range(n_jobs):
@@ -243,18 +235,13 @@ class ListOfBlobs(object):
                 "Not all blobs have been annotated. idtrackerai may hang"
             )
 
-        for i in range(n_processes):
+        for i in range(n_jobs):
             # if the queue still has stuff in it, the program
             # hangs here
             process_name = processes_names[i]
             process = processes[process_name]
             process.join()
             completed += 1
-            if started < n_processes:
-                processes[processes_names[started]].start()
-                started+=1
-
-
 
         self.stitch_parallel_blocks(starts, ends)
         self.blobs_are_connected = True

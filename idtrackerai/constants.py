@@ -86,7 +86,6 @@ BACKGROUND_SUBTRACTION_STAT = os.environ.get(
 # Set None to use the default mode of the system.
 # (see segmentation_utils.py module for details)
 NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION = -2
-NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS = 1
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
 NUMBER_OF_JOBS_FOR_SEGMENTATION = -2
