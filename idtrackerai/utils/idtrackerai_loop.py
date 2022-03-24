@@ -109,15 +109,19 @@ def write_jobfile(
         "NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION",
         "NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS",
         "NUMBER_OF_JOBS_FOR_SEGMENTATION",
-        "NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES"
     ]
 
-    for property in number_of_job_properties:
+    for prop in number_of_job_properties:
 
         lines.append(
-            f"echo {property}={jobs} >> local_settings.py"
+            f"echo {prop}={jobs} >> local_settings.py"
         )
-        
+
+    prop="NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES"
+    jobs=7
+    lines.append(
+        f"echo {prop}={jobs} >> local_settings.py"
+    )        
 
     if knowledge_transfer:
 
@@ -125,9 +129,12 @@ def write_jobfile(
             lines.append(
                 'echo "from idtrackerai.utils.idtrackerai_loop import setup_knowledge_transfer" >> local_settings.py'
             )
-            function_call = f'setup_knowledge_transfer(experiment_folder="{analysis_folder}", i={int(chunk)-1})'
+            function_call = f'setup_knowledge_transfer(experiment_folder="{analysis_folder}", i={int(chunk)-1}, max_past={int(chunk)-10})'
             lines.append(
                 f"echo 'IDENTITY_TRANSFER, KNOWLEDGE_TRANSFER_FOLDER_IDCNN={function_call}' >> local_settings.py"
+            )
+            lines.append(
+                f"echo 'print(IDENTITY_TRANSFER); print(KNOWLEDGE_TRANSFER_FOLDER_IDCNN)' >> local_settings.py"
             )
         else:
             lines.append("echo IDENTITY_TRANSFER=True > local_settings.py")
@@ -226,9 +233,9 @@ def setup_knowledge_transfer(*args, **kwargs):
         return True, network_folder
 
 
-def get_network_folder(experiment_folder, i):
+def get_network_folder(experiment_folder, i, max_past):
 
-    if i < 0:
+    if i < 0 or i == max_past:
         return None
 
     session_folder = os.path.join(
@@ -246,7 +253,7 @@ def get_network_folder(experiment_folder, i):
             accum_folders.append(os.path.join(session_folder, folder))
 
     if len(accum_folders) == 0:
-        return get_network_folder(experiment_folder, i - 1)
+        return get_network_folder(experiment_folder, i - 1, max_past)
     else:
         # last_network = sorted(accum_folders)[-1]
         # return last_network

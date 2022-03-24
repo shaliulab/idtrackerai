@@ -38,7 +38,7 @@ import math
 import h5py
 import numpy as np
 from confapp import conf
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, parallel_backend
 from tqdm import tqdm
 
 from idtrackerai.blob import Blob
@@ -546,27 +546,31 @@ class ListOfBlobs(object):
         width : int
             Width of a video frame considering the resolution reduction factor.
         """
-        Output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
-            delayed(self._set_identification_images_per_episode)(
-                identification_image_size,
-                number_of_animals,
-                number_of_frames,
-                video_path,
-                height,
-                width,
-                file,
-                self.blobs_in_video[start:end],
-            )
-            for file, (start, end) in tqdm(
-                list(
-                    zip(
-                        identification_images_file_paths,
-                        episodes_start_end,
+        n_cpus = conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
+        n_jobs = len(episodes_start_end)
+        logger.info(f"Number of CPUs for setting id images = {n_cpus}")
+        logger.info(f"Number of jobs for setting id images = {n_jobs}")
+
+        with parallel_backend("loky", inner_max_num_threads=2):
+            Output = Parallel(n_jobs=n_cpus)(
+                delayed(self._set_identification_images_per_episode)(
+                    identification_image_size,
+                    number_of_animals,
+                    number_of_frames,
+                    video_path,
+                    height,
+                    width,
+                    file,
+                    self.blobs_in_video[start:end],
+                )
+                for file, (start, end) in
+                    list(
+                        zip(
+                            identification_images_file_paths,
+                            episodes_start_end,
+                        )
                     )
-                ),
-                desc="Setting images for identification",
             )
-        )
         self.blobs_in_video = [
             blobs_in_frame
             for blobs_in_episode in Output
@@ -595,7 +599,7 @@ class ListOfBlobs(object):
             file,
             video_path,
         )
-        for blobs_in_frame in blobs_in_episode:
+        for blobs_in_frame in tqdm(blobs_in_episode, desc="Setting identification images"):
             for blob in blobs_in_frame:
                 blob.save_image_for_identification(
                     identification_image_size, height, width, file

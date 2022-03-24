@@ -34,6 +34,7 @@ import gc
 import logging
 import multiprocessing
 import os
+from unicodedata import numeric
 
 import cv2
 import h5py
@@ -409,6 +410,9 @@ def _segment_episode(
     max_number_of_blobs = 0
     frame_number = 0
     blobs_in_episode = []
+    
+    pb = tqdm(total=number_of_frames_in_episode, desc="Segmenting video")
+
     while frame_number < number_of_frames_in_episode:
 
         # Compute the global fragment number in the video
@@ -444,6 +448,7 @@ def _segment_episode(
         # store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)
         frame_number += 1
+        pb.update(1)
 
     cap.release()
     gc.collect()
@@ -468,7 +473,8 @@ def _segment_video_in_parallel(
     
     n_cpus=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
 
-    for episodes_sublist in tqdm(episodes_sublists, desc="Segmenting video"):
+    # for episodes_sublist in tqdm(episodes_sublists, desc="Segmenting video"):
+    for episodes_sublist in episodes_sublists:
         episodes_sublist = list(episodes_sublist)
         n_jobs = len(episodes_sublist)
 
