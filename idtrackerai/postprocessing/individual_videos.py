@@ -46,6 +46,13 @@ from idtrackerai.utils.py_utils import get_spaced_colors_util
 logger = logging.getLogger("__main__.video")
 
 
+from confapp import conf
+try:
+    import local_settings
+    conf += local_settings
+except:
+    pass
+
 def get_frame(frame, centroid, height, width):
     if not np.all(np.isnan(centroid)):
         X, Y = int(centroid[1]), int(centroid[0])
@@ -60,7 +67,7 @@ def get_frame(frame, centroid, height, width):
         return np.zeros((height, width))
 
 
-def initialize_video_writer(video_object, height, width, identity):
+def initialize_video_writer_xvid(video_object, height, width, identity):
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
     file_name = os.path.join(
@@ -68,10 +75,59 @@ def initialize_video_writer(video_object, height, width, identity):
         "minivideo_{}.avi".format(identity),
     )
     out = cv2.VideoWriter(
-        file_name, fourcc, video_object.frames_per_second, (height, width)
+        file_name, fourcc, video_object.frames_per_second, (width, height)
     )
     return out
 
+def initialize_video_writer_nvenc(video_object, height, width, identity):
+    import cv2cuda
+
+    file_name = os.path.join(
+        video_object.individual_videos_folder,
+        "minivideo_{}.mp4".format(identity),
+    )
+
+    out = cv2cuda.VideoWriter(
+        file_name, apiPreference="FFMPEG", fourcc="h264_nvenc", fps=video_object.frames_per_second, frameSize=(width, height)
+    )
+    return out
+
+
+def initialize_video_writer(*args, backend="cv2", **kwargs):
+    # Define the codec and create VideoWriter object
+
+    if backend=="cv2":
+        return initialize_video_writer_xvid(*args, **kwargs)
+    elif backend=="cv2cuda":
+        return initialize_video_writer_nvenc(*args, **kwargs)
+
+def initialize_statistics_file(video_object, identity):
+    file_name = os.path.join(
+            video_object.individual_videos_folder,
+            "minivideo_{}.csv".format(identity),
+        )
+
+    
+    filehandle = open(file_name, "w")
+    filehandle.write("frame_idx,absdiff,x,y\n")
+    return filehandle
+    
+def update_centroid(centroid, last_centroid, threshold):
+
+    if last_centroid is None:
+        return centroid
+        
+    if abs(centroid[1] - last_centroid[1]) > threshold:
+        X = centroid[1]
+    else:
+        X = last_centroid[1]
+    
+    if abs(centroid[0] - last_centroid[0]) > threshold:
+        Y = centroid[0]
+    else:
+        Y = last_centroid[0]
+
+    return (Y, X)
 
 def generate_individual_video(
     video_object,
@@ -83,7 +139,11 @@ def generate_individual_video(
     color=(0, 0, 0),
 ):
     # Initialize video writer
-    out = initialize_video_writer(video_object, height, width, identity)
+    last_frame = None
+    last_centroid = None
+
+    out = initialize_video_writer(video_object, height, width, identity, backend=conf.INDIVIDUAL_VIDEO_BACKEND)
+    out_stats = initialize_statistics_file(video_object, identity)
     # Initialize cap reader
     if len(video_object.video_paths) > 1:
         current_segment = 0
@@ -110,8 +170,11 @@ def generate_individual_video(
         except cv2.error:
             raise Exception("could not read frame")
         # Generate frame for individual
+        centroid = trajectories[frame_number, identity - 1]
+        centroid = update_centroid(centroid, last_centroid, threshold=0)
+
         individual_frame = get_frame(
-            frame, trajectories[frame_number, identity - 1], height, width
+            frame, centroid, height, width
         )
 
         individual_frame = individual_frame.astype("uint8")
@@ -132,8 +195,35 @@ def generate_individual_video(
 
         # Write frame in video
         out.write(individual_frame)
+
+        if last_frame is not None:
+            absdiff = cv2.absdiff(last_frame, individual_frame)
+            absdiff_stat = absdiff[absdiff > conf.ABSDIFF_THRESHOLD].mean()
+            out_stats.write(f"{frame_number},{absdiff_stat},{centroid[1]},{centroid[0]}\n")
+        else:
+            out_stats.write(f"{frame_number},0,0,0\n")
+
+        if conf.SAVE_INDIVIDUAL_IMAGES:
+            subfolder = os.path.join(
+                video_object.individual_videos_folder,
+                "minivideo_{}".format(identity)
+            )
+
+            os.makedirs(subfolder, exist_ok=True)
+            cv2.imwrite(
+                os.path.join(
+                    subfolder,
+                    "{}.png".format(str(frame_number).zfill(6)),
+                ),
+                individual_frame
+            )
+
+        last_frame = individual_frame
+        last_centroid = centroid
+
     cap.release()
     out.release()
+    out_stats.close()
     cv2.destroyAllWindows()
 
 
@@ -168,20 +258,34 @@ def generate_individual_videos(video_object, trajectories, **kwargs):
         number_of_animals = int(input("Please enter number of animals!"))
 
     colors = get_spaced_colors_util(number_of_animals, black=False)
-    Parallel(n_jobs=-2)(
-        delayed(generate_individual_video)(
-            video_object,
-            trajectories,
-            identity=i + 1,
-            width=width,
-            height=height,
-            color=colors[i],
-            **kwargs
+    n_jobs=conf.NUMBER_OF_JOBS_FOR_INDIVIDUAL_VIDEO_GENERATION
+    if n_jobs != 1:
+        Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_INDIVIDUAL_VIDEO_GENERATION)(
+            delayed(generate_individual_video)(
+                video_object,
+                trajectories,
+                identity=i + 1,
+                width=width,
+                height=height,
+                color=colors[i],
+                **kwargs
+            )
+            for i in range(
+                video_object.user_defined_parameters["number_of_animals"]
+            )
         )
-        for i in range(
-            video_object.user_defined_parameters["number_of_animals"]
-        )
-    )
+    else:
+        for i in range(video_object.user_defined_parameters["number_of_animals"]):
+            generate_individual_video(
+                video_object,
+                trajectories,
+                identity=i+1,
+                width=width,
+                height=height,
+                color=colors[i],
+                **kwargs
+            )
+
     logger.info("Invididual videos generated")
 
 

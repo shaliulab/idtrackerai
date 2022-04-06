@@ -189,12 +189,12 @@ class Blob(object):
     def getstate_safe(self):
         previous_blobs = getattr(self, "previous", [])
         previous_blobs = [
-            (blob.frame_number, blob.in_frame_index) for blob in previous_blobs
+            (blob.frame_number, blob.unique_identifier) for blob in previous_blobs
         ]
 
         next_blobs = getattr(self, "next", [])
         next_blobs = [
-            (blob.frame_number, blob.in_frame_index) for blob in next_blobs
+            (blob.frame_number, blob.unique_identifier) for blob in next_blobs
         ]
 
         self._now_points_to_blob_fn_index = {
