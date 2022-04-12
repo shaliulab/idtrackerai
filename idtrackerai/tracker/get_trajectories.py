@@ -240,7 +240,7 @@ def produce_output_dict(blobs_in_video, video):
 
     """
     if not len(blobs_in_video) == video.number_of_frames:
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         raise Exception(
             f"Number of frames of video ({video.number_of_frames})"
             " does not match number of frames in this list of blobs"

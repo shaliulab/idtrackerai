@@ -186,30 +186,46 @@ class Blob(object):
     def frame_number_generic(self):
         return self.frame_number
 
-    def getstate_safe(self):
-        previous_blobs = getattr(self, "previous", [])
-        previous_blobs = [
-            (blob.frame_number, blob.unique_identifier) for blob in previous_blobs
-        ]
+    # def getstate_safe(self):
+    #     previous_blobs = getattr(self, "previous", [])
+    #     previous_blobs = [
+    #         (blob.frame_number_in_video_path, blob.unique_identifier) for blob in previous_blobs
+    #     ]
 
-        next_blobs = getattr(self, "next", [])
-        next_blobs = [
-            (blob.frame_number, blob.unique_identifier) for blob in next_blobs
-        ]
+    #     next_blobs = getattr(self, "next", [])
+    #     next_blobs = [
+    #         (blob.frame_number_in_video_path, blob.unique_identifier) for blob in next_blobs
+    #     ]
 
-        self._now_points_to_blob_fn_index = {
-            "previous": previous_blobs,
-            "next": previous_blobs,
-        }
+    #     self._now_points_to_blob_fn_index = {
+    #         "previous": previous_blobs,
+    #         "next": next_blobs,
+    #     }
+
+    @property
+    def unique_identifier(self):
+        return self.bounding_box_in_frame_coordinates
+
+    def identifier_matches(self, identifier):
+
+        if isinstance(identifier, list):
+            return all([
+                v == identifier[i] for i, v in enumerate(self.unique_identifier)
+            ])
+        
+        elif isinstance(identifier, tuple):
+            return self.unique_identifier == identifier
+
 
     def __getstate__(self):
 
-        self.getstate_safe()
-        d = self.__dict__
-        # remove all (direct) references to other blobs
-        # to avoid infinite recursiveness
+        # self.getstate_safe()
+        # option 1
+        # d = {k: v for k, v in self.__dict__.items() if k not in ["previous", "next"]}
+        # option 2
+        d = self.__dict__.copy()
         d["previous"] = []
-        d["next"] = []
+        d["next"] = []     
         return d
 
     @property
@@ -574,7 +590,7 @@ class Blob(object):
             overlaps = True
         return overlaps
 
-    def now_points_to(self, other):
+    def now_points_to(self, other, update_cache=True):
         """Given two consecutive blob objects updates their respective
         overlapping histories
 
@@ -586,6 +602,15 @@ class Blob(object):
         assert self is not other
         self.next.append(other)
         other.previous.append(self)
+
+        if update_cache:
+            self._now_points_to_blob_fn_index["next"].append(
+                (other.frame_number_in_video_path, other.unique_identifier)
+            )
+            other._now_points_to_blob_fn_index["previous"].append(
+                (self.frame_number_in_video_path, self.unique_identifier)
+            )
+
 
     def squared_distance_to(self, other):
         """Returns the squared distance from the centroid of self to the
@@ -1488,6 +1513,10 @@ class Blob(object):
         fragment_id = f"fragment id: {self.fragment_identifier}\n"
         previous_blob = f"previous blob(s): {self.previous}\n"
         next_blob = f"next blob(s): {self.next}\n"
+        unique_identifier = f"unique_identifier: {self.unique_identifier}\n"
+        now_points_to_blob_fn_index = f"now_points_to_blob_fn_index: {self._now_points_to_blob_fn_index}\n"
+        frame_number = f"frame_number: {self.frame_number_in_video_path}\n"
+
         sure_individual_crossing = (
             f"sure individual-crossing: "
             f"{self.is_a_sure_individual()}-"
@@ -1522,8 +1551,11 @@ class Blob(object):
             blob_name
             + used_for_training
             + fragment_id
+            + frame_number
             + previous_blob
             + next_blob
+            + unique_identifier
+            + now_points_to_blob_fn_index
             + sure_individual_crossing
             + individual_crossing
             + was_a_crossing

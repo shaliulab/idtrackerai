@@ -171,6 +171,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
             self.list_of_blobs.compute_overlapping_between_subsequent_frames(
                 conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
             )
+            
 
     def _train_and_apply_crossing_detector(self):
         """

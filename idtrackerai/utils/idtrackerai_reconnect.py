@@ -8,21 +8,21 @@ from confapp import conf
 from idtrackerai.list_of_blobs import ListOfBlobs
 
 
-def pick_blobs_collection(session_folder):
+# def pick_blobs_collection(session_folder):
 
-    blobs_collection = os.path.join(
-        session_folder, "preprocessing", "blobs_collection_no_gaps.npy"
-    )
-    if os.path.exists(blobs_collection):
-        return blobs_collection
-    else:
-        blobs_collection = os.path.join(
-            session_folder, "preprocessing", "blobs_collection.npy"
-        )
-        if os.path.exists(blobs_collection):
-            return blobs_collection
-        else:
-            raise ValueError(f"No blobs collection found for {session_folder}")
+#     blobs_collection = os.path.join(
+#         session_folder, "preprocessing", "blobs_collection_no_gaps.npy"
+#     )
+#     if os.path.exists(blobs_collection):
+#         return blobs_collection
+#     else:
+#         blobs_collection = os.path.join(
+#             session_folder, "preprocessing", "blobs_collection.npy"
+#         )
+#         if os.path.exists(blobs_collection):
+#             return blobs_collection
+#         else:
+#             raise ValueError(f"No blobs collection found for {session_folder}")
 
 
 def get_parser(ap=None):

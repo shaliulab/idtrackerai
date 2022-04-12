@@ -66,6 +66,29 @@ The segmentation module
 """
 
 
+class BlobsInFrame(List):
+
+    def __getitem__(self, k):
+        if isinstance(k, int):
+            return super(BlobsInFrame, self).__getitem__(k)
+        
+        elif isinstance(k, tuple):
+            for blob in self:
+                if blob.identifier_matches(k):
+                    return blob
+            
+            raise KeyError(k)
+        else:
+            raise Exception(
+                """
+                BlobsInFrame can only be indexed by:
+                  int: return the blob under that position of the list
+                  list: return the blob with the bounding box given by the list (errors if no match)
+                """
+            )
+
+
+
 def _get_blobs_in_frame(
     cap,
     video_params_to_store,
@@ -273,7 +296,7 @@ def _create_blobs_objects(
     video_path,
     segmentation_parameters,
 ):
-    blobs_in_frame = []
+    blobs_in_frame = BlobsInFrame()
     # create blob objects
     for i, bounding_box in enumerate(bounding_boxes):
         if save_segmentation_image == "DISK":
@@ -443,7 +466,7 @@ def _segment_episode(
             )
         else:
             ret, _ = cap.read()
-            blobs_in_frame = []
+            blobs_in_frame = BlobsInFrame()
 
         # store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)

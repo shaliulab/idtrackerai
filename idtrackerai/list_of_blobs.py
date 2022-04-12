@@ -348,7 +348,13 @@ class ListOfBlobs(object):
         path_to_save : str, optional
             Path where to save the object, by default None
         """
+        # NOTE
+        # I dont disconnect anymore because instead I dont save the reference to other blobs
+        # I actually save them but in a pickle compatible way (i.e. I dont save the references in memory)
+        # but instead a unique identifier that can be used to retrieve them back after reload from pickle
+        # using ListOfBlobs.reconnect_from_cache (called from ListOfBlobs.load)
         # self.disconnect()
+
         logger.info("saving blobs list at %s" % path_to_save)
         np.save(path_to_save, self)
 
@@ -382,7 +388,7 @@ class ListOfBlobs(object):
         # compute_overlapping_between_subsequent_frames
 
         # go through each frame
-        for blobs_in_frame in self.blobs_in_video:
+        for blobs_in_frame in tqdm(self.blobs_in_video, desc="Connecting blobs from cache"):
             # go through each blob in the frame
             for blob in blobs_in_frame:
                 # go through each of the next blobs of the current blob
@@ -394,10 +400,32 @@ class ListOfBlobs(object):
                         next_blob[0],
                         next_blob[1],
                     )
-                    a_next_blob = self.blobs_in_video[next_blob_fn][
-                        next_blob_unique_identifier
-                    ]
-                    blob.now_points_to(a_next_blob)
+
+                    if isinstance(next_blob_unique_identifier, int):
+                        # NOTE
+                        # I was using before the position in the lsit
+                        # as identifier. This is wrong
+                        for next_blob_instance in self.blobs_in_video[next_blob_fn]:
+                            if blob.overlaps_with(next_blob_instance):
+                                blob.now_points_to(next_blob_instance, update_cache=False)
+                    else:
+
+                        # if next_blob_fn == 682 and blob.identity == 3:
+                        #     import ipdb; ipdb.set_trace()
+
+                        try:
+                            a_next_blob = self.blobs_in_video[next_blob_fn][
+                                next_blob_unique_identifier
+                            ]
+                            blob.now_points_to(a_next_blob, update_cache=False)
+                        except TypeError:
+                            a_next_blob=None
+                            blobs_in_frame=self.blobs_in_video[next_blob_fn]
+                            for next_blob_instance in blobs_in_frame:
+                                if next_blob_instance.identifier_matches(next_blob_unique_identifier):
+                                    a_next_blob = next_blob_instance
+                                    blob.now_points_to(a_next_blob, update_cache=False)
+                                    break
 
         self.blobs_are_connected = True
 

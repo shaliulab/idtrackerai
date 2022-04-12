@@ -184,12 +184,19 @@ def is_idtrackerai_folder(folder, trajectories=True):
     return has_video_object and has_blobs and has_fragments and has_trajectories
 
 
-def pick_blob_collection(folder):
+def pick_blob_collection(folder, verify=True):
 
     base_pattern = "blobs_collection.*.npy$"
     timestamped_pattern = "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}_" + base_pattern
 
-    if is_idtrackerai_folder(folder):
+
+    if verify:
+        ok = is_idtrackerai_folder(folder)
+    else:
+        ok = True
+    
+    if ok:
+
         preprocessing_folder = os.path.join(folder, "preprocessing")
         stuff = sorted(os.listdir(preprocessing_folder))
 

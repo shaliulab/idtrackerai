@@ -1108,6 +1108,8 @@ class TrackerAPI(object):
         )
         # if False:
         #     self.list_of_blobs.compute_nose_and_head_coordinates()
+        # NOTE
+        # This is where the list of blobs is saved if no gap is detected
         self.list_of_blobs.save(self.video.blobs_path)
         self.video._identify_time = time.time() - self.video.identify_time
         create_trajectories()
@@ -1172,6 +1174,7 @@ class TrackerAPI(object):
             self.video._estimated_accuracy = 1.0
             self.video._has_crossings_solved = False
             self.video._has_trajectories_wo_gaps = False
+            # import ipdb; ipdb.set_trace()
             self.list_of_blobs.save(self.video.blobs_path)
             # Call GUI function
             if update_and_show_happy_ending_popup:
@@ -1192,6 +1195,15 @@ class TrackerAPI(object):
             self.list_of_blobs_no_gaps,
             self.list_of_fragments,
         )
+        # import ipdb; ipdb.set_trace()
+        self.list_of_blobs_no_gaps.reconnect_from_cache()
+
+        # NOTE
+        # Here is where the list_of_blobs is saved
+        # if any gap is detected and therefore resolved
+        # If the blobs have already lost their next and previous
+        # attributes due to a previous list_of_blobs.save call
+        # the resulting file will have disconnected blobs
         self.video.blobs_no_gaps_path = os.path.join(
             os.path.split(self.video.blobs_path)[0],
             "blobs_collection_no_gaps.npy",
