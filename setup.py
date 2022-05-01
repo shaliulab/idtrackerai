@@ -114,7 +114,7 @@ setup(
             "python-video-annotator==3.306",
             "python-video-annotator-module-idtrackerai == 1.0.1a0",
         ],
-        "gpu": ["pytorch", "torchvision"],
+        "gpu": ["torch", "torchvision"],
         "dev": ["pytest", "black", "sphinx", "numpydoc"],
     },
     zip_safe=False,
