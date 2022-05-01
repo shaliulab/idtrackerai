@@ -55,7 +55,7 @@ requirements = [
     "seaborn >= 0.8",
     "tqdm >= 4.19",
     "joblib >= 0.11",
-    "scikit-learn >= 0.19",
+    "scikit-learn == 1.0.1",
     "pyyaml >= 3.12",
     "psutil >= 5.4.3",
     "h5py >= 2.7.0",
