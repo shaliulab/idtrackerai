@@ -424,7 +424,7 @@ def _get_bounding_box(
     """
     # TODO: rethink whether the expansion is really needed
     x, y, w, h = cv2.boundingRect(cnt)
-    original_diagonal = int(np.ceil(np.sqrt(w ** 2 + h ** 2)))
+    original_diagonal = int(np.ceil(np.sqrt(w**2 + h**2)))
     n = conf.EXTRA_PIXELS_BBOX
     if x - n > 0:  # We only expand the
         x = x - n

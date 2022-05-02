@@ -280,7 +280,7 @@ class idCNN_adaptive(nn.Module):
 
         # Fully connected layers
         self.fc1 = nn.Linear(
-            num_channels[-1] * self.width_adaptive_pool ** 2, 100
+            num_channels[-1] * self.width_adaptive_pool**2, 100
         )
         self.fc2 = nn.Linear(100, out_dim)
         self.linear = nn.Sequential(self.fc1, nn.ReLU(inplace=True))
@@ -290,7 +290,7 @@ class idCNN_adaptive(nn.Module):
 
     def features(self, x):
         x = self.conv(x)
-        x = self.linear(x.view(-1, 100 * self.width_adaptive_pool ** 2))
+        x = self.linear(x.view(-1, 100 * self.width_adaptive_pool**2))
         return x
 
     def logits(self, x):
