@@ -519,9 +519,8 @@ class Blob(object):
 
         # If bounding boxes overlap, then compute pixel-to-pixel overlapping check
         if bbox_overlaps:
-            # check if there's any pixel in the intersection of
-            # the two pixels sets
-            overlaps = len(self.pixels_set & other.pixels_set) > 0
+            # check if there the two pixels sets are disjoint
+            overlaps = not self.pixels_set.isdisjoint(other.pixels_set)
         else:
             overlaps = False
         return overlaps
