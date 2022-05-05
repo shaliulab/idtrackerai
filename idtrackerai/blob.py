@@ -255,6 +255,14 @@ class Blob(object):
 
     @property
     def pixels_set(self):
+        """A set() version of blob.pixels, used in `blob.overlaps_with()`
+
+        Returns
+        -------
+        Set
+            Set of integers indicating the linarized indices of the pixels
+            that represent the blob.
+        """
         if self._pixels_set is None:
             self._pixels_set = set(self.pixels)
         return self._pixels_set
