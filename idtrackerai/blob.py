@@ -259,6 +259,10 @@ class Blob(object):
             self._pixels_set = set(self.pixels)
         return self._pixels_set
 
+    @pixels_set.deleter
+    def pixels_set(self):
+        self._pixels_set = None
+
     @property
     def eroded_pixels(self):
         """Pixels of the blob after erosion.
