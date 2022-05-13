@@ -44,6 +44,9 @@ def get_parser():
         If you want to enable this, please pass previous (to enable transfer from the previous chunk).""",
     )
     ap.add_argument(
+        "--gpu", action="store_true", default=False, dest="gpu"
+    )
+    ap.add_argument(
         "--interval",
         nargs="+",
         type=int,
@@ -164,7 +167,7 @@ def write_jobfile(
     return
 
 
-def build_async_call(experiment_folder, chunk, config_file, backend="task-spooler", **kwargs):
+def build_async_call(experiment_folder, chunk, config_file, backend="task-spooler", gpu=False, **kwargs):
 
     # prepare the call to idtrackerai
     folder_split = experiment_folder.split("/./")
@@ -201,7 +204,11 @@ def build_async_call(experiment_folder, chunk, config_file, backend="task-spoole
         cmd = f"qsub -o {output_file} -e {error_file} -N {job_name} -cwd {jobfile}"
         return shlex.split(cmd)
     elif backend == "task-spooler":
-        gpu_requirement = "-G 1"
+        if gpu:
+            gpu_requirement = "-G 1"
+        else:
+            gpu_requirement = ""
+
         cmd_ts = shlex.split(f'ts -n {gpu_requirement} -L {job_name}')
         cmd_bash = shlex.split(f'bash -c "{jobfile} > {output_file} 2>&1"')
         cmd = cmd_ts + cmd_bash
@@ -293,7 +300,8 @@ def main(args=None):
             config_file,
             environment=args.environment,
             knowledge_transfer=args.knowledge_transfer,
-            jobs=args.jobs
+            jobs=args.jobs,
+            gpu=args.gpu,
         )
 
 
