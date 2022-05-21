@@ -89,6 +89,12 @@ class ListOfBlobs(object):
             ):
                 if blob_0.overlaps_with(blob_1):
                     blob_0.now_points_to(blob_1)
+
+            # clean pixels_sets created in overlaps_with() to free memory
+            for blob in self.blobs_in_video[frame_i - 1]:
+                del blob.pixels_set
+        for blob in self.blobs_in_video[self.number_of_frames - 1]:
+            del blob.pixels_set
         self.blobs_are_connected = True
 
     def disconnect(self):

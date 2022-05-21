@@ -171,6 +171,7 @@ class Blob(object):
         # During validation
         self._user_generated_identities = None
         self._user_generated_centroids = None
+        self._pixels_set = None
 
     @property
     def bounding_box_image(self):
@@ -251,6 +252,24 @@ class Blob(object):
                 (self.video_height, self.video_width),
             )
             return pixels
+
+    @property
+    def pixels_set(self):
+        """A set() version of blob.pixels, used in `blob.overlaps_with()`
+
+        Returns
+        -------
+        Set
+            Set of integers indicating the linarized indices of the pixels
+            that represent the blob.
+        """
+        if self._pixels_set is None:
+            self._pixels_set = set(self.pixels)
+        return self._pixels_set
+
+    @pixels_set.deleter
+    def pixels_set(self):
+        self._pixels_set = None
 
     @property
     def eroded_pixels(self):
@@ -501,8 +520,6 @@ class Blob(object):
             intersection
         """
 
-        overlaps = False
-
         # Check bounding box overlapping between blobs S (self) and O (other)
         (S_xmin, S_ymin) = self.bounding_box_in_frame_coordinates[0]
         (S_xmax, S_ymax) = self.bounding_box_in_frame_coordinates[1]
@@ -514,11 +531,10 @@ class Blob(object):
 
         # If bounding boxes overlap, then compute pixel-to-pixel overlapping check
         if bbox_overlaps:
-            intersection = np.isin(
-                self.pixels, other.pixels, assume_unique=True
-            )
-            if any(intersection):
-                overlaps = True
+            # check if there the two pixels sets are disjoint
+            overlaps = not self.pixels_set.isdisjoint(other.pixels_set)
+        else:
+            overlaps = False
         return overlaps
 
     def now_points_to(self, other):
