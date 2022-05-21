@@ -166,6 +166,8 @@ Check more information in the [idtracker.ai webpage](https://idtrackerai.readthe
 * Mattia G. Bergomi (2015-2018)
 * Ricardo Ribeiro (2018-2020)
 * Francisco J.H. Heras (2015-)
+* Antonio Ortega (2021-)
+* Jordi Torrents (2022-)
 
 ## License
 This file is part of idtracker.ai a multiple animals tracking system
