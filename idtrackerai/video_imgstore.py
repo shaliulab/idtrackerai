@@ -3,7 +3,7 @@ import logging
 
 import imgstore
 from .video import Video
-from imgstore.multistores import MultiStore
+from imgstore.stores import multi as imgstore
 
 logger = logging.getLogger(__name__)
 
@@ -24,24 +24,29 @@ except ImportError:
 
 class VideoImgstore(Video):
 
-    def __init__(self, store, chunk=0):
+    def __init__(self, store, chunk=0, init_store=True):
 
         self._chunk = chunk
         chunk_numbers = [chunk-1, chunk, chunk+1]
         chunk_numbers = [c for c in chunk_numbers if c >= 0]
         self._chunk_numbers = chunk_numbers
+        self._store_path = store
 
-        self._store = MultiStore.new_for_filename(
-            store,
-            ref_chunk=chunk,
-            chunk_numbers=chunk_numbers
-        )
+        if init_store:
+            self._store = imgstore.new_for_filename(store)
+        else:
+            self._store = None
 
         logger.info(f"Opening {self._store.current_video_path}")
         super().__init__(
             video_path = self._store.current_video_path,
             open_multiple_files=False
         )
+
+    @property
+    def store(self):
+        if self._store is None:
+            self._store = imgstore.new_for_filename(self._store_path)
 
 
     def __getstate__(self):
@@ -51,11 +56,21 @@ class VideoImgstore(Video):
         return d
 
     def __setstate__(self, d):
-        full_path = d.pop("full_path")
-        original_path = full_path
-        reset = conf.WRONG_ROOT_DIR is not None and conf.RIGHT_ROOT_DIR is not None
 
-        if reset:
+        # compatibility
+        full_path = d.pop("full_path", None)
+        if full_path is None:
+            full_path = d.pop("_store_path")
+        d["_store_path"] = full_path
+        ####
+
+        if "init_store" not in d:
+            d["init_store"] = False
+
+
+        relink = conf.WRONG_ROOT_DIR is not None and conf.RIGHT_ROOT_DIR is not None
+
+        if relink:
             # path to the .yaml
             full_path = full_path.replace(
                 conf.WRONG_ROOT_DIR,
@@ -76,16 +91,9 @@ class VideoImgstore(Video):
                 conf.RIGHT_ROOT_DIR
             )
 
-
-        d["_store"] = MultiStore.new_for_filename(
-            full_path,
-            ref_chunk=d["_chunk"],
-            chunk_numbers=d["_chunk_numbers"]
-        )
         self.__dict__ = d
 
-        if reset:
-
+        if relink:
             print(f"Saving relinked npy file to {self.path_to_video_object}")
             self.save()
 
