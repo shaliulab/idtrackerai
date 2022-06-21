@@ -41,10 +41,13 @@ from tqdm import tqdm
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
 
+from .parallel import ParallelBlobOverlap
+from .overlap import compute_overlapping_between_two_subsequent_frames
+
 logger = logging.getLogger("__main__.list_of_blobs")
 
 
-class ListOfBlobs(object):
+class ListOfBlobs(ParallelBlobOverlap, object):
     """Contains all the instances of the class :class:`~blob.Blob` for all
     frames in the video.
 
@@ -81,21 +84,32 @@ class ListOfBlobs(object):
         :meth:`blob.Blob.overlaps_with`
         """
         self.disconnect()
+        if conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS == 1:
+            self._compute_overlapping_between_subsequent_frames()
+        else:
+            self.compute_overlapping_between_subsequent_frames_parallel()
+        self.blobs_are_connected = True
+
+
+    def _compute_overlapping_between_subsequent_frames(self):
+        """
+        Non concurrent implementation of blob overlap computation
+        """
+
         for frame_i in tqdm(
             range(1, self.number_of_frames), desc="Connecting blobs "
         ):
-            for (blob_0, blob_1) in itertools.product(
-                self.blobs_in_video[frame_i - 1], self.blobs_in_video[frame_i]
-            ):
-                if blob_0.overlaps_with(blob_1):
-                    blob_0.now_points_to(blob_1)
+            compute_overlapping_between_two_subsequent_frames(
+                blobs_before=self.blobs_in_video[frame_i - 1],
+                blobs_after=self.blobs_in_video[frame_i],
+            )
 
             # clean pixels_sets created in overlaps_with() to free memory
             for blob in self.blobs_in_video[frame_i - 1]:
                 del blob.pixels_set
         for blob in self.blobs_in_video[self.number_of_frames - 1]:
             del blob.pixels_set
-        self.blobs_are_connected = True
+
 
     def disconnect(self):
         """Reinitialise the previous and next attributes of each blob.
