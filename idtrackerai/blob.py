@@ -1626,6 +1626,35 @@ class Blob(object):
                 )
 
 
+    def __getstate__(self):
+
+        previous_blobs = getattr(self, "previous", [])
+        previous_blobs = [
+            (blob.frame_number, blob.in_frame_index) for blob in previous_blobs
+        ]
+
+        next_blobs = getattr(self, "next", [])
+        next_blobs = [
+            (blob.frame_number, blob.in_frame_index) for blob in next_blobs
+        ]
+
+        self._now_points_to_blob_fn_index = {
+            "previous": previous_blobs,
+            "next": previous_blobs,
+        }
+        
+        
+        d = self.__dict__
+        # remove all (direct) references to other blobs
+        # to avoid infinite recursiveness
+        d["previous"] = []
+        d["next"] = []
+        return d
+
+    # it is not possible to define a __setstate__ in a similar way
+    # because we need references to the overlapping blobs, which are not accessible from the Blob class
+    # -> only possible in the ListOfBlobs
+
 def _mask_background_pixels(
     height,
     width,
