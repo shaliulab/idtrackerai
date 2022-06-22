@@ -1,13 +1,13 @@
 import time
 import multiprocessing
 import logging
-
+import math
 from tqdm import tqdm
 from confapp import conf
 
 from .overlap import compute_overlapping_between_two_subsequent_frames
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("__main__.list_of_blobs.parallel")
 
 n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
 
@@ -65,10 +65,32 @@ class ParallelBlobOverlap:
         
         return i
 
+    def partition_blobs_across_processes(self):
+        """
+        Given a total number of frames and a number of frames to be processed on each parallel process,
+        this function computes the start and end of the frame intervals that should be used
+        to split the dataset and process it in parallel
+        so:
+        * starts[i] is the first frame to be processed on the ith parallel process
+        * ends[i] is the frame following the last frame to be to be processed on the ith parallel process
+        following Python's convention of declaring closed-open intervals. i.e. [start, end)
+        """
+
+        #math.ceil(self.number_of_frames / n_jobs)
+
+        starts = list(range(0, self.number_of_frames, conf.BLOB_CONNECTION_PROCESS_SIZE))
+        ends = [starts[i] + conf.BLOB_CONNECTION_PROCESS_SIZE for i in range(len(starts))]
+        return starts, ends
+
 
     def compute_overlapping_between_subsequent_frames_parallel(self):
 
         self._processes = {}
+        logger.info(
+            f"""
+            Computing overlap between subsequent frames in parallel using {conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS} jobs
+            """
+        )
         starts, ends = self.partition_blobs_across_processes()
         queue = multiprocessing.Queue(maxsize=0)
         n_started_jobs = self.generate_parallel_processes(starts, ends, queue, conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS)
@@ -85,7 +107,7 @@ class ParallelBlobOverlap:
             # in the same function
 
         # receive the results of the parallel processes!!
-        self.process_blob_overlap_queue(queue, starts, ends, n_started_jobs)
+        n_started_jobs=self.process_blob_overlap_queue(queue, starts, ends, n_started_jobs)
 
         if queue.qsize() != 0:
             logger.warning(
@@ -97,7 +119,13 @@ class ParallelBlobOverlap:
             # hangs here
             process.join()
 
-        self.stitch_parallel_blocks(starts, ends)
+        if len(starts) != 1:
+            self.stitch_parallel_blocks(starts, ends)
+
+        # remove processes so the list_of_blobs can be pickled!
+        processes = list(self._processes.keys())
+        for p in processes:
+            del self._processes[p]
 
 
     @property
@@ -135,6 +163,7 @@ class ParallelBlobOverlap:
                 blob_0 = self.blobs_in_video[frame_i][frame_i_index]
                 blob_1 = self.blobs_in_video[frame_ip1][frame_ip1_index]
                 blob_0.now_points_to(blob_1)
+                logger.debug(f"{blob_0.frame_number}:{blob_0.in_frame_index} -> {blob_1.frame_number}:{blob_1.in_frame_index}")
 
 
                 while self.number_of_running_jobs < conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS and \
@@ -152,7 +181,7 @@ class ParallelBlobOverlap:
                     # once, we exit, anything new will stay there
                     # and the program will hang
 
-            return 0
+            return n_started_jobs
 
 
     def stitch_parallel_blocks(self, starts, ends):

@@ -85,7 +85,7 @@ with open("README.md", "r") as fd:
     long_description = fd.read()
 
 setup(
-    name="idtrackerai",
+    name="idtrackerai-shaliulab",
     version=version,
     python_requires=">={}.{}".format(*REQUIRED_PYTHON),
     url="https://idtrackerai.readthedocs.io/en/latest/",
