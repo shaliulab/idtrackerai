@@ -576,11 +576,12 @@ class TrackerAPI(object):
             # Re-enter the function for the next step of the accumulation
             self.accumulate()
 
-        elif (
+        elif ((
             not self.accumulation_manager.new_global_fragments_for_training
             and not self.video._has_protocol2_finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
+            ) or conf.DISABLE_PROTOCOL_3
         ):
             # Accumulation stop because protocol 1 is successful
             logger.info("--------------------> Protocol 1 successful")
@@ -626,25 +627,28 @@ class TrackerAPI(object):
                 < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             ):
 
-                logger.info(
-                    "--------------------> Protocol 2 failed -> Start protocol 3"
-                )
-                # raise ValueError('Protocol 3')
-                if (
-                    "protocols1_and_2" not in self.processes_to_restore
-                    or not self.processes_to_restore["protocols1_and_2"]
-                ):
-                    self.video._protocol1_time = (
-                        time.time() - self.video.protocol1_time
+                if conf.DISABLE_PROTOCOL_3:
+                    pass
+                else:
+                    logger.info(
+                        "--------------------> Protocol 2 failed -> Start protocol 3"
                     )
-                    if self.video.protocol2_time != 0:
-                        self.video._protocol2_time = (
-                            time.time() - self.video.protocol2_time
+                    # raise ValueError('Protocol 3')
+                    if (
+                        "protocols1_and_2" not in self.processes_to_restore
+                        or not self.processes_to_restore["protocols1_and_2"]
+                    ):
+                        self.video._protocol1_time = (
+                            time.time() - self.video.protocol1_time
                         )
-                self.video._protocol3_pretraining_time = time.time()
+                        if self.video.protocol2_time != 0:
+                            self.video._protocol2_time = (
+                                time.time() - self.video.protocol2_time
+                            )
+                    self.video._protocol3_pretraining_time = time.time()
 
-                self.pretraining_counter = 0
-                self.protocol3()
+                    self.pretraining_counter = 0
+                    self.protocol3()
 
         elif (
             self.video.has_protocol3_pretraining_finished
