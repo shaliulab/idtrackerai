@@ -45,6 +45,11 @@ from idtrackerai.utils.py_utils import (
     set_mkl_to_single_thread,
 )
 
+try:
+    from imgstore.interface import VideoCapture
+except ModuleNotFoundError:
+    from cv2 import VideoCapture
+
 logger = logging.getLogger("__main__.segmentation_utils")
 
 
@@ -68,7 +73,7 @@ def _update_bkg_stat(
 
 
 def _compute_bkg_for_episode(
-    cap: cv2.VideoCapture,
+    cap: VideoCapture,
     bkg: np.ndarray,
     frames_range: Iterable,  # sample frames in the given episode
     mask: np.ndarray,  # values are 1 (valid) 0 (invalid)
@@ -92,7 +97,7 @@ def _compute_bkg_for_episode(
 def _get_episode_frames_for_bkg(cap, starting_frame, ending_frame, period):
     if ending_frame is None:
         # ending_frame is None when the video is splitted in chunks
-        ending_frame = int(cap.get(7))  # number of frames in video
+        ending_frame = int(cap.get("ENDING_FRAME_OF_CHUNK"))  # number of frames in video
         if period > ending_frame:
             # TODO: Find a better implementation that does not change the
             # effective BACKGROUND_SUBTRACTION_PERIOD when the video is
@@ -117,7 +122,7 @@ def _compute_episode_bkg(
     ending_frame: Optional[int] = None,
 ) -> Tuple[np.ndarray, int]:
 
-    cap = cv2.VideoCapture(video_path)
+    cap = VideoCapture(video_path)
 
     frames_for_bkg = _get_episode_frames_for_bkg(
         cap, starting_frame, ending_frame, period

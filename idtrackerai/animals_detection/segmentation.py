@@ -56,6 +56,12 @@ from idtrackerai.animals_detection.segmentation_utils import (
     to_gray_scale,
     gaussian_blur,
 )
+
+try:
+    from imgstore.interface import VideoCapture
+except ModuleNotFoundError:
+    from cv2 import VideoCapture
+
 import idtrackerai.constants as cons
 
 logger = logging.getLogger("__main__.segmentation")
@@ -396,7 +402,8 @@ def _segment_episode(
     else:
         pixels_path = None
     # Read video for the episode
-    cap = cv2.VideoCapture(video_path)
+
+    cap = VideoCapture(video_path)
 
     # Get number of frames in the episode
     if single_video_file:

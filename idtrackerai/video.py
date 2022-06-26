@@ -41,7 +41,10 @@ import cv2
 import numpy as np
 from confapp import conf
 from natsort import natsorted
-
+try:
+    from imgstore.interface import VideoCapture
+except ModuleNotFoundError:
+    from cv2 import VideoCapture
 
 logger = logging.getLogger("__main__.video")
 
@@ -78,6 +81,7 @@ class Video(object):
         self._frames_per_second = None
         self._number_of_animals = None
         self._number_of_frames = None
+        self._number_of_frames_in_chunk = None
         self._number_of_episodes = None
         self._episodes_start_end = None
 
@@ -98,6 +102,7 @@ class Video(object):
         self._get_info_from_video_file()
         (
             self._number_of_frames,
+            self._number_of_frames_in_chunk,
             self._episodes_start_end,
             self._number_of_episodes,
         ) = self.get_num_frames_and_processing_episodes(self._video_paths)
@@ -253,6 +258,11 @@ class Video(object):
         :method:`~idtrackerai.video.Video.get_num_frames_and_processing_episodes`
         """
         return self._number_of_frames
+
+
+    @property
+    def number_of_frames_in_chunk(self):
+        return self._number_of_frames_in_chunk
 
     @property
     def number_of_episodes(self):
@@ -875,7 +885,7 @@ class Video(object):
 
         widths, heights, frames_per_seconds = [], [], []
         for path in self._video_paths:
-            cap = cv2.VideoCapture(path)
+            cap = VideoCapture(path)
             widths.append(int(cap.get(3)))
             heights.append(int(cap.get(4)))
 
@@ -1150,16 +1160,21 @@ class Video(object):
         """
         logger.info("Getting video episodes and number of frames")
         if len(video_paths) == 1:  # single video file
-            cap = cv2.VideoCapture(video_paths[0])
-            number_of_frames = int(cap.get(7))
-            start = list(range(0, number_of_frames, conf.FRAMES_PER_EPISODE))
-            end = start[1:] + [number_of_frames]
+            cap = VideoCapture(video_paths[0])
+            number_of_frames = int(cap.get("TOTAL_NUMBER_OF_FRAMES"))
+            last_frame_in_episode = int(cap.get("NUMBER_OF_FRAMES"))
+            number_of_frames_in_chunk=int(cap.get("NUMBER_OF_FRAMES_IN_CHUNK"))
+            start = list(range(int(cap.get("STARTING_FRAME_OF_CHUNK")), int(last_frame_in_episode), conf.FRAMES_PER_EPISODE))
+            end = start[1:] + [last_frame_in_episode]
             episodes_start_end = list(zip(start, end))
+            print(episodes_start_end)
+            assert last_frame_in_episode == end[-1]
             number_of_episodes = len(episodes_start_end)
         else:  # multiple video files
             logger.info("Tracking multiple files:")
             logger.info(f"{video_paths}")
             num_frames_in_video_segments = [
+                # This cv2.VideoCapture is OK because it's only used with opencv videos
                 int(cv2.VideoCapture(video_segment).get(7))
                 for video_segment in video_paths
             ]
@@ -1167,10 +1182,11 @@ class Video(object):
             start = [0] + end[:-1]
             episodes_start_end = list(zip(start, end))
             number_of_frames = np.sum(num_frames_in_video_segments)
+            number_of_frames_in_chunk = number_of_frames
             number_of_episodes = len(episodes_start_end)
         logger.info(f"The video has {number_of_frames} frames")
         logger.info(f"The video has {number_of_episodes} episodes")
-        return number_of_frames, episodes_start_end, number_of_episodes
+        return number_of_frames, number_of_frames_in_chunk, episodes_start_end, number_of_episodes
 
     def in_which_episode(self, frame_number):
         """Given a `frame_number` of the whole video it returns the episode

@@ -43,6 +43,11 @@ from tqdm import tqdm
 
 logger = logging.getLogger("__main__.video")
 
+try:
+    from imgstore.interface import VideoCapture
+except ModuleNotFoundError:
+    from cv2 import VideoCapture
+
 
 def get_frame(frame, centroid, height, width):
     if not np.all(np.isnan(centroid)):
@@ -79,10 +84,10 @@ def generate_individual_video(
     # Initialize cap reader
     if len(video_object.video_paths) > 1:
         current_segment = 0
-        cap = cv2.VideoCapture(video_object.video_paths[current_segment])
+        cap = VideoCapture(video_object.video_paths[current_segment])
         start = video_object._episodes_start_end[current_segment][0]
     else:
-        cap = cv2.VideoCapture(video_object.video_path)
+        cap = VideoCapture(video_object.video_path)
 
     for frame_number in range(video_object.number_of_frames):
         # Update cap if necessary.
@@ -90,12 +95,12 @@ def generate_individual_video(
             segment_number = video_object.in_which_episode(frame_number)
             if current_segment != segment_number:
                 print(video_object.video_paths[segment_number])
-                cap = cv2.VideoCapture(
+                cap = VideoCapture(
                     video_object.video_paths[segment_number]
                 )
                 start = video_object._episodes_start_end[segment_number][0]
                 current_segment = segment_number
-            cap.set(1, frame_number - start)
+            cap.set("CAP_PROP_POS_FRAMES", frame_number - start)
         # Read frame
         try:
             ret, frame = cap.read()

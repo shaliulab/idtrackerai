@@ -37,6 +37,11 @@ from tqdm import tqdm
 
 from idtrackerai.utils.py_utils import get_spaced_colors_util
 
+try:
+    from imgstore.interface import VideoCapture
+except ModuleNotFoundError:
+    from cv2 import VideoCapture
+
 
 def writeIds(
     video_object,
@@ -99,7 +104,7 @@ def apply_func_on_frame(
 ):
     segment_number = video_object.in_which_episode(frame_number)
     if cap is None:
-        cap = cv2.VideoCapture(video_object.video_paths[segment_number])
+        cap = VideoCapture(video_object.video_paths[segment_number])
         start = video_object._episodes_start_end[segment_number][0]
         cap.set(1, frame_number - start)
     else:
@@ -114,6 +119,7 @@ def apply_func_on_frame(
             centroid_trace_length,
             colors,
         )
+
         return frame
 
 
@@ -143,7 +149,7 @@ def generate_trajectories_video(
     )
 
     if len(video_object.video_paths) == 1:
-        cap = cv2.VideoCapture(video_object.video_path)
+        cap = VideoCapture(video_object.video_path)
     else:
         cap = None
 

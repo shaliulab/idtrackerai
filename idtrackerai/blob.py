@@ -37,6 +37,11 @@ import h5py
 import numpy as np
 from sklearn.decomposition import PCA
 
+try:
+    from imgstore.interface import VideoCapture
+except ModuleNotFoundError:
+    from cv2 import VideoCapture
+
 logger = logging.getLogger("__main__.blob")
 
 
@@ -199,7 +204,7 @@ class Blob(object):
                     str(self.frame_number) + "-" + str(self.in_frame_index)
                 ][:]
         else:
-            cap = cv2.VideoCapture(self.video_path)
+            cap = VideoCapture(self.video_path)
             cap.set(1, self.frame_number_in_video_path)
             ret, frame = cap.read()
             bb = self.bounding_box_in_frame_coordinates
