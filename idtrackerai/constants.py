@@ -105,6 +105,10 @@ NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION = -2
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
 NUMBER_OF_JOBS_FOR_SEGMENTATION = -2
+
+NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=1
+BLOB_CONNECTION_PROCESS_SIZE=1000
+
 SIGMA_GAUSSIAN_BLURRING = None
 ##################################################
 # Data storage advanced parameters
