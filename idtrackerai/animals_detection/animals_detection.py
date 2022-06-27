@@ -35,7 +35,10 @@ import logging
 import time
 
 from idtrackerai.video import Video
-from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.list_of_blobs import (
+    ListOfBlobs,
+    extend_blobs_in_video_to_absolute_start_and_end
+)
 from idtrackerai.animals_detection.segmentation import segment
 
 logger = logging.getLogger(__name__)
@@ -181,6 +184,9 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             self.video.video_paths,
         )
 
+        frames_before = self.video.episodes_start_end[0][0]
+        frames_after = self.video.number_of_frames - self.video.episodes_start_end[-1][-1]
+        blobs_in_video = extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)        
         logger.info("Generating ListOfBlobs object")
 
         return ListOfBlobs(blobs_in_video=blobs_in_video)

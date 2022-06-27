@@ -44,6 +44,15 @@ from idtrackerai.utils.py_utils import interpolate_nans
 logger = logging.getLogger("__main__.list_of_blobs")
 
 
+def extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after):
+
+    blobs_in_video = [[], ] * frames_before + \
+        blobs_in_video + \
+        [[], ] * frames_after
+    
+    return blobs_in_video
+    
+
 class ListOfBlobs(object):
     """Contains all the instances of the class :class:`~blob.Blob` for all
     frames in the video.
@@ -323,11 +332,15 @@ class ListOfBlobs(object):
                 desc="Setting images for identification",
             )
         )
-        self.blobs_in_video = [
+        blobs_in_video = [
             blobs_in_frame
             for blobs_in_episode in Output
             for blobs_in_frame in blobs_in_episode
         ]
+
+        frames_before = episodes_start_end[0][0]
+        frames_after = len(self.blobs_in_video) - episodes_start_end[-1][-1]
+        self.blobs_in_video=extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)
 
     @staticmethod
     def _set_identification_images_per_episode(
