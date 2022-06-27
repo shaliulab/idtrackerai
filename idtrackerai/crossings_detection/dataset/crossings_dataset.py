@@ -31,7 +31,8 @@
 
 
 import logging
-
+from codetiming import Timer
+import tqdm
 import numpy as np
 from confapp import conf
 from torchvision.datasets.folder import VisionDataset
@@ -42,6 +43,11 @@ from idtrackerai.tracker.dataset.identification_dataset import (
 )
 
 logger = logging.getLogger("__main__.crossings_data_set")
+timer_logger = logging.getLogger("timer_logger")
+# TODO
+# Figure out how to make timer_logger log up to warning by default
+# This line is for now needed because otherwise the timer keeps logging
+timer_logger.setLevel("WARNING")
 
 
 class CrossingDataset(VisionDataset):
@@ -137,20 +143,30 @@ def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
     training_blobs = {"individuals": [], "crossings": []}
     validation_blobs = {}
     toassign_blobs = []
-    for blobs_in_frame in list_of_blobs.blobs_in_video:
+    for frame_number, blobs_in_frame in tqdm.tqdm(enumerate(list_of_blobs.blobs_in_video)):
         for blob in blobs_in_frame:
-            if blob.is_a_sure_individual() or blob.in_a_global_fragment_core(
-                blobs_in_frame
-            ):
+
+            with Timer(text="is_individual took {:.8f} seconds to compute", logger=timer_logger.debug):
+                is_individual=blob.is_a_sure_individual() or blob.in_a_global_fragment_core(
+                    blobs_in_frame
+                )
+
+            if is_individual:
                 training_blobs["individuals"].append(blob)
-            elif blob.is_a_sure_crossing():
-                training_blobs["crossings"].append(blob)
-            elif (
-                blob.is_an_individual
-                and not blob.in_a_global_fragment_core(blobs_in_frame)
-                and not blob.is_a_sure_individual()
-            ) or (blob.is_a_crossing and not blob.is_a_sure_crossing()):
-                toassign_blobs.append(blob)
+            else:
+                with Timer(text="is_crossing took {:.8f} seconds to compute", logger=timer_logger.debug):
+                    is_crossing=blob.is_a_sure_crossing()
+                if is_crossing:
+                    training_blobs["crossings"].append(blob)
+                else:
+                    with Timer(text="is_unsure took {:.8f} seconds to compute", logger=timer_logger.debug):
+                        is_unsure = (
+                            blob.is_an_individual
+                            and not blob.in_a_global_fragment_core(blobs_in_frame)
+                            and not blob.is_a_sure_individual()
+                        ) or (blob.is_a_crossing and not blob.is_a_sure_crossing())
+                    if is_unsure:
+                        toassign_blobs.append(blob)
 
     n_blobs_crossings = len(training_blobs["crossings"])
     n_blobs_individuals = len(training_blobs["individuals"])
