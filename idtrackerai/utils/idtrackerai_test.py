@@ -39,7 +39,7 @@ import gdown
 from idtrackerai.constants import (
     IDTRACKERAI_FOLDER,
     TEST_VIDEO_URL,
-    COMPRESSED_VIDEO_PATH,
+    COMPRESSED_VIDEO_PATH# as COMPRESSED_VIDEO_PATH,
 )
 
 
@@ -81,7 +81,19 @@ def generate_json_file(video_path, args):
     with open(default_json_file_path) as json_file:
         json_content = json.load(json_file)
 
-    json_content["_video"]["value"] = video_path
+
+    if args.config_file is not None:
+        with open(args.config_file, "r") as filehandle:
+            config = json.load(filehandle)
+            if "_number_of_animals" in config: json_content["_number_of_animals"] = config["_number_of_animals"]
+            if "_range" in config: json_content["_range"] = {"value": args.range, "max": max(args.range), "min": min(args.range), "scale": 1.0, "convert-int": False}
+            if "_intensity" in config: json_content["_intensity"] = config["_intensity"]
+            if "_area" in config: json_content["_area"] = config["_area"]
+            if "_applyroi" in config: json_content["_applyroi"] = config["_applyroi"]
+            if "_roi" in config: json_content["_roi"] = config["_roi"]
+
+
+    json_content["_video"]["value"] = video_path 
     if args.no_identities:
         json_content["_no_ids"]["value"] = "True"
     else:
@@ -90,11 +102,26 @@ def generate_json_file(video_path, args):
     with open(updated_json_file, "w") as json_file:
         json.dump(json_content, json_file)
 
+    print(json_content)
+
     return updated_json_file
 
 
 def test():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--range",
+        nargs="+",
+        type=int,
+        help="Frame number range",
+        default=[0, 508],
+    )
+    parser.add_argument(
+        "--config_file",
+        type=str,
+        help="Path to a json config file",
+        default=None,
+    )
     parser.add_argument(
         "-o",
         "--output_folder",
