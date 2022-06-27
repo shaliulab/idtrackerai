@@ -29,11 +29,12 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from typing import Tuple, List, Dict, Optional
+from typing import Tuple, List, Dict, Optional, Union
 import gc
 import logging
 import multiprocessing
 import os
+import traceback
 
 import cv2
 import h5py
