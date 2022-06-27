@@ -421,7 +421,7 @@ class Blob(object):
 
         return False
 
-    def check_for_crossing_in_next_or_previous(self, direction=None):
+    def check_for_crossing_in_next_or_previous_v1(self, direction=None):
         """Flag indicating if the blob has a crossing in its past or future
         overlapping history
 
@@ -455,6 +455,94 @@ class Blob(object):
                 return True
         return False
 
+    def check_for_crossing_in_next_or_previous(self, direction=None):
+        return self.check_for_crossing_in_next_or_previous_v2(direction=direction)
+
+
+    def check_for_crossing_in_next_or_previous_v2(self, direction=None):
+        """Flag indicating if the blob has a crossing in its past or future
+        overlapping history
+
+        This method is used to check whether the blob is an individual.
+
+        Parameters
+        ----------
+        direction : str
+            "previous" or "next". If "previous" the past overlapping history
+            will be checked in order to find out if the blob ends up in a
+            crossing.
+            Symmetrically, if "next" the future overlapping history of the blob
+            will be checked.
+
+        Returns
+        -------
+        bool
+            If True the blob has a crossing in its "past" or "future" history,
+            depending on the parameter `direction`.
+        """
+
+        opposite_direction = "next" if direction == "previous" else "previous"
+        current = getattr(self, direction)[0]
+        moving_frames=0
+        if self._crossing_in_next_or_previous[direction] is not None:
+            return self._crossing_in_next_or_previous[direction]
+
+        result=False
+
+        while len(getattr(current, direction)) == 1:
+
+            # NOTE
+            # if direction=="previous", the previous blobs already
+            # know their status (because we went through the blob
+            # now called current when it was self)
+            if current._crossing_in_next_or_previous[direction] is not None:
+                result=current._crossing_in_next_or_previous[direction]
+                self._crossing_in_next_or_previous[direction]=result
+                break
+
+            moving_frames+=1
+            if (
+                len(getattr(current, opposite_direction)) > 1
+                and current.is_a_crossing
+            ):
+                result=True
+                break
+            else:
+                current = getattr(current, direction)[0]
+
+        # NOTE
+        # This is where we assign to the current blob whether
+        # in direction {direction} there is a crossing (True) or not
+        self._crossing_in_next_or_previous[direction]=result
+
+        # tell all the other blobs we encountered on the way!
+        current = getattr(self, direction)[0]
+        moving_frames_2=0
+
+        while len(getattr(current, direction)) == 1:
+            moving_frames_2+=1
+            # NOTE
+            # if direction=="next", we already know that all the blobs next to self
+            # have the same status as self, so current (which is a future blob we traced
+            # in the first while loop to learn result) can be assigned result to.
+            # current._crossing_in_next_or_previous[direction] is None and we assign result there
+            # if direction=="previous", we don't need to do it, since previous blobs
+            # are already processed
+
+            if current._crossing_in_next_or_previous[direction] is None:
+                current._crossing_in_next_or_previous[direction]=result
+                if (
+                    len(getattr(current, opposite_direction)) > 1
+                    and current.is_a_crossing
+                ):
+                    break
+                else:
+                    current = getattr(current, direction)[0]
+            else:
+                break
+
+        return result
+
     def is_a_sure_individual(self):
         """Flag indicating that the blob is a sure individual according to
         some heuristics and it can be used to train the crossing detector CNN.
@@ -470,12 +558,15 @@ class Blob(object):
             and len(self.next[0].previous) == 1
             and len(self.previous[0].next) == 1
         ):
-            has_crossing_in_past = self.check_for_crossing_in_next_or_previous(
-                "previous"
-            )
+
             has_crossing_in_future = (
                 self.check_for_crossing_in_next_or_previous("next")
             )
+
+            has_crossing_in_past = self.check_for_crossing_in_next_or_previous(
+                "previous"
+            )
+
             if has_crossing_in_past and has_crossing_in_future:
                 return True
         else:
