@@ -49,6 +49,7 @@ from idtrackerai.utils.py_utils import (
     flatten,
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
+    find_blob,
 )
 from idtrackerai.animals_detection.segmentation_utils import (
     blob_extractor,
@@ -71,14 +72,6 @@ logger = logging.getLogger("__main__.segmentation")
 The segmentation module
 """
 
-
-def find_blob(blobs_in_frame, identifier):
-
-    for blob in blobs_in_frame:
-        if blob.identifier_matches(identifier):
-            return blob
-
-    raise KeyError(f"{identifier} not in {blobs_in_frame}")
 
 class BlobsInFrame(List):
 

@@ -39,8 +39,7 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 from idtrackerai.blob import Blob
-from idtrackerai.utils.py_utils import interpolate_nans
-from idtrackerai.animals_detection.segmentation import find_blob
+from idtrackerai.utils.py_utils import interpolate_nans, find_blob
 
 from .parallel import ParallelBlobOverlap
 from .overlap import compute_overlapping_between_two_subsequent_frames

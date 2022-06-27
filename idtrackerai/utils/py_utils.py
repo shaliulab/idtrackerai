@@ -145,3 +145,12 @@ def _nan_helper(y):
     """
 
     return np.isnan(y), lambda z: z.nonzero()[0]
+
+
+def find_blob(blobs_in_frame, identifier):
+
+    for blob in blobs_in_frame:
+        if blob.identifier_matches(identifier):
+            return blob
+
+    raise KeyError(f"{identifier} not in {blobs_in_frame}")
