@@ -178,6 +178,10 @@ class Blob(object):
         self._user_generated_centroids = None
         self._pixels_set = None
 
+        self._use_coordinates_in_frame=True
+        self._use_index_from_opencv=False
+
+
     @property
     def bounding_box_image(self):
         """Image cropped from the original video that contains the blob.
@@ -1728,6 +1732,49 @@ class Blob(object):
                     thickness=3,
                     lineType=cv2.LINE_AA,
                 )
+
+
+    @property
+    def unique_index(self):
+        if self._use_index_from_opencv:
+            return self.in_frame_index
+
+        # this is safer because it's guaranteed to be unique
+        # even if we add 
+        elif self._use_coordinates_in_frame:
+            return self.bounding_box_in_frame_coordinates
+
+    def identifier_matches(self, identifier):
+
+        if isinstance(identifier, list):
+            return all([
+                v == identifier[i] for i, v in enumerate(self.unique_index)
+            ])
+
+        elif isinstance(identifier, tuple):
+            return self.unique_index == identifier
+
+
+    def __getstate__(self):
+        previous_blobs = getattr(self, "previous", [])
+        previous_blobs = [
+            (blob.frame_number_in_video_path, blob.unique_index) for blob in previous_blobs
+        ]
+
+        next_blobs = getattr(self, "next", [])
+        next_blobs = [
+            (blob.frame_number_in_video_path, blob.unique_index) for blob in next_blobs
+        ]
+
+        self._now_points_to_blob_fn_index = {
+            "previous": previous_blobs,
+            "next": next_blobs,
+        }
+
+        d = self.__dict__.copy()
+        d["previous"] = []
+        d["next"] = []     
+        return 
 
 
 def _mask_background_pixels(

@@ -40,6 +40,7 @@ from tqdm import tqdm
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
+from idtrackerai.animals_detection.segmentation import find_blob
 
 from .parallel import ParallelBlobOverlap
 from .overlap import compute_overlapping_between_two_subsequent_frames
@@ -178,7 +179,53 @@ class ListOfBlobs(ParallelBlobOverlap, object):
             path_to_load_blob_list_file, allow_pickle=True
         ).item()
         list_of_blobs.blobs_are_connected = False
+        if conf.RECONNECT_BLOBS_FROM_CACHE:
+            list_of_blobs.reconnect_from_cache()
+
         return list_of_blobs
+
+
+    def reconnect_from_cache(self):
+
+        # this should run much faster than
+        # compute_overlapping_between_subsequent_frames
+
+        # go through each frame
+        for blobs_in_frame in tqdm(self.blobs_in_video, desc="Connecting blobs from cache"):
+            # go through each blob in the frame
+            for blob in blobs_in_frame:
+                # go through each of the next blobs of the current blob
+                # (> 99% of the time there is only one next blob, sometimes none or > 1)
+                # if there is no next blob, this for loop does not run
+                # if there is > 1, it runs > 1 time accordingly
+                for next_blob in blob._now_points_to_blob_fn_index["next"]:
+                    next_blob_fn, next_blob_unique_identifier = (
+                        next_blob[0],
+                        next_blob[1],
+                    )
+                    blobs_in_next_frame=self.blobs_in_video[next_blob_fn]
+
+                    if isinstance(next_blob_unique_identifier, int):
+                        # NOTE
+                        # I was using before the position in the lsit
+                        # as identifier. This is wrong
+                        for next_blob_instance in blobs_in_next_frame:
+                            if blob.overlaps_with(next_blob_instance):
+                                blob.now_points_to(next_blob_instance, update_cache=False)
+                    else:
+
+                        try:
+                            a_next_blob = blobs_in_next_frame[
+                                next_blob_unique_identifier
+                            ]
+                            blob.now_points_to(a_next_blob, update_cache=False)
+                        # an error is raised if blobs_in_next_frame
+                        # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
+                        except TypeError:
+                            blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
+                            blob.now_points_to(a_next_blob, update_cache=False)
+
+        self.blobs_are_connected = True
 
     # TODO: This is part of fragmentation it should be somewhere else.
     def compute_fragment_identifier_and_blob_index(self, number_of_animals):
