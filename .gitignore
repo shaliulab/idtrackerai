@@ -73,3 +73,9 @@ docs/idtrackerai-app\.log
 .pytest_cache
 
 \.vscode/
+
+# Compatibility
+idtrackerai/video_imgstore.py
+
+# Dev
+idtrackerai/tracker/correct_impossible_velocity_jumps_dev.py
