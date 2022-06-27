@@ -943,7 +943,7 @@ class Video(object):
         else:
             session_name = "session_" + name
 
-        self._session_folder = os.path.join(self.video_folder, session_name)
+        self._session_folder = os.path.join(self.video_folder, conf.ANALYSIS_FOLDER, session_name)
         logger.info(f"Creating session folder at {self._session_folder}")
 
         # TODO: `_previons_session_folder` is probably not used. Remove.
