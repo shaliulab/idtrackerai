@@ -177,6 +177,8 @@ def _process_frame(
         bkg = segmentation_parameters["bkg_model"]
         mask = segmentation_parameters["mask"]
 
+        assert frame.shape[:2] == mask.shape
+
         # Apply resolution reduction
         if segmentation_parameters["resolution_reduction"] != 1:
             frame = cv2.resize(

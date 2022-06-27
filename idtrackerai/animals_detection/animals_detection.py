@@ -90,6 +90,8 @@ class AnimalsDetectionABC(ABC):
         )
         self.video._has_animals_detected = True
 
+        assert len(self.list_of_blobs.blobs_in_video) > 0
+
         return self.list_of_blobs
 
     @property
@@ -187,6 +189,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         frames_before = self.video.episodes_start_end[0][0]
         frames_after = self.video.number_of_frames - self.video.episodes_start_end[-1][-1]
         blobs_in_video = extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)        
+        assert len(blobs_in_video) == self.video.number_of_frames
         logger.info("Generating ListOfBlobs object")
 
         return ListOfBlobs(blobs_in_video=blobs_in_video)
