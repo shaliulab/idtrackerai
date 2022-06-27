@@ -506,10 +506,17 @@ class ListOfBlobs(object):
             blobs_in_frame_to_check = self.blobs_in_video[0:current_frame][
                 ::-1
             ]
-        for blobs_in_frame in blobs_in_frame_to_check:
+
+        frame_number = current_frame
+        for i, blobs_in_frame in enumerate(blobs_in_frame_to_check):
             for blob in blobs_in_frame:
                 if check_tracking(blobs_in_frame):
-                    return blob.frame_number
+                    # return blob.frame_number
+                    if direction == "future":
+                        frame_number = current_frame + i
+                    elif direction == "past":
+                        frame_number = current_frame - i
+                    return frame_number
 
     # TODO: consider moving to validation
     def interpolate_from_user_generated_centroids(
