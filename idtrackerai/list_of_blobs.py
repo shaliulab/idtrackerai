@@ -39,8 +39,7 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 from idtrackerai.blob import Blob
-from idtrackerai.utils.py_utils import interpolate_nans
-from idtrackerai.animals_detection.segmentation import find_blob
+from idtrackerai.utils.py_utils import interpolate_nans, find_blob
 
 logger = logging.getLogger("__main__.list_of_blobs")
 
