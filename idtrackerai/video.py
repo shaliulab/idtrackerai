@@ -1285,15 +1285,23 @@ class Video(object):
     # TODO: to list_of_global_fragments.py, list_of_blobs.py, or tracker.py
     def get_first_frame(self, list_of_blobs):
         if self.user_defined_parameters["number_of_animals"] != 1:
-            return self.first_frame_first_global_fragment[
+            master_fn = self.first_frame_first_global_fragment[
                 self.accumulation_trial
             ]
         elif self.user_defined_parameters["number_of_animals"] == 1:
-            return 0
+            master_fn = 0
         else:
             for blobs_in_frame in list_of_blobs.blobs_in_video:
                 if len(blobs_in_frame) != 0:
-                    return blobs_in_frame[0].frame_number
+                    master_fn = blobs_in_frame[0].frame_number
+                    break
+        
+        store = VideoCapture(self.video_path, chunk=self._chunk)
+        if getattr(store, "crossindex", None) is None:
+            return master_fn
+        else:
+            fn = store.crossindex.find_selected_fn(master_fn)
+            return fn
 
 
 def scan_folder(path):
