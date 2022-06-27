@@ -50,6 +50,13 @@ COMPRESSED_VIDEO_PATH_2 = os.path.join(
     "conflict3and4_20120316T155032_13_compressed.avi",
 )
 
+COMPRESSED_VIDEO_PATH_3 = os.path.join(
+    DATA_PATH,
+    "example_fly_video",
+    "example_fly_video.mp4",
+)
+
+
 #######################################
 #### Constants for tests ##############
 #######################################
@@ -62,16 +69,25 @@ COMPRESSED_VIDEO_HEIGHT = 938
 #######################################
 ##########       video      ###########
 #######################################
-AVAILABLE_VIDEO_EXTENSION = [
-    ".avi",
-    ".AVI",
-    ".mp4",
-    ".MP4",
-    ".mpg",
-    ".MPG",
-    ".mov",
-    ".MOV",
-]
+EXTENSIONS = {
+    "video": [
+        ".avi",
+        ".AVI",
+        ".mp4",
+        ".MP4",
+        ".mpg",
+        ".MPG",
+        ".mov",
+        ".MOV",
+    ],
+    "imgstore": [
+        ".yaml"
+    ]
+}
+
+AVAILABLE_VIDEO_EXTENSION = EXTENSIONS["video"] + EXTENSIONS["imgstore"]
+USING_PYTHON_VIDEO_ANNOTATOR=False
+
 ###############################################################################
 # Animal detection advanced parameters
 ###############################################################################
@@ -223,6 +239,8 @@ MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION = flo
         0.5,
     )
 )
+
+NUMBER_OF_JOBS_FOR_CORRECT_IMPOSSIBLE_VELOCITY_JUMPS=-2
 ###############################################################################
 # Post processing advanced parameters
 ###############################################################################
