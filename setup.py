@@ -72,6 +72,7 @@ requirements = [
     "gdown >= 3.10.0",
 ]
 
+IDTRACKERAI_APP_DEPENDENCY="idtrackerai-app-shaliulab==1.0.1",
 
 EXCLUDE_FROM_PACKAGES = ["plots", "plots.*", "docs", "docs.*"]
 
@@ -107,15 +108,16 @@ setup(
     },
     install_requires=requirements,
     extras_require={
-        "cli": ["idtrackerai-app == 1.0.0a0"],
+        "cli": [IDTRACKERAI_APP_DEPENDENCY],
         "gui": [
-            "idtrackerai-app == 1.0.0a0",
+            IDTRACKERAI_APP_DEPENDENCY,
             "pyforms-gui==4.904.152",
             "python-video-annotator==3.306",
             "python-video-annotator-module-idtrackerai == 1.0.1a0",
         ],
         "gpu": ["torch", "torchvision"],
         "dev": ["pytest", "black", "sphinx", "numpydoc"],
+        "imgstore": ["imgstore-shaliulab>=0.4.7"],
     },
     zip_safe=False,
     classifiers=[
