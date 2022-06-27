@@ -104,7 +104,7 @@ def apply_func_on_frame(
 ):
     segment_number = video_object.in_which_episode(frame_number)
     if cap is None:
-        cap = VideoCapture(video_object.video_paths[segment_number])
+        cap = VideoCapture(video_object.video_paths[segment_number], chunk=video_object._chunk)
         start = video_object._episodes_start_end[segment_number][0]
         cap.set(1, frame_number - start)
     else:
@@ -149,7 +149,7 @@ def generate_trajectories_video(
     )
 
     if len(video_object.video_paths) == 1:
-        cap = VideoCapture(video_object.video_path)
+        cap = VideoCapture(video_object.video_path, chunk=video_object._chunk)
     else:
         cap = None
 

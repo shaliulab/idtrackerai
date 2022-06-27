@@ -113,6 +113,7 @@ def _get_episode_frames_for_bkg(cap, starting_frame, ending_frame, period):
 
 def _compute_episode_bkg(
     video_path: str,
+    chunk: int,
     bkg: np.ndarray,
     mask: np.ndarray,
     period: int,
@@ -120,10 +121,10 @@ def _compute_episode_bkg(
     sigma: Optional[float] = None,
     starting_frame: Optional[int] = 0,
     ending_frame: Optional[int] = None,
+    **kwargs
 ) -> Tuple[np.ndarray, int]:
 
-    cap = VideoCapture(video_path)
-
+    cap = VideoCapture(video_path, chunk=chunk)
     frames_for_bkg = _get_episode_frames_for_bkg(
         cap, starting_frame, ending_frame, period
     )
@@ -146,6 +147,7 @@ def compute_background(
     original_height,
     original_width,
     video_path,
+    chunk,
     original_ROI,
     episodes_start_end,
     background_sampling_period=conf.BACKGROUND_SUBTRACTION_PERIOD,
@@ -212,6 +214,7 @@ def compute_background(
         output = Parallel(n_jobs=num_jobs_parallel)(
             delayed(_compute_episode_bkg)(
                 video_path,
+                chunk,
                 bkg,
                 original_ROI,
                 background_sampling_period,

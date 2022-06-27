@@ -61,7 +61,7 @@ class Video(object):
     However, this is bad practice and it will change in the future.
     """
 
-    def __init__(self, video_path, open_multiple_files):
+    def __init__(self, video_path, open_multiple_files, chunk=0):
         """Initializes a video object
 
         Parameters
@@ -84,6 +84,7 @@ class Video(object):
         self._number_of_frames_in_chunk = None
         self._number_of_episodes = None
         self._episodes_start_end = None
+        self._chunk = chunk
 
         # User defined parameters
         self._user_defined_parameters = None  # has a setter
@@ -105,7 +106,7 @@ class Video(object):
             self._number_of_frames_in_chunk,
             self._episodes_start_end,
             self._number_of_episodes,
-        ) = self.get_num_frames_and_processing_episodes(self._video_paths)
+        ) = self.get_num_frames_and_processing_episodes(self._video_paths, chunk=self._chunk)
 
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
         # Currently idtracker.ai does not rely on color. All color videos
@@ -885,7 +886,7 @@ class Video(object):
 
         widths, heights, frames_per_seconds = [], [], []
         for path in self._video_paths:
-            cap = VideoCapture(path)
+            cap = VideoCapture(path, chunk=self._chunk)
             widths.append(int(cap.get(3)))
             heights.append(int(cap.get(4)))
 
@@ -1136,7 +1137,7 @@ class Video(object):
         ]
 
     @staticmethod
-    def get_num_frames_and_processing_episodes(video_paths):
+    def get_num_frames_and_processing_episodes(video_paths, chunk):
         """Gets the number of frames in the video, the eposides of the video,
         and the number of episodes.
 
@@ -1160,7 +1161,7 @@ class Video(object):
         """
         logger.info("Getting video episodes and number of frames")
         if len(video_paths) == 1:  # single video file
-            cap = VideoCapture(video_paths[0])
+            cap = VideoCapture(video_paths[0], chunk=chunk)
             number_of_frames = int(cap.get("TOTAL_NUMBER_OF_FRAMES"))
             last_frame_in_episode = int(cap.get("NUMBER_OF_FRAMES"))
             number_of_frames_in_chunk=int(cap.get("NUMBER_OF_FRAMES_IN_CHUNK"))
@@ -1175,7 +1176,7 @@ class Video(object):
             logger.info(f"{video_paths}")
             num_frames_in_video_segments = [
                 # This cv2.VideoCapture is OK because it's only used with opencv videos
-                int(cv2.VideoCapture(video_segment).get(7))
+                int(cv2.VideoCapture(video_segment, chunk=None).get(7))
                 for video_segment in video_paths
             ]
             end = list(np.cumsum(num_frames_in_video_segments))

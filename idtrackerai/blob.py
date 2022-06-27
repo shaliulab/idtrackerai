@@ -204,7 +204,7 @@ class Blob(object):
                     str(self.frame_number) + "-" + str(self.in_frame_index)
                 ][:]
         else:
-            cap = VideoCapture(self.video_path)
+            cap = VideoCapture(self.video_path, chunk=self._chunk)
             cap.set(1, self.frame_number_in_video_path)
             ret, frame = cap.read()
             bb = self.bounding_box_in_frame_coordinates

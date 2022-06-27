@@ -173,6 +173,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         logger.info("Segmenting video")
         blobs_in_video, max_num_blobs = segment(
             self.video.video_path,
+            self.video._chunk,
             self.detection_parameters,
             self.attributes_to_store_in_each_blob,
             self.video.episodes_start_end,

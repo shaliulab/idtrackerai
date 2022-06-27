@@ -343,6 +343,7 @@ def _segment_episode(
     start,
     end,
     video_path,
+    chunk,
     segmentation_parameters,
     segmentation_data_folder,
     video_params_to_store,
@@ -403,7 +404,7 @@ def _segment_episode(
         pixels_path = None
     # Read video for the episode
 
-    cap = VideoCapture(video_path)
+    cap = VideoCapture(video_path, chunk)
 
     # Get number of frames in the episode
     if single_video_file:
@@ -459,6 +460,7 @@ def _segment_episode(
 
 def _segment_video_in_parallel(
     episodes_sublists,
+    chunk,
     segmentation_data_folder,
     segmentation_parameters,
     video_params_to_store,
@@ -479,6 +481,7 @@ def _segment_video_in_parallel(
                 start_end[0],
                 start_end[1],
                 episode_path,
+                chunk,
                 segmentation_parameters,
                 segmentation_data_folder,
                 video_params_to_store,
@@ -498,6 +501,7 @@ def _segment_video_in_parallel(
 
 def segment(
     video_path: str,
+    chunk: Union[int, None],
     segmentation_parameters: Dict[str, any],
     video_attributes_to_store_in_each_blob: Dict[str, any],
     episodes_start_end: List[Tuple[int, int]],
@@ -565,6 +569,7 @@ def segment(
     set_mkl_to_single_thread()
     blobs_in_video, maximum_number_of_blobs = _segment_video_in_parallel(
         episodes_sublists,
+        chunk,
         segmentation_data_folder,
         segmentation_parameters,
         video_attributes_to_store_in_each_blob,

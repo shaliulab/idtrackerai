@@ -84,10 +84,10 @@ def generate_individual_video(
     # Initialize cap reader
     if len(video_object.video_paths) > 1:
         current_segment = 0
-        cap = VideoCapture(video_object.video_paths[current_segment])
+        cap = VideoCapture(video_object.video_paths[current_segment], chunk=video_object._chunk)
         start = video_object._episodes_start_end[current_segment][0]
     else:
-        cap = VideoCapture(video_object.video_path)
+        cap = VideoCapture(video_object.video_path, chunk=video_object._chunk)
 
     for frame_number in range(video_object.number_of_frames):
         # Update cap if necessary.
@@ -96,7 +96,8 @@ def generate_individual_video(
             if current_segment != segment_number:
                 print(video_object.video_paths[segment_number])
                 cap = VideoCapture(
-                    video_object.video_paths[segment_number]
+                    video_object.video_paths[segment_number],
+                    chunk=video_object._chunk
                 )
                 start = video_object._episodes_start_end[segment_number][0]
                 current_segment = segment_number
