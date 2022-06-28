@@ -82,7 +82,7 @@ class ListOfBlobs(ParallelBlobOverlap, object):
     def __len__(self):
         return len(self.blobs_in_video)
 
-    def compute_overlapping_between_subsequent_frames(self):
+    def compute_overlapping_between_subsequent_frames(self, n_jobs=None):
         """Computes overlapping between blobs in consecutive frames.
 
         Two blobs in consecutive frames overlap if the intersection of the list
@@ -93,7 +93,10 @@ class ListOfBlobs(ParallelBlobOverlap, object):
         :meth:`blob.Blob.overlaps_with`
         """
         self.disconnect()
-        if conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS == 1:
+        if n_jobs is None:
+            n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
+
+        if n_jobs == 1:
             self._compute_overlapping_between_subsequent_frames()
         else:
             self.compute_overlapping_between_subsequent_frames_parallel()
