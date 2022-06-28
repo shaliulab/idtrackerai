@@ -177,6 +177,7 @@ class Blob(object):
         self._user_generated_identities = None
         self._user_generated_centroids = None
         self._pixels_set = None
+        self._crossing_in_next_or_previous={"previous": None, "next": None}
 
         self._use_coordinates_in_frame=True
         self._use_index_from_opencv=False
