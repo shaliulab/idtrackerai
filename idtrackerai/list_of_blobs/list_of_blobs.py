@@ -78,9 +78,27 @@ class ListOfBlobs(ParallelBlobOverlap, object):
         self.blobs_in_video = blobs_in_video
         self.number_of_frames = len(self.blobs_in_video)
         self.blobs_are_connected = False
+        self._start_end_with_blobs = ()
 
     def __len__(self):
         return len(self.blobs_in_video)
+
+    def extend_blobs_in_video_to_absolute_start_and_end(self, *args, **kwargs):
+        return extend_blobs_in_video_to_absolute_start_and_end(self.list_of_blobs.blobs_in_video, *args, **kwargs)
+
+    def _annotate_location_of_blobs(self):
+
+        last_frame_with_blobs = 0
+        first_frame_with_blobs = None
+        for i in tqdm(range(len(self.blobs_in_video)), desc="Annotating location of blobs in data"):
+            if len(self.blobs_in_video[i]) > 0:
+                last_frame_with_blobs = i
+                if first_frame_with_blobs is None:
+                    first_frame_with_blobs = i
+        
+        self._start_end_with_blobs = (first_frame_with_blobs, last_frame_with_blobs)
+
+
 
     def compute_overlapping_between_subsequent_frames(self, n_jobs=None):
         """Computes overlapping between blobs in consecutive frames.
@@ -99,7 +117,7 @@ class ListOfBlobs(ParallelBlobOverlap, object):
         if n_jobs == 1:
             self._compute_overlapping_between_subsequent_frames()
         else:
-            self.compute_overlapping_between_subsequent_frames_parallel()
+            self.compute_overlapping_between_subsequent_frames_parallel(n_jobs)
         self.blobs_are_connected = True
 
 
