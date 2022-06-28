@@ -1670,7 +1670,7 @@ class Blob(object):
         d = self.__dict__.copy()
         d["previous"] = []
         d["next"] = []     
-        return 
+        return d
 
 
 def _mask_background_pixels(
