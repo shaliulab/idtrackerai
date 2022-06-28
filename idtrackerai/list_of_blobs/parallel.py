@@ -74,8 +74,8 @@ class ParallelBlobOverlap:
             ) / ROUND_FACTOR
         
         ) * ROUND_FACTOR
-        starts = list(range(self._start_end_with_blobs[0], self._start_end_with_blobs[1], process_size))
-        ends = starts[1:] + [self._start_end_with_blobs[1]]
+        starts = list(range(self._start_end_with_blobs[0], self._start_end_with_blobs[1]+1, process_size))
+        ends = starts[1:] + [self._start_end_with_blobs[1]+1]
 
 
         # Prepare list of arguments (args) for the pool of processes
