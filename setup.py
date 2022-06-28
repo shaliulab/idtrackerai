@@ -72,7 +72,7 @@ requirements = [
     "gdown >= 3.10.0",
 ]
 
-IDTRACKERAI_APP_DEPENDENCY="idtrackerai-app-shaliulab==1.0.1",
+IDTRACKERAI_APP_DEPENDENCY="idtrackerai-app-shaliulab==1.0.3",
 
 EXCLUDE_FROM_PACKAGES = ["plots", "plots.*", "docs", "docs.*"]
 
