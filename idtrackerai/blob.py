@@ -177,6 +177,7 @@ class Blob(object):
         self._user_generated_identities = None
         self._user_generated_centroids = None
         self._pixels_set = None
+        self._crossing_in_next_or_previous={"previous": None, "next": None}
 
     @property
     def bounding_box_image(self):
