@@ -9,6 +9,7 @@ from .overlap import compute_overlapping_between_two_subsequent_frames
 
 logger = logging.getLogger("__main__.list_of_blobs.parallel")
 
+ROUND_FACTOR=1000
 n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
 
 def compute_overlapping_between_subsequent_frames_single_job(
@@ -70,9 +71,9 @@ class ParallelBlobOverlap:
         process_size = math.ceil(
             ( 
                 (self._start_end_with_blobs[1] - self._start_end_with_blobs[0]) / n_jobs
-            ) / 10
+            ) / ROUND_FACTOR
         
-        ) * 10
+        ) * ROUND_FACTOR
         starts = list(range(self._start_end_with_blobs[0], self._start_end_with_blobs[1], process_size))
         ends = starts[1:] + [self._start_end_with_blobs[1]]
 
