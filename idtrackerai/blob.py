@@ -281,7 +281,6 @@ class Blob(object):
         # getattr(self, "_pixels_set", None)
         # because old blob files dont serialize this property
         if getattr(self, "_pixels_set", None) is None:
-            logger.info("Old file detected. Setting _pixels_set on the spot")
             self._pixels_set = set(self.pixels)
         return self._pixels_set
 
