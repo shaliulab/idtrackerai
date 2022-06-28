@@ -132,7 +132,6 @@ class ListOfBlobs(object):
         path_to_save : str, optional
             Path where to save the object, by default None
         """
-        self.disconnect()
         logger.info("saving blobs list at %s" % path_to_save)
         np.save(path_to_save, self)
 
