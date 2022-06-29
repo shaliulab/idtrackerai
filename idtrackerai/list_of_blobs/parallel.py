@@ -48,15 +48,27 @@ class ParallelBlobOverlap:
     def make_process_name(start, end):
         return f"Process [{start} - {end})"
 
+    def fetch_blob(self, frame_identifier, blob_identifier):
+        try:
+            blobs_prior = self.blobs_in_video[frame_identifier]
+        except Exception:
+            raise Exception(f"Cannot fetch frame {frame_identifier} from blobs_in_video of length {len(self.blobs_in_video)}")
+        else:
+            try:
+                blob = blobs_prior[blob_identifier]
+            except Exception:
+                raise Exception(f"Cannot fetch blob {blob_identifier} from blobs_in_frame of length {len(blobs_prior)} (#{frame_identifier} frame)")
+            else:
+                return blob
+
 
     def _annotate_output_of_parallel_computations_in_blobs(self, data):
         for i, process in enumerate(data):
             for entry in tqdm(process, desc=f"Annotating output of compute_overlapping_between_subsequent_frames_single_job {i}"):
                 (frame_i, frame_i_index), (frame_ip1, frame_ip1_index) = entry
-                blob_0 = self.blobs_in_video[frame_i][frame_i_index]
-                blob_1 = self.blobs_in_video[frame_ip1][frame_ip1_index]
+                blob_0 = self.fetch_blob(frame_i, frame_i_index)
+                blob_1 = self.fetch_blob(frame_ip1, frame_ip1_index)
                 blob_0.now_points_to(blob_1)
-
 
     def compute_overlapping_between_subsequent_frames_parallel(self, n_jobs=None):
 
@@ -91,8 +103,10 @@ class ParallelBlobOverlap:
         with multiprocessing.Pool(n_jobs) as p:
             output=p.starmap(compute_overlapping_between_subsequent_frames_single_job, args)
 
+        assert self.blobs_in_video[self._start_end_with_blobs[0]][0].frame_number == output[0][0][0][0]
+        assert self.blobs_in_video[self._start_end_with_blobs[0]][0].frame_number == self._start_end_with_blobs[0]
+
         self._annotate_output_of_parallel_computations_in_blobs(output)
-        # self.extend_blobs_in_video_to_absolute_start_and_end(frames_before, frames_after)
         self.stitch_parallel_blocks(starts, ends)
 
         assert number_of_frames == len(self.blobs_in_video)
