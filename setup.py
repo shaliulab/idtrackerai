@@ -70,6 +70,7 @@ requirements = [
     "opencv-python == 3.4.5.20",
     "confapp >= 1.1.11",
     "gdown >= 3.10.0",
+    "codetiming",
 ]
 
 IDTRACKERAI_APP_DEPENDENCY="idtrackerai-app-shaliulab==1.0.3",
