@@ -480,7 +480,7 @@ class Blob(object):
         return False
 
     def check_for_crossing_in_next_or_previous(self, direction=None):
-        return self.check_for_crossing_in_next_or_previous_v2(direction=direction)
+        return self.check_for_crossing_in_next_or_previous_v1(direction=direction)
 
 
     def check_for_crossing_in_next_or_previous_v2(self, direction=None):
@@ -851,18 +851,18 @@ class Blob(object):
 
         if not conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
 
-        # For RAM optimization
-        with h5py.File(file_path, "a") as f:
-            dset = f["identification_images"]
-            i = dset.shape[0]
-            dset.resize(
-                (
-                    i + 1,
-                    image_for_identification.shape[1],
-                    image_for_identification.shape[1],
+            # For RAM optimization
+            with h5py.File(file_path, "a") as f:
+                dset = f["identification_images"]
+                i = dset.shape[0]
+                dset.resize(
+                    (
+                        i + 1,
+                        image_for_identification.shape[1],
+                        image_for_identification.shape[1],
+                    )
                 )
-            )
-            dset[i, ...] = image_for_identification
+                dset[i, ...] = image_for_identification
         self.identification_image_index = i
         self.episode = int(
             os.path.basename(file_path).split(".")[0].split("_")[-1]
