@@ -565,8 +565,10 @@ def interpolate_trajectories_during_gaps(
     possible_identities,
     erosion_counter,
 ):
-    # logger.debug('In interpolate_trajectories_during_gaps')
+
+
     blobs_in_video = list_of_blobs.blobs_in_video
+    
     for frame_number, (blobs_in_frame, occluded_identities_in_frame) in tqdm(
         enumerate(zip(blobs_in_video, list_of_occluded_identities)),
         desc="closing gaps",

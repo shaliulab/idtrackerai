@@ -384,6 +384,10 @@ class AccumulationManager(object):
         )  # used to compute the certainty on the network's assignment
         self.certainty_of_candidate_individual_fragments = []
 
+        fragment_identifiers=[fragment.identifier for fragment in self.list_of_fragments.fragments]
+
+
+
         for (
             individual_fragment_predictions,
             individual_fragment_softmax_probs,
@@ -394,15 +398,17 @@ class AccumulationManager(object):
             candidate_individual_fragments_identifiers,
         ):
 
-            index = self.video.fragment_identifier_to_index[
-                candidate_individual_fragment_identifier
+            fragment=self.list_of_fragments.fragments[
+                fragment_identifiers.index(candidate_individual_fragment_identifier)
             ]
-            self.list_of_fragments.fragments[
-                index
-            ].compute_identification_statistics(
+
+            assert fragment.identifier == candidate_individual_fragment_identifier
+            fragment.compute_identification_statistics(
                 np.asarray(individual_fragment_predictions),
                 individual_fragment_softmax_probs,
             )
+
+
 
     def reset_accumulation_variables(self):
         """After an accumulation is finished reinitialise the variables involved

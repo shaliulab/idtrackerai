@@ -551,14 +551,14 @@ class ListOfBlobs(ParallelBlobOverlap, object):
             "accumulation_step",
         ]
 
+        fragment_identifiers = [fragment.identifier for fragment in fragments]
+
         for blobs_in_frame in tqdm(
             self.blobs_in_video,
             desc="updating list of blobs from list of fragments",
         ):
             for blob in blobs_in_frame:
-                fragment = fragments[
-                    fragment_identifier_to_index[blob.fragment_identifier]
-                ]
+                fragment = fragments[fragment_identifiers.index(blob.fragment_identifier)]
                 [
                     setattr(
                         blob, "_" + attribute, getattr(fragment, attribute)

@@ -34,6 +34,7 @@ import logging
 import os
 import time
 
+import codetiming
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
@@ -576,12 +577,11 @@ class TrackerAPI(object):
             # Re-enter the function for the next step of the accumulation
             self.accumulate()
 
-        elif ((
+        elif (
             not self.accumulation_manager.new_global_fragments_for_training
             and not self.video._has_protocol2_finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
-            ) or conf.DISABLE_PROTOCOL_3
         ):
             # Accumulation stop because protocol 1 is successful
             logger.info("--------------------> Protocol 1 successful")
@@ -1075,12 +1075,14 @@ class TrackerAPI(object):
     """ Post processing """
 
     def postprocess_impossible_jumps(self, call_update_list_of_blobs=True):
+    
         self.video.velocity_threshold = compute_model_velocity(
             self.list_of_fragments.fragments,
             self.video.user_defined_parameters["number_of_animals"],
             percentile=conf.VEL_PERCENTILE,
         )
-        correct_impossible_velocity_jumps(self.video, self.list_of_fragments)
+        if conf.POSTPROCESS_IMPOSSIBLE_JUMPS:
+                correct_impossible_velocity_jumps(self.video, self.list_of_fragments)
         self.list_of_fragments.save(self.video.fragments_path)
         self.video.save()
 
@@ -1183,11 +1185,12 @@ class TrackerAPI(object):
 
         self.list_of_blobs_no_gaps = copy.deepcopy(self.list_of_blobs)
         self.video._has_crossings_solved = False
-        self.list_of_blobs_no_gaps = close_trajectories_gaps(
-            self.video,
-            self.list_of_blobs_no_gaps,
-            self.list_of_fragments,
-        )
+        with codetiming.Timer(text="Done closing gaps in trajectories in  {:.8f} seconds"):
+            self.list_of_blobs_no_gaps = close_trajectories_gaps(
+                self.video,
+                self.list_of_blobs_no_gaps,
+                self.list_of_fragments,
+            )
         self.video.blobs_no_gaps_path = os.path.join(
             os.path.split(self.video.blobs_path)[0],
             "blobs_collection_no_gaps.npy",

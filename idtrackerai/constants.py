@@ -253,6 +253,7 @@ FIXED_IDENTITY_THRESHOLD = float(
     os.environ.get("FIXED_IDENTITY_THRESHOLD", 0.9)
 )
 VEL_PERCENTILE = int(os.environ.get("VEL_PERCENTILE", 99))
+POSTPROCESS_IMPOSSIBLE_JUMPS=True
 ################################################
 # After tracking advanced parameters
 ################################################
@@ -260,5 +261,5 @@ INDIVIDUAL_VIDEO_WIDTH_HEIGHT = None
 CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON = False
 
 
-DISABLE_PROTOCOL_3=True
+DISABLE_PROTOCOL_3=False
 ANALYSIS_FOLDER="idtrackerai"
