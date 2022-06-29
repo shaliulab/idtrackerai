@@ -143,7 +143,101 @@ def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
     training_blobs = {"individuals": [], "crossings": []}
     validation_blobs = {}
     toassign_blobs = []
-    for frame_number, blobs_in_frame in tqdm.tqdm(enumerate(list_of_blobs.blobs_in_video)):
+    # for i, blobs_in_frame in tqdm.tqdm(enumerate(list_of_blobs.blobs_in_video), desc="get_train_validation_and_eval_blobs"):
+    for i, blobs_in_frame in enumerate(list_of_blobs.blobs_in_video):
+
+        if len(blobs_in_frame) == 0:
+            continue
+
+        for j, blob in enumerate(blobs_in_frame):
+            if blob.is_a_sure_individual() or blob.in_a_global_fragment_core(
+                blobs_in_frame
+            ):
+                training_blobs["individuals"].append(blob)
+            elif blob.is_a_sure_crossing():
+                training_blobs["crossings"].append(blob)
+            elif (
+                blob.is_an_individual
+                and not blob.in_a_global_fragment_core(blobs_in_frame)
+                and not blob.is_a_sure_individual()
+            ) or (blob.is_a_crossing and not blob.is_a_sure_crossing()):
+                toassign_blobs.append(blob)
+
+    n_blobs_crossings = len(training_blobs["crossings"])
+    n_blobs_individuals = len(training_blobs["individuals"])
+    logger.debug(
+        "number of individual blobs (before cut): {}".format(
+            n_blobs_individuals
+        )
+    )
+    logger.debug("number of crossing blobs: {}".format(n_blobs_crossings))
+
+    # Shuffle and make crossings and individuals even
+    np.random.shuffle(training_blobs["individuals"])
+    np.random.shuffle(training_blobs["crossings"])
+    if n_blobs_crossings > conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR:
+        training_blobs["crossings"] = training_blobs["crossings"][
+            : conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
+        ]
+        n_blobs_crossings = conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
+    if n_blobs_individuals > conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR:
+        training_blobs["individuals"] = training_blobs["individuals"][
+            : conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
+        ]
+        n_blobs_individuals = conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
+    n_individual_blobs_validation = int(n_blobs_individuals * ratio_validation)
+    n_crossing_blobs_validation = int(n_blobs_crossings * ratio_validation)
+
+    # split training and validation
+    validation_blobs["individuals"] = training_blobs["individuals"][
+        :n_individual_blobs_validation
+    ]
+    validation_blobs["crossings"] = training_blobs["crossings"][
+        :n_crossing_blobs_validation
+    ]
+    training_blobs["individuals"] = training_blobs["individuals"][
+        n_individual_blobs_validation:
+    ]
+    training_blobs["crossings"] = training_blobs["crossings"][
+        n_crossing_blobs_validation:
+    ]
+
+    ratio_crossings = n_blobs_crossings / (
+        n_blobs_crossings + n_blobs_individuals
+    )
+    training_blobs["weights"] = [ratio_crossings, 1 - ratio_crossings]
+
+    logger.info(
+        "{} individual blobs and {} crossing blobs for training".format(
+            len(training_blobs["individuals"]),
+            len(training_blobs["crossings"]),
+        )
+    )
+    logger.info(
+        "{} individual blobs and {} crossing blobs for validation".format(
+            len(validation_blobs["individuals"]),
+            len(validation_blobs["crossings"]),
+        )
+    )
+    logger.info("{} blobs to test".format(len(toassign_blobs)))
+
+    return training_blobs, validation_blobs, toassign_blobs
+
+
+
+
+def get_train_validation_and_eval_blobs_v2(list_of_blobs, ratio_validation=0.1):
+    """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs), and a list (toassign_blobs).
+
+    :param list_of_blobs:
+    :param ratio_validation:
+    :return: training_blobs, validation_blobs, toassign_blobs
+    """
+
+    training_blobs = {"individuals": [], "crossings": []}
+    validation_blobs = {}
+    toassign_blobs = []
+    for frame_number, blobs_in_frame in tqdm.tqdm(enumerate(list_of_blobs.blobs_in_video), desc="get_train_validation_and_eval_blobs_v2"):
         for blob in blobs_in_frame:
 
             with Timer(text="is_individual took {:.8f} seconds to compute", logger=timer_logger.debug):
