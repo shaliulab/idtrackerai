@@ -33,6 +33,8 @@ from abc import ABC, abstractmethod
 import os
 import logging
 import time
+import pickle
+from confapp import conf
 
 from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import (
@@ -176,15 +178,24 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         """
 
         logger.info("Segmenting video")
-        blobs_in_video, max_num_blobs = segment(
-            self.video.video_path,
-            self.video._chunk,
-            self.detection_parameters,
-            self.attributes_to_store_in_each_blob,
-            self.video.episodes_start_end,
-            self.video.segmentation_data_foler,
-            self.video.video_paths,
-        )
+        pickle_file = os.path.join(self.video.session_folder, "segmentation.pkl")
+        if os.path.exists(pickle_file) and conf.IDTRACKERAI_IS_TESTING:
+            with open(pickle_file, "rb") as filehandle:
+                data = pickle.load(filehandle)
+                blobs_in_video, max_num_blobs = data
+        else:
+            blobs_in_video, max_num_blobs = segment(
+                self.video.video_path,
+                self.video._chunk,
+                self.detection_parameters,
+                self.attributes_to_store_in_each_blob,
+                self.video.episodes_start_end,
+                self.video.segmentation_data_foler,
+                self.video.video_paths,
+            )
+
+            with open(pickle_file, "wb") as filehandle:
+                pickle.dump((blobs_in_video, max_num_blobs), filehandle)
 
         frames_before = self.video.episodes_start_end[0][0]
         frames_after = self.video.number_of_frames - self.video.episodes_start_end[-1][-1]

@@ -31,7 +31,7 @@
 
 import itertools
 import logging
-
+import codetiming
 import h5py
 import numpy as np
 from confapp import conf
@@ -391,36 +391,50 @@ class ListOfBlobs(ParallelBlobOverlap, object):
         width : int
             Width of a video frame considering the resolution reduction factor.
         """
-        Output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
-            delayed(self._set_identification_images_per_episode)(
-                identification_image_size,
-                number_of_animals,
-                number_of_frames,
-                video_path,
-                height,
-                width,
-                file,
-                self.blobs_in_video[start:end],
+
+        logger.info("""
+            idtrackerai is generating the identification images,
+            (input to the idCNN). The processes need to be spawned,
+            which is very quick as the progress bar shows, but also actually run
+            which takes a bit longer.
+        """)
+        
+        with codetiming.Timer(text="Setting identification images took {:.8f} seconds", logger=logger.info):
+            Output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
+                delayed(self._set_identification_images_per_episode)(
+                    identification_image_size,
+                    number_of_animals,
+                    number_of_frames,
+                    video_path,
+                    height,
+                    width,
+                    file,
+                    self.blobs_in_video[start:end],
+                )
+                for file, (start, end) in tqdm(
+                    list(
+                        zip(
+                            identification_images_file_paths,
+                            episodes_start_end,
+                        )
+                    ),
+                    desc=f"Spawning {conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES} parallel processes to generate identification images.",
+                )
             )
-            for file, (start, end) in tqdm(
-                list(
-                    zip(
-                        identification_images_file_paths,
-                        episodes_start_end,
-                    )
-                ),
-                desc="Setting images for identification",
-            )
-        )
+
         blobs_in_video = [
             blobs_in_frame
             for blobs_in_episode in Output
             for blobs_in_frame in blobs_in_episode
         ]
 
-        frames_before = episodes_start_end[0][0]
-        frames_after = len(self.blobs_in_video) - episodes_start_end[-1][-1]
-        self.blobs_in_video=extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)
+        if len(blobs_in_video) < len(self.blobs_in_video):
+            logger.info("Extending length of list of blobs back to original!")
+            frames_before = episodes_start_end[0][0]
+            frames_after = len(self.blobs_in_video) - episodes_start_end[-1][-1]
+            self.blobs_in_video=extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)
+        else:
+            self.blobs_in_video=blobs_in_video
 
     @staticmethod
     def _set_identification_images_per_episode(
@@ -945,6 +959,8 @@ class ListOfBlobs(ParallelBlobOverlap, object):
             contour=None,
             area=None,
             bounding_box_in_frame_coordinates=None,
+            video_path=video.video_path,
+            chunk=video._chunk,
         )
         new_blob._user_generated_centroids = [(centroid[0], centroid[1])]
         new_blob._user_generated_identities = [identity]

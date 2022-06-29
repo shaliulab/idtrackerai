@@ -36,7 +36,7 @@ import cv2
 import h5py
 import numpy as np
 from sklearn.decomposition import PCA
-
+from confapp import conf
 try:
     from imgstore.interface import VideoCapture
 except ModuleNotFoundError:
@@ -433,7 +433,7 @@ class Blob(object):
 
         return False
 
-    def check_for_crossing_in_next_or_previous_v1(self, direction=None):
+    def check_for_crossing_in_next_or_previous_v1(self, direction=None, debug=False):
         """Flag indicating if the blob has a crossing in its past or future
         overlapping history
 
@@ -457,9 +457,19 @@ class Blob(object):
         opposite_direction = "next" if direction == "previous" else "previous"
         current = getattr(self, direction)[0]
 
+        steps=0
         while len(getattr(current, direction)) == 1:
+            new_blob = getattr(current, direction)[0]
+            if direction == "next": step=1
+            elif direction == "previous": step=-1
 
-            current = getattr(current, direction)[0]
+            if not current.frame_number + step == new_blob.frame_number:
+                raise Exception(f"The {direction} blob has a frame_number that is in the opposite direction. The blob overlap is corrupted")
+            current = new_blob
+
+
+            if debug: print(steps)
+
             if (
                 len(getattr(current, opposite_direction)) > 1
                 and current.is_a_crossing
@@ -571,13 +581,8 @@ class Blob(object):
             and len(self.previous[0].next) == 1
         ):
 
-            has_crossing_in_future = (
-                self.check_for_crossing_in_next_or_previous("next")
-            )
-
-            has_crossing_in_past = self.check_for_crossing_in_next_or_previous(
-                "previous"
-            )
+            has_crossing_in_future = self.check_for_crossing_in_next_or_previous("next")
+            has_crossing_in_past = self.check_for_crossing_in_next_or_previous("previous")
 
             if has_crossing_in_past and has_crossing_in_future:
                 return True
@@ -841,6 +846,8 @@ class Blob(object):
             height,
             width,
         )
+
+        if not conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
 
         # For RAM optimization
         with h5py.File(file_path, "a") as f:

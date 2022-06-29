@@ -125,6 +125,7 @@ def detect_crossings(
         val_blobs,
         eval_blobs,
     ) = get_train_validation_and_eval_blobs(list_of_blobs)
+    logger.info("Done getting list of blobs for training, validation and eval")
 
     if (
         len(train_blobs["crossings"])
