@@ -127,6 +127,7 @@ class Blob(object):
         video_height=None,
         video_width=None,
         video_path=None,
+        chunk=None,
         pixels_are_from_eroded_blob=False,
         resolution_reduction=1.0,
     ):
@@ -149,6 +150,7 @@ class Blob(object):
         self.video_height = video_height
         self.video_width = video_width
         self.video_path = video_path
+        self.chunk = chunk
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
         self._resolution_reduction = resolution_reduction
 

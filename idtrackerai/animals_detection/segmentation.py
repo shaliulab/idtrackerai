@@ -100,6 +100,7 @@ def _get_blobs_in_frame(
     frame_number_in_video_path,
     bounding_box_images_path,
     video_path,
+    chunk,
     pixels_path,
     save_pixels,
     save_segmentation_image,
@@ -176,13 +177,13 @@ def _get_blobs_in_frame(
         frame_number_in_video_path,
         video_params_to_store,
         video_path,
+        chunk,
         segmentation_parameters,
     )
 
     max_number_of_blobs = max(max_number_of_blobs, len(centroids))
 
     return blobs_in_frame, max_number_of_blobs
-
 
 def _process_frame(
     frame,
@@ -299,6 +300,7 @@ def _create_blobs_objects(
     frame_number_in_video_path,
     video_params_to_store,
     video_path,
+    chunk,
     segmentation_parameters,
 ):
     blobs_in_frame = BlobsInFrame()
@@ -333,6 +335,7 @@ def _create_blobs_objects(
             video_height=video_params_to_store["height"],
             video_width=video_params_to_store["width"],
             video_path=video_path,
+            chunk=chunk,
             frame_number_in_video_path=frame_number_in_video_path,
             resolution_reduction=segmentation_parameters[
                 "resolution_reduction"
@@ -464,6 +467,7 @@ def _segment_episode(
                 frame_number_in_video_path,
                 bounding_box_images_path,
                 video_path,
+                chunk,
                 pixels_path,
                 save_pixels,
                 save_segmentation_image,
@@ -590,6 +594,7 @@ def segment(
     # print([list(episodes_sublist) for episodes_sublist in episodes_sublists])
     # print("******************************************************************")
     set_mkl_to_single_thread()
+    
     blobs_in_video, maximum_number_of_blobs = _segment_video_in_parallel(
         episodes_sublists,
         chunk,
