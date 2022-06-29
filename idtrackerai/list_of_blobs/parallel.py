@@ -110,5 +110,5 @@ class ParallelBlobOverlap:
             assert (ends[i] - 1 + 1) == starts[i + 1]
             compute_overlapping_between_two_subsequent_frames(
                 self.blobs_in_video[ends[i] - 1],
-                self.blobs_in_video[starts[i]],
+                self.blobs_in_video[starts[i+1]],
             )
