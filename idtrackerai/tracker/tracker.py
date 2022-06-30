@@ -1080,7 +1080,9 @@ class TrackerAPI(object):
             self.video.user_defined_parameters["number_of_animals"],
             percentile=conf.VEL_PERCENTILE,
         )
-        correct_impossible_velocity_jumps(self.video, self.list_of_fragments)
+
+        if conf.POSTPROCESS_IMPOSSIBLE_JUMPS:
+            correct_impossible_velocity_jumps(self.video, self.list_of_fragments)
         self.list_of_fragments.save(self.video.fragments_path)
         self.video.save()
 
