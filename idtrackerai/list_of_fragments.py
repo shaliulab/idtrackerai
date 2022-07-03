@@ -258,6 +258,12 @@ class ListOfFragments(object):
         """
         for file in self.identification_images_file_paths:
             with h5py.File(file, "a") as f:
+                if "identities" in f:
+                    # a previous run of idtrackerai tracking was already done
+                    # we need to remove the existing identities to allow the new ones
+                    # to be saved in the h5df
+                    del f["identities"]
+
                 f.create_dataset(
                     "identities",
                     (f["identification_images"].shape[0], 1),
