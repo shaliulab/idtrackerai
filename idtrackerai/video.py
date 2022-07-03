@@ -1242,6 +1242,11 @@ class Video(object):
         Which folders are deleted depends on the constant DATA_POLICY
         """
         logger.info("Data policy: {}".format(conf.DATA_POLICY))
+
+        if conf.DATA_POLICY == "remove_segmentation_data":
+            logger.info("Deleting segmentation images")
+            rmtree(self._segmentation_data_folder, ignore_errors=True)
+
         if conf.DATA_POLICY in [
             "trajectories",
             "validation",
