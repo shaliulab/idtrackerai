@@ -181,7 +181,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
         np.save(path_to_save, self)
 
     @staticmethod
-    def load(path_to_load_blob_list_file):
+    def load(path_to_load_blob_list_file, reconnect_from_cache=False):
         """Loads an instance of a clase saved in a .npy file.
 
         Parameters
@@ -199,7 +199,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
             path_to_load_blob_list_file, allow_pickle=True
         ).item()
         list_of_blobs.blobs_are_connected = False
-        if conf.RECONNECT_BLOBS_FROM_CACHE:
+        if reconnect_from_cache:
             list_of_blobs.reconnect_from_cache()
 
         return list_of_blobs

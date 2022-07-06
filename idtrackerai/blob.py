@@ -31,6 +31,8 @@
 
 import logging
 import os
+import warnings
+from confapp import conf
 
 import cv2
 import h5py
@@ -159,6 +161,7 @@ class Blob(object):
         self.identification_image_index = None
         self.next = []
         self.previous = []
+        self._now_points_to_blob_fn_index = {"previous": [], "next": []}
         self._is_an_individual = False
         self._is_a_crossing = False
         # During fragmentation
@@ -215,7 +218,10 @@ class Blob(object):
             cap.set(1, self.frame_number_in_video_path)
             ret, frame = cap.read()
             bb = self.bounding_box_in_frame_coordinates
-            return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
+            if len(frame.shape) == 3:
+                return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
+            else:
+                return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0]]
 
     @property
     def pixels(self):
@@ -255,6 +261,9 @@ class Blob(object):
                     )
                 return f[dataset_name][:]
         else:
+            if conf.USING_PYTHON_VIDEO_ANNOTATOR:
+                warnings.warn(f"{self._pixels_path} not found", stacklevel=2)
+
             cimg = np.zeros((self.video_height, self.video_width))
             cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
             pts = np.where(cimg == 255)
@@ -335,6 +344,7 @@ class Blob(object):
     @eroded_pixels.setter
     def eroded_pixels(self, eroded_pixels):
         if self._pixels_path is not None:  # is saving in disk
+            os.makedirs(os.path.dirname(self._pixels_path), exist_ok=True)
             with h5py.File(self._pixels_path, "a") as f:
                 dataset_name = (
                     str(self.frame_number)
@@ -663,6 +673,7 @@ class Blob(object):
         """
         self.next.append(other)
         other.previous.append(self)
+        self._cache_next_and_previous()
 
     def squared_distance_to(self, other):
         """Returns the squared distance from the centroid of self to the
@@ -852,6 +863,7 @@ class Blob(object):
         if not conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
 
             # For RAM optimization
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
             with h5py.File(file_path, "a") as f:
                 dset = f["identification_images"]
                 i = dset.shape[0]
@@ -1593,6 +1605,7 @@ class Blob(object):
         user_centroids = f"user centroids: {self.user_generated_centroids}\n"
         final_identities = f"final identities: {self.final_identities}\n"
         final_centroids = f"final centroids: {self.final_centroids}\n"
+        unique_index = f"unique index: {self.unique_index}\n"
 
         summary_str = (
             blob_name
@@ -1612,6 +1625,7 @@ class Blob(object):
             + user_centroids
             + final_identities
             + final_centroids
+            + unique_index
         )
         return summary_str
 
@@ -1764,7 +1778,7 @@ class Blob(object):
             return self.unique_index == identifier
 
 
-    def __getstate__(self):
+    def _cache_next_and_previous(self, update=True):
         previous_blobs = getattr(self, "previous", [])
         previous_blobs = [
             (blob.frame_number_in_video_path, blob.unique_index) for blob in previous_blobs
@@ -1775,11 +1789,19 @@ class Blob(object):
             (blob.frame_number_in_video_path, blob.unique_index) for blob in next_blobs
         ]
 
+        if not update and (
+            self._now_points_to_blob_fn_index["previous"] or self._now_points_to_blob_fn_index["next"]
+        ):
+            return
+
         self._now_points_to_blob_fn_index = {
             "previous": previous_blobs,
             "next": next_blobs,
         }
 
+
+
+    def __getstate__(self):
         d = self.__dict__.copy()
         d["previous"] = []
         d["next"] = []     
