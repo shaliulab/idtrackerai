@@ -43,6 +43,7 @@ from idtrackerai.utils.py_utils import interpolate_nans, find_blob
 
 from .parallel import ParallelBlobOverlap
 from .overlap import compute_overlapping_between_two_subsequent_frames
+from .align import AlignableList
 
 logger = logging.getLogger("__main__.list_of_blobs")
 
@@ -56,7 +57,7 @@ def extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_befor
     return blobs_in_video
     
 
-class ListOfBlobs(ParallelBlobOverlap, object):
+class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
     """Contains all the instances of the class :class:`~blob.Blob` for all
     frames in the video.
 
@@ -429,7 +430,7 @@ class ListOfBlobs(ParallelBlobOverlap, object):
         ]
 
         if len(blobs_in_video) < len(self.blobs_in_video):
-            logger.info("Extending length of list of blobs back to original!")
+            logger.info("Extending length of list of blobs back to original")
             frames_before = episodes_start_end[0][0]
             frames_after = len(self.blobs_in_video) - episodes_start_end[-1][-1]
             self.blobs_in_video=extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)
