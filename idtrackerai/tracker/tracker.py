@@ -269,7 +269,10 @@ class TrackerAPI(object):
                         ],
                     )
                     b.frame_number = f
-        self.video._first_frame_first_global_fragment = [fragment.start_end[0]]  # in case
+
+        first_frame_global_fragment = fragment.start_end[0]
+        logger.info(f"The first frame of the first global global fragment is {first_frame_global_fragment}")
+        self.video._first_frame_first_global_fragment = [first_frame_global_fragment]  # in case
         create_trajectories()
 
     def track_wo_identification(self, create_trajectories=None):
@@ -279,7 +282,10 @@ class TrackerAPI(object):
 
 
         fragment = self.list_of_fragments.fragments[0]
-        self.video._first_frame_first_global_fragment =  [fragment.start_end[0]]
+        first_frame_global_fragment = fragment.start_end[0]
+        logger.info(f"The first frame of the first global global fragment is {first_frame_global_fragment}")
+        self.video._first_frame_first_global_fragment = [first_frame_global_fragment]  # in case
+
         self.video._track_wo_identification = True
         create_trajectories()
 
