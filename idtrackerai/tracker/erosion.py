@@ -30,7 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import os
-
+from tqdm import tqdm
 import cv2
 import numpy as np
 from confapp import conf
@@ -43,16 +43,13 @@ from idtrackerai.animals_detection.segmentation_utils import blob_extractor
 
 def compute_erosion_disk(video, blobs_in_video):
     min_frame_distance_transform = []
-    for blobs_in_frame in blobs_in_video:
+    for blobs_in_frame in tqdm(blobs_in_video, desc="Computing erosion disk"):
         if len(blobs_in_frame) > 0:
             min_frame_distance_transform.append(
                 compute_min_frame_distance_transform(video, blobs_in_frame)
             )
 
     return np.ceil(np.nanmedian(min_frame_distance_transform)).astype(np.int)
-    # return np.ceil(np.nanmedian([compute_min_frame_distance_transform(video, blobs_in_frame)
-    #                              for blobs_in_frame in blobs_in_video
-    #                              if len(blobs_in_frame) > 0])).astype(np.int)
 
 
 def compute_min_frame_distance_transform(video, blobs_in_frame):
