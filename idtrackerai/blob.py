@@ -31,14 +31,15 @@
 
 import logging
 import os
+import warnings
 
 import cv2
 import h5py
 import numpy as np
 from sklearn.decomposition import PCA
-
+from imgstore.interface import VideoCapture
 logger = logging.getLogger("__main__.blob")
-
+from confapp import conf
 
 class Blob(object):
     """Represents a segmented blob (collection of pixels) from a given frame.
@@ -152,6 +153,8 @@ class Blob(object):
         self.identification_image_index = None
         self.next = []
         self.previous = []
+        self._now_points_to_blob_fn_index = {"previous": [], "next": []}
+
         self._is_an_individual = False
         self._is_a_crossing = False
         # During fragmentation
@@ -199,11 +202,14 @@ class Blob(object):
                     str(self.frame_number) + "-" + str(self.in_frame_index)
                 ][:]
         else:
-            cap = cv2.VideoCapture(self.video_path)
+            cap = VideoCapture(self.video_path, chunk=self.chunk)
             cap.set(1, self.frame_number_in_video_path)
             ret, frame = cap.read()
             bb = self.bounding_box_in_frame_coordinates
-            return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
+            if len(frame.shape) == 3:
+                return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
+            else:
+                return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0]]
 
     @property
     def pixels(self):
@@ -243,6 +249,9 @@ class Blob(object):
                     )
                 return f[dataset_name][:]
         else:
+            if conf.USING_PYTHON_VIDEO_ANNOTATOR:
+                warnings.warn(f"{self._pixels_path} not found", stacklevel=2)
+
             cimg = np.zeros((self.video_height, self.video_width))
             cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
             pts = np.where(cimg == 255)
@@ -316,6 +325,7 @@ class Blob(object):
     @eroded_pixels.setter
     def eroded_pixels(self, eroded_pixels):
         if self._pixels_path is not None:  # is saving in disk
+            os.makedirs(os.path.dirname(self._pixels_path), exist_ok=True)
             with h5py.File(self._pixels_path, "a") as f:
                 dataset_name = (
                     str(self.frame_number)
@@ -548,6 +558,7 @@ class Blob(object):
         """
         self.next.append(other)
         other.previous.append(self)
+        self._cache_next_and_previous()
 
     def squared_distance_to(self, other):
         """Returns the squared distance from the centroid of self to the
@@ -734,17 +745,20 @@ class Blob(object):
             width,
         )
 
-        # For RAM optimization
-        with h5py.File(file_path, "a") as f:
-            dset = f["identification_images"]
-            i = dset.shape[0]
-            dset.resize(
-                (
-                    i + 1,
-                    image_for_identification.shape[1],
-                    image_for_identification.shape[1],
+        if not conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
+
+            # For RAM optimization
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with h5py.File(file_path, "a") as f:
+                dset = f["identification_images"]
+                i = dset.shape[0]
+                dset.resize(
+                    (
+                        i + 1,
+                        image_for_identification.shape[1],
+                        image_for_identification.shape[1],
+                    )
                 )
-            )
             dset[i, ...] = image_for_identification
         self.identification_image_index = i
         self.episode = int(
@@ -1476,6 +1490,7 @@ class Blob(object):
         user_centroids = f"user centroids: {self.user_generated_centroids}\n"
         final_identities = f"final identities: {self.final_identities}\n"
         final_centroids = f"final centroids: {self.final_centroids}\n"
+        unique_index = f"unique index: {self.unique_index}"
 
         summary_str = (
             blob_name
@@ -1495,6 +1510,7 @@ class Blob(object):
             + user_centroids
             + final_identities
             + final_centroids
+            + unique_index
         )
         return summary_str
 
@@ -1626,8 +1642,28 @@ class Blob(object):
                 )
 
 
-    def __getstate__(self):
+    @property
+    def unique_index(self):
+        if self._use_index_from_opencv:
+            return self.in_frame_index
 
+        # this is safer because it's guaranteed to be unique
+        # even if we add 
+        elif self._use_coordinates_in_frame:
+            return self.bounding_box_in_frame_coordinates
+
+    def identifier_matches(self, identifier):
+
+        if isinstance(identifier, list):
+            return all([
+                v == identifier[i] for i, v in enumerate(self.unique_index)
+            ])
+
+        elif isinstance(identifier, tuple):
+            return self.unique_index == identifier
+
+    
+    def _cache_next_and_previous(self, update=True):
         previous_blobs = getattr(self, "previous", [])
         previous_blobs = [
             (blob.frame_number, blob.in_frame_index) for blob in previous_blobs
@@ -1638,15 +1674,25 @@ class Blob(object):
             (blob.frame_number, blob.in_frame_index) for blob in next_blobs
         ]
 
+        # if update is set to False and the dictionary is already populated, dont do anything
+
+        if not update and (
+            self._now_points_to_blob_fn_index["previous"] or self._now_points_to_blob_fn_index["next"]
+        ):
+            return
+
         self._now_points_to_blob_fn_index = {
             "previous": previous_blobs,
             "next": previous_blobs,
         }
-        
-        
-        d = self.__dict__
-        # remove all (direct) references to other blobs
-        # to avoid infinite recursiveness
+
+ 
+    def __getstate__(self):
+        # update=False means the _now_points_to_blob_fn_index dict
+        # caching the results of now_points_to
+        # will not be recomputed
+        self._cache_next_and_previous(update=False)
+        d = self.__dict__.copy()
         d["previous"] = []
         d["next"] = []
         return d
