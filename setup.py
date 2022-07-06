@@ -74,7 +74,7 @@ requirements = [
     "codetiming",
 ]
 
-IDTRACKERAI_APP_DEPENDENCY="idtrackerai-app-shaliulab==1.0.7",
+IDTRACKERAI_APP_DEPENDENCY="idtrackerai-app-shaliulab==1.0.8",
 
 EXCLUDE_FROM_PACKAGES = ["plots", "plots.*", "docs", "docs.*"]
 
@@ -114,7 +114,7 @@ setup(
         "gui": [
             IDTRACKERAI_APP_DEPENDENCY,
             "pyforms-gui==4.904.152",
-            "python-video-annotator-shaliulab==3.6.2,
+            "python-video-annotator-shaliulab==3.6.2",
             "python-video-annotator-module-idtrackerai == 1.0.6",
         ],
         "gpu": ["torch", "torchvision"],
