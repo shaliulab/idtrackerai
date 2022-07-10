@@ -1649,7 +1649,7 @@ class Blob(object):
             return self.in_frame_index
 
         # this is safer because it's guaranteed to be unique
-        # even if we add 
+        # even if we add
         elif self._use_coordinates_in_frame:
             return self.bounding_box_in_frame_coordinates
 
