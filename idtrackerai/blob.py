@@ -174,6 +174,12 @@ class Blob(object):
         self._pixels_set = None
 
 
+        # initialize the cache
+        self._now_points_to_blob_fn_index = {
+            "previous": [],
+            "next": [],
+        }
+
         # how the unique_index property is computed
         # 1. using the coordinates of the bounding box
         self._use_coordinates_in_frame=True
