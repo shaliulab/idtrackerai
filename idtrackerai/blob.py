@@ -1665,6 +1665,12 @@ class Blob(object):
 
 
     def _cache_next_and_previous(self, update=True):
+        """
+        Save the frame number and unique index of each of the previous and next blobs
+
+        If update is False and the cache is already populated (there is at least a previous or a next blob)
+        then the cache is not updated
+        """
         previous_blobs = getattr(self, "previous", [])
         previous_blobs = [
             (blob.frame_number_in_video_path, blob.unique_index) for blob in previous_blobs
