@@ -203,6 +203,11 @@ class ListOfBlobs(ParallelBlobOverlap, object):
         for blobs_in_frame in tqdm(self.blobs_in_video, desc="Connecting blobs from cache"):
             # go through each blob in the frame
             for blob in blobs_in_frame:
+
+                # check that self._use_index_from_opencv is not True
+                # because then this method is not guaranteed to work well
+                assert not blob._use_index_from_opencv and blob._use_coordinates_in_frame
+
                 # go through each of the next blobs of the current blob
                 # (> 99% of the time there is only one next blob, sometimes none or > 1)
                 # if there is no next blob, this for loop does not run
