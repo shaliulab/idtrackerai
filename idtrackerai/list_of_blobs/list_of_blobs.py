@@ -74,9 +74,6 @@ class ListOfBlobs(ParallelBlobOverlap, object):
     def __len__(self):
         return len(self.blobs_in_video)
 
-    def extend_blobs_in_video_to_absolute_start_and_end(self, *args, **kwargs):
-        return extend_blobs_in_video_to_absolute_start_and_end(self.list_of_blobs.blobs_in_video, *args, **kwargs)
-
     def _annotate_location_of_blobs(self):
 
         last_frame_with_blobs = 0
@@ -402,7 +399,6 @@ class ListOfBlobs(ParallelBlobOverlap, object):
 
         frames_before = episodes_start_end[0][0]
         frames_after = len(self.blobs_in_video) - episodes_start_end[-1][-1]
-        self.blobs_in_video=extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)
 
     @staticmethod
     def _set_identification_images_per_episode(
