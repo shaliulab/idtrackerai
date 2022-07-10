@@ -562,6 +562,7 @@ class Blob(object):
         """
         self.next.append(other)
         other.previous.append(self)
+        self._cache_next_and_previous(update=True)
 
     def squared_distance_to(self, other):
         """Returns the squared distance from the centroid of self to the
