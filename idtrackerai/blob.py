@@ -146,6 +146,7 @@ class Blob(object):
         self.video_path = video_path
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
         self._resolution_reduction = resolution_reduction
+        self.episode = None
 
         # Attributes populated at different points of the tracking
         # During crossing detection
