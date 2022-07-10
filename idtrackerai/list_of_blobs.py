@@ -180,6 +180,11 @@ class ListOfBlobs(object):
                     )
                     blobs_in_next_frame=self.blobs_in_video[next_blob_fn]
                     overlapping_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
+                    # NOTE
+                    # if blobs_in_next_frame is BlobsInFrame, then the above line can be replaced by
+                    # overlapping_blob = blobs_in_next_frame[next_blob_unique_identifier]
+                    # however, this code works either if it's a BlobsInFrame or a plain list
+
                     blob.now_points_to(overlapping_blob)
 
         self.blobs_are_connected = True
