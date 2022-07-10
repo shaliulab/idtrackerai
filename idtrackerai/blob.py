@@ -173,7 +173,11 @@ class Blob(object):
         self._user_generated_centroids = None
         self._pixels_set = None
 
+
+        # how the unique_index property is computed
+        # 1. using the coordinates of the bounding box
         self._use_coordinates_in_frame=True
+        # 2. using the index given by opencv (not safe)
         self._use_index_from_opencv=False
 
 
@@ -1651,7 +1655,7 @@ class Blob(object):
             return self.unique_index == identifier
 
 
-    def __getstate__(self):
+    def _cache_next_and_previous(self, update=True):
         previous_blobs = getattr(self, "previous", [])
         previous_blobs = [
             (blob.frame_number_in_video_path, blob.unique_index) for blob in previous_blobs
@@ -1662,15 +1666,28 @@ class Blob(object):
             (blob.frame_number_in_video_path, blob.unique_index) for blob in next_blobs
         ]
 
+        if not update and (
+            self._now_points_to_blob_fn_index["previous"] or self._now_points_to_blob_fn_index["next"]
+        ):
+            return
+
         self._now_points_to_blob_fn_index = {
             "previous": previous_blobs,
             "next": next_blobs,
         }
 
+
+    def __getstate__(self):
+        self._cache_next_and_previous(update=False)
         d = self.__dict__.copy()
+        d["_pixels_set"] = None
+        d["_eroded_pixels"] = None
+        d["_bounding_box_image"] = None
         d["previous"] = []
-        d["next"] = []     
+        d["next"] = []
         return d
+
+
 
 
 def _mask_background_pixels(

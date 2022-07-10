@@ -179,26 +179,8 @@ class ListOfBlobs(object):
                         next_blob[1],
                     )
                     blobs_in_next_frame=self.blobs_in_video[next_blob_fn]
-
-                    if isinstance(next_blob_unique_identifier, int):
-                        # NOTE
-                        # I was using before the position in the lsit
-                        # as identifier. This is wrong
-                        for next_blob_instance in blobs_in_next_frame:
-                            if blob.overlaps_with(next_blob_instance):
-                                blob.now_points_to(next_blob_instance)
-                    else:
-
-                        try:
-                            a_next_blob = blobs_in_next_frame[
-                                next_blob_unique_identifier
-                            ]
-                            blob.now_points_to(a_next_blob)
-                        # an error is raised if blobs_in_next_frame
-                        # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
-                        except TypeError:
-                            blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
-                            blob.now_points_to(a_next_blob)
+                    overlapping_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
+                    blob.now_points_to(overlapping_blob)
 
         self.blobs_are_connected = True
 
