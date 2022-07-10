@@ -1490,6 +1490,7 @@ class Blob(object):
         user_centroids = f"user centroids: {self.user_generated_centroids}\n"
         final_identities = f"final identities: {self.final_identities}\n"
         final_centroids = f"final centroids: {self.final_centroids}\n"
+        unique_index = f"unique index: {self.unique_index}\n"
 
         summary_str = (
             blob_name
@@ -1509,6 +1510,7 @@ class Blob(object):
             + user_centroids
             + final_identities
             + final_centroids
+            + unique_index
         )
         return summary_str
 
