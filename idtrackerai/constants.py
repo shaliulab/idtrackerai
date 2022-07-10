@@ -94,6 +94,7 @@ NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS=1
 BLOB_CONNECTION_PROCESS_SIZE=1000
 
 SIGMA_GAUSSIAN_BLURRING = None
+RECONNECT_BLOBS_FROM_CACHE=False
 ##################################################
 # Data storage advanced parameters
 ##################################################

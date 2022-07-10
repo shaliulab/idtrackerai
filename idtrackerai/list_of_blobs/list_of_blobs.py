@@ -47,19 +47,6 @@ from .overlap import compute_overlapping_between_two_subsequent_frames
 logger = logging.getLogger("__main__.list_of_blobs")
 
 
-def extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before=0, frames_after=0):
-    """
-    Add empty lists before and after the current blobs in video
-    to represent frames in the video that were not analyzed now
-    """
-
-    blobs_in_video = [[], ] * frames_before + \
-        blobs_in_video + \
-        [[], ] * frames_after
-    
-    return blobs_in_video
-    
-
 class ListOfBlobs(ParallelBlobOverlap, object):
     """Contains all the instances of the class :class:`~blob.Blob` for all
     frames in the video.
@@ -99,9 +86,8 @@ class ListOfBlobs(ParallelBlobOverlap, object):
                 last_frame_with_blobs = i
                 if first_frame_with_blobs is None:
                     first_frame_with_blobs = i
-        
-        self._start_end_with_blobs = (first_frame_with_blobs, last_frame_with_blobs)
 
+        self._start_end_with_blobs = (first_frame_with_blobs, last_frame_with_blobs)
 
 
     def compute_overlapping_between_subsequent_frames(self, n_jobs=None):
@@ -180,7 +166,6 @@ class ListOfBlobs(ParallelBlobOverlap, object):
         path_to_save : str, optional
             Path where to save the object, by default None
         """
-        self.disconnect()
         logger.info("saving blobs list at %s" % path_to_save)
         np.save(path_to_save, self)
 
@@ -228,26 +213,13 @@ class ListOfBlobs(ParallelBlobOverlap, object):
                         next_blob[1],
                     )
                     blobs_in_next_frame=self.blobs_in_video[next_blob_fn]
+                    overlapping_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
+                    # NOTE
+                    # if blobs_in_next_frame is BlobsInFrame, then the above line can be replaced by
+                    # overlapping_blob = blobs_in_next_frame[next_blob_unique_identifier]
+                    # however, this code works either if it's a BlobsInFrame or a plain list
 
-                    if isinstance(next_blob_unique_identifier, int):
-                        # NOTE
-                        # I was using before the position in the lsit
-                        # as identifier. This is wrong
-                        for next_blob_instance in blobs_in_next_frame:
-                            if blob.overlaps_with(next_blob_instance):
-                                blob.now_points_to(next_blob_instance, update_cache=False)
-                    else:
-
-                        try:
-                            a_next_blob = blobs_in_next_frame[
-                                next_blob_unique_identifier
-                            ]
-                            blob.now_points_to(a_next_blob, update_cache=False)
-                        # an error is raised if blobs_in_next_frame
-                        # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
-                        except TypeError:
-                            blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
-                            blob.now_points_to(a_next_blob, update_cache=False)
+                    blob.now_points_to(overlapping_blob)
 
         self.blobs_are_connected = True
 

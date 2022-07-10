@@ -48,6 +48,7 @@ from idtrackerai.utils.py_utils import (
     flatten,
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
+    find_blob,
 )
 from idtrackerai.animals_detection.segmentation_utils import (
     blob_extractor,
@@ -63,6 +64,24 @@ logger = logging.getLogger("__main__.segmentation")
 """
 The segmentation module
 """
+
+
+class BlobsInFrame(List):
+
+    def __getitem__(self, k):
+        if isinstance(k, int):
+            return super(BlobsInFrame, self).__getitem__(k)
+
+        elif isinstance(k, tuple):
+            return find_blob(self, k)
+        else:
+            raise Exception(
+                """
+                BlobsInFrame can only be indexed by:
+                  int: return the blob under that position of the list
+                  list: return the blob with the bounding box given by the list (errors if no match)
+                """
+            )
 
 
 def _get_blobs_in_frame(
@@ -272,7 +291,7 @@ def _create_blobs_objects(
     video_path,
     segmentation_parameters,
 ):
-    blobs_in_frame = []
+    blobs_in_frame = BlobsInFrame()
     # create blob objects
     for i, bounding_box in enumerate(bounding_boxes):
         if save_segmentation_image == "DISK":
@@ -439,7 +458,7 @@ def _segment_episode(
             )
         else:
             ret, _ = cap.read()
-            blobs_in_frame = []
+            blobs_in_frame = BlobsInFrame()
 
         # store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)

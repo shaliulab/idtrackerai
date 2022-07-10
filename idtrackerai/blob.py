@@ -173,6 +173,20 @@ class Blob(object):
         self._user_generated_centroids = None
         self._pixels_set = None
 
+
+        # initialize the cache
+        self._now_points_to_blob_fn_index = {
+            "previous": [],
+            "next": [],
+        }
+
+        # how the unique_index property is computed
+        # 1. using the coordinates of the bounding box
+        self._use_coordinates_in_frame=True
+        # 2. using the index given by opencv (not safe)
+        self._use_index_from_opencv=False
+
+
     @property
     def bounding_box_image(self):
         """Image cropped from the original video that contains the blob.
@@ -548,6 +562,7 @@ class Blob(object):
         """
         self.next.append(other)
         other.previous.append(self)
+        self._cache_next_and_previous(update=True)
 
     def squared_distance_to(self, other):
         """Returns the squared distance from the centroid of self to the
@@ -1476,6 +1491,7 @@ class Blob(object):
         user_centroids = f"user centroids: {self.user_generated_centroids}\n"
         final_identities = f"final identities: {self.final_identities}\n"
         final_centroids = f"final centroids: {self.final_centroids}\n"
+        unique_index = f"unique index: {self.unique_index}\n"
 
         summary_str = (
             blob_name
@@ -1495,6 +1511,7 @@ class Blob(object):
             + user_centroids
             + final_identities
             + final_centroids
+            + unique_index
         )
         return summary_str
 
@@ -1624,6 +1641,68 @@ class Blob(object):
                     thickness=3,
                     lineType=cv2.LINE_AA,
                 )
+
+
+    @property
+    def unique_index(self):
+        if self._use_index_from_opencv:
+            return self.in_frame_index
+
+        # this is safer because it's guaranteed to be unique
+        # even if we add 
+        elif self._use_coordinates_in_frame:
+            return self.bounding_box_in_frame_coordinates
+
+    def identifier_matches(self, identifier):
+
+        if isinstance(identifier, list):
+            return all([
+                v == identifier[i] for i, v in enumerate(self.unique_index)
+            ])
+
+        elif isinstance(identifier, tuple):
+            return self.unique_index == identifier
+
+
+    def _cache_next_and_previous(self, update=True):
+        """
+        Save the frame number and unique index of each of the previous and next blobs
+
+        If update is False and the cache is already populated (there is at least a previous or a next blob)
+        then the cache is not updated
+        """
+        previous_blobs = getattr(self, "previous", [])
+        previous_blobs = [
+            (blob.frame_number_in_video_path, blob.unique_index) for blob in previous_blobs
+        ]
+
+        next_blobs = getattr(self, "next", [])
+        next_blobs = [
+            (blob.frame_number_in_video_path, blob.unique_index) for blob in next_blobs
+        ]
+
+        if not update and (
+            self._now_points_to_blob_fn_index["previous"] or self._now_points_to_blob_fn_index["next"]
+        ):
+            return
+
+        self._now_points_to_blob_fn_index = {
+            "previous": previous_blobs,
+            "next": next_blobs,
+        }
+
+
+    def __getstate__(self):
+        self._cache_next_and_previous(update=False)
+        d = self.__dict__.copy()
+        d["_pixels_set"] = None
+        d["_eroded_pixels"] = None
+        d["_bounding_box_image"] = None
+        d["previous"] = []
+        d["next"] = []
+        return d
+
+
 
 
 def _mask_background_pixels(
