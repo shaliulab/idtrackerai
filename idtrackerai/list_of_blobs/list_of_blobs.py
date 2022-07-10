@@ -391,14 +391,12 @@ class ListOfBlobs(ParallelBlobOverlap, object):
                 desc="Setting images for identification",
             )
         )
-        blobs_in_video = [
+        self.blobs_in_video = [
             blobs_in_frame
             for blobs_in_episode in Output
             for blobs_in_frame in blobs_in_episode
         ]
 
-        frames_before = episodes_start_end[0][0]
-        frames_after = len(self.blobs_in_video) - episodes_start_end[-1][-1]
 
     @staticmethod
     def _set_identification_images_per_episode(
