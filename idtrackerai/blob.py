@@ -31,6 +31,7 @@
 
 import logging
 import os
+from confapp import conf
 
 import cv2
 import h5py
@@ -563,7 +564,8 @@ class Blob(object):
         """
         self.next.append(other)
         other.previous.append(self)
-        self._cache_next_and_previous(update=True)
+        if conf.GENERATE_CACHE:
+            self._cache_next_and_previous(update=True)
 
     def squared_distance_to(self, other):
         """Returns the squared distance from the centroid of self to the
@@ -1694,7 +1696,9 @@ class Blob(object):
 
 
     def __getstate__(self):
-        self._cache_next_and_previous(update=False)
+        if conf.GENERATE_CACHE:
+            self._cache_next_and_previous(update=False)
+
         d = self.__dict__.copy()
         d["_pixels_set"] = None
         d["_eroded_pixels"] = None

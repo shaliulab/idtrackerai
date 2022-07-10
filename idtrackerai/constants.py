@@ -91,6 +91,8 @@ NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION = -2
 NUMBER_OF_JOBS_FOR_SEGMENTATION = -2
 SIGMA_GAUSSIAN_BLURRING = None
 RECONNECT_BLOBS_FROM_CACHE=False
+GENERATE_CACHE=True
+
 ##################################################
 # Data storage advanced parameters
 ##################################################
