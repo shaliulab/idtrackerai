@@ -74,7 +74,7 @@ requirements = [
     "codetiming",
 ]
 
-IDTRACKERAI_APP_DEPENDENCY="idtrackerai-app-shaliulab==1.0.8",
+IDTRACKERAI_APP_DEPENDENCY="idtrackerai-app-shaliulab==1.0.9",
 
 EXCLUDE_FROM_PACKAGES = ["plots", "plots.*", "docs", "docs.*"]
 
