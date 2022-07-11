@@ -1562,6 +1562,8 @@ class Blob(object):
             current_centroid = np.asarray(previous_centroid)
             count_past_corrections += 1
 
+        return count_past_corrections, count_future_corrections
+
     @property
     def summary(self):
         """[Validation] Returns a summary string for some blob attributes.
@@ -1802,9 +1804,11 @@ class Blob(object):
 
 
     def __getstate__(self):
+        self._cache_next_and_previous(update=False)
         d = self.__dict__.copy()
+        d["_pixels_set"] = None
         d["previous"] = []
-        d["next"] = []     
+        d["next"] = []
         return d
 
 

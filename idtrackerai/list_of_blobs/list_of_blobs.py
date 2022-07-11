@@ -37,13 +37,13 @@ import numpy as np
 from confapp import conf
 from joblib import Parallel, delayed
 from tqdm import tqdm
-
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans, find_blob
 
 from .parallel import ParallelBlobOverlap
 from .overlap import compute_overlapping_between_two_subsequent_frames
 from .align import AlignableList
+from .validation import validate_from_file, check_tracking
 
 logger = logging.getLogger("__main__.list_of_blobs")
 
@@ -242,7 +242,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
                         # an error is raised if blobs_in_next_frame
                         # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
                         except TypeError:
-                            blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
+                            a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
                             blob.now_points_to(a_next_blob)
 
         self.blobs_are_connected = True
@@ -581,9 +581,20 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
                     for attribute in attributes
                     if hasattr(fragment, attribute)
                 ]
+    def next_frame_to_validate(self, current_frame, direction, number_of_animals, must_validate=True):
+        print(f"Current frame {current_frame}")
+        if conf.VALIDATION=="from_data":
+            fn=self.next_frame_to_validate_from_data(current_frame, direction, number_of_animals, must_validate)
+        elif conf.VALIDATION=="from_file":
+            fn=self.next_frame_to_validate_from_file(current_frame, direction,number_of_animals, must_validate)
+
+        return fn
+
+    def next_frame_to_validate_from_file(self, current_frame, direction, number_of_animals, must_validate):
+        return validate_from_file(self.blobs_in_video, current_frame, direction, number_of_animals, must_validate)
 
     # TODO: consider moving to validation
-    def next_frame_to_validate(self, current_frame, direction):
+    def next_frame_to_validate_from_data(self, current_frame, direction, number_of_animals, must_validate):
         """[Validation] Returns the next frame to be validated.
 
         Parameters
@@ -616,14 +627,19 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
             ]
 
         frame_number = current_frame
+        do_return=False
         for i, blobs_in_frame in enumerate(blobs_in_frame_to_check):
             for blob in blobs_in_frame:
-                if check_tracking(blobs_in_frame):
+                target=check_tracking(blobs_in_frame, number_of_animals)
+                if not must_validate:
+                    target = not target
+                if target:
                     # return blob.frame_number
                     if direction == "future":
                         frame_number = current_frame + i
                     elif direction == "past":
                         frame_number = current_frame - i
+                    import ipdb; ipdb.set_trace()
                     return frame_number
 
     # TODO: consider moving to validation
@@ -1018,30 +1034,3 @@ def initialize_identification_images_file(
         f.attrs["video_path"] = video_path
 
 
-# TODO: consider moving to validation
-def check_tracking(blobs_in_frame):
-    """Returns True if the list of blobs `blobs_in_frame` needs to be
-    validated.
-
-    A list of blobs of a frame need to be validated if some blobs are crossings
-    or if there is some missing identity.
-
-    Parameters
-    ----------
-    blobs_in_frame : list
-        List of Blob objects in a given frame of the video.
-
-    Returns
-    -------
-    check_tracking_flag : boolean
-    """
-    there_are_crossings = any(
-        [blob.is_a_crossing for blob in blobs_in_frame]
-    )  # check whether there is a crossing in the frame
-    missing_identity = any(
-        [
-            None in blob.final_identities or 0 in blob.final_identities
-            for blob in blobs_in_frame
-        ]
-    )  # Check whether there is some missing identities (0 or None)
-    return there_are_crossings or missing_identity
