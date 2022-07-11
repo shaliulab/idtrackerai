@@ -639,7 +639,6 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
                         frame_number = current_frame + i
                     elif direction == "past":
                         frame_number = current_frame - i
-                    import ipdb; ipdb.set_trace()
                     return frame_number
 
     # TODO: consider moving to validation
