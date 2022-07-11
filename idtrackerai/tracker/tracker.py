@@ -252,7 +252,9 @@ class TrackerAPI(object):
         for fragment in self.list_of_fragments.fragments:
             if fragment.is_an_individual:
                 fragment_identifier_to_id[fragment.identifier] = identity
+                fragment._identity = identity
                 identity += 1
+
             else:
                 fragment_identifier_to_id[fragment.identifier] = None
 
