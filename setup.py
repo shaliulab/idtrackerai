@@ -114,7 +114,7 @@ setup(
         "gui": [
             IDTRACKERAI_APP_DEPENDENCY,
             "pyforms-gui==4.904.152",
-            "python-video-annotator-shaliulab==3.6.2",
+            "python-video-annotator-shaliulab==3.6.3",
             "python-video-annotator-module-idtrackerai == 1.0.6",
         ],
         "gpu": ["torch", "torchvision"],
