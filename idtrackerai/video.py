@@ -73,6 +73,7 @@ class Video(object):
         """
         logger.debug("Video object init")
         # General video properties
+        self._video = None
         self._video_paths = None
         self._original_width = None
         self._original_height = None
@@ -199,6 +200,12 @@ class Video(object):
         Video episodes are used for parallelisation of some processes.
         """
         return self._episodes_start_end
+
+    @property
+    def video(self):
+        if getattr(self, "_video", None) is None:
+            self._video = VideoCapture(self._video_path, chunk=self._chunk)
+        return self._video
 
     @property
     def video_path(self):
@@ -1301,12 +1308,11 @@ class Video(object):
                     master_fn = blobs_in_frame[0].frame_number
                     break
         
-        store = VideoCapture(self.video_path, chunk=self._chunk)
-        if getattr(store, "crossindex", None) is None:
+        if getattr(self.video, "crossindex", None) is None:
             return master_fn
         else:
-            fn = store.crossindex.find_selected_fn(master_fn)
-            return fn
+            id = self.video.crossindex.find_id_given_fn("master", master_fn)
+            return id
 
 
 def scan_folder(path):
