@@ -498,7 +498,7 @@ class Blob(object):
         if quick:
             return self.check_for_crossing_in_next_or_previous_v2(direction=direction)
         else:
-        return self.check_for_crossing_in_next_or_previous_v1(direction=direction)
+            return self.check_for_crossing_in_next_or_previous_v1(direction=direction)
 
 
     def check_for_crossing_in_next_or_previous_v2(self, direction=None):
