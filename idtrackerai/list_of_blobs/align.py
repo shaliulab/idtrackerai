@@ -60,6 +60,8 @@ class AlignableList:
 
         else:
             pass
+        
+        self._annotate_location_of_blobs()
 
 
     def align(self, video_object):
