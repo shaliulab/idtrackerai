@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 from typing import Tuple, List, Dict, Optional, Union
+import time
 import gc
 import logging
 import multiprocessing
@@ -38,11 +39,20 @@ import traceback
 
 import cv2
 import h5py
+import numpy as np
 
 from scipy import ndimage
 from confapp import conf
 from joblib import Parallel, delayed
+from torch import normal
 from tqdm import tqdm
+
+# this is needed, otherwise conf.SIGMA_GAUSSIAN_BLURRING is the default
+try:
+    import local_settings
+    conf += local_settings
+except:
+    pass
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import (
@@ -161,6 +171,7 @@ def _get_blobs_in_frame(
         save_segmentation_image,
     )
 
+
     blobs_in_frame = _create_blobs_objects(
         bounding_boxes,
         miniframes,
@@ -191,14 +202,25 @@ def _process_frame(
     frame_number,
     save_pixels,
     save_segmentation_image,
+    iteration=0,
 ):
 
+    orig_frame = frame.copy()
+
     try:
-        frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
+
         bkg = segmentation_parameters["bkg_model"]
         mask = segmentation_parameters["mask"]
 
         assert frame.shape[:2] == mask.shape
+
+        frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
+        # Convert the frame to gray scale
+        gray = to_gray_scale(frame)
+        # Normalize frame
+        avg_intensity = get_frame_average_intensity(gray, mask)
+        # print(avg_intensity)
+        normalized_framed = gray / avg_intensity
 
         # Apply resolution reduction
         if segmentation_parameters["resolution_reduction"] != 1:
@@ -225,10 +247,6 @@ def _process_frame(
                     fy=segmentation_parameters["resolution_reduction"],
                     interpolation=cv2.INTER_AREA,
                 )
-        # Convert the frame to gray scale
-        gray = to_gray_scale(frame)
-        # Normalize frame
-        normalized_framed = gray / get_frame_average_intensity(gray, mask)
         # Binarize frame
         segmentedFrame = segment_frame(
             normalized_framed,
@@ -259,6 +277,58 @@ def _process_frame(
             save_pixels,
             save_segmentation_image,
         )
+        segmentation_parameters=segmentation_parameters.copy()
+
+
+        if conf.ADVANCED_SEGMENTATION:
+
+            if len(contours) == 0:
+
+                test_frame = orig_frame.copy()
+                test_frame = cv2.drawContours(test_frame, contours, -1, 255, -1)
+                print(os.getcwd())
+                cv2.imshow("contours", test_frame)
+                cv2.waitKey(0)
+                cv2.imwrite(str(frame_number) + "_contours.png", test_frame)
+                np.save(str(frame_number) + ".npy", orig_frame)
+                np.save(str(frame_number) + "_segmented.npy", segmentedFrame)
+                np.save(str(frame_number) + "_normalized.npy", normalized_framed)
+                cv2.imwrite(str(frame_number) + "_mask.png", np.uint8(255*mask))
+                raise Exception("No contour found")
+
+
+            if (
+                iteration < 20 and
+                len(contours) < segmentation_parameters["number_of_animals"] and
+                segmentation_parameters["max_threshold"] > (segmentation_parameters["min_threshold"]+1)
+            ):
+                # print(frame_number, len(contours), segmentation_parameters)
+                iteration+=1
+                # print(frame_number, f"Iteration: {iteration}")
+                segmentation_parameters["max_threshold"] -= 1
+                if (segmentation_parameters["max_threshold"] - segmentation_parameters["min_threshold"]) < 10:
+                    segmentation_parameters["min_threshold"] -= 1
+
+                return _process_frame(
+                    orig_frame,
+                    segmentation_parameters,
+                    frame_number,
+                    save_pixels,
+                    save_segmentation_image,
+                    iteration=iteration
+                )
+
+            if iteration != 0:
+                print(f"""
+                    Calling _process_frame with segmentation thresholds
+                        min: {segmentation_parameters['min_threshold']}
+                        max: {segmentation_parameters['max_threshold']}
+                        frame_number: {frame_number}
+                        iteration: {iteration}
+                        # contours: {len(contours)}
+                    """
+                )
+
     except Exception as error:
         print(f"Error on frame {frame_number}: {error}")
         logger.warning(traceback.print_exc())
@@ -429,7 +499,6 @@ def _segment_episode(
     else:
         pixels_path = None
     # Read video for the episode
-
     cap = VideoCapture(video_path, chunk)
 
     # Get number of frames in the episode

@@ -136,6 +136,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         "bkg_model",
         "resolution_reduction",
         "tracking_interval",
+        "number_of_animals",
     ]
 
     def __init__(self, video: Video):
