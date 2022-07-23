@@ -186,7 +186,8 @@ class Blob(object):
 
         self._use_coordinates_in_frame=True
         self._use_index_from_opencv=False
-
+        self._is_directly_annotated=False
+        self._joined_fragments = False
 
     @property
     def bounding_box_image(self):
