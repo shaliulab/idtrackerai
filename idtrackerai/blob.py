@@ -33,7 +33,7 @@ import logging
 import os
 import warnings
 from confapp import conf
-
+import time
 import cv2
 import h5py
 import numpy as np
@@ -470,7 +470,11 @@ class Blob(object):
         current = getattr(self, direction)[0]
 
         steps=0
+        processing_start = time.time()
         while len(getattr(current, direction)) == 1:
+            if (time.time() - processing_start) > conf.CHECK_FOR_CROSSING_TIMEOUT:
+                raise Exception("check_for_crossing_in_next_or_previous_v1 has timeout")
+
             new_blob = getattr(current, direction)[0]
             if direction == "next": step=1
             elif direction == "previous": step=-1
@@ -489,7 +493,10 @@ class Blob(object):
                 return True
         return False
 
-    def check_for_crossing_in_next_or_previous(self, direction=None):
+    def check_for_crossing_in_next_or_previous(self, direction=None, quick=True):
+        if quick:
+            return self.check_for_crossing_in_next_or_previous_v2(direction=direction)
+        else:
         return self.check_for_crossing_in_next_or_previous_v1(direction=direction)
 
 
@@ -556,9 +563,9 @@ class Blob(object):
         while len(getattr(current, direction)) == 1:
             moving_frames_2+=1
             # NOTE
-            # if direction=="next", we already know that all the blobs next to self
-            # have the same status as self, so current (which is a future blob we traced
-            # in the first while loop to learn result) can be assigned result to.
+            # if direction=="next", we already know that all the blobs next (in the future) to self
+            # have the same status as self, so current
+            # (which is a future blob we traced in the first while loop to learn result) can be assigned the result we obtained.
             # current._crossing_in_next_or_previous[direction] is None and we assign result there
             # if direction=="previous", we don't need to do it, since previous blobs
             # are already processed
@@ -577,7 +584,7 @@ class Blob(object):
 
         return result
 
-    def is_a_sure_individual(self):
+    def is_a_sure_individual(self, quick=True):
         """Flag indicating that the blob is a sure individual according to
         some heuristics and it can be used to train the crossing detector CNN.
 
@@ -593,8 +600,8 @@ class Blob(object):
             and len(self.previous[0].next) == 1
         ):
 
-            has_crossing_in_future = self.check_for_crossing_in_next_or_previous("next")
-            has_crossing_in_past = self.check_for_crossing_in_next_or_previous("previous")
+            has_crossing_in_future = self.check_for_crossing_in_next_or_previous("next", quick)
+            has_crossing_in_past = self.check_for_crossing_in_next_or_previous("previous",quick)
 
             if has_crossing_in_past and has_crossing_in_future:
                 return True
