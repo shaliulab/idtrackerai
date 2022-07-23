@@ -67,6 +67,11 @@ from idtrackerai.tracker.correct_impossible_velocity_jumps import (
 from idtrackerai.tracker.get_trajectories import (
     produce_output_dict,
 )
+from idtrackerai.trajectories import (
+    Trajectories,
+    save_trajectories
+)
+
 from idtrackerai.tracker.identify_non_assigned_with_interpolation import (
     assign_zeros_with_interpolation_identities,
 )
@@ -1158,7 +1163,15 @@ class TrackerAPI(object):
                     self.video,
                 )
             logger.info("Saving trajectories")
-            np.save(trajectories_file, trajectories)
+            # NOTE
+            # trajectories are saved here
+            # np.save(trajectories_file, trajectories)
+            save_trajectories(
+                trajectories_file, trajectories,
+                start=self.list_of_blobs._start_end_with_blobs[0],
+                end=self.list_of_blobs._start_end_with_blobs[1]+1,
+            )
+
             if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
                 logger.info("Saving trajectories in csv format...")
                 convert_trajectories_file_to_csv_and_json(trajectories_file)
@@ -1226,7 +1239,16 @@ class TrackerAPI(object):
             self.list_of_blobs_no_gaps.blobs_in_video,
             self.video,
         )
-        np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
+        # NOTE
+        # trajectories are saved here
+        # np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
+        save_trajectories(
+            trajectories_wo_gaps_file, trajectories_wo_gaps,
+            start=self.list_of_blobs._start_end_with_blobs[0],
+            end=self.list_of_blobs._start_end_with_blobs[1]+1,
+        )
+
+
         if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
             logger.info("Saving trajectories in csv format...")
             convert_trajectories_file_to_csv_and_json(
@@ -1245,7 +1267,16 @@ class TrackerAPI(object):
             self.list_of_blobs.blobs_in_video,
             self.video,
         )
-        np.save(trajectories_file, trajectories)
+        # NOTE
+        # trajectories are saved here
+        # np.save(trajectories_file, trajectories)
+        save_trajectories(
+            trajectories_file,
+            trajectories,
+            start=self.list_of_blobs._start_end_with_blobs[0],
+            end=self.list_of_blobs._start_end_with_blobs[1]+1,
+        )
+
         if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
             logger.info("Saving trajectories in csv format...")
             convert_trajectories_file_to_csv_and_json(trajectories_file)
