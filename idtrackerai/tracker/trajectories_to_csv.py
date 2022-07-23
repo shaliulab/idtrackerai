@@ -35,6 +35,7 @@ import sys
 
 import numpy as np
 
+from idtrackerai.trajectories import Trajectories
 
 def save_array_to_csv(path, array, key=""):
     array = np.squeeze(array)
@@ -59,7 +60,12 @@ def save_array_to_csv(path, array, key=""):
 
 
 def convert_trajectories_file_to_csv_and_json(trajectories_file):
-    trajectories_dict = np.load(trajectories_file, allow_pickle=True).item()
+    
+    # NOTE
+    # trajectories are loaded here
+    # trajectories_dict = np.load(trajectories_file, allow_pickle=True).item()
+    trajectories_dict=load_trajectories(trajectories_file)
+
 
     file_name = os.path.splitext(trajectories_file)[0]
 
