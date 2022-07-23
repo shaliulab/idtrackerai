@@ -13,7 +13,7 @@ ROUND_FACTOR=1000
 n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
 
 def compute_overlapping_between_subsequent_frames_single_job(
-    blobs_in_video, f, queue, start_and_end=None
+    blobs_in_video, f, start_and_end=None, queue=None
 ):
 
     """
@@ -70,46 +70,59 @@ class ParallelBlobOverlap:
                 blob_1 = self.fetch_blob(frame_ip1, frame_ip1_index)
                 blob_0.now_points_to(blob_1)
 
-    def compute_overlapping_between_subsequent_frames_parallel(self, n_jobs=None):
+    def compute_overlapping_between_subsequent_frames_parallel(
+        self, n_jobs=None
+    ):
 
         if n_jobs is None:
-            n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
+            n_jobs = conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
 
         self._annotate_location_of_blobs()
-        number_of_frames =len(self.blobs_in_video)
-        
-        frames_before = self._start_end_with_blobs[0]
-        frames_after = number_of_frames - self._start_end_with_blobs[1]
-        process_size = math.ceil(
-            ( 
-                (self._start_end_with_blobs[1] - self._start_end_with_blobs[0]) / n_jobs
-            ) / ROUND_FACTOR
-        
-        ) * ROUND_FACTOR
-        starts = list(range(self._start_end_with_blobs[0], self._start_end_with_blobs[1]+1, process_size))
-        ends = starts[1:] + [self._start_end_with_blobs[1]+1]
+        FRAME_WITH_FIRST_BLOB=self._start_end_with_blobs[0]
+        FRAME_WITH_LAST_BLOB=self._start_end_with_blobs[1]
+        number_of_frames = len(self.blobs_in_video)
 
+
+        starts = list(
+            range(
+                FRAME_WITH_FIRST_BLOB,
+                FRAME_WITH_LAST_BLOB+1,
+                conf.BLOB_CONNECTION_PROCESS_SIZE,
+            )
+        )
+        ends = starts[1:] + [FRAME_WITH_LAST_BLOB+1]
 
         # Prepare list of arguments (args) for the pool of processes
         # Each element in this list is a tuple with the arguments
         # each worker will receive
 
-        blobs=[self.blobs_in_video[starts[i] : ends[i]] for i in range(len(starts))]
-        starts_ends=[(starts[i], ends[i]) for i in range(len(starts))]
-        function=[compute_overlapping_between_two_subsequent_frames, ] * len(starts)
-        queue=[None, ] * len(starts)
-        args = list(zip(blobs, function, queue, starts_ends))
-        
-        with multiprocessing.Pool(n_jobs) as p:
-            output=p.starmap(compute_overlapping_between_subsequent_frames_single_job, args)
+        blobs = [
+            self.blobs_in_video[starts[i] : ends[i]]
+            for i in range(len(starts))
+        ]
+        starts_ends = [(starts[i], ends[i]) for i in range(len(starts))]
 
-        assert self.blobs_in_video[self._start_end_with_blobs[0]][0].frame_number == output[0][0][0][0]
-        assert self.blobs_in_video[self._start_end_with_blobs[0]][0].frame_number == self._start_end_with_blobs[0]
+        function = [
+            compute_overlapping_between_two_subsequent_frames,
+        ] * len(starts)
+    
+        args = list(zip(blobs, function, starts_ends))
+
+        with multiprocessing.Pool(n_jobs) as p:
+            output = p.starmap(
+                compute_overlapping_between_subsequent_frames_single_job, args
+            )
+
+        assert self.blobs_in_video[FRAME_WITH_FIRST_BLOB][0].frame_number == output[0][0][0][0]
+        assert (
+            self.blobs_in_video[FRAME_WITH_LAST_BLOB][0].frame_number
+            == FRAME_WITH_LAST_BLOB
+        )
 
         self._annotate_output_of_parallel_computations_in_blobs(output)
         self.stitch_parallel_blocks(starts, ends)
-
         assert number_of_frames == len(self.blobs_in_video)
+
 
     def stitch_parallel_blocks(self, starts, ends):
         """
@@ -121,8 +134,8 @@ class ParallelBlobOverlap:
         """
 
         for i in tqdm(range(len(ends) - 1)):
-            assert (ends[i] - 1 + 1) == starts[i + 1]
+            assert (ends[i]) == starts[i + 1]
             compute_overlapping_between_two_subsequent_frames(
                 self.blobs_in_video[ends[i] - 1],
-                self.blobs_in_video[starts[i+1]],
+                self.blobs_in_video[starts[i + 1]],
             )
