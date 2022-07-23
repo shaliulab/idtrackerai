@@ -143,8 +143,7 @@ def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
     training_blobs = {"individuals": [], "crossings": []}
     validation_blobs = {}
     toassign_blobs = []
-    # for i, blobs_in_frame in tqdm.tqdm(enumerate(list_of_blobs.blobs_in_video), desc="get_train_validation_and_eval_blobs"):
-    for i, blobs_in_frame in enumerate(list_of_blobs.blobs_in_video):
+    for i, blobs_in_frame in tqdm.tqdm(enumerate(list_of_blobs.blobs_in_video), desc="get_train_validation_and_eval_blobs"):
 
         if len(blobs_in_frame) == 0:
             continue
