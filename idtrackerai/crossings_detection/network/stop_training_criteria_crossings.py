@@ -108,7 +108,7 @@ class Stop_Training(object):
                 self.overfitting_counter = 0
             # check if the error is not decreasing much
             if self.check_for_loss_plateau:
-                if np.abs(
+                if current_loss == 0 or np.abs(
                     losses_difference
                 ) < conf.LEARNING_PERCENTAGE_DIFFERENCE_2_DCD * 10 ** (
                     int(np.log10(current_loss)) - 1
