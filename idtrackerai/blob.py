@@ -678,6 +678,9 @@ class Blob(object):
         other : <Blob object>
             An instance of the class Blob
         """
+        
+        assert other.frame_number > self.frame_number
+
         self.next.append(other)
         other.previous.append(self)
         self._cache_next_and_previous()
