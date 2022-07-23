@@ -39,7 +39,20 @@ def check_tracking(blobs_in_frame, number_of_animals):
     )  # Check whether there is some missing identities (0 or None)
 
     unicity_cond = len(blobs_in_frame) == number_of_animals
-    return there_are_crossings or missing_identity or (not unicity_cond)
+    step_1 = there_are_crossings or missing_identity or (not unicity_cond)
+
+    if step_1:
+        return step_1
+
+    else:
+        identities = []
+        for blob in blobs_in_frame:
+            identities.extend(blob.final_identities)
+
+        step_2 = len(set(identities)) != number_of_animals
+        return step_2
+
+
 
 
 def validate_from_file(blobs_in_video, current_frame, direction, number_of_animals, must_validate):
