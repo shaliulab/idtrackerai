@@ -120,6 +120,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
         else:
             self.compute_overlapping_between_subsequent_frames_parallel(n_jobs)
         self.blobs_are_connected = True
+        self._annotate_location_of_blobs()
 
 
     def _compute_overlapping_between_subsequent_frames(self):
@@ -246,6 +247,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
                             blob.now_points_to(a_next_blob)
 
         self.blobs_are_connected = True
+        self._annotate_location_of_blobs()
 
     # TODO: This is part of fragmentation it should be somewhere else.
     def compute_fragment_identifier_and_blob_index(self, number_of_animals):
