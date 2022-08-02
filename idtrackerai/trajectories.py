@@ -1,4 +1,5 @@
 import numpy as np
+import tqdm
 
 class Trajectories:
 
@@ -41,12 +42,12 @@ class Trajectories:
         if tr._chunked:
             data = tr._trajectories.copy()
             number_of_animals = tr._trajectories["trajectories"].shape[1]
-            for field in ["areas", "trajectories", "id_probabilities"]:
-
+            for field in tqdm.tqdm(["areas", "trajectories", "id_probabilities"]):
                 if len(data[field].shape) == 3:
                     unit = [[np.nan, ] * data[field].shape[2],]
                 else:
                     unit = [np.nan, ]
+
                 prepend = np.concatenate([np.array([unit * number_of_animals]) for _ in range(tr._start)], axis=0)
                 append = np.concatenate([np.array([unit* number_of_animals]) for _ in range(tr._end, tr._total_length)], axis=0)
                 data[field] = np.vstack([prepend, data[field], append])
