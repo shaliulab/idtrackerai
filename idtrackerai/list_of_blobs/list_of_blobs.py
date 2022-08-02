@@ -403,6 +403,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
         """)
         
         with codetiming.Timer(text="Setting identification images took {:.8f} seconds", logger=logger.info):
+
             Output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
                 delayed(self._set_identification_images_per_episode)(
                     identification_image_size,
@@ -424,6 +425,25 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
                     desc=f"Spawning {conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES} parallel processes to generate identification images.",
                 )
             )
+
+            # debugging
+            # Output = []
+            # for file, (start, end) in list(zip(
+            #     identification_images_file_paths,
+            #     episodes_start_end
+            # )):
+            #     Output.append(
+            #         self._set_identification_images_per_episode(
+            #             identification_image_size,
+            #             number_of_animals,
+            #             number_of_frames,
+            #             video_path,
+            #             height,
+            #             width,
+            #             file,
+            #             self.blobs_in_video[start:end]
+            #         )
+            #     )
 
         blobs_in_video = [
             blobs_in_frame
