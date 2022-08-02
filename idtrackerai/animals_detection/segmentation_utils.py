@@ -268,6 +268,7 @@ def compute_background(
 
 def gaussian_blur(frame, sigma=None):
     if sigma is not None and sigma > 0:
+        logger.debug(f"Applying gaussian blur with sigma={sigma}")
         frame = cv2.GaussianBlur(frame, (0, 0), sigma)
     return frame
 
@@ -340,8 +341,9 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         )  # output: 255 in range, else 0
     else:
         p99 = np.percentile(frame, 99.95) * 1.001
+        img=np.clip(frame * (255.0 / p99), 0, 255)
         frame_segmented = cv2.inRange(
-            np.clip(frame * (255.0 / p99), 0, 255),
+            img,
             min_threshold,
             max_threshold,
         )  # output: 255 in range, else 0
