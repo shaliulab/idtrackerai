@@ -15,28 +15,6 @@ except ModuleNotFoundError:
 logger = logging.getLogger(__name__)
 
 
-def find_frame_number(store, ft):
-    """
-    Given a frame time, return the frame number
-    of the first frame after that in the index
-    """
-    # NOTE:
-    # This is more efficient than the commented code below because
-    # this skips the "ORDER BY" SQL statement, which is very slow
-    # In this way, we dont need the ORDER BY statement because we take
-    # advantage of the fact that the frame times are already ordered
-    
-    # Here we look for the first frame_number in the master store that is ahead of the passed frame time
-    # (from the selected or delta store) and we subtract one from it
-    # to get the first one in the past instead of the future
-    cur = store._conn.cursor()
-    cmd="SELECT id from master WHERE (frame_time - ?) >= 0 LIMIT 1;"
-    cur.execute(cmd, (ft,))
-    frame_number = cur.fetchone()[0]
-    # TODO Check data
-    return frame_number
-
-
 class AlignableList:
     
     def dealign(self, video_object):
@@ -87,28 +65,21 @@ class AlignableList:
             # TODO This info should already be saved in a separate summary table
             nframes = cur.fetchone()[0]
 
-            index=cap._master._index
-
             logger.info("Trimming delta index ")
             # we assume the frame_times are sorted in increasing manner
             # the indices indices are also sorted
                     
             logger.info("Done")
 
-            # start_of_data = find_frame_number(cap, index.get_chunk_metadata(video_object._chunk)["frame_time"][0])
-            # end_of_data = find_frame_number(cap, index.get_chunk_metadata(video_object._chunk)["frame_time"][-1])
-            # print(f"Starting frame: {start_of_data}, Ending frame {end_of_data}")
-
             aligned_blobs=[]
             warned=False
             
-            rows = cap.crossindex.get_all_master_fn()
+            rows = cap.crossindex.get_all_fn(cap.main)
             # for selected_fn in tqdm.tqdm(range(number_of_frames), desc="Aligning blobs"):
             for row in tqdm.tqdm(rows, desc="Aligning blobs"):
                 try:
-                    # master_fn = cap.crossindex.find_master_fn(selected_fn)
-                    master_fn=row[0]
-                    aligned_blobs.append(self.blobs_in_video[master_fn])
+                    frame_number=row[0]
+                    aligned_blobs.append(self.blobs_in_video[frame_number])
                 except IndexError:
                     # TODO
                     # Figure out why the crossindex has a number of rows equal to frame_times (expected)
