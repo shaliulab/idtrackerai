@@ -618,7 +618,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
                     for attribute in attributes
                     if hasattr(fragment, attribute)
                 ]
-    def next_frame_to_validate(self, current_frame, direction, number_of_animals, must_validate=True):
+    def next_frame_to_validate(self, current_frame, direction, number_of_animals, must_validate=True, strict=True):
         print(f"Current frame {current_frame}")
         if conf.VALIDATION=="from_data":
             fn=self.next_frame_to_validate_from_data(current_frame, direction, number_of_animals, must_validate, strict=strict)
