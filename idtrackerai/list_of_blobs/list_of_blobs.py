@@ -41,7 +41,10 @@ from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans, find_blob
 
 from .parallel import ParallelBlobOverlap
-from .overlap import compute_overlapping_between_two_subsequent_frames
+from .overlap import (
+    compute_overlapping_between_two_subsequent_frames,
+    compute_overlapping_between_two_subsequent_frames_with_ratio_threshold
+)
 from .align import AlignableList
 from .validation import validate_from_file, check_tracking
 
@@ -101,7 +104,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
 
 
 
-    def compute_overlapping_between_subsequent_frames(self, n_jobs=None):
+    def compute_overlapping_between_subsequent_frames(self, n_jobs=None, threshold=None, debug=False, **kwargs):
         """Computes overlapping between blobs in consecutive frames.
 
         Two blobs in consecutive frames overlap if the intersection of the list
@@ -116,25 +119,39 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
             n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
 
         if n_jobs == 1:
-            self._compute_overlapping_between_subsequent_frames()
+            self._compute_overlapping_between_subsequent_frames(threshold=threshold, debug=debug, **kwargs)
         else:
-            self.compute_overlapping_between_subsequent_frames_parallel(n_jobs)
+            self.compute_overlapping_between_subsequent_frames_parallel(n_jobs, threshold=threshold, debug=debug, **kwargs)
+        
         self.blobs_are_connected = True
         self._annotate_location_of_blobs()
 
 
-    def _compute_overlapping_between_subsequent_frames(self):
+    def _compute_overlapping_between_subsequent_frames(self, threshold=None, debug=False, **kwargs):
         """
         Non concurrent implementation of blob overlap computation
         """
 
+        if debug:
+            import ipdb; ipdb.set_trace()
+
         for frame_i in tqdm(
             range(1, self.number_of_frames), desc="Connecting blobs "
         ):
+            if threshold is None:
             compute_overlapping_between_two_subsequent_frames(
                 blobs_before=self.blobs_in_video[frame_i - 1],
                 blobs_after=self.blobs_in_video[frame_i],
+                    **kwargs
             )
+            else:
+                compute_overlapping_between_two_subsequent_frames_with_ratio_threshold(
+                    blobs_before=self.blobs_in_video[frame_i - 1],
+                    blobs_after=self.blobs_in_video[frame_i],
+                    threshold=threshold,
+                    **kwargs
+                )
+
 
             # clean pixels_sets created in overlaps_with() to free memory
             for blob in self.blobs_in_video[frame_i - 1]:
@@ -151,7 +168,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
         :attr:`blob.Blob.next`
         :attr:`blob.Blob.previous`
         """
-        for blobs_in_frame in self.blobs_in_video:
+        for blobs_in_frame in tqdm(self.blobs_in_video, desc="Disconnecting"):
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
         self.blobs_are_connected = False
@@ -280,11 +297,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
                     blob._fragment_identifier = counter
                     blob_index = missing_blob_indices.pop(0)
                     blob._blob_index = blob_index
-                    if (
-                        len(blob.next) == 1
-                        and len(blob.next[0].previous) == 1
-                        and blob.next[0].is_an_individual
-                    ):
+                    if blob.can_continue_fragment:
                         blob.next[0]._fragment_identifier = counter
                         blob.next[0]._blob_index = blob_index
                         if blob.next[0].is_an_individual_in_a_fragment:
@@ -298,11 +311,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
                                 blob._fragment_identifier = counter
                                 blob._blob_index = blob_index
 
-                            if (
-                                len(blob.next) == 1
-                                and len(blob.next[0].previous) == 1
-                                and blob.next[0].is_an_individual
-                            ):
+                            if blob.can_continue_fragment:
                                 blob.next[0]._fragment_identifier = counter
                                 blob.next[0]._blob_index = blob_index
                     counter += 1
@@ -367,6 +376,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
         video_path,
         height,
         width,
+        n_jobs=None,
     ):
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
@@ -402,9 +412,14 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
             which takes a bit longer.
         """)
         
+        if n_jobs is None:
+            NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
+        else:
+            NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES=n_jobs
+
         with codetiming.Timer(text="Setting identification images took {:.8f} seconds", logger=logger.info):
 
-            Output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
+            Output = Parallel(n_jobs=NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
                 delayed(self._set_identification_images_per_episode)(
                     identification_image_size,
                     number_of_animals,
@@ -422,7 +437,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
                             episodes_start_end,
                         )
                     ),
-                    desc=f"Spawning {conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES} parallel processes to generate identification images.",
+                    desc=f"Spawning {NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES} parallel processes to generate identification images.",
                 )
             )
 
