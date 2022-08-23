@@ -49,7 +49,7 @@ from tqdm import tqdm
 
 # this is needed, otherwise conf.SIGMA_GAUSSIAN_BLURRING is the default
 try:
-    import local_settings
+    import local_settings # type: ignore
     conf += local_settings
 except:
     pass
@@ -203,6 +203,8 @@ def _process_frame(
     save_pixels,
     save_segmentation_image,
     iteration=0,
+    erosion=None,
+    number_of_animals=None,
 ):
 
     orig_frame = frame.copy()
@@ -256,6 +258,15 @@ def _process_frame(
             mask,
             segmentation_parameters["subtract_bkg"],
         )
+
+        if erosion is not None:
+            segmentedFrame = cv2.erode(segmentedFrame, erosion["kernel"], iterations=erosion["iterations"])
+            fraction = 1 - erosion["iterations"]*0.2
+            min_area = max(int(segmentation_parameters["min_area"] * fraction), erosion["iterations"]*0.2)
+        else:
+            min_area = segmentation_parameters["min_area"]
+
+
         # Fill holes in the segmented frame to avoid duplication of contours
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype(
             "uint8"
@@ -272,7 +283,7 @@ def _process_frame(
         ) = blob_extractor(
             segmentedFrame,
             gray,
-            segmentation_parameters["min_area"],
+            min_area,
             segmentation_parameters["max_area"],
             save_pixels,
             save_segmentation_image,
@@ -281,52 +292,23 @@ def _process_frame(
 
 
         if conf.ADVANCED_SEGMENTATION:
-
             if len(contours) == 0:
-
-                test_frame = orig_frame.copy()
-                test_frame = cv2.drawContours(test_frame, contours, -1, 255, -1)
-                print(os.getcwd())
-                cv2.imshow("contours", test_frame)
-                cv2.waitKey(0)
-                cv2.imwrite(str(frame_number) + "_contours.png", test_frame)
-                np.save(str(frame_number) + ".npy", orig_frame)
-                np.save(str(frame_number) + "_segmented.npy", segmentedFrame)
+                np.save(str(frame_number) + "_segmentation_parameters.npy", segmentation_parameters)
                 np.save(str(frame_number) + "_normalized.npy", normalized_framed)
-                cv2.imwrite(str(frame_number) + "_mask.png", np.uint8(255*mask))
+                cv2.imwrite(str(frame_number) + "_frame.png", gray)
+                cv2.imwrite(str(frame_number) + "_segmented_frame.png", segmentedFrame)
                 raise Exception("No contour found")
+            
+            if number_of_animals is not None and len(contours) != number_of_animals:
 
-
-            if (
-                iteration < 20 and
-                len(contours) < segmentation_parameters["number_of_animals"] and
-                segmentation_parameters["max_threshold"] > (segmentation_parameters["min_threshold"]+1)
-            ):
-                # print(frame_number, len(contours), segmentation_parameters)
-                iteration+=1
-                # print(frame_number, f"Iteration: {iteration}")
-                segmentation_parameters["max_threshold"] -= 1
-                if (segmentation_parameters["max_threshold"] - segmentation_parameters["min_threshold"]) < 10:
-                    segmentation_parameters["min_threshold"] -= 1
-
-                return _process_frame(
-                    orig_frame,
-                    segmentation_parameters,
-                    frame_number,
-                    save_pixels,
-                    save_segmentation_image,
-                    iteration=iteration
-                )
-
-            if iteration != 0:
-                print(f"""
-                    Calling _process_frame with segmentation thresholds
-                        min: {segmentation_parameters['min_threshold']}
-                        max: {segmentation_parameters['max_threshold']}
-                        frame_number: {frame_number}
-                        iteration: {iteration}
-                        # contours: {len(contours)}
-                    """
+                return perform_advanced_segmentation(
+                    orig_frame.copy(),
+                    frame_number=frame_number,
+                    contours=contours,
+                    segmentation_parameters=segmentation_parameters,
+                    save_pixels=save_pixels,
+                    save_segmentation_image=save_segmentation_image,
+                    iteration=iteration,
                 )
 
     except Exception as error:
@@ -352,6 +334,64 @@ def _process_frame(
         contours,
         estimated_body_lengths,
     )
+
+
+def perform_advanced_segmentation(frame, frame_number, contours, segmentation_parameters, iteration, **kwargs):
+    
+    bounding_boxes = []
+    miniframes = []
+    centroids = []
+    areas = []
+    pixels = []
+    contours = []
+    estimated_body_lengths = []
+    result = (
+        bounding_boxes,
+        miniframes,
+        centroids,
+        areas,
+        pixels,
+        contours,
+        estimated_body_lengths,
+    )
+
+    if (
+        # iteration < 20 and
+        iteration < 10 and
+        len(contours) < segmentation_parameters["number_of_animals"] and
+        segmentation_parameters["max_threshold"] > (segmentation_parameters["min_threshold"]+1)
+    ):
+        # print(frame_number, len(contours), segmentation_parameters)
+        iteration+=1
+        # print(frame_number, f"Iteration: {iteration}")
+        segmentation_parameters["max_threshold"] -= 1
+        if (segmentation_parameters["max_threshold"] - segmentation_parameters["min_threshold"]) < 10:
+            segmentation_parameters["min_threshold"] -= 1
+            
+            
+        print("Dynamic segmentation parameters: ")
+        print(segmentation_parameters)
+
+        result = _process_frame(
+            frame,
+            segmentation_parameters,
+            frame_number,
+            iteration=iteration,
+            **kwargs
+        )
+
+    if iteration != 0:
+        print(f"""
+            Calling _process_frame with segmentation thresholds
+                min: {segmentation_parameters['min_threshold']}
+                max: {segmentation_parameters['max_threshold']}
+                frame_number: {frame_number}
+                iteration: {iteration}
+                # contours: {len(contours)}
+            """
+        )
+
+    return result
 
 
 def _create_blobs_objects(
