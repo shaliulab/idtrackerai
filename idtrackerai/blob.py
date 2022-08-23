@@ -637,7 +637,24 @@ class Blob(object):
         else:
             return False
 
-    def overlaps_with(self, other):
+    def fragment_transfer_overlaps_with(self, other):
+        """
+        Return True if both blobs have a source_fragment_identifier and their value agrees
+        This value can be set to some value to bypass the overlaps_with algorithm
+        when we know for sure two blobs overlap beforehand
+        """
+
+        self_source_f_identifier = getattr(self, "source_fragment_identifier", None)
+        other_source_f_identifier = getattr(other, "source_fragment_identifier", None)
+        
+        if self_source_f_identifier is not None and other_source_f_identifier is not None:
+                if self_source_f_identifier == other_source_f_identifier:
+                    return True
+                else:
+                    return False
+            
+
+    def overlaps_with(self, other, use_fragment_transfer_info=False):
         """Computes whether the pixels in `self` intersect with the pixels in
         `other`
 
@@ -652,6 +669,8 @@ class Blob(object):
             True if the lists of pixels of both blobs have non-empty
             intersection
         """
+        if use_fragment_transfer_info:
+            return self.fragment_transfer_overlaps_with(other)
 
         # Check bounding box overlapping between blobs S (self) and O (other)
         (S_xmin, S_ymin) = self.bounding_box_in_frame_coordinates[0]
