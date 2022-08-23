@@ -135,7 +135,7 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
     if conf.SAVE_AREAS:
         areas = np.ones((number_of_frames, number_of_animals)) * np.NaN
 
-    for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video)):
+    for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video, desc="Producing trajectories")):
 
         for blob in blobs_in_frame:
             for identity, centroid in zip(
