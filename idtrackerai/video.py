@@ -1297,21 +1297,21 @@ class Video(object):
     # TODO: to list_of_global_fragments.py, list_of_blobs.py, or tracker.py
     def get_first_frame(self, list_of_blobs):
         if self.user_defined_parameters["number_of_animals"] != 1:
-            master_fn = self.first_frame_first_global_fragment[
+            main_fn = self.first_frame_first_global_fragment[
                 self.accumulation_trial
             ]
         elif self.user_defined_parameters["number_of_animals"] == 1:
-            master_fn = 0
+            main_fn = 0
         else:
             for blobs_in_frame in list_of_blobs.blobs_in_video:
                 if len(blobs_in_frame) != 0:
-                    master_fn = blobs_in_frame[0].frame_number
+                    main_fn = blobs_in_frame[0].frame_number
                     break
         
         if getattr(self.video, "crossindex", None) is None:
-            return master_fn
+            return main_fn
         else:
-            id = self.video.crossindex.find_id_given_fn("master", master_fn)
+            id = self.video.crossindex.find_id_given_fn("main", main_fn)
             return id
 
 
