@@ -621,17 +621,23 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
     def next_frame_to_validate(self, current_frame, direction, number_of_animals, must_validate=True):
         print(f"Current frame {current_frame}")
         if conf.VALIDATION=="from_data":
-            fn=self.next_frame_to_validate_from_data(current_frame, direction, number_of_animals, must_validate)
+            fn=self.next_frame_to_validate_from_data(current_frame, direction, number_of_animals, must_validate, strict=strict)
         elif conf.VALIDATION=="from_file":
-            fn=self.next_frame_to_validate_from_file(current_frame, direction,number_of_animals, must_validate)
+            fn=self.next_frame_to_validate_from_file(current_frame, direction,number_of_animals, must_validate, strict=strict)
 
         return fn
+
+    def next_frame_to_validate_non_strict(self, current_frame, direction, number_of_animals, must_validate, strict=False):
+        return self.next_frame_to_validate(current_frame, direction, number_of_animals, must_validate, strict=strict)
+
 
     def next_frame_to_validate_from_file(self, current_frame, direction, number_of_animals, must_validate):
         return validate_from_file(self.blobs_in_video, current_frame, direction, number_of_animals, must_validate)
 
+
+
     # TODO: consider moving to validation
-    def next_frame_to_validate_from_data(self, current_frame, direction, number_of_animals, must_validate):
+    def next_frame_to_validate_from_data(self, current_frame, direction, number_of_animals, must_validate, strict=True):
         """[Validation] Returns the next frame to be validated.
 
         Parameters
@@ -667,7 +673,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
         do_return=False
         for i, blobs_in_frame in enumerate(blobs_in_frame_to_check):
             for blob in blobs_in_frame:
-                target=check_tracking(blobs_in_frame, number_of_animals)
+                target=check_tracking(blobs_in_frame, number_of_animals, strict=strict)
                 if not must_validate:
                     target = not target
                 if target:

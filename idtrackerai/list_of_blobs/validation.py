@@ -12,7 +12,7 @@ else:
     frames_to_validate = None
 
 # TODO: consider moving to validation
-def check_tracking(blobs_in_frame, number_of_animals):
+def check_tracking(blobs_in_frame, number_of_animals, strict=True):
     """Returns True if the list of blobs `blobs_in_frame` needs to be
     validated.
 
@@ -23,6 +23,9 @@ def check_tracking(blobs_in_frame, number_of_animals):
     ----------
     blobs_in_frame : list
         List of Blob objects in a given frame of the video.
+
+    number_of_animals: int
+    strict: bool If True, any frame with a blob that has been split is also checked for validation
 
     Returns
     -------
@@ -50,7 +53,12 @@ def check_tracking(blobs_in_frame, number_of_animals):
             identities.extend(blob.final_identities)
 
         step_2 = len(set(identities)) != number_of_animals
+        if step_2:
         return step_2
+        elif strict:
+            a_blob_is_split = any([blob.is_split])
+            step_3 = blobs_in_frame[0].borders_crossing_scene or a_blob_is_split
+            return step_3
 
 
 
