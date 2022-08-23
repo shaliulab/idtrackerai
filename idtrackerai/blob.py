@@ -39,13 +39,23 @@ import h5py
 import numpy as np
 from sklearn.decomposition import PCA
 from confapp import conf
+import codetiming
+
 try:
     from imgstore.interface import VideoCapture
 except ModuleNotFoundError:
     from cv2 import VideoCapture
 
 logger = logging.getLogger("__main__.blob")
-
+identification_logger = logging.getLogger("__main__.blob.identification")
+from confapp import conf
+try:
+    import local_settings # type:ignore
+    conf += local_settings
+except:
+    pass
+timer_logger = logging.getLogger("timer")
+# timer_logger = logger
 
 class Blob(object):
     """Represents a segmented blob (collection of pixels) from a given frame.
@@ -186,8 +196,48 @@ class Blob(object):
 
         self._use_coordinates_in_frame=True
         self._use_index_from_opencv=False
+        # feed_integration
         self._is_directly_annotated=False
         self._joined_fragments = False
+        self._is_split = False
+        self._borders_crossing_scene = False
+        self._is_connected_to_crossing = False
+    
+    @property
+    def is_connected_to_crossing(self):
+        return getattr(self, "_is_connected_to_crossing", False)
+
+    @is_connected_to_crossing.setter
+    def is_connected_to_crossing(self, value):
+        self._is_connected_to_crossing = value
+
+    @property
+    def is_split(self):
+        return getattr(self, "_is_split", False)
+
+    @is_split.setter
+    def is_split(self, value):
+        self._is_split = value
+
+    @property
+    def borders_crossing_scene(self):
+        return getattr(self, "_borders_crossing_scene", False)
+
+    @borders_crossing_scene.setter
+    def borders_crossing_scene(self, value):
+        self._borders_crossing_scene = value
+
+
+    def regenerate_bounding_box_image(self):
+
+        cap = VideoCapture(self.video_path, chunk=self.chunk)
+        cap.set(1, self.frame_number_in_video_path)
+        ret, frame = cap.read()
+        bb = self.bounding_box_in_frame_coordinates
+        if len(frame.shape) == 3:
+            return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
+        else:
+            return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0]]
 
     @property
     def bounding_box_image(self):
@@ -205,24 +255,29 @@ class Blob(object):
             Image cropped from the video containing the pixels that represent
             the blob.
         """
+
+       # print(f"Bounding box image: {self.bounding_box_images_path}")
+       # if self.bounding_box_images_path is not None:
+       #     print(os.path.isfile(self.bounding_box_images_path))
+
         if self._bounding_box_image is not None:
             return self._bounding_box_image
         elif self.bounding_box_images_path is not None and os.path.isfile(
             self.bounding_box_images_path
         ):
-            with h5py.File(self.bounding_box_images_path, "r") as f:
-                return f[
-                    str(self.frame_number) + "-" + str(self.in_frame_index)
-                ][:]
+            try:
+                with h5py.File(self.bounding_box_images_path, "r") as f:
+                    return f[
+                        str(self.frame_number) + "-" + str(self.in_frame_index)
+                    ][:]
+            except Exception as error:
+                print(error)
+                print("Regenerating image")
+                return self.regenerate_bounding_box_image()
+
         else:
-            cap = VideoCapture(self.video_path, chunk=self._chunk)
-            cap.set(1, self.frame_number_in_video_path)
-            ret, frame = cap.read()
-            bb = self.bounding_box_in_frame_coordinates
-            if len(frame.shape) == 3:
-                return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
-            else:
-                return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0]]
+            return self.regenerate_bounding_box_image()
+
 
     @property
     def pixels(self):
@@ -243,11 +298,13 @@ class Blob(object):
             List of integers indicating the linarized indices of the pixels
             that represent the blob.
         """
+        pixels = None
+
         if self._pixels is not None:
             return self._pixels
         elif self._pixels_path is not None and os.path.isfile(
             self._pixels_path
-        ):
+        ) and not self.is_split:
             with h5py.File(self._pixels_path, "r") as f:
                 if not self.pixels_are_from_eroded_blob:
                     dataset_name = (
@@ -260,21 +317,34 @@ class Blob(object):
                         + str(self.in_frame_index)
                         + "-eroded"
                     )
-                return f[dataset_name][:]
-        else:
-            if conf.USING_PYTHON_VIDEO_ANNOTATOR:
-                warnings.warn(f"{self._pixels_path} not found", stacklevel=2)
 
-            cimg = np.zeros((self.video_height, self.video_width))
-            cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
-            pts = np.where(cimg == 255)
-            pixels = np.asarray(list(zip(pts[0], pts[1])))
-            pixels = np.ravel_multi_index(
-                [pixels[:, 0], pixels[:, 1]],
-                (self.video_height, self.video_width),
-            )
-            return pixels
+                try:
+                    pixels = f[dataset_name][:]
+                except Exception as error:
+                    print(error)
+                    # warnings.warn(error.args[0], stacklevel=2)
+                    pixels = None
 
+
+        if pixels is None:
+            # import ipdb; ipdb.set_trace()
+            pixels = self.regenerate_pixels()
+
+        return pixels
+
+    def regenerate_pixels(self):
+        if conf.USING_PYTHON_VIDEO_ANNOTATOR:
+            warnings.warn(f"{self._pixels_path} not found", stacklevel=2)
+
+        cimg = np.zeros((self.video_height, self.video_width))
+        cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
+        pts = np.where(cimg == 255)
+        pixels = np.asarray(list(zip(pts[0], pts[1])))
+        pixels = np.ravel_multi_index(
+            [pixels[:, 0], pixels[:, 1]],
+            (self.video_height, self.video_width),
+        )
+        return pixels
     @property
     def pixels_set(self):
         """A set() version of blob.pixels, used in `blob.overlaps_with()`
@@ -910,28 +980,34 @@ class Blob(object):
         file_path : str
             Path to the hdf5 file where the images will be stored.
         """
-        image_for_identification = self.get_image_for_identification(
-            identification_image_size,
-            height,
-            width,
-        )
-
-        if not conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
-
-            # For RAM optimization
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with h5py.File(file_path, "a") as f:
-                dset = f["identification_images"]
-                i = dset.shape[0]
-                dset.resize(
-                    (
-                        i + 1,
-                        image_for_identification.shape[1],
-                        image_for_identification.shape[1],
-                    )
+        if conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
+            print("Skip saving identification images")
+        else:
+            with codetiming.Timer(text="took {:.8f} to generate identification image " + str(self.frame_number), logger=timer_logger.debug):
+                image_for_identification = self.get_image_for_identification(
+                    identification_image_size,
+                    height,
+                    width,
                 )
-                dset[i, ...] = image_for_identification
-        self.identification_image_index = i
+
+
+            with codetiming.Timer(text="took {:.8f} to save identification image " + str(self.frame_number), logger=timer_logger.debug):
+                # For RAM optimization
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with h5py.File(file_path, "a") as f:
+                    dset = f["identification_images"]
+                    i = dset.shape[0]
+                    dset.resize(
+                        (
+                            i + 1,
+                            image_for_identification.shape[1],
+                            image_for_identification.shape[1],
+                        )
+                    )
+                    dset[i, ...] = image_for_identification
+            self.identification_image_index = i
+
+        # print("Setting blob episode")
         self.episode = int(
             os.path.basename(file_path).split(".")[0].split("_")[-1]
         )
@@ -962,7 +1038,7 @@ class Blob(object):
             detector CNN and the identifiactio CNN.
         """
 
-        return self._get_image_for_identification(
+        image, delay=self._get_image_for_identification(
             height,
             width,
             self.bounding_box_image,
@@ -970,6 +1046,8 @@ class Blob(object):
             self.bounding_box_in_frame_coordinates,
             identification_image_size[0],
         )
+
+        return image
 
     # TODO: Consider changing the name of image_for_identification
     # it is also the image for the crossing detector.
@@ -1008,53 +1086,86 @@ class Blob(object):
             detector CNN and the identifiactio CNN.
 
         """
-        bounding_box_image = _mask_background_pixels(
-            height,
-            width,
-            bounding_box_image,
-            pixels,
-            bounding_box_in_frame_coordinates,
-        )
+        # import ipdb; ipdb.set_trace()
+        # with codetiming.Timer(text="Masking {milliseconds:.8f} ms", logger=print):#logger=identification_logger.debug):
+        with codetiming.Timer(text="Masking {milliseconds:.8f} ms", logger=identification_logger.debug):
+            bounding_box_image = _mask_background_pixels(
+                height,
+                width,
+                bounding_box_image,
+                pixels,
+                bounding_box_in_frame_coordinates,
+            )
+        
+        try:
+            every=1
+            with open("debug_pca.txt", "r") as filehandle:
+                message = filehandle.read().strip("\n")
+                if message == "debug":
+                    import ipdb; ipdb.set_trace()
+                else:
+                    try:
+                        every = int(message)
+                    except:
+                        every = 1
+
+
+        except:
+            pass
+
         pca = PCA()
         pxs = np.unravel_index(pixels, (height, width))
         pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
-        pca.fit(pxs1)
+        pxs1=pxs1[::every]
+        with codetiming.Timer(text="PCA {milliseconds:.8f} ms", logger=identification_logger.debug):
+        # with codetiming.Timer(text="PCA {milliseconds:.8f} ms", logger=print):# logger=identification_logger.debug):
+            before = time.time()
+            pca.fit(pxs1)
+            after = time.time()
+
+        delay = (after - before) * 1000
         rot_ang = (
             np.arctan(pca.components_[0][1] / pca.components_[0][0])
             * 180
             / np.pi
             + 45
         )
-        # we substract 45 so that the fish is aligned in the diagonal.
-        # This way we have smaller frames
-        center = (pca.mean_[0], pca.mean_[1])
-        center = _transform_to_bbox_coordinates(
-            center, bounding_box_in_frame_coordinates
-        )
-        center = np.array([int(center[0]), int(center[1])])
+
+        # import ipdb; ipdb.set_trace()
+        with codetiming.Timer(text=" Subtract {milliseconds:.8f} ms", logger=identification_logger.debug):
+            # we substract 45 so that the fish is aligned in the diagonal.
+            # This way we have smaller frames
+            center = (pca.mean_[0], pca.mean_[1])
+            center = _transform_to_bbox_coordinates(
+                center, bounding_box_in_frame_coordinates
+            )
+            center = np.array([int(center[0]), int(center[1])])
 
         # rotate
-        diag = np.sqrt(
-            np.sum(np.asarray(bounding_box_image.shape) ** 2)
-        ).astype(int)
-        diag = (diag, diag)
-        M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
-        minif_rot = cv2.warpAffine(
-            bounding_box_image,
-            M,
-            diag,
-            borderMode=cv2.BORDER_CONSTANT,
-            flags=cv2.INTER_CUBIC,
-        )
+        # import ipdb; ipdb.set_trace()
+        with codetiming.Timer(text="Rotation {milliseconds:.8f} ms", logger=identification_logger.debug):
 
-        crop_distance = int(image_size / 2)
-        x_range = range(center[0] - crop_distance, center[0] + crop_distance)
-        y_range = range(center[1] - crop_distance, center[1] + crop_distance)
-        image_for_identification = minif_rot.take(
-            y_range, mode="wrap", axis=0
-        ).take(x_range, mode="wrap", axis=1)
+            diag = np.sqrt(
+                np.sum(np.asarray(bounding_box_image.shape) ** 2)
+            ).astype(int)
+            diag = (diag, diag)
+            M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
+            minif_rot = cv2.warpAffine(
+                bounding_box_image,
+                M,
+                diag,
+                borderMode=cv2.BORDER_CONSTANT,
+                flags=cv2.INTER_CUBIC,
+            )
 
-        return image_for_identification
+            crop_distance = int(image_size / 2)
+            x_range = range(center[0] - crop_distance, center[0] + crop_distance)
+            y_range = range(center[1] - crop_distance, center[1] + crop_distance)
+            image_for_identification = minif_rot.take(
+                y_range, mode="wrap", axis=0
+            ).take(x_range, mode="wrap", axis=1)
+
+        return image_for_identification, delay
 
     @property
     def contour_full_resolution(self):
