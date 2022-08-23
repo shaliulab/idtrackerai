@@ -386,6 +386,15 @@ class Blob(object):
         self._is_an_individual = value
         self._is_a_crossing = not value
 
+
+    @property
+    def can_continue_fragment(self):
+        return (
+            len(self.next) == 1
+            and len(self.next[0].previous) == 1
+            and self.next[0].is_an_individual
+        )
+
     # TODO: consider removing this property, as it is redundant.
     @property
     def is_a_crossing(self):
