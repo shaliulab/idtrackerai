@@ -1260,6 +1260,8 @@ class TrackerAPI(object):
             self.list_of_blobs,
             self.list_of_blobs_no_gaps,
         )
+        logger.debug("copy completed")
+
         trajectories_file = os.path.join(
             self.video.trajectories_folder, "trajectories.npy"
         )
@@ -1267,6 +1269,8 @@ class TrackerAPI(object):
             self.list_of_blobs.blobs_in_video,
             self.video,
         )
+        logger.debug("produce output dict completed")
+
         # NOTE
         # trajectories are saved here
         # np.save(trajectories_file, trajectories)
@@ -1276,6 +1280,7 @@ class TrackerAPI(object):
             start=self.list_of_blobs._start_end_with_blobs[0],
             end=self.list_of_blobs._start_end_with_blobs[1]+1,
         )
+        logger.debug("save trajectories completed")
 
         if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
             logger.info("Saving trajectories in csv format...")
