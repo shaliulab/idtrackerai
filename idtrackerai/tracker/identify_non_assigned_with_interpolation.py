@@ -50,11 +50,14 @@ def assign_zeros_with_interpolation_identities(
     for blobs_in_frame, blobs_in_frame_no_gaps in zip(
         list_of_blobs.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video
     ):
-        unassigned_blobs = [
-            blob
-            for blob in blobs_in_frame
-            if blob.is_an_individual and blob.assigned_identities[0] == 0
-        ]
+        unassigned_blobs = []
+        for blob in blobs_in_frame:
+            if blob.is_an_individual and blob.assigned_identities[0] == 0:
+                blob._pixels = None
+                blob._bounding_box_image = None
+                blob._pixels_set = None
+                unassigned_blobs.append(blob)
+
         for unassigned_blob in unassigned_blobs:
             candidate_blobs = [
                 blob
