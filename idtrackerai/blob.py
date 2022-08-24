@@ -766,7 +766,9 @@ class Blob(object):
             intersection
         """
         if use_fragment_transfer_info:
-            return self.fragment_transfer_overlaps_with(other)
+            overlaps=self.fragment_transfer_overlaps_with(other)
+            if overlaps:
+                return overlaps
 
         # Check bounding box overlapping between blobs S (self) and O (other)
         (S_xmin, S_ymin) = self.bounding_box_in_frame_coordinates[0]
