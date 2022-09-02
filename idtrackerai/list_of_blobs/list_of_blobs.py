@@ -38,6 +38,7 @@ from confapp import conf
 from joblib import Parallel, delayed
 from tqdm import tqdm
 from idtrackerai.blob import Blob
+from .feed_integration import bypass_crossings
 from idtrackerai.utils.py_utils import interpolate_nans, find_blob
 
 from .parallel import ParallelBlobOverlap
@@ -104,7 +105,11 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
 
 
 
-    def compute_overlapping_between_subsequent_frames(self, n_jobs=None, threshold=None, debug=False, **kwargs):
+    def compute_overlapping_between_subsequent_frames(
+            self, n_jobs=None, threshold=None, debug=False,
+            use_fragment_transfer_info=False,
+            use_bypass_crossings=None,
+        **kwargs):
         """Computes overlapping between blobs in consecutive frames.
 
         Two blobs in consecutive frames overlap if the intersection of the list
@@ -114,14 +119,40 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
         --------
         :meth:`blob.Blob.overlaps_with`
         """
+        if use_bypass_crossings is None:
+            use_bypass_crossings = use_fragment_transfer_info
         self.disconnect()
+
+
         if n_jobs is None:
             n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
 
         if n_jobs == 1:
-            self._compute_overlapping_between_subsequent_frames(threshold=threshold, debug=debug, **kwargs)
+            self._compute_overlapping_between_subsequent_frames(
+                threshold=threshold, debug=debug,
+                use_fragment_transfer_info=use_fragment_transfer_info,
+                **kwargs
+            )
+
         else:
-            self.compute_overlapping_between_subsequent_frames_parallel(n_jobs, threshold=threshold, debug=debug, **kwargs)
+            self.compute_overlapping_between_subsequent_frames_parallel(
+                n_jobs, threshold=threshold, debug=debug,
+                use_fragment_transfer_info=use_fragment_transfer_info,
+                **kwargs
+            )
+
+        if use_fragment_transfer_info:
+            lengths = []
+            for blobs_in_frame in self.blobs_in_video:
+                length=len(blobs_in_frame)
+                if length > 0:
+                    lengths.append(length)
+                
+            counts = np.unique(lengths, return_counts=True)
+            number_of_animals=counts[0][np.argsort(counts[1])[-1]]
+            print(number_of_animals)
+            if use_bypass_crossings:
+                bypass_crossings(self, number_of_animals=number_of_animals)
         
         self.blobs_are_connected = True
         self._annotate_location_of_blobs()
@@ -131,7 +162,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
         """
         Non concurrent implementation of blob overlap computation
         """
-
+        
         if debug:
             import ipdb; ipdb.set_trace()
 
@@ -139,11 +170,11 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
             range(1, self.number_of_frames), desc="Connecting blobs "
         ):
             if threshold is None:
-            compute_overlapping_between_two_subsequent_frames(
-                blobs_before=self.blobs_in_video[frame_i - 1],
-                blobs_after=self.blobs_in_video[frame_i],
+                compute_overlapping_between_two_subsequent_frames(
+                    blobs_before=self.blobs_in_video[frame_i - 1],
+                    blobs_after=self.blobs_in_video[frame_i],
                     **kwargs
-            )
+                )
             else:
                 compute_overlapping_between_two_subsequent_frames_with_ratio_threshold(
                     blobs_before=self.blobs_in_video[frame_i - 1],
@@ -171,6 +202,8 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
         for blobs_in_frame in tqdm(self.blobs_in_video, desc="Disconnecting"):
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
+                blob._bridge_start, blob._bridge_end = None, None
+                
         self.blobs_are_connected = False
 
     # TODO: Check if used. Otherwise delete
@@ -411,7 +444,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
             which is very quick as the progress bar shows, but also actually run
             which takes a bit longer.
         """)
-        
+
         if n_jobs is None:
             NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
         else:

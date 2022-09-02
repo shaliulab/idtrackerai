@@ -32,7 +32,7 @@
 from abc import ABC, abstractmethod
 import logging
 import time
-
+import numpy as np
 from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.list_of_fragments import (
@@ -44,12 +44,14 @@ logger = logging.getLogger(__name__)
 
 
 class FragmentationABC(ABC):
-    def __init__(self, video: Video, list_of_blobs: ListOfBlobs):
+    def __init__(self, video: Video, list_of_blobs: ListOfBlobs, use_fragment_transfer_info: bool = False, threshold: int =None):
         """
         Generates a list_of_fragments given a video and a list_of_blobs
         """
         self.video = video
         self.list_of_blobs = list_of_blobs
+        self._use_fragment_transfer_info=use_fragment_transfer_info
+        self._threshold = threshold
 
     def __call__(self):
         self.video._fragmentation_time = time.time()
@@ -77,8 +79,10 @@ class FragmentationAPI(FragmentationABC):
     def _generate_list_of_fragments(self):
         if not self.list_of_blobs.blobs_are_connected:
             # If the list of of blobs has been loaded
-            self.list_of_blobs.compute_overlapping_between_subsequent_frames()
-
+            self.list_of_blobs.compute_overlapping_between_subsequent_frames(
+                use_fragment_transfer_info=self._use_fragment_transfer_info,
+            )
+            
         self.list_of_blobs.compute_fragment_identifier_and_blob_index(
             max(
                 self.video.user_defined_parameters["number_of_animals"],

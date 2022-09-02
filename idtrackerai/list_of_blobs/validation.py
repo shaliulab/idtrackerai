@@ -56,8 +56,13 @@ def check_tracking(blobs_in_frame, number_of_animals, strict=True):
         if step_2:
         return step_2
         elif strict:
-            a_blob_is_split = any([blob.is_split])
-            step_3 = blobs_in_frame[0].borders_crossing_scene or a_blob_is_split
+            blobs_in_frame_are_feed_integrated=[]
+            for blob in blobs_in_frame:
+                blobs_in_frame_are_feed_integrated.append(
+                    blob.borders_crossing_scene or blob.is_split or blob.bridge_start is not None or blob.bridge_end is not None
+                )
+            step_3 = any(blobs_in_frame_are_feed_integrated)
+            
             return step_3
 
 

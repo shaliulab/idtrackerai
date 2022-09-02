@@ -227,6 +227,51 @@ class Blob(object):
     def borders_crossing_scene(self, value):
         self._borders_crossing_scene = value
 
+    @property
+    def bridge_start(self):
+        if getattr(self, "_bridge_start", None) is None:
+            self._bridge_start = None
+        
+        return self._bridge_start
+    
+    @bridge_start.setter
+    def bridge_start(self, value):
+        if getattr(self, "_bridge_start", None) is None:
+            self._bridge_start = value
+        elif value is not None:
+            print(f"Already a bridge start ({self._bridge_start})")
+            import ipdb; ipdb.set_trace()
+            # raise Exception(f"Already a bridge start ({self.bridge_start})")
+   
+    @property
+    def bridge_end(self):
+        if getattr(self, "_bridge_end", None) is None:
+            self._bridge_end = None
+        
+        return self._bridge_end
+    
+    @bridge_end.setter
+    def bridge_end(self, value):
+        if getattr(self, "_bridge_end", None) is None:
+            self._bridge_end = value
+        elif value is not None:
+            print(f"Already a bridge end ({self._bridge_end})")
+            import ipdb; ipdb.set_trace()
+            # raise Exception(f"Already a bridge end ({self._bridge_end})")
+
+
+    @property
+    def source_fragment_identifier(self):
+        if getattr(self, "_source_fragment_identifier", None) is None:
+            self._source_fragment_identifier = None
+        
+        return self._source_fragment_identifier
+    
+
+    @source_fragment_identifier.setter
+    def source_fragment_identifier(self, value):
+        self._source_fragment_identifier = value
+
 
     def regenerate_bounding_box_image(self):
 
@@ -1811,6 +1856,12 @@ class Blob(object):
         final_identities = f"final identities: {self.final_identities}\n"
         final_centroids = f"final centroids: {self.final_centroids}\n"
         unique_index = f"unique index: {self.unique_index}\n"
+        bridge_start = f"bridge start: {self.bridge_start}\n"
+        bridge_end = f"bridge end: {self.bridge_end}\n"
+        is_split = f"is split: {self.is_split}\n"
+        borders_crossing_scene = f"borders crossing scene: {self.borders_crossing_scene}\n"
+        frame_number = f"frame number: {self.frame_number}\n"
+        source_fragment_identifier = f"source fragment identifier: {self.source_fragment_identifier}\n"
 
         summary_str = (
             blob_name
@@ -1831,6 +1882,12 @@ class Blob(object):
             + final_identities
             + final_centroids
             + unique_index
+            + borders_crossing_scene
+            + is_split
+            + frame_number
+            + source_fragment_identifier
+            + bridge_start
+            + bridge_end
         )
         return summary_str
 
