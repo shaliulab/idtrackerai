@@ -754,7 +754,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                 )
                 centroids = [blob.centroid]
                 areas = [blob.area]
-                episodes = [blob.episode]
+                episodes = [blob.episode]               
                 start = blob.frame_number
                 current = blob
 

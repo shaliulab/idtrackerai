@@ -23,7 +23,7 @@ def check_tracking(blobs_in_frame, number_of_animals, strict=True):
     ----------
     blobs_in_frame : list
         List of Blob objects in a given frame of the video.
-
+    
     number_of_animals: int
     strict: bool If True, any frame with a blob that has been split is also checked for validation
 
@@ -54,7 +54,7 @@ def check_tracking(blobs_in_frame, number_of_animals, strict=True):
 
         step_2 = len(set(identities)) != number_of_animals
         if step_2:
-        return step_2
+            return step_2
         elif strict:
             blobs_in_frame_are_feed_integrated=[]
             for blob in blobs_in_frame:

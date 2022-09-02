@@ -230,7 +230,7 @@ class Blob(object):
         self._is_split = False
         self._borders_crossing_scene = False
         self._is_connected_to_crossing = False
-    
+        
     def get_rotation_angle(self, height, width):
         if getattr(self, "_rotation_angle", None) is None:
             self._rotation_angle, _, _ = _get_rotation_angle(self.pixels, height, width)

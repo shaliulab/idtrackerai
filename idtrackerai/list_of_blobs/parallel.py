@@ -140,7 +140,7 @@ class ParallelBlobOverlap:
             self.blobs_in_video[FRAME_WITH_LAST_BLOB][0].frame_number
             == FRAME_WITH_LAST_BLOB
         )
-
+        
 
         self._annotate_output_of_parallel_computations_in_blobs(output)
         self.stitch_parallel_blocks(starts, ends)
@@ -159,10 +159,10 @@ class ParallelBlobOverlap:
         for i in tqdm(range(len(ends) - 1)):
             assert (ends[i]) == starts[i + 1]
             if threshold is None:
-            compute_overlapping_between_two_subsequent_frames(
-                self.blobs_in_video[ends[i] - 1],
-                self.blobs_in_video[starts[i + 1]],
-            )
+                compute_overlapping_between_two_subsequent_frames(
+                    self.blobs_in_video[ends[i] - 1],
+                    self.blobs_in_video[starts[i + 1]],
+                )
             else:
                 compute_overlapping_between_two_subsequent_frames_with_ratio_threshold(
                     self.blobs_in_video[ends[i] - 1],
