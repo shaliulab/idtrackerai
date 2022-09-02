@@ -5,7 +5,10 @@ import math
 from tqdm import tqdm
 from confapp import conf
 
-from .overlap import compute_overlapping_between_two_subsequent_frames
+from .overlap import (
+    compute_overlapping_between_two_subsequent_frames,
+    compute_overlapping_between_two_subsequent_frames_with_ratio_threshold
+)
 
 logger = logging.getLogger("__main__.list_of_blobs.parallel")
 
@@ -13,7 +16,7 @@ ROUND_FACTOR=1000
 n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
 
 def compute_overlapping_between_subsequent_frames_single_job(
-    blobs_in_video, f, start_and_end=None, queue=None
+    blobs_in_video, f, start_and_end=None,  threshold=None, queue=None, use_fragment_transfer_info=False
 ):
 
     """
@@ -33,7 +36,15 @@ def compute_overlapping_between_subsequent_frames_single_job(
     for frame_i in tqdm(
         range(1, len(blobs_in_video)), desc=desc
     ):
-        data.extend(f(blobs_in_video[frame_i - 1], blobs_in_video[frame_i], queue, do=False))
+        # blobs_before, blobs_after, queue=None, do=True, threshold=None
+        data.extend(f(
+            blobs_before=blobs_in_video[frame_i - 1],
+            blobs_after=blobs_in_video[frame_i],
+            queue=queue,
+            do=False,
+            threshold=threshold,
+            use_fragment_transfer_info=use_fragment_transfer_info
+        ))
 
     return data
 
@@ -71,7 +82,8 @@ class ParallelBlobOverlap:
                 blob_0.now_points_to(blob_1)
 
     def compute_overlapping_between_subsequent_frames_parallel(
-        self, n_jobs=None
+        self, n_jobs=None, threshold=None, use_fragment_transfer_info=False,
+        debug=False,
     ):
 
         if n_jobs is None:
@@ -101,12 +113,22 @@ class ParallelBlobOverlap:
             for i in range(len(starts))
         ]
         starts_ends = [(starts[i], ends[i]) for i in range(len(starts))]
+        thresholds = [threshold for _ in range(len(starts))]
+        queues = [None for _ in range(len(starts))]
+        use_fragment_transfer_infos = [use_fragment_transfer_info for _ in range(len(starts))]
+        
+        # signature of compute_overlapping_between_subsequent_frames_single_job
+        # blobs_in_video, f, start_and_end=None,  threshold=None, queue=None, **kwargs
 
         function = [
-            compute_overlapping_between_two_subsequent_frames,
+            compute_overlapping_between_two_subsequent_frames_with_ratio_threshold,
         ] * len(starts)
     
-        args = list(zip(blobs, function, starts_ends))
+        args = list(zip(blobs, function, starts_ends, thresholds, queues, use_fragment_transfer_infos))
+        
+        if debug:
+            import ipdb; ipdb.set_trace()
+        
 
         with multiprocessing.Pool(n_jobs) as p:
             output = p.starmap(
@@ -119,12 +141,13 @@ class ParallelBlobOverlap:
             == FRAME_WITH_LAST_BLOB
         )
 
+
         self._annotate_output_of_parallel_computations_in_blobs(output)
         self.stitch_parallel_blocks(starts, ends)
         assert number_of_frames == len(self.blobs_in_video)
 
 
-    def stitch_parallel_blocks(self, starts, ends):
+    def stitch_parallel_blocks(self, starts, ends, threshold=None):
         """
         For every pair of consecutive frames in ends[i] and starts[i+1]
         compute the blob overlap
@@ -135,7 +158,14 @@ class ParallelBlobOverlap:
 
         for i in tqdm(range(len(ends) - 1)):
             assert (ends[i]) == starts[i + 1]
+            if threshold is None:
             compute_overlapping_between_two_subsequent_frames(
                 self.blobs_in_video[ends[i] - 1],
                 self.blobs_in_video[starts[i + 1]],
             )
+            else:
+                compute_overlapping_between_two_subsequent_frames_with_ratio_threshold(
+                    self.blobs_in_video[ends[i] - 1],
+                    self.blobs_in_video[starts[i + 1]],
+                    threshold=threshold
+                )

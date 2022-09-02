@@ -795,7 +795,7 @@ class Blob(object):
                     return False
             
 
-    def overlaps_with(self, other, use_fragment_transfer_info=False):
+    def overlaps_with(self, other, use_fragment_transfer_info=False, only_use_fragment_transfer_info=False):
         """Computes whether the pixels in `self` intersect with the pixels in
         `other`
 
@@ -812,7 +812,7 @@ class Blob(object):
         """
         if use_fragment_transfer_info:
             overlaps=self.fragment_transfer_overlaps_with(other)
-            if overlaps:
+            if overlaps or only_use_fragment_transfer_info:
                 return overlaps
 
         # Check bounding box overlapping between blobs S (self) and O (other)
