@@ -868,6 +868,24 @@ class Blob(object):
             overlaps = False
         return overlaps
 
+    
+    def reset_next(self):
+        
+        for blob in self.next:
+            blob.previous.pop(blob.previous.index(self))
+            
+        self.next = []
+        self._cache_next_and_previous()
+        
+        
+    def reset_previous(self):
+        
+        for blob in self.previous:
+            blob.next.pop(blob.next.index(self))
+            
+        self.previous = []
+        self._cache_next_and_previous()
+
     def now_points_to(self, other):
         """Given two consecutive blob objects updates their respective
         overlapping histories
