@@ -57,6 +57,33 @@ except:
 timer_logger = logging.getLogger("timer")
 # timer_logger = logger
 
+
+def _get_rotation_angle(pixels, height, width):
+
+
+    pixels = pixels
+    every=1
+    pca = PCA()
+    pxs = np.unravel_index(pixels, (height, width))
+    pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
+    pxs1=pxs1[::every]
+    with codetiming.Timer(text="PCA {milliseconds:.8f} ms", logger=identification_logger.debug):
+    # with codetiming.Timer(text="PCA {milliseconds:.8f} ms", logger=print):# logger=identification_logger.debug):
+        before = time.time()
+        pca.fit(pxs1)
+        after = time.time()
+
+    delay = (after - before) * 1000
+    rot_ang = (
+        np.arctan(pca.components_[0][1] / pca.components_[0][0])
+        * 180
+        / np.pi
+        + 45
+    )
+    center = (pca.mean_[0], pca.mean_[1])
+    
+    return rot_ang, center, delay
+
 class Blob(object):
     """Represents a segmented blob (collection of pixels) from a given frame.
 
@@ -165,6 +192,7 @@ class Blob(object):
         self.chunk = chunk
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
         self._resolution_reduction = resolution_reduction
+        self._rotation_angle = None
 
         # Attributes populated at different points of the tracking
         # During crossing detection
@@ -203,6 +231,14 @@ class Blob(object):
         self._borders_crossing_scene = False
         self._is_connected_to_crossing = False
     
+    def get_rotation_angle(self, height, width):
+        if getattr(self, "_rotation_angle", None) is None:
+            self._rotation_angle, _, _ = _get_rotation_angle(self.pixels, height, width)
+            
+       
+        return self._rotation_angle
+
+
     @property
     def is_connected_to_crossing(self):
         return getattr(self, "_is_connected_to_crossing", False)
@@ -1085,7 +1121,7 @@ class Blob(object):
             detector CNN and the identifiactio CNN.
         """
 
-        image, delay=self._get_image_for_identification(
+        image, delay, rot_angle =self._get_image_for_identification(
             height,
             width,
             self.bounding_box_image,
@@ -1093,6 +1129,9 @@ class Blob(object):
             self.bounding_box_in_frame_coordinates,
             identification_image_size[0],
         )
+        
+        if rot_angle is not None:
+            self._rotation_angle = rot_angle
 
         return image
 
@@ -1135,6 +1174,7 @@ class Blob(object):
         """
         # import ipdb; ipdb.set_trace()
         # with codetiming.Timer(text="Masking {milliseconds:.8f} ms", logger=print):#logger=identification_logger.debug):
+        rot_ang=None
         with codetiming.Timer(text="Masking {milliseconds:.8f} ms", logger=identification_logger.debug):
             bounding_box_image = _mask_background_pixels(
                 height,
@@ -1160,29 +1200,12 @@ class Blob(object):
         except:
             pass
 
-        pca = PCA()
-        pxs = np.unravel_index(pixels, (height, width))
-        pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
-        pxs1=pxs1[::every]
-        with codetiming.Timer(text="PCA {milliseconds:.8f} ms", logger=identification_logger.debug):
-        # with codetiming.Timer(text="PCA {milliseconds:.8f} ms", logger=print):# logger=identification_logger.debug):
-            before = time.time()
-            pca.fit(pxs1)
-            after = time.time()
-
-        delay = (after - before) * 1000
-        rot_ang = (
-            np.arctan(pca.components_[0][1] / pca.components_[0][0])
-            * 180
-            / np.pi
-            + 45
-        )
+        rot_ang, center, delay = _get_rotation_angle(pixels, height, width)
 
         # import ipdb; ipdb.set_trace()
         with codetiming.Timer(text=" Subtract {milliseconds:.8f} ms", logger=identification_logger.debug):
             # we substract 45 so that the fish is aligned in the diagonal.
             # This way we have smaller frames
-            center = (pca.mean_[0], pca.mean_[1])
             center = _transform_to_bbox_coordinates(
                 center, bounding_box_in_frame_coordinates
             )
@@ -1212,7 +1235,7 @@ class Blob(object):
                 y_range, mode="wrap", axis=0
             ).take(x_range, mode="wrap", axis=1)
 
-        return image_for_identification, delay
+        return image_for_identification, delay, rot_ang
 
     @property
     def contour_full_resolution(self):
