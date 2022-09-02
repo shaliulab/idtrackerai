@@ -821,8 +821,8 @@ class Blob(object):
         when we know for sure two blobs overlap beforehand
         """
 
-        self_source_f_identifier = getattr(self, "source_fragment_identifier", None)
-        other_source_f_identifier = getattr(other, "source_fragment_identifier", None)
+        self_source_f_identifier = self.source_fragment_identifier
+        other_source_f_identifier = other.source_fragment_identifier
         
         if self_source_f_identifier is not None and other_source_f_identifier is not None:
                 if self_source_f_identifier == other_source_f_identifier:
