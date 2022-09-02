@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
+import re
 
 import numpy as np
 from confapp import conf
@@ -524,6 +525,10 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
         GlobalFragment(blobs_in_video, fragments, i, num_animals)
         for i in indices_beginning_of_fragment
     ]
+    
+    # if there are bridges in the blob overlap, the global fragments can be repeated
+    global_fragments=remove_duplicated_global_fragments(global_fragments)
+    
     logger.info("total number of global_fragments: %i" % len(global_fragments))
     logger.info(
         [
@@ -548,3 +553,15 @@ def _abort_knowledge_transfer_on_same_animals(video, identification_model):
         "We proceed by transferring only the convolutional filters."
     )
     return identities
+
+
+def remove_duplicated_global_fragments(global_fragments):
+    new_global_fragments=[]
+    identifiers = set()
+    for gf in global_fragments:
+        individual_fragments_identifiers=tuple(sorted(gf.individual_fragments_identifiers))
+        if not individual_fragments_identifiers in identifiers:
+            new_global_fragments.append(gf)
+            identifiers.add(individual_fragments_identifiers)
+            
+    return new_global_fragments
