@@ -263,6 +263,25 @@ class TrackerAPI(object):
             else:
                 fragment_identifier_to_id[fragment.identifier] = None
 
+        error_fragments=[]
+
+        for fragment_identifier, identity in fragment_identifier_to_id.items():
+            if identity is not None:
+                if identity > self.video.user_defined_parameters["number_of_animals"]:
+                    fragment_index = self.video.fragment_identifier_to_index[fragment_identifier]
+
+                    fragment_length=np.diff(self.list_of_fragments.fragments[fragment_index].start_end)
+                    # if fragment_length>self.video._frames_per_second:
+                    error_fragments.append((fragment_identifier, fragment_index))
+
+        if error_fragments:
+
+            message = "Please check whether fragments:\n"
+            for error in error_fragments:
+                message += f" identifier: {error[0]}, index: {error[1]}\n"
+            message+=" are actually individuals or not"
+            raise Exception(message)
+
         for f, bf in enumerate(self.list_of_blobs.blobs_in_video):
             for b in bf:
                 if b.is_an_individual:
