@@ -552,6 +552,7 @@ def _segment_episode(
     max_number_of_blobs = 0
     frame_number = 0
     blobs_in_episode = []
+    called = 0
     while frame_number < number_of_frames_in_episode:
 
         # Compute the global fragment number in the video
@@ -566,21 +567,28 @@ def _segment_episode(
 
         if _frame_in_intervals(
             global_frame_number, segmentation_parameters["tracking_interval"]
-        ):
-            blobs_in_frame, max_number_of_blobs = _get_blobs_in_frame(
-                cap,
-                video_params_to_store,
-                segmentation_parameters,
-                max_number_of_blobs,
-                global_frame_number,
-                frame_number_in_video_path,
-                bounding_box_images_path,
-                video_path,
-                chunk,
-                pixels_path,
-                save_pixels,
-                save_segmentation_image,
-            )
+        ) and (global_frame_number % conf.SKIP_EVERY_FRAME  == 0 or frame_number == 0 or frame_number >= (number_of_frames_in_episode-conf.SKIP_EVERY_FRAME)):
+            try:
+                blobs_in_frame, max_number_of_blobs = _get_blobs_in_frame(
+                    cap,
+                    video_params_to_store,
+                    segmentation_parameters,
+                    max_number_of_blobs,
+                    global_frame_number,
+                    frame_number_in_video_path,
+                    bounding_box_images_path,
+                    video_path,
+                    chunk,
+                    pixels_path,
+                    save_pixels,
+                    save_segmentation_image,
+                )
+                called += 1
+            except Exception as error:
+                # print(f"Start {start}")
+                # print(global_frame_number)
+                # print(f"Called {called} times")
+                raise error
         else:
             ret, _ = cap.read()
             blobs_in_frame = BlobsInFrame()
