@@ -1297,9 +1297,14 @@ class Video(object):
     # TODO: to list_of_global_fragments.py, list_of_blobs.py, or tracker.py
     def get_first_frame(self, list_of_blobs):
         if self.user_defined_parameters["number_of_animals"] != 1:
-            main_fn = self.first_frame_first_global_fragment[
-                self.accumulation_trial
-            ]
+            try:
+                main_fn = self.first_frame_first_global_fragment[
+                    self.accumulation_trial
+                ]
+            except Exception as error:
+                print(error)
+                main_fn = list_of_blobs._start_end_with_blobs[0]
+                
         elif self.user_defined_parameters["number_of_animals"] == 1:
             main_fn = 0
         else:
