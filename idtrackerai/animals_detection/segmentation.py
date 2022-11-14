@@ -222,7 +222,8 @@ def _process_frame(
         # Normalize frame
         avg_intensity = get_frame_average_intensity(gray, mask)
         # print(avg_intensity)
-        normalized_framed = gray / avg_intensity
+        # normalized_framed = gray / avg_intensity
+        normalized_framed = gray
 
         # Apply resolution reduction
         if segmentation_parameters["resolution_reduction"] != 1:
@@ -369,8 +370,8 @@ def perform_advanced_segmentation(frame, frame_number, contours, segmentation_pa
             segmentation_parameters["min_threshold"] -= 1
             
             
-        print("Dynamic segmentation parameters: ")
-        print(segmentation_parameters)
+        logger.debug("Dynamic segmentation parameters: ")
+        logger.debug(segmentation_parameters)
 
         result = _process_frame(
             frame,
@@ -381,7 +382,7 @@ def perform_advanced_segmentation(frame, frame_number, contours, segmentation_pa
         )
 
     if iteration != 0:
-        print(f"""
+        logger.debug(f"""
             Calling _process_frame with segmentation thresholds
                 min: {segmentation_parameters['min_threshold']}
                 max: {segmentation_parameters['max_threshold']}

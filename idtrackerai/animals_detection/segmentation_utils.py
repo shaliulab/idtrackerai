@@ -340,8 +340,12 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
             frame, min_threshold, max_threshold
         )  # output: 255 in range, else 0
     else:
-        p99 = np.percentile(frame, 99.95) * 1.001
-        img=np.clip(frame * (255.0 / p99), 0, 255)
+        # p99 = np.percentile(frame, 99.95) * 1.001
+        # img=np.clip(frame * (255.0 / p99), 0, 255)
+        img=frame
+        # cv2.imshow("img", img)
+        # cv2.waitKey(1)
+        # print(min_threshold, max_threshold)
         frame_segmented = cv2.inRange(
             img,
             min_threshold,
