@@ -1933,7 +1933,8 @@ class Blob(object):
         return summary_str
 
     def draw(
-        self, frame, colors_lst=None, selected_id=None, is_selected=False
+        self, frame, colors_lst=None, selected_id=None, is_selected=False,
+        scale_multiplier=1
     ):
         """[Validation] Draw the blob in a given frame of the video.
 
@@ -2017,9 +2018,9 @@ class Blob(object):
                     idstr,
                     str_pos,
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    1.0,
-                    color,
-                    thickness=3,
+                    fontScale=1.0*scale_multiplier,
+                    color=color,
+                    thickness=3*scale_multiplier,
                     lineType=cv2.LINE_AA,
                 )
 
