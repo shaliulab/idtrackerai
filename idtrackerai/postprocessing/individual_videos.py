@@ -50,7 +50,7 @@ import numpy as np
 from confapp import conf
 from joblib import Parallel, delayed
 from tqdm import tqdm
-
+from scipy.spatial.distance import euclidean
 import imgstore.stores
 from idtrackerai.blob import _get_rotation_angle
 from imgstore.util import load_config
@@ -208,15 +208,18 @@ DEBUG_FN=math.inf # no debug
 
 
 def process_missing_data(out, frame_number, height, width, fts, i, identity=None):
-    warnings.warn(f"No blob found in frame number {frame_number} with identity {identity}")
+    logger.debug(f"No blob found in frame number {frame_number} with identity {identity}")
     # TODO Make this code faster
     # by getting the right frame time
     # without having to call get_image
     out.add_image(np.zeros((height, width), np.uint8), frame_number, fts[i])
     out.add_extra_data(
         blob_missing=True,
+        light=None,
         temperature=None,
         humidity=None,
+        flip=None,
+        nearby_flies={},
     )
 
 def generate_individual_video_rotation_invariant(video_object, trajectories, lists_of_blobs, identity, width, height):
@@ -235,7 +238,7 @@ def generate_individual_video_rotation_invariant(video_object, trajectories, lis
         cap = VideoCapture(video_object.video_path, chunk=video_object._chunk)
 
     store = VideoCapture(video_object.video_path, video_object._chunk)
-    config = load_config(store)#._stores[dest])
+    config = load_config(store)
     extra_data = store.get_extra_data()
     index = {row["frame_time"]: row.name for i, row in extra_data.iterrows()}
 
@@ -248,7 +251,7 @@ def generate_individual_video_rotation_invariant(video_object, trajectories, lis
             list_of_blobs = lists_of_blobs[chunk]
             started=True
         except:
-            if not started and chunk == 1000:
+            if not started and chunk == 2000:
                 raise Exception("No data found")
             elif not started:
                 chunk += 1
@@ -259,12 +262,10 @@ def generate_individual_video_rotation_invariant(video_object, trajectories, lis
         start, end = list_of_blobs._start_end_with_blobs
         end+=1
         fts = store._index.get_chunk_metadata(chunk)["frame_time"]
-        # import ipdb; ipdb.set_trace()
+
+        single_trajectory = []
+        print(start, end)
         for i, frame_number in enumerate(tqdm(range(start, end), desc=f"Cropping chunk {chunk}")):
-            
-            
-            # if frame_number % 6000 > 50:
-            #     continue
 
             if DEBUG_FN != math.inf and frame_number < DEBUG_FN:
                 continue
@@ -277,21 +278,21 @@ def generate_individual_video_rotation_invariant(video_object, trajectories, lis
                 row_id = video_object.concatenation[:,0] == chunk
                 if row_id.sum() == 0:
                     process_missing_data(out, frame_number, height, width, fts, i, identity=None)
+                    single_trajectory.append([np.nan, np.nan])
                     continue
 
                 identity = video_object.concatenation[row_id,1:].flatten()[identity_in_first_chunk-1]
 
             candidate_blobs = [blob for blob in blobs_in_frame if blob.final_identities[0] == identity]
-            
-                
+
             if candidate_blobs:
                 blob = candidate_blobs[0]
                 assert blob.frame_number == frame_number
             else:
                 process_missing_data(out, frame_number, height, width, fts, i, identity=identity)
+                single_trajectory.append([np.nan, np.nan])
                 continue
 
-            
             with codetiming.Timer(text="{milliseconds:.8f} to compute angle", logger=logger.debug):
                 rot_angle = _get_rotation_angle(
                     blob.pixels,
@@ -300,18 +301,28 @@ def generate_individual_video_rotation_invariant(video_object, trajectories, lis
                 )[0]
                 if rot_angle > 180:
                     rot_angle -= 360
-                    
-           
+
             # Read frame
             try:
                 frame, (frame_number, frame_time) = cap.get_image(frame_number)
-                
-                
+
             except cv2.error:
                 raise Exception("could not read frame")
-            # Generate frame for individual
+
             centroid=trajectories[frame_number, identity_in_first_chunk-1]
             
+            
+            nearby_flies={}
+            for k, other_centroid in enumerate(trajectories[frame_number, :]):
+                if np.isnan(other_centroid).all():
+                    continue
+
+                dist=euclidean(centroid, other_centroid)
+                if 0 < dist < 1.5 * video_object.median_body_length:
+                    other_identity = k+1
+                    nearby_flies[other_identity]=dist
+                    
+            # Generate frame for individual
             individual_frame = get_frame(
                 frame, centroid, height*2, width*2
             )
@@ -364,8 +375,6 @@ def generate_individual_video_rotation_invariant(video_object, trajectories, lis
             # cv2.imwrite(os.path.join(folder, f"fly_processed_{frame_number}-{identity}.png"), individual_frame)
             cv2.imshow(f"individual frame", individual_frame)
             cv2.waitKey(1)
-            
-            
 
             assert individual_frame.shape[0] == height
             assert individual_frame.shape[1] == width
@@ -374,18 +383,28 @@ def generate_individual_video_rotation_invariant(video_object, trajectories, lis
             out.add_image(individual_frame.astype("uint8"), frame_number, frame_time)
             try:
                 extra_data_row = extra_data.loc[index[frame_time]]
-                out.add_extra_data(        
-                        light=extra_data_row["light"],
-                        temperature=extra_data_row["temperature"],
-                        humidity=extra_data_row["humidity"],
-                        flip=flip,
-                    )
-            except KeyError:
-                pass
+                out.add_extra_data(
+                    blob_missing=False, 
+                    light=extra_data_row["light"],
+                    temperature=extra_data_row["temperature"],
+                    humidity=extra_data_row["humidity"],
+                    flip=flip,
+                    nearby_flies=nearby_flies,
+                )
+            except KeyError as error:
+                print(error)
+
+            single_trajectory.append(centroid)
             
+            
+        single_trajectory = np.array(single_trajectory)
+        np.save(
+            os.path.join(out._basedir, f"{str(chunk).zfill(6)}.npy"),
+            single_trajectory
+        )
+
         # lists_of_blobs[chunk].save(lists_of_blobs._blobs_path)
         chunk+=1
-        
     cap.release()
     out.release()
     cv2.destroyAllWindows()
