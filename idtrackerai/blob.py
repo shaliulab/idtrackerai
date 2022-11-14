@@ -1082,7 +1082,7 @@ class Blob(object):
             Path to the hdf5 file where the images will be stored.
         """
         if conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
-            print("Skip saving identification images")
+            pass
         else:
             with codetiming.Timer(text="took {:.8f} to generate identification image " + str(self.frame_number), logger=timer_logger.debug):
                 image_for_identification = self.get_image_for_identification(
