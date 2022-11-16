@@ -88,8 +88,13 @@ def _compute_bkg_for_episode(
         frame = gaussian_blur(frame, sigma=sigma)
         if ret:
             gray = to_gray_scale(frame)
-            gray = gray / get_frame_average_intensity(gray, mask)
+            # gray = gray / get_frame_average_intensity(gray, mask)
+            gray = np.uint8(np.round(gray))
+            # print("Gray", gray.dtype)
+            # print("Bkg", bkg.dtype)
             bkg = _update_bkg_stat(bkg, gray, stat)
+            # print("Bkg", bkg.dtype)
+            # print("--")
             number_of_sample_frames_in_episode += 1
     return bkg, number_of_sample_frames_in_episode
 
@@ -98,7 +103,7 @@ def _get_episode_frames_for_bkg(cap, starting_frame, ending_frame, period):
     if ending_frame is None:
         # ending_frame is None when the video is splitted in chunks
         ending_frame = int(cap.get("ENDING_FRAME_OF_CHUNK"))  # number of frames in video
-        if period > ending_frame:
+        if period is not None and period > ending_frame:
             # TODO: Find a better implementation that does not change the
             # effective BACKGROUND_SUBTRACTION_PERIOD when the video is
             # splitted in multiple files
@@ -202,11 +207,12 @@ def compute_background(
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
     if background_subtraction_stat in ["mean", "max"]:
-        bkg = np.zeros((original_height, original_width))
+        bkg = np.uint8(np.zeros((original_height, original_width)))
     else:
-        bkg = np.ones((original_height, original_width)) * 10
+        bkg = np.uint8(np.ones((original_height, original_width)) * 10)
 
     set_mkl_to_single_thread()
+    print(chunk)
     if video_paths is None:  # one single file
         logger.debug(
             "one single video, computing bkg in parallel from single video"
@@ -235,6 +241,7 @@ def compute_background(
         output = Parallel(n_jobs=num_jobs_parallel)(
             delayed(_compute_episode_bkg)(
                 video_path,
+                chunk,
                 bkg,
                 original_ROI,
                 background_sampling_period,
@@ -263,7 +270,7 @@ def compute_background(
     elif background_subtraction_stat == "max":
         bkg = np.max(partial_bkg, axis=0)
 
-    return bkg.astype("float32")
+    return bkg#.astype("float32")
 
 
 def gaussian_blur(frame, sigma=None):
@@ -334,8 +341,8 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         # only step where frame normalization is important,
         # because the background is normalised
         frame = cv2.absdiff(bkg, frame)
-        p99 = np.percentile(frame, 99.95) * 1.001
-        frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
+        # p99 = np.percentile(frame, 99.95) * 1.001
+        # frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
         frame_segmented = cv2.inRange(
             frame, min_threshold, max_threshold
         )  # output: 255 in range, else 0
