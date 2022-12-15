@@ -414,6 +414,35 @@ def _create_blobs_objects(
     chunk,
     segmentation_parameters,
 ):
+    """
+    Generate idtrackerai.Blob instances from the segmentation results
+    
+    Args:
+        bounding_boxes (list): Bounding box of each segmented contour, in format ((x1, y1), (x2, y2))
+        miniframes (list):Image crops, one per passed bounding box.
+            Their width and height must agree with the width and height of the corresponding bounding box
+        centroids (list): Centroid of the contour in coordinates of the image, in format (x, y). x and y may be floats
+        areas (list): Area of each contour, may be float 
+        pixels (list): Pixels of the contour, in raveled format (i.e. in 1D)
+        contours (list): Contour of the segmented blob 
+        estimated_body_lengths (list): Approximate length of the longest side of each animal, in int format
+        save_segmentation_image (str): Whether to save the segmentation data to disk (DISK), RAM (RAM) or not (NONE)
+        bounding_box_images_path (str): Path to a segmentation_data/episode_images_X.hdf5 file to which the segmentation image will be saved if required
+        save_pixels (str): Whether to save the pixels to disk (DISK), RAM (RAM) or not (NONE)
+        pixels_path (str): Path to a segmentation_data/episode_pixels_X.hdf5 file to which the pixels will be saved if required
+        global_frame_number (int): Frame number in the full imgstore or video
+        frame_number_in_video_path (int): Frame number in the video chunk or video
+        video_params_to_store (dict): Parameters of the video to be saved. Must contain width, height and number_of_animals
+        video_path (str): Path to the video or metadata.yaml (imgstore)
+        chunk (int): Chunk of the imgstore
+        segmentation_parameters (dict):
+            min_threshold, max_threshold, min_area, max_area, apply_ROI (bool), rois (list), mask (np.ndarray),
+            subtract_bkg (bool), bkg_model, resolution_reduction, tracking_interval (list of length 2 lists), number_of_animals (int)
+
+    Returns:
+        blobs_in_frame (list): Collection of blobs generated from the segmentation results of a single frame 
+    """
+
     blobs_in_frame = BlobsInFrame()
     # create blob objects
     for i, bounding_box in enumerate(bounding_boxes):
