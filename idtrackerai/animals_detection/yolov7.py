@@ -7,6 +7,8 @@ import numpy as np
 from .segmentation import _create_blobs_objects
 from .segmentation_utils import _get_blobs_information_per_frame
 
+yolov7_repo = "/scratch/leuven/333/vsc33399/Projects/YOLOv7/yolov7"
+
 def yolo_line_to_detection(line):
     """
     
@@ -181,3 +183,13 @@ def read_yolov7_label(label_file):
             print(line)
 
     return lines
+
+def get_label_file_path(dataset, frame_number, chunk, frame_idx):
+    labels_dir = f"runs/detect/{dataset}/labels/"
+    labels_dir=os.path.join(yolov7_repo, labels_dir)
+
+    key=f"{frame_number}_{chunk}-{frame_idx}"
+    label_file = os.path.join(labels_dir, f"{key}.txt")
+
+    assert os.path.exists(label_file)
+    return label_file
