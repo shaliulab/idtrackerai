@@ -5,7 +5,89 @@ import cv2
 import numpy as np
 
 from .segmentation import _create_blobs_objects
-from .segmentation_utils import _get_blobs_information_per_frame
+from .segmentation_utils import (
+    _get_blobs_information_per_frame,
+    apply_segmentation_criteria
+)
+
+from idtrackerai.list_of_blobs import ListOfBlobs
+
+def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes):
+    """
+    Correct idtrackerai preprocessing errors with YOLOv7 results,
+    which should be made available in the runs/detect folder of the YOLOv7 repository
+    under a folder called like the experiment
+    
+    The function loads the list_of_blobs,
+    modifies it with the information collected from the YOLOv7 output
+    and saves it back to the original file
+    
+    The attribute yolov7_annotated of the list_of_blobs contains the frame number
+    of the frames where a modification has been made
+
+    Arguments:
+    
+        * store_path (str): Path to the metadata.yaml file of the imgstore
+        * chunk (int): Chunk to be processed
+        * frames (list): frame_number, frame_idx tuples for each frame in the experiment where idtrackerai preprocessing failed
+        * allowed_classes (iterable): id of the classes taken from the yolov7 output
+        
+    Returns:
+        None
+    """
+    
+    idtrackerai_folder=os.path.join(os.path.dirname(store_path), "idtrackerai")
+    video_object_path = os.path.join(idtrackerai_folder, f"session_{str(chunk).zfill(6)}", "video_object.npy")
+    assert os.path.exists(video_object_path)
+    video_object = np.load(video_object_path, allow_pickle=True).item()
+    session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
+
+    # TODO Let's get a more robust way of getting the experiment
+    # maybe as a property of the metadata
+    experiment = os.path.sep.join(
+        os.path.dirname(store_path).split(os.path.sep)[-2:]
+    )
+    
+    # get the problematic frame
+    video_path=os.path.join(os.path.dirname(store_path), f"{str(chunk).zfill(6)}.mp4")
+    assert os.path.exists(video_path)
+    
+    blobs_in_frame_all = []
+
+    cap = cv2.VideoCapture(video_path)
+    for frame_number, frame_idx in frames:
+        cap.set(1, frame_idx)
+        ret, frame = cap.read()
+        frame=frame[:,:,0]
+    
+        label_file=get_label_file_path(experiment, frame_number, chunk, frame_idx)
+        lines=read_yolov7_label(label_file)
+        lines=[line for line in lines if line[0] in allowed_classes]
+        kwargs=load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx)
+        config=kwargs["segmentation_parameters"]
+        if len(lines) == video_object.user_defined_parameters["number_of_animals"]:
+            detections = [yolo_line_to_detection(line) for line in lines]
+            segmented_frame, _ = apply_segmentation_criteria(frame, config)
+            blobs_in_frame = yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs)
+            blobs_in_frame_all.append((frame_number, blobs_in_frame))
+        else:
+            print("YOLOv7 failed in frame {frame_number}")
+        
+    cap.release()
+
+    blobs_collection = os.path.join(idtrackerai_folder, session_folder, "preprocessing", "blobs_collection.npy")
+    assert os.path.exists(blobs_collection)
+    list_of_blobs=ListOfBlobs.load(blobs_collection)
+    
+    if blobs_in_frame_all:
+        list_of_blobs.yolov7_annotated = []
+        for frame_number, blobs_in_frame in blobs_in_frame_all:
+            list_of_blobs.blobs_in_video[frame_number]=blobs_in_frame
+            list_of_blobs.yolov7_annotated.append(frame_number)
+    
+    list_of_blobs.save(blobs_collection)
+    return
+
 
 def yolo_line_to_detection(line):
     """
