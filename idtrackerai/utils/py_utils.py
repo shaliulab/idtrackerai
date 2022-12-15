@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import glob
+import json
 import logging
 import multiprocessing
 import os
@@ -154,3 +155,12 @@ def find_blob(blobs_in_frame, identifier):
             return blob
 
     raise KeyError(f"{identifier} not in {blobs_in_frame}")
+
+def read_json_file(config_file):
+    
+    with open(config_file, "r") as filehandle:
+        config = json.load(filehandle)
+    roi_contour = np.array(eval(config["_roi"]["value"][0][0])).reshape((-1, 1, 2))
+    
+    config["_roi_contour"] = roi_contour
+    return config
