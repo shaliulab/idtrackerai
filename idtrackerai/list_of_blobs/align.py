@@ -1,7 +1,7 @@
 import logging
 import warnings
 import tqdm
-from confapp import conf, load_config
+from confapp import conf
 
 
 try:
@@ -19,7 +19,7 @@ class AlignableList:
     
     def dealign(self, video_object):
 
-        config = load_config(imgstore.constants)
+        config = conf.__dict__
         cap=imgstore.interface.VideoCapture(
             video_object.video_path,
             chunk=video_object._chunk
