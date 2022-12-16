@@ -11,8 +11,10 @@ from .segmentation_utils import (
 )
 
 from idtrackerai.list_of_blobs import ListOfBlobs
+yolov7_repo = "/scratch/leuven/333/vsc33399/Projects/YOLOv7/yolov7"
 
-def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes):
+
+def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=True):
     """
     Correct idtrackerai preprocessing errors with YOLOv7 results,
     which should be made available in the runs/detect folder of the YOLOv7 repository
@@ -83,11 +85,12 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes):
         for frame_number, blobs_in_frame in blobs_in_frame_all:
             list_of_blobs.apply_modification(frame_number, blobs_in_frame)
     
-    list_of_blobs.save(blobs_collection)
-    return
+    if save:
+        list_of_blobs.save(blobs_collection)
+    
+    return list_of_blobs
 
 
-yolov7_repo = "/scratch/leuven/333/vsc33399/Projects/YOLOv7/yolov7"
 
 def yolo_line_to_detection(line):
     """
