@@ -2113,6 +2113,15 @@ class Blob(object):
         d["next"] = []
         return d
 
+    @property
+    def modified(self):
+        value = getattr(self, "_modified", False)
+        return value
+    
+    @modified.setter
+    def modified(self, value):
+        self._modified = value
+
 
 def _mask_background_pixels(
     height,
@@ -2192,3 +2201,4 @@ def _transform_to_bbox_coordinates(point, bounding_box):
         np.asarray(point)
         - np.asarray([bounding_box[0][0], bounding_box[0][1]])
     )
+    

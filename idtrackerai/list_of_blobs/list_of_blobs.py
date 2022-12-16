@@ -48,6 +48,7 @@ from .overlap import (
 )
 from .align import AlignableList
 from .validation import validate_from_file, check_tracking
+from .modifiable import Modifications
 
 logger = logging.getLogger("__main__.list_of_blobs")
 
@@ -61,7 +62,7 @@ def extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_befor
     return blobs_in_video
     
 
-class ListOfBlobs(ParallelBlobOverlap, AlignableList, object):
+class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
     """Contains all the instances of the class :class:`~blob.Blob` for all
     frames in the video.
 

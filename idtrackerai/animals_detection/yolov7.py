@@ -80,10 +80,8 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes):
     list_of_blobs=ListOfBlobs.load(blobs_collection)
     
     if blobs_in_frame_all:
-        list_of_blobs.yolov7_annotated = []
         for frame_number, blobs_in_frame in blobs_in_frame_all:
-            list_of_blobs.blobs_in_video[frame_number]=blobs_in_frame
-            list_of_blobs.yolov7_annotated.append(frame_number)
+            list_of_blobs.apply_modification(frame_number, blobs_in_frame)
     
     list_of_blobs.save(blobs_collection)
     return
@@ -218,6 +216,9 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs):
         save_pixels=save_pixels,
         **kwargs
     )
+    
+    for blob in blobs_in_frame:
+        blob.modified=True
     
     return blobs_in_frame
 
