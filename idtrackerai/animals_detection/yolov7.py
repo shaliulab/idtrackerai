@@ -47,7 +47,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=
     # TODO Let's get a more robust way of getting the experiment
     # maybe as a property of the metadata
     experiment = os.path.sep.join(
-        os.path.dirname(store_path).split(os.path.sep)[-2:]
+        os.path.dirname(store_path).split(os.path.sep)[-3:]
     )
     
     # get the problematic frame
@@ -73,7 +73,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=
             blobs_in_frame = yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs)
             blobs_in_frame_all.append((frame_number, blobs_in_frame))
         else:
-            print("YOLOv7 failed in frame {frame_number}")
+            print(f"YOLOv7 failed in frame {frame_number}")
         
     cap.release()
 
@@ -265,9 +265,6 @@ def read_yolov7_label(label_file):
     with open(label_file, "r") as filehandle:
         lines = filehandle.readlines()
         lines = [line.strip() for line in lines]
-        for line in lines:
-            print(line)
-
     return lines
 
 def get_label_file_path(dataset, frame_number, chunk, frame_idx):
@@ -277,5 +274,5 @@ def get_label_file_path(dataset, frame_number, chunk, frame_idx):
     key=f"{frame_number}_{chunk}-{frame_idx}"
     label_file = os.path.join(labels_dir, f"{key}.txt")
 
-    assert os.path.exists(label_file)
+    assert os.path.exists(label_file), f"{label_file} cannot be found"
     return label_file
