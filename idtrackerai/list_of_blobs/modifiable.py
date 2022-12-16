@@ -1,4 +1,8 @@
+import logging
 import copy
+
+
+logger = logging.getLogger(__name__)
 
 class Modifications:
     
@@ -31,6 +35,7 @@ class Modifications:
 
             self.original_segmentation[frame_number] = original_blobs_in_frame
             
+        logger.debug(f"Applying modification for frame number {frame_number}")
         self.blobs_in_video[frame_number] = blobs_in_frame
         self.modified_segmentation[frame_number] = blobs_in_frame
 
