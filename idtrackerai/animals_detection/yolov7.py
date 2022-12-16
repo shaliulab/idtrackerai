@@ -64,11 +64,12 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=
     
         label_file=get_label_file_path(experiment, frame_number, chunk, frame_idx)
         lines=read_yolov7_label(label_file)
-        lines=[line for line in lines if line[0] in allowed_classes]
+        detections = [yolo_line_to_detection(line) for line in lines]
+        detections=[detection for detection in detections if detection[0] in allowed_classes]
         kwargs=load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx)
         config=kwargs["segmentation_parameters"]
-        if len(lines) == video_object.user_defined_parameters["number_of_animals"]:
-            detections = [yolo_line_to_detection(line) for line in lines]
+        
+        if len(detections) == video_object.user_defined_parameters["number_of_animals"]:
             segmented_frame, _ = apply_segmentation_criteria(frame, config)
             blobs_in_frame = yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs)
             blobs_in_frame_all.append((frame_number, blobs_in_frame))
