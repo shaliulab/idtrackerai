@@ -186,14 +186,13 @@ def yolo_detection_to_contour(segmented_frame, detection, other_detections=[]):
     
     assert (and_mask == 255).any()
     
-    contours = cv2.findContours(and_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[1]
-    
-    sorted(contours, key=lambda c: cv2.contourArea(c))
-    contour = contours[-1]
+    contours=cv2.findContours(and_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[1]
+    contours=sorted(contours, key=lambda c: cv2.contourArea(c))
+    contour=contours[-1]
         
     return contour
 
-def yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs):
+def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True, frame_number=None, **kwargs):
     """
     
     Arguments:
