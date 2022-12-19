@@ -100,16 +100,21 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=
 
     blobs_collection = os.path.join(idtrackerai_folder, session_folder, "preprocessing", "blobs_collection.npy")
     assert os.path.exists(blobs_collection)
-    list_of_blobs=ListOfBlobs.load(blobs_collection)
-    
-    if blobs_in_frame_all:
-        for frame_number, blobs_in_frame in blobs_in_frame_all:
-            list_of_blobs.apply_modification(frame_number, blobs_in_frame)
-    
-    if save:
-        list_of_blobs.save(blobs_collection)
-    
-    return list_of_blobs
+    try:
+        shutil.copy(blobs_collection, f"{blobs_collection}.bak")
+        list_of_blobs=ListOfBlobs.load(blobs_collection)
+        
+        if blobs_in_frame_all:
+            for frame_number, blobs_in_frame in blobs_in_frame_all:
+                list_of_blobs.apply_modification(frame_number, blobs_in_frame)
+        
+        if save:
+            list_of_blobs.save(blobs_collection)
+    except Exception as error:
+        shutil.copy(f"{blobs_collection}.bak", blobs_collection)
+        raise error
+        
+    return list_of_blobs, len(blobs_in_frame_all) / len(frames)
 
 
 
