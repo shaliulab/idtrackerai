@@ -418,6 +418,7 @@ def _get_bounding_box(
     cnt: np.ndarray,
     width: int,
     height: int,
+    tight: bool=False,
 ) -> Tuple[Tuple[Tuple[int, int], Tuple[int, int]], int]:
     """Computes the bounding box of a given contour with an extra margin of
     constants.EXTRA_PIXELS_BBOX pixels.
@@ -434,6 +435,8 @@ def _get_bounding_box(
         Width of the video frame
     height : int
         Height of the video frame
+    tight: bool
+        Whether to keep the bounding box as it is (True) or to expand it (False)
 
     Returns
     -------
@@ -446,7 +449,11 @@ def _get_bounding_box(
     # TODO: rethink whether the expansion is really needed
     x, y, w, h = cv2.boundingRect(cnt)
     original_diagonal = int(np.ceil(np.sqrt(w**2 + h**2)))
-    n = conf.EXTRA_PIXELS_BBOX
+    if tight:
+        n = 0
+    else:
+        n = conf.EXTRA_PIXELS_BBOX
+
     if x - n > 0:  # We only expand the
         x = x - n
     else:
@@ -517,6 +524,7 @@ def _get_bounding_box_image(
     cnt: np.ndarray,
     save_pixels: str,
     save_segmentation_image: str,
+    **kwargs,
 ):
     """Computes the `bounding_box_image`from a given frame and contour. It also
     returns the coordinates of the `bounding_box`, the ravelled `pixels`
@@ -541,6 +549,8 @@ def _get_bounding_box_image(
         List of ravelled pixels coordinates inside of the given contour
     estimated_body_length : int
         Estimated length of the contour in pixels.
+    kwargs: dict
+        Extra arguments to _get_bounding_box
 
     See Also
     --------
@@ -552,7 +562,7 @@ def _get_bounding_box_image(
     width = frame.shape[1]
     # Coordinates of an expanded bounding box
     bounding_box, estimated_body_length = _get_bounding_box(
-        cnt, width, height
+        cnt, width, height, **kwargs
     )  # the estimated body length is the diagonal of the original bounding_box
     # Get bounding box from frame
     if save_segmentation_image == "RAM" or save_segmentation_image == "DISK":
@@ -598,6 +608,7 @@ def _get_blobs_information_per_frame(
     contours: List[np.ndarray],
     save_pixels: str,
     save_segmentation_image: str,
+    **kwargs,
 ):
     """Computes a set of properties for all the `contours` in a given frame.
 
@@ -622,6 +633,8 @@ def _get_blobs_information_per_frame(
         List with the `pixels` for every contour in `contours`
     estimated_body_lengths : list
         List with the `estimated_body_length` for every contour in `contours`
+    kwargs: dict
+        Extra arguments to _get_bounding_box_image
 
     See Also
     --------
@@ -643,7 +656,7 @@ def _get_blobs_information_per_frame(
             pixels_in_full_frame_ravelled,
             estimated_body_length,
         ) = _get_bounding_box_image(
-            frame, cnt, save_pixels, save_segmentation_image
+            frame, cnt, save_pixels, save_segmentation_image, **kwargs
         )
         # bounding boxes
         bounding_boxes.append(bounding_box)

@@ -200,9 +200,10 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs):
         frame,
         contours,
         save_pixels,
-        save_segmentation_image
+        save_segmentation_image,
+        tight=True,
     )
-        
+            
     miniframes=[
         frame[
             bounding_box[0][1]:bounding_box[1][1],
