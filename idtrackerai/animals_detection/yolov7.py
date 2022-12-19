@@ -65,13 +65,33 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=
         label_file=get_label_file_path(experiment, frame_number, chunk, frame_idx)
         lines=read_yolov7_label(label_file)
         detections = [yolo_line_to_detection(line) for line in lines]
-        detections=[detection for detection in detections if detection[0] in allowed_classes]
-        kwargs=load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx)
+
+        if len(detections) == 0:
+            print(f"No detections found for frame_number {frame_number}")
+            logger.debug(f"Label file {label_file}")
+            continue
+
+        if allowed_classes is not None:
+            detections=[detection for detection in detections if detection["class"] in allowed_classes]
+
+        if len(detections) == 0:
+            print(f"No detections found for frame_number {frame_number} for allowed classes {allowed_classes}")
+            logger.debug(f"Label file {label_file}")
+            continue
+
+
+        kwargs.update(load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx))
         config=kwargs["segmentation_parameters"]
         
         if len(detections) == video_object.user_defined_parameters["number_of_animals"]:
             segmented_frame, _ = apply_segmentation_criteria(frame, config)
-            blobs_in_frame = yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs)
+            try:
+                blobs_in_frame = yolo_detections_to_blobs(frame, segmented_frame, detections, frame_number=frame_number, **kwargs)
+            except Exception as error:
+                logger.error(error)
+                logger.error(traceback.print_exc())
+                print(f"Could not process YOLOv7 predictions in frame {frame_number}")
+                continue
             blobs_in_frame_all.append((frame_number, blobs_in_frame))
         else:
             print(f"YOLOv7 failed in frame {frame_number}")
