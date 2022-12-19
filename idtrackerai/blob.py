@@ -1093,6 +1093,8 @@ class Blob(object):
         file_path : str
             Path to the hdf5 file where the images will be stored.
         """
+        import ipdb; ipdb.set_trace()
+
         if conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
             pass
         else:
@@ -1157,14 +1159,15 @@ class Blob(object):
         with codetiming.Timer(text="Getting bounding_box_image for image identification took {milliseconds:.8f} ms", logger=identification_logger.debug):       
             bounding_box_image=self.bounding_box_image
 
-        image, delay, rot_angle =self._get_image_for_identification(
-            height,
-            width,
-            bounding_box_image,
-            pixels,
-            self.bounding_box_in_frame_coordinates,
-            identification_image_size[0],
-        )
+        with codetiming.Timer(text="_get_image_for_identification took {milliseconds:.8f} ms", logger=identification_logger.debug):       
+            image, delay, rot_angle =self._get_image_for_identification(
+                height,
+                width,
+                bounding_box_image,
+                pixels,
+                self.bounding_box_in_frame_coordinates,
+                identification_image_size[0],
+            )
         
         if rot_angle is not None:
             self._rotation_angle = rot_angle
@@ -1208,8 +1211,6 @@ class Blob(object):
             detector CNN and the identifiactio CNN.
 
         """
-        # import ipdb; ipdb.set_trace()
-        # with codetiming.Timer(text="Masking {milliseconds:.8f} ms", logger=print):#logger=identification_logger.debug):
         rot_ang=None
         with codetiming.Timer(text="Masking {milliseconds:.8f} ms", logger=identification_logger.debug):
             bounding_box_image = _mask_background_pixels(
@@ -1237,9 +1238,10 @@ class Blob(object):
             except:
                 pass
 
-        rot_ang, center, delay = _get_rotation_angle(pixels, height, width)
 
-        # import ipdb; ipdb.set_trace()
+        with codetiming.Timer(text="_get_rotation_angle {milliseconds:.8f} ms", logger=identification_logger.debug):
+            rot_ang, center, delay = _get_rotation_angle(pixels, height, width)
+
         with codetiming.Timer(text=" Subtract {milliseconds:.8f} ms", logger=identification_logger.debug):
             # we substract 45 so that the fish is aligned in the diagonal.
             # This way we have smaller frames
@@ -1249,8 +1251,7 @@ class Blob(object):
             center = np.array([int(center[0]), int(center[1])])
 
         # rotate
-        # import ipdb; ipdb.set_trace()
-        with codetiming.Timer(text="Rotation {milliseconds:.8f} ms", logger=identification_logger.debug):
+        with codetiming.Timer(text="apply rotation {milliseconds:.8f} ms", logger=identification_logger.debug):
 
             diag = np.sqrt(
                 np.sum(np.asarray(bounding_box_image.shape) ** 2)
