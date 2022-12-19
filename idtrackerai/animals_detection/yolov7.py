@@ -312,7 +312,7 @@ def read_yolov7_label(label_file):
     return lines
 
 def get_label_file_path(dataset, frame_number, chunk, frame_idx):
-    labels_dir = f"runs/detect/{dataset}/labels/"
+    labels_dir = f"runs/detect/{dataset}/incomplete_frames/yolov7/labels/"
     labels_dir=os.path.join(yolov7_repo, labels_dir)
 
     key=f"{frame_number}_{chunk}-{frame_idx}"
