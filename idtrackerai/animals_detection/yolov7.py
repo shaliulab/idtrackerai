@@ -252,9 +252,17 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
         save_pixels=save_pixels,
         **kwargs
     )
-    
     for blob in blobs_in_frame:
         blob.modified=True
+        blob.segmentation_contour = blob.contour.copy()
+        bbox=blob.bounding_box_in_frame_coordinates
+        bbox = [bbox[0][0], bbox[0][1], bbox[1][0]-bbox[0][0], bbox[1][1]-bbox[0][1]]
+        blob.contour = np.array([
+            [bbox[0], bbox[1]],
+            [bbox[0]+bbox[2], bbox[1]],
+            [bbox[0]+bbox[2], bbox[1]+bbox[3]],
+            [bbox[0], bbox[1]+bbox[3]],
+        ]).reshape((4, 1, 2))
     
     return blobs_in_frame
 
