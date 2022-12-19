@@ -60,28 +60,29 @@ timer_logger = logging.getLogger("timer")
 
 def _get_rotation_angle(pixels, height, width):
 
+    with codetiming.Timer(text="pre PCA {milliseconds:.8f} ms", logger=identification_logger.debug):
+        every=1
+        pca = PCA()
+        pxs = np.unravel_index(pixels, (height, width))
+        pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
+        pxs1=pxs1[::every]
 
-    pixels = pixels
-    every=1
-    pca = PCA()
-    pxs = np.unravel_index(pixels, (height, width))
-    pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
-    pxs1=pxs1[::every]
     with codetiming.Timer(text="PCA {milliseconds:.8f} ms", logger=identification_logger.debug):
-    # with codetiming.Timer(text="PCA {milliseconds:.8f} ms", logger=print):# logger=identification_logger.debug):
         before = time.time()
         pca.fit(pxs1)
         after = time.time()
 
-    delay = (after - before) * 1000
-    rot_ang = (
-        np.arctan(pca.components_[0][1] / pca.components_[0][0])
-        * 180
-        / np.pi
-        + 45
-    )
-    center = (pca.mean_[0], pca.mean_[1])
-    
+    with codetiming.Timer(text="pos PCA {milliseconds:.8f} ms", logger=identification_logger.debug):
+
+        delay = (after - before) * 1000
+        rot_ang = (
+            np.arctan(pca.components_[0][1] / pca.components_[0][0])
+            * 180
+            / np.pi
+            + 45
+        )
+        center = (pca.mean_[0], pca.mean_[1])
+
     return rot_ang, center, delay
 
 class Blob(object):
@@ -1095,7 +1096,7 @@ class Blob(object):
         if conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
             pass
         else:
-            with codetiming.Timer(text="took {:.8f} to generate identification image " + str(self.frame_number), logger=timer_logger.debug):
+            with codetiming.Timer(text="took {milliseconds:.8f} ms to generate identification image " + str(self.frame_number), logger=timer_logger.debug):
                 image_for_identification = self.get_image_for_identification(
                     identification_image_size,
                     height,
@@ -1103,7 +1104,7 @@ class Blob(object):
                 )
 
 
-            with codetiming.Timer(text="took {:.8f} to save identification image " + str(self.frame_number), logger=timer_logger.debug):
+            with codetiming.Timer(text="took {milliseconds:.8f} ms to save identification image " + str(self.frame_number), logger=timer_logger.debug):
                 # For RAM optimization
                 os.makedirs(os.path.dirname(file_path), exist_ok=True)
                 with h5py.File(file_path, "a") as f:
@@ -1149,12 +1150,18 @@ class Blob(object):
             Square image with black background used to train the crossings
             detector CNN and the identifiactio CNN.
         """
+        
+        with codetiming.Timer(text="Getting pixels for image identification took {milliseconds:.8f} ms", logger=identification_logger.debug):
+            pixels = self.pixels
+
+        with codetiming.Timer(text="Getting bounding_box_image for image identification took {milliseconds:.8f} ms", logger=identification_logger.debug):       
+            bounding_box_image=self.bounding_box_image
 
         image, delay, rot_angle =self._get_image_for_identification(
             height,
             width,
-            self.bounding_box_image,
-            self.pixels,
+            bounding_box_image,
+            pixels,
             self.bounding_box_in_frame_coordinates,
             identification_image_size[0],
         )
