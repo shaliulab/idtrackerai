@@ -90,7 +90,7 @@ def compute_model_area_and_body_length(
             if len(blobs_in_frame) == number_of_animals
         ]
     )
-    logger.info(f"Model area computed with {len(areas_and_body_length)}")
+    logger.info(f"Model area computed with {len(areas_and_body_length)} animals")
     if areas_and_body_length.shape[0] == 0:
         raise ValueError(
             "There is not part in the video where the {} "
