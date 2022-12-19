@@ -1,6 +1,7 @@
 import os.path
-import json
-
+import logging
+import traceback
+import shutil
 import cv2
 import numpy as np
 
@@ -11,10 +12,13 @@ from .segmentation_utils import (
 )
 
 from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.utils.py_utils import read_json_file
+
+logger=logging.getLogger(__name__)
+
 yolov7_repo = "/scratch/leuven/333/vsc33399/Projects/YOLOv7/yolov7"
 
-
-def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=True):
+def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes=None, save=True, **kwargs):
     """
     Correct idtrackerai preprocessing errors with YOLOv7 results,
     which should be made available in the runs/detect folder of the YOLOv7 repository
@@ -272,9 +276,7 @@ def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_num
     session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
 
     conf_file = os.path.join(os.path.dirname(store_path), os.path.basename(os.path.dirname(store_path)) + ".conf")
-
-    with open(conf_file, "r") as filehandle:
-        config = json.load(filehandle)
+    config = read_json_file(conf_file)
 
     episode_number = None
     for i, episode in enumerate(video_object.episodes_start_end):
