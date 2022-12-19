@@ -1220,21 +1220,22 @@ class Blob(object):
                 bounding_box_in_frame_coordinates,
             )
         
-        try:
-            every=1
-            with open("debug_pca.txt", "r") as filehandle:
-                message = filehandle.read().strip("\n")
-                if message == "debug":
-                    import ipdb; ipdb.set_trace()
-                else:
-                    try:
-                        every = int(message)
-                    except:
-                        every = 1
+        with codetiming.Timer(text="Reading debug options of _get_image_for_identification {milliseconds:.8f} ms", logger=identification_logger.debug):
+            try:
+                every=1
+                with open("debug_pca.txt", "r") as filehandle:
+                    message = filehandle.read().strip("\n")
+                    if message == "debug":
+                        import ipdb; ipdb.set_trace()
+                    else:
+                        try:
+                            every = int(message)
+                        except:
+                            every = 1
 
 
-        except:
-            pass
+            except:
+                pass
 
         rot_ang, center, delay = _get_rotation_angle(pixels, height, width)
 
