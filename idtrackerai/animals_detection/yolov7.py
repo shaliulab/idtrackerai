@@ -52,9 +52,9 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes=None, 
 
     # TODO Let's get a more robust way of getting the experiment
     # maybe as a property of the metadata
-    experiment = os.path.sep.join(
-        os.path.dirname(store_path).split(os.path.sep)[-3:]
-    )
+    # experiment = os.path.sep.join(
+    #     os.path.dirname(store_path).split(os.path.sep)[-3:]
+    # )
     
     # get the problematic frame
     video_path=os.path.join(os.path.dirname(store_path), f"{str(chunk).zfill(6)}.mp4")
@@ -68,7 +68,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes=None, 
         ret, frame = cap.read()
         frame=frame[:,:,0]
     
-        label_file=get_label_file_path(experiment, frame_number, chunk, frame_idx)
+        label_file=get_label_file_path(frame_number, chunk, frame_idx)
         lines=read_yolov7_label(label_file)
         detections = [yolo_line_to_detection(line) for line in lines]
 
@@ -311,9 +311,8 @@ def read_yolov7_label(label_file):
         lines = [line.strip() for line in lines]
     return lines
 
-def get_label_file_path(dataset, frame_number, chunk, frame_idx):
-    labels_dir = f"runs/detect/{dataset}/incomplete_frames/yolov7/labels/"
-    labels_dir=os.path.join(yolov7_repo, labels_dir)
+def get_label_file_path(frame_number, chunk, frame_idx):
+    labels_dir = "yolov7/labels"
 
     key=f"{frame_number}_{chunk}-{frame_idx}"
     label_file = os.path.join(labels_dir, f"{key}.txt")
