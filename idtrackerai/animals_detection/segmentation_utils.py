@@ -53,6 +53,16 @@ except ModuleNotFoundError:
 logger = logging.getLogger("__main__.segmentation_utils")
 
 
+def parse_contours(find_contours):
+
+    if cv2.__version__.split(".")[0] == "4":
+        contours = find_contours[0]
+    else:
+        contours = find_contours[1]
+
+    return contours
+
+
 """
 The utilities to segment and extract the blob information
 """
@@ -684,9 +694,11 @@ def blob_extractor(
     List[float],
 ]:
     # TODO: Document
-    _, contours, hierarchy = cv2.findContours(
+    find_contours = cv2.findContours(
         segmented_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
     )
+    contours = parse_contours(find_contours)
+
     # Filter contours by size
     good_contours_in_full_frame = _filter_contours_by_area(
         contours, min_area, max_area
@@ -722,22 +734,27 @@ def apply_segmentation_criteria(frame, config):
     Repeat the idtrackerai preprocessing step for a single frame given a set of parameters 
     """
 
-    roi_mask = np.zeros_like(frame)
-    roi_contour = np.array(eval(config["_roi"]["value"][0][0])).reshape((-1, 1, 2))
+    if eval(config["_applyroi"]["value"]):
+        roi_mask = np.zeros_like(frame)
+        roi_contour = np.array(eval(config["_roi"]["value"][0][0])).reshape((-1, 1, 2))
+        roi_mask = cv2.drawContours(roi_mask, [roi_contour], -1, 255, -1)
+    else:
+        roi_mask = np.ones_like(frame)*255
 
-    roi_mask = cv2.drawContours(roi_mask, [roi_contour], -1, 255, -1)
 
-    frame_canvas = np.zeros_like(frame)
     segmented_frame = segment_frame(frame, config["_intensity"]["value"][0], config["_intensity"]["value"][1], None, roi_mask, False)
-    _, contours, hierarchy = cv2.findContours(
+    find_contours = cv2.findContours(
         segmented_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
     )
+    contours = parse_contours(find_contours)
 
     # Filter contours by size
     good_contours_in_full_frame = _filter_contours_by_area(
         contours, config["_area"]["value"][0], config["_area"]["value"][1]
     )
 
+
+    frame_canvas = np.zeros_like(frame)
     final_frame = cv2.drawContours(frame_canvas.copy(), good_contours_in_full_frame, -1, 255, -1)
     return final_frame, good_contours_in_full_frame
 
