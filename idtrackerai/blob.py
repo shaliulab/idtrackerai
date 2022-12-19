@@ -851,6 +851,17 @@ class Blob(object):
             if overlaps or only_use_fragment_transfer_info:
                 return overlaps
 
+        if self.modified or other.modified:
+            fraction=self.overlaps_with_fraction(other)
+            # TODO
+            # Instead of call overlaps_with_fraction, write the routine
+            # that computes the blob overlap so that if the blob is modified
+            # overlaps_with_fraction is called directly and the threshold is checked
+            if fraction > 0.5:
+                return True
+            else:
+                return False
+
         # Check bounding box overlapping between blobs S (self) and O (other)
         (S_xmin, S_ymin) = self.bounding_box_in_frame_coordinates[0]
         (S_xmax, S_ymax) = self.bounding_box_in_frame_coordinates[1]
