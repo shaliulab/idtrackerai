@@ -121,8 +121,8 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         shutil.copy(f"{blobs_collection}.bak", blobs_collection)
         raise error
     
-    success_rate = round(len(blobs_in_frame_all) / len(frames), 3)
-    return list_of_blobs, success_rate
+    processed_successfully = len(blobs_in_frame_all)
+    return list_of_blobs, processed_successfully
 
 
 
