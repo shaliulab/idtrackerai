@@ -278,7 +278,7 @@ def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_num
 
     episode_number = None
     for i, episode in enumerate(video_object.episodes_start_end):
-        if episode[0] < frame_number < episode[1]:
+        if episode[0] <= frame_number < episode[1]:
             episode_number = i
 
     assert episode_number is not None
