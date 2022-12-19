@@ -18,7 +18,7 @@ logger=logging.getLogger(__name__)
 
 yolov7_repo = "/scratch/leuven/333/vsc33399/Projects/YOLOv7/yolov7"
 
-def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes=None, save=True, **kwargs):
+def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes=None, save=True, **kwargs):
     """
     Correct idtrackerai preprocessing errors with YOLOv7 results,
     which should be made available in the runs/detect folder of the YOLOv7 repository
@@ -36,6 +36,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes=None, 
         * store_path (str): Path to the metadata.yaml file of the imgstore
         * chunk (int): Chunk to be processed
         * frames (list): frame_number, frame_idx tuples for each frame in the experiment where idtrackerai preprocessing failed
+        * input (str): Path to folder with labels (each frame must have a corresponding label here)
         * allowed_classes (iterable): id of the classes taken from the yolov7 output
         
     Returns:
@@ -68,7 +69,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes=None, 
         ret, frame = cap.read()
         frame=frame[:,:,0]
     
-        label_file=get_label_file_path(frame_number, chunk, frame_idx)
+        label_file=get_label_file_path(input, frame_number, chunk, frame_idx)
         lines=read_yolov7_label(label_file)
         detections = [yolo_line_to_detection(line) for line in lines]
 
@@ -311,8 +312,7 @@ def read_yolov7_label(label_file):
         lines = [line.strip() for line in lines]
     return lines
 
-def get_label_file_path(frame_number, chunk, frame_idx):
-    labels_dir = "yolov7/labels"
+def get_label_file_path(labels_dir, frame_number, chunk, frame_idx):
 
     key=f"{frame_number}_{chunk}-{frame_idx}"
     label_file = os.path.join(labels_dir, f"{key}.txt")
