@@ -1,6 +1,7 @@
 import os.path
-import json
-
+import logging
+import traceback
+import shutil
 import cv2
 import numpy as np
 
@@ -11,10 +12,13 @@ from .segmentation_utils import (
 )
 
 from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.utils.py_utils import read_json_file
+
+logger=logging.getLogger(__name__)
+
 yolov7_repo = "/scratch/leuven/333/vsc33399/Projects/YOLOv7/yolov7"
 
-
-def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=True):
+def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes=None, save=True, **kwargs):
     """
     Correct idtrackerai preprocessing errors with YOLOv7 results,
     which should be made available in the runs/detect folder of the YOLOv7 repository
@@ -65,13 +69,33 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=
         label_file=get_label_file_path(experiment, frame_number, chunk, frame_idx)
         lines=read_yolov7_label(label_file)
         detections = [yolo_line_to_detection(line) for line in lines]
-        detections=[detection for detection in detections if detection[0] in allowed_classes]
-        kwargs=load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx)
+
+        if len(detections) == 0:
+            print(f"No detections found for frame_number {frame_number}")
+            logger.debug(f"Label file {label_file}")
+            continue
+
+        if allowed_classes is not None:
+            detections=[detection for detection in detections if detection["class"] in allowed_classes]
+
+        if len(detections) == 0:
+            print(f"No detections found for frame_number {frame_number} for allowed classes {allowed_classes}")
+            logger.debug(f"Label file {label_file}")
+            continue
+
+
+        kwargs.update(load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx))
         config=kwargs["segmentation_parameters"]
         
         if len(detections) == video_object.user_defined_parameters["number_of_animals"]:
             segmented_frame, _ = apply_segmentation_criteria(frame, config)
-            blobs_in_frame = yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs)
+            try:
+                blobs_in_frame = yolo_detections_to_blobs(frame, segmented_frame, detections, frame_number=frame_number, **kwargs)
+            except Exception as error:
+                logger.error(error)
+                logger.error(traceback.print_exc())
+                print(f"Could not process YOLOv7 predictions in frame {frame_number}")
+                continue
             blobs_in_frame_all.append((frame_number, blobs_in_frame))
         else:
             print(f"YOLOv7 failed in frame {frame_number}")
@@ -80,16 +104,21 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes, save=
 
     blobs_collection = os.path.join(idtrackerai_folder, session_folder, "preprocessing", "blobs_collection.npy")
     assert os.path.exists(blobs_collection)
-    list_of_blobs=ListOfBlobs.load(blobs_collection)
-    
-    if blobs_in_frame_all:
-        for frame_number, blobs_in_frame in blobs_in_frame_all:
-            list_of_blobs.apply_modification(frame_number, blobs_in_frame)
-    
-    if save:
-        list_of_blobs.save(blobs_collection)
-    
-    return list_of_blobs
+    try:
+        shutil.copy(blobs_collection, f"{blobs_collection}.bak")
+        list_of_blobs=ListOfBlobs.load(blobs_collection)
+        
+        if blobs_in_frame_all:
+            for frame_number, blobs_in_frame in blobs_in_frame_all:
+                list_of_blobs.apply_modification(frame_number, blobs_in_frame)
+        
+        if save:
+            list_of_blobs.save(blobs_collection)
+    except Exception as error:
+        shutil.copy(f"{blobs_collection}.bak", blobs_collection)
+        raise error
+        
+    return list_of_blobs, len(blobs_in_frame_all) / len(frames)
 
 
 
@@ -161,14 +190,13 @@ def yolo_detection_to_contour(segmented_frame, detection, other_detections=[]):
     
     assert (and_mask == 255).any()
     
-    contours = cv2.findContours(and_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[1]
-    
-    sorted(contours, key=lambda c: cv2.contourArea(c))
-    contour = contours[-1]
+    contours=cv2.findContours(and_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[1]
+    contours=sorted(contours, key=lambda c: cv2.contourArea(c))
+    contour=contours[-1]
         
     return contour
 
-def yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs):
+def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True, frame_number=None, **kwargs):
     """
     
     Arguments:
@@ -184,11 +212,16 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs):
     indices = np.arange(len(detections)).tolist()
 
     for i, detection in enumerate(detections):
-        other_detections = [detections[index] for k, index in enumerate(indices) if k != i]
-        assert len(detections) == len(other_detections)+1
+        if exclusive:
+            other_detections = [detections[index] for k, index in enumerate(indices) if k != i]
+            assert len(detections) == len(other_detections)+1
+        else:
+            other_detections = []
+
         contour = yolo_detection_to_contour(segmented_frame, detection, other_detections)
+        assert contour.shape[0] >= 4
         contours.append(contour)
-    
+
     (
         bounding_boxes,
         bounding_box_images,
@@ -200,9 +233,10 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs):
         frame,
         contours,
         save_pixels,
-        save_segmentation_image
+        save_segmentation_image,
+        tight=True,
     )
-        
+            
     miniframes=[
         frame[
             bounding_box[0][1]:bounding_box[1][1],
@@ -222,9 +256,17 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, **kwargs):
         save_pixels=save_pixels,
         **kwargs
     )
-    
     for blob in blobs_in_frame:
         blob.modified=True
+        blob.segmentation_contour = blob.contour.copy()
+        bbox=blob.bounding_box_in_frame_coordinates
+        bbox = [bbox[0][0], bbox[0][1], bbox[1][0]-bbox[0][0], bbox[1][1]-bbox[0][1]]
+        blob.contour = np.array([
+            [bbox[0], bbox[1]],
+            [bbox[0]+bbox[2], bbox[1]],
+            [bbox[0]+bbox[2], bbox[1]+bbox[3]],
+            [bbox[0], bbox[1]+bbox[3]],
+        ]).reshape((4, 1, 2))
     
     return blobs_in_frame
 
@@ -234,13 +276,11 @@ def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_num
     session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
 
     conf_file = os.path.join(os.path.dirname(store_path), os.path.basename(os.path.dirname(store_path)) + ".conf")
-
-    with open(conf_file, "r") as filehandle:
-        config = json.load(filehandle)
+    config = read_json_file(conf_file)
 
     episode_number = None
     for i, episode in enumerate(video_object.episodes_start_end):
-        if episode[0] < frame_number < episode[1]:
+        if episode[0] <= frame_number < episode[1]:
             episode_number = i
 
     assert episode_number is not None
