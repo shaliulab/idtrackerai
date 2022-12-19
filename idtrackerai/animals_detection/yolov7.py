@@ -208,11 +208,16 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
     indices = np.arange(len(detections)).tolist()
 
     for i, detection in enumerate(detections):
-        other_detections = [detections[index] for k, index in enumerate(indices) if k != i]
-        assert len(detections) == len(other_detections)+1
+        if exclusive:
+            other_detections = [detections[index] for k, index in enumerate(indices) if k != i]
+            assert len(detections) == len(other_detections)+1
+        else:
+            other_detections = []
+
         contour = yolo_detection_to_contour(segmented_frame, detection, other_detections)
+        assert contour.shape[0] >= 4
         contours.append(contour)
-    
+
     (
         bounding_boxes,
         bounding_box_images,
