@@ -41,6 +41,8 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes=None, 
     Returns:
         None
     """
+
+    assert len(frames) > 0
     
     idtrackerai_folder=os.path.join(os.path.dirname(store_path), "idtrackerai")
     video_object_path = os.path.join(idtrackerai_folder, f"session_{str(chunk).zfill(6)}", "video_object.npy")
@@ -117,8 +119,9 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, allowed_classes=None, 
     except Exception as error:
         shutil.copy(f"{blobs_collection}.bak", blobs_collection)
         raise error
-        
-    return list_of_blobs, len(blobs_in_frame_all) / len(frames)
+    
+    success_rate = round(len(blobs_in_frame_all) / len(frames), 3)
+    return list_of_blobs, success_rate
 
 
 
