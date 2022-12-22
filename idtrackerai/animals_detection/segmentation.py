@@ -413,6 +413,7 @@ def _create_blobs_objects(
     video_path,
     chunk,
     segmentation_parameters,
+    modified=False,
 ):
     """
     Generate idtrackerai.Blob instances from the segmentation results
@@ -444,18 +445,25 @@ def _create_blobs_objects(
     """
 
     blobs_in_frame = BlobsInFrame()
+       
     # create blob objects
     for i, bounding_box in enumerate(bounding_boxes):
+        if not modified:
+            dataset_name = str(global_frame_number) + "-" + str(i)
+        else:
+            dataset_name = str(global_frame_number) + "-" + str(i) + "-modified"
+            print(dataset_name)
+
         if save_segmentation_image == "DISK":
             with h5py.File(bounding_box_images_path, "a") as f1:
                 f1.create_dataset(
-                    str(global_frame_number) + "-" + str(i), data=miniframes[i]
+                    dataset_name, data=miniframes[i]
                 )
             miniframes[i] = None
         if save_pixels == "DISK":
             with h5py.File(pixels_path, "a") as f2:
                 f2.create_dataset(
-                    str(global_frame_number) + "-" + str(i), data=pixels[i]
+                    dataset_name, data=pixels[i]
                 )
             pixels[i] = None
 
