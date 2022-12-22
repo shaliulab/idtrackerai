@@ -32,7 +32,7 @@ def compute_overlapping_between_two_subsequent_frames_fraction(
     for ((blob_0_i, blob_0), (blob_1_i, blob_1)) in itertools.product(
         enumerate(blobs_before), enumerate(blobs_after)
     ):  
-        overlap_fractions[blob_0].append(blob_0.overlaps_with_fraction(blob_1, **kwargs))
+        overlap_fractions[blob_0].append(blob_0.overlaps_with_fraction(blob_1))
     
     for blob_0 in overlap_fractions:
         if max(overlap_fractions[blob_0]) == 0:
