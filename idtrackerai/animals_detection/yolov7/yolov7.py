@@ -251,10 +251,6 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
         assert contour.shape[0] >= 4
         contours.append(contour)
 
-
-    if frame_number == 2408749:
-        import ipdb; ipdb.set_trace()
-
     (
         bounding_boxes,
         bounding_box_images,
