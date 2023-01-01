@@ -40,7 +40,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from confapp import conf
 import codetiming
-
+# import pickle
 try:
     from imgstore.interface import VideoCapture
 except ModuleNotFoundError:
@@ -1093,7 +1093,10 @@ class Blob(object):
         file_path : str
             Path to the hdf5 file where the images will be stored.
         """
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
+        # data = {"identification_image_size": identification_image_size, "frame_number": self.frame_number, "height": height, "width": width, "pixels": self.pixels, "bounding_box_image": self.bounding_box_image, "bounding_box_in_frame_coordinates": self.bounding_box_in_frame_coordinates}
+        # with open("data.pkl", "wb") as filehandle:
+        #     pickle.dump(data, filehandle)
 
         if conf.SKIP_SAVING_IDENTIFICATION_IMAGES:
             pass
