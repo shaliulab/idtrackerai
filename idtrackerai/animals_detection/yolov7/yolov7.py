@@ -5,8 +5,8 @@ import shutil
 import cv2
 import numpy as np
 
-from .segmentation import _create_blobs_objects
-from .segmentation_utils import (
+from idtrackerai.animals_detection.segmentation import _create_blobs_objects
+from idtrackerai.animals_detection.segmentation_utils import (
     _get_blobs_information_per_frame,
     apply_segmentation_criteria
 )
