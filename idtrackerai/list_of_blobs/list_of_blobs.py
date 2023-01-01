@@ -476,23 +476,26 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             )
 
             # debugging
-            # Output = []
-            # for file, (start, end) in list(zip(
-            #     identification_images_file_paths,
-            #     episodes_start_end
-            # )):
-            #     Output.append(
-            #         self._set_identification_images_per_episode(
-            #             identification_image_size,
-            #             number_of_animals,
-            #             number_of_frames,
-            #             video_path,
-            #             height,
-            #             width,
-            #             file,
-            #             self.blobs_in_video[start:end]
-            #         )
-            #     )
+            #Output = []
+            #for file, (start, end) in list(zip(
+            #    identification_images_file_paths,
+            #    episodes_start_end
+            #)):
+            #    print(start)
+            #    Output.append(
+            #        self._set_identification_images_per_episode(
+            #            identification_image_size,
+            #            number_of_animals,
+            #            number_of_frames,
+            #            video_path,
+            #            height,
+            #            width,
+            #            file,
+            #            self.blobs_in_video[start:end]
+            #        )
+            #    )
+            prof.disable()
+            prof.dump_stats("idtrackerai.stats")
 
         blobs_in_video = [
             blobs_in_frame

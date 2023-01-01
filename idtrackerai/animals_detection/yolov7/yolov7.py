@@ -212,8 +212,8 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
     * kwargs: Extra arguments to _create_blobs_objects
     """
 
-    save_pixels="NONE"
-    save_segmentation_image="NONE"
+    save_pixels="DISK"
+    save_segmentation_image="DISK"
     contours = []
     indices = np.arange(len(detections)).tolist()
 
@@ -227,6 +227,10 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
         contour = yolo_detection_to_contour(segmented_frame, detection, other_detections)
         assert contour.shape[0] >= 4
         contours.append(contour)
+
+
+    if frame_number == 2408749:
+        import ipdb; ipdb.set_trace()
 
     (
         bounding_boxes,
@@ -260,6 +264,7 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
         estimated_body_lengths,
         save_segmentation_image=save_segmentation_image,
         save_pixels=save_pixels,
+        modified=True,
         **kwargs
     )
     for blob in blobs_in_frame:
@@ -299,14 +304,15 @@ def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_num
         "video_params_to_store": {"height": video_object.height, "width": video_object.width, "number_of_animals": video_object.user_defined_parameters["number_of_animals"]},
         "chunk": chunk,
         "global_frame_number": frame_number,
-        "frame_number_in_video_path": frame_idx,
+        "frame_number_in_video_path": frame_number, # this would be the frame idx in the multiple video interface from idtrackerai, but not if we use imgstore
         "segmentation_parameters": config,
         "bounding_box_images_path": os.path.join(idtrackerai_folder, session_folder, f"segmentation_data/episode_images_{episode_number}.hdf5"),
         "pixels_path": os.path.join(idtrackerai_folder, session_folder, f"segmentation_data/episode_pixels_{episode_number}.hdf5")
     }
     return kwargs
-    # assert os.path.exists(kwargs["bounding_box_images_path"])
-    # assert os.path.exists(kwargs["pixels_path"])
+
+    assert os.path.exists(kwargs["bounding_box_images_path"])
+    assert os.path.exists(kwargs["pixels_path"])
 
 def read_yolov7_label(label_file):
     with open(label_file, "r") as filehandle:

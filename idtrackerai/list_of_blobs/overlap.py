@@ -1,7 +1,63 @@
 import itertools
 import numpy as np
 
-def compute_overlapping_between_two_subsequent_frames(
+def compute_overlapping_between_two_subsequent_frames(blobs_before, blobs_after, *args, **kwargs):
+
+    if any([blob.modified for blob in blobs_before]) or any([blob.modified for blob in blobs_after]):
+        return compute_overlapping_between_two_subsequent_frames_fraction(
+            blobs_before, blobs_after, *args, **kwargs
+        )
+    else:
+        return compute_overlapping_between_two_subsequent_frames_boolean(
+            blobs_before, blobs_after, *args, **kwargs
+        )
+
+
+
+def compute_overlapping_between_two_subsequent_frames_fraction(
+    blobs_before, blobs_after, queue=None, do=True, threshold=None, **kwargs
+):
+    """
+    If two or more blobs overlap with the same blob in the future/past
+    pass only the one that overlaps the most
+    This should be executed only on frames where an AI
+    has modified the segmentation output
+    """
+
+    assert any([blob.modified for blob in blobs_before]) or any([blob.modified for blob in blobs_after])
+
+
+    data = []
+    overlap_fractions = {blob_0: [] for blob_0 in blobs_before}
+    for ((blob_0_i, blob_0), (blob_1_i, blob_1)) in itertools.product(
+        enumerate(blobs_before), enumerate(blobs_after)
+    ):  
+        overlap_fractions[blob_0].append(blob_0.overlaps_with_fraction(blob_1))
+    
+    for blob_0 in overlap_fractions:
+        if max(overlap_fractions[blob_0]) == 0:
+            continue
+        else:
+            best_identifier=np.argmax(overlap_fractions[blob_0])
+
+        blob_1 = blobs_after[best_identifier]
+            
+        result = (
+            (blob_0.frame_number, blob_0_i),
+            (blob_1.frame_number, blob_1_i),
+        )
+
+        if do:
+            blob_0.now_points_to(blob_1)
+
+        elif queue is None:
+            data.append(result)
+        else:
+            queue.put(result)
+
+    return data
+
+def compute_overlapping_between_two_subsequent_frames_boolean(
     blobs_before, blobs_after, queue=None, do=True, threshold=None, **kwargs
 ):
     data = []
