@@ -13,6 +13,8 @@ from idtrackerai.animals_detection.segmentation_utils import (
 
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.utils.py_utils import read_json_file
+from idtrackerai.animals_detection.yolov7.nms_multilabel import resolve_multilabel
+from idtrackerai.animals_detection.yolov7.filter import keep_best_detections
 
 logger=logging.getLogger(__name__)
 
@@ -50,6 +52,8 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
     assert os.path.exists(video_object_path)
     video_object = np.load(video_object_path, allow_pickle=True).item()
     session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
+    number_of_animals=video_object._user_defined_parameters["number_of_animals"]
+    
 
     # TODO Let's get a more robust way of getting the experiment
     # maybe as a property of the metadata
@@ -73,6 +77,25 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         label_file=get_label_file_path(input, frame_number, chunk, frame_idx)
         lines=read_yolov7_label(label_file)
         detections = [yolo_line_to_detection(line) for line in lines]
+        
+
+        for detection in detections:
+            detection["keep"] = True
+            detection["overwrites"] = False
+            
+        if len(detections) > number_of_animals:
+            # if two detections highly overlap, keep the blurry
+            detections=resolve_multilabel(detections)
+            if len(detections) == number_of_animals:
+                logger.info(f"MULTILABEL RESOLVED {label_file}")
+
+            elif len(detections) > number_of_animals:
+                # if it's still too many detections are found, keep the ones with the most confidence
+                detections = keep_best_detections(detections, number_of_animals)
+                logger.info(f"FILTERING detections in {label_file} w confidence >= {detections[-1]['confidence']}")
+            else:
+                logger.info(f"FAIL {label_file}")
+
 
         if len(detections) == 0:
             print(f"No detections found for frame_number {frame_number}")
