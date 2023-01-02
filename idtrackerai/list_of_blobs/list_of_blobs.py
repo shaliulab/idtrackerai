@@ -46,7 +46,8 @@ from idtrackerai.utils.py_utils import interpolate_nans, find_blob
 from .parallel import ParallelBlobOverlap
 from .overlap import (
     compute_overlapping_between_two_subsequent_frames,
-    compute_overlapping_between_two_subsequent_frames_with_ratio_threshold
+    compute_overlapping_between_two_subsequent_frames_with_ratio_threshold,
+    compute_overlapping_between_two_subsequent_frames_fraction,
 )
 from .align import AlignableList
 from .validation import validate_from_file, check_tracking
@@ -278,9 +279,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 blobs_in_next_frame=self.blobs_in_video[frame_number+1]
                 if any([blob.modified for blob in blobs_in_frame + blobs_in_next_frame]):
                     logger.info(f"Computing overlap between {frame_number} and {frame_number+1} ")
-                    for next_blob_instance in blobs_in_next_frame:
-                        if blob.overlaps_with(next_blob_instance):
-                            blob.now_points_to(next_blob_instance)
+                    compute_overlapping_between_two_subsequent_frames_fraction(blobs_in_frame, blobs_in_next_frame, threshold=0.5, do=True)
                 else:
 
                     for next_blob in blob._now_points_to_blob_fn_index["next"]:
