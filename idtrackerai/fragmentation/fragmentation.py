@@ -31,6 +31,7 @@
 
 from abc import ABC, abstractmethod
 import logging
+import warnings
 import time
 import numpy as np
 from idtrackerai.video import Video
@@ -77,12 +78,22 @@ class FragmentationAPI(FragmentationABC):
             return None
 
     def _generate_list_of_fragments(self):
-        if not self.list_of_blobs.blobs_are_connected:
+        if self.list_of_blobs.blobs_are_connected:
             # If the list of of blobs has been loaded
+            self.list_of_blobs.disconnect()
+            self.list_of_blobs.reconnect_from_cache()
+        else:
             self.list_of_blobs.compute_overlapping_between_subsequent_frames(
                 use_fragment_transfer_info=self._use_fragment_transfer_info,
             )
+
             
+
+        for blobs_in_frame in self.list_of_blobs.blobs_in_video:
+            for blob in blobs_in_frame:
+                blob._fragment_identifier = None
+                blob._blob_index = None
+
         self.list_of_blobs.compute_fragment_identifier_and_blob_index(
             max(
                 self.video.user_defined_parameters["number_of_animals"],
@@ -90,6 +101,17 @@ class FragmentationAPI(FragmentationABC):
             )
         )
         self.list_of_blobs.compute_crossing_fragment_identifier()
+
+        f_ids = set()
+        for blobs_in_frame in self.list_of_blobs.blobs_in_video:
+            for blob in blobs_in_frame:
+                f_ids.add(blob.fragment_identifier)
+
+        n_fragments = len(f_ids)
+        if n_fragments > 1000:
+            warnings.warn(f"{n_fragments} fragments detected. Is that right?")
+            import ipdb; ipdb.set_trace()
+
         fragments = create_list_of_fragments(
             self.list_of_blobs.blobs_in_video,
             self.video.user_defined_parameters["number_of_animals"],
