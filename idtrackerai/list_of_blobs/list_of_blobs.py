@@ -270,32 +270,42 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 # (> 99% of the time there is only one next blob, sometimes none or > 1)
                 # if there is no next blob, this for loop does not run
                 # if there is > 1, it runs > 1 time accordingly
-                for next_blob in blob._now_points_to_blob_fn_index["next"]:
-                    next_blob_fn, next_blob_unique_identifier = (
-                        next_blob[0],
-                        next_blob[1],
-                    )
-                    blobs_in_next_frame=self.blobs_in_video[next_blob_fn]
+                
+                frame_number=blob.frame_number
+                blobs_in_next_frame=self.blobs_in_video[frame_number+1]
+                if any([blob.modified for blob in blobs_in_frame + blobs_in_next_frame]):
+                    for next_blob_instance in blobs_in_next_frame:
+                        logger.info(f"Computing overlap between {frame_number} and {frame_number+1} ")
+                        if blob.overlaps_with(next_blob_instance):
+                            blob.now_points_to(next_blob_instance)
+                else:
 
-                    if isinstance(next_blob_unique_identifier, int):
-                        # NOTE
-                        # I was using before the position in the lsit
-                        # as identifier. This is wrong
-                        for next_blob_instance in blobs_in_next_frame:
-                            if blob.overlaps_with(next_blob_instance):
-                                blob.now_points_to(next_blob_instance)
-                    else:
+                    for next_blob in blob._now_points_to_blob_fn_index["next"]:
+                        next_blob_fn = next_blob[0]
 
-                        try:
-                            a_next_blob = blobs_in_next_frame[
-                                next_blob_unique_identifier
-                            ]
-                            blob.now_points_to(a_next_blob)
-                        # an error is raised if blobs_in_next_frame
-                        # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
-                        except TypeError:
-                            a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
-                            blob.now_points_to(a_next_blob)
+                        blobs_in_next_frame=self.blobs_in_video[next_blob_fn]
+                        next_blob_unique_identifier = next_blob[1]
+
+
+                        if isinstance(next_blob_unique_identifier, int):
+                            # NOTE
+                            # I was using before the position in the lsit
+                            # as identifier. This is wrong
+                            for next_blob_instance in blobs_in_next_frame:
+                                if blob.overlaps_with(next_blob_instance):
+                                    blob.now_points_to(next_blob_instance)
+                        else:
+
+                            try:
+                                a_next_blob = blobs_in_next_frame[
+                                    next_blob_unique_identifier
+                                ]
+                                blob.now_points_to(a_next_blob)
+                            # an error is raised if blobs_in_next_frame
+                            # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
+                            except TypeError:
+                                a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
+                                blob.now_points_to(a_next_blob)
 
         self.blobs_are_connected = True
         self._annotate_location_of_blobs()
@@ -494,8 +504,8 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             #            self.blobs_in_video[start:end]
             #        )
             #    )
-            prof.disable()
-            prof.dump_stats("idtrackerai.stats")
+            # prof.disable()
+            # prof.dump_stats("idtrackerai.stats")
 
         blobs_in_video = [
             blobs_in_frame
