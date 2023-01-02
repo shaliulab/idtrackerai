@@ -34,17 +34,17 @@ def compute_overlapping_between_two_subsequent_frames_fraction(
     ):  
         overlap_fractions[blob_0].append(blob_0.overlaps_with_fraction(blob_1))
     
-    for blob_0 in overlap_fractions:
+    for i, blob_0 in enumerate(overlap_fractions):
         if max(overlap_fractions[blob_0]) == 0:
             continue
         else:
-            best_identifier=np.argmax(overlap_fractions[blob_0])
+            best_identifier=np.argmax(overlap_fractions[blob_0]).item()
 
         blob_1 = blobs_after[best_identifier]
             
         result = (
-            (blob_0.frame_number, blob_0_i),
-            (blob_1.frame_number, blob_1_i),
+            (blob_0.frame_number, i),
+            (blob_1.frame_number, best_identifier),
         )
 
         if do:
