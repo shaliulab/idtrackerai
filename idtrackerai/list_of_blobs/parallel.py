@@ -7,7 +7,8 @@ from confapp import conf
 
 from .overlap import (
     compute_overlapping_between_two_subsequent_frames,
-    compute_overlapping_between_two_subsequent_frames_with_ratio_threshold
+    compute_overlapping_between_two_subsequent_frames_with_ratio_threshold,
+    compute_overlapping_between_two_subsequent_frames_fraction,
 )
 
 logger = logging.getLogger("__main__.list_of_blobs.parallel")
@@ -16,7 +17,7 @@ ROUND_FACTOR=1000
 n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
 
 def compute_overlapping_between_subsequent_frames_single_job(
-    blobs_in_video, f, start_and_end=None,  threshold=None, queue=None, use_fragment_transfer_info=False
+    blobs_in_video, functions, start_and_end=None,  threshold=None, queue=None, use_fragment_transfer_info=False
 ):
 
     """
@@ -36,10 +37,18 @@ def compute_overlapping_between_subsequent_frames_single_job(
     for frame_i in tqdm(
         range(1, len(blobs_in_video)), desc=desc
     ):
+        blobs_before=blobs_in_video[frame_i - 1]
+        blobs_after=blobs_in_video[frame_i]
+        
+        if any([blob.modified for blob in blobs_before + blobs_after]):
+            f = functions[1]
+        else:
+            f = functions[0]
+            
         # blobs_before, blobs_after, queue=None, do=True, threshold=None
         data.extend(f(
-            blobs_before=blobs_in_video[frame_i - 1],
-            blobs_after=blobs_in_video[frame_i],
+            blobs_before=blobs_before,
+            blobs_after=blobs_after,
             queue=queue,
             do=False,
             threshold=threshold,
@@ -120,11 +129,14 @@ class ParallelBlobOverlap:
         # signature of compute_overlapping_between_subsequent_frames_single_job
         # blobs_in_video, f, start_and_end=None,  threshold=None, queue=None, **kwargs
 
-        function = [
-            compute_overlapping_between_two_subsequent_frames_with_ratio_threshold,
+        functions = [
+            (
+                compute_overlapping_between_two_subsequent_frames_with_ratio_threshold,
+                compute_overlapping_between_two_subsequent_frames_fraction
+            )
         ] * len(starts)
     
-        args = list(zip(blobs, function, starts_ends, thresholds, queues, use_fragment_transfer_infos))
+        args = list(zip(blobs, functions, starts_ends, thresholds, queues, use_fragment_transfer_infos))
         
         if debug:
             import ipdb; ipdb.set_trace()
