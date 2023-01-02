@@ -31,6 +31,7 @@
 
 import itertools
 import logging
+import sys
 import codetiming
 import h5py
 import numpy as np
@@ -231,6 +232,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         """
         logger.info("saving blobs list at %s" % path_to_save)
         np.save(path_to_save, self)
+        self.blobs_are_connected = False
 
     @staticmethod
     def load(path_to_load_blob_list_file, reconnect_from_cache=False):
@@ -294,8 +296,14 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                         # an error is raised if blobs_in_next_frame
                         # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
                         except TypeError:
-                            a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
-                            blob.now_points_to(a_next_blob)
+                            try:
+                                a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
+                                blob.now_points_to(a_next_blob)
+                            except KeyError:
+                                import ipdb; ipdb.set_trace()
+                        except Exception as error:
+                            print(f"Could not process frame {next_blob_fn}")
+                            raise error
 
         self.blobs_are_connected = True
         self._annotate_location_of_blobs()
@@ -494,8 +502,6 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             #            self.blobs_in_video[start:end]
             #        )
             #    )
-            prof.disable()
-            prof.dump_stats("idtrackerai.stats")
 
         blobs_in_video = [
             blobs_in_frame
@@ -510,6 +516,9 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             self.blobs_in_video=extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)
         else:
             self.blobs_in_video=blobs_in_video
+            if self.blobs_are_connected:
+                self.reconnect_from_cache()
+
 
     @staticmethod
     def _set_identification_images_per_episode(
@@ -529,6 +538,9 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             file,
             video_path,
         )
+        #if len(blobs_in_episode[0]) > 0:
+        #    print(blobs_in_episode[0][0].frame_number)
+
         for blobs_in_frame in blobs_in_episode:
             for blob in blobs_in_frame:
                 blob.save_image_for_identification(
