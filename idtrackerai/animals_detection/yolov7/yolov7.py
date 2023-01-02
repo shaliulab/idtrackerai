@@ -316,7 +316,7 @@ def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_num
     assert episode_number is not None
     episode_number
 
-    config["resolution_reduction"]=config["_resreduct"]
+    config["resolution_reduction"]=config["_resreduct"]["value"]
 
     kwargs = {
         "video_path": video_object.video_path,
