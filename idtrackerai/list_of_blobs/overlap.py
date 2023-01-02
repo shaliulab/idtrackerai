@@ -15,14 +15,21 @@ def compute_overlapping_between_two_subsequent_frames(blobs_before, blobs_after,
 
 
 def compute_overlapping_between_two_subsequent_frames_fraction(
-    blobs_before, blobs_after, queue=None, do=True, threshold=None, **kwargs
+    blobs_before, blobs_after, queue=None, do=True, threshold=0, **kwargs
 ):
     """
     If two or more blobs overlap with the same blob in the future/past
     pass only the one that overlaps the most
     This should be executed only on frames where an AI
     has modified the segmentation output
+    
+    Arguments:
+
+        * threshold (int): Minimum % overlap fraction between two blobs (not 0 necessarily)
     """
+    
+    if threshold is None:
+        threshold = 0
 
     assert any([blob.modified for blob in blobs_before]) or any([blob.modified for blob in blobs_after])
 
@@ -35,7 +42,7 @@ def compute_overlapping_between_two_subsequent_frames_fraction(
         overlap_fractions[blob_0].append(blob_0.overlaps_with_fraction(blob_1))
     
     for i, blob_0 in enumerate(overlap_fractions):
-        if max(overlap_fractions[blob_0]) == 0:
+        if (max(overlap_fractions[blob_0]) * 100) < threshold:
             continue
         else:
             best_identifier=np.argmax(overlap_fractions[blob_0]).item()
