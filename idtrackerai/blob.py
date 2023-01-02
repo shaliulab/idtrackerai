@@ -31,6 +31,7 @@
 
 import logging
 import os
+import traceback
 import warnings
 from confapp import conf
 import time
@@ -2193,7 +2194,10 @@ def _mask_background_pixels(
     temp_image = np.zeros_like(bounding_box_image).astype("uint8")
     try:
         temp_image[pxs[0, :], pxs[1, :]] = 255
-    except:
+    except Exception as error:
+        print(error)
+        print(traceback.print_exc())
+        
         import ipdb; ipdb.set_trace()
 
     temp_image = cv2.dilate(
