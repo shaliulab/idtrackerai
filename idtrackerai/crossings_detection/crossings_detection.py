@@ -132,7 +132,6 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         """
         logger.info("--> set_identification_images")
         self.video.compute_identification_image_size(self.median_body_length)
-        self.list_of_blobs.save(self.video.blobs_path)
         self.list_of_blobs.set_images_for_identification(
             self.video.episodes_start_end,
             self.video.identification_images_file_paths,
