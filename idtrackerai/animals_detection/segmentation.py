@@ -92,6 +92,8 @@ class BlobsInFrame(List):
         elif isinstance(k, tuple):
             return find_blob(self, k)
         else:
+            print(f"Passed invalid key {k} of type {type(k)}")
+
             raise Exception(
                 """
                 BlobsInFrame can only be indexed by:
