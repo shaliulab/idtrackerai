@@ -33,6 +33,7 @@ import itertools
 import logging
 import sys
 import codetiming
+import traceback
 import h5py
 import numpy as np
 from confapp import conf
@@ -311,8 +312,9 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                                 except KeyError:
                                     import ipdb; ipdb.set_trace()
                             except Exception as error:
-                                print(f"Could not process frame {next_blob_fn}")
-                            raise error
+                                logger.error(f"Could not process frame {next_blob_fn}")
+                                logger.error(traceback.print_exc())
+                                raise error
 
         self.blobs_are_connected = True
         self._annotate_location_of_blobs()
