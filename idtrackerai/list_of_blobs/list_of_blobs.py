@@ -309,6 +309,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                                     a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
                                     blob.now_points_to(a_next_blob)
                                 except KeyError:
+                                    print(error)
                                     import ipdb; ipdb.set_trace()
                             except Exception as error:
                                 logger.error(f"Could not process frame {next_blob_fn}")
@@ -324,6 +325,13 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         conneted with its next and previous blobs.
 
         Blobs must be connected and classified as individuals or crossings.
+        This means the blob attributes:
+        
+        * blob.can_continue_fragment
+        * blob.is_an_individual_in_a_fragment
+        * blob.
+        
+        must be set to something different from None
 
         Parameters
         ----------
@@ -506,8 +514,9 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             self.blobs_in_video=extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)
         else:
             self.blobs_in_video=blobs_in_video
-            if self.blobs_are_connected:
-                self.reconnect_from_cache()
+
+        if self.blobs_are_connected:
+            self.reconnect_from_cache()
 
 
     @staticmethod
