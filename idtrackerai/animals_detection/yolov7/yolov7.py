@@ -141,6 +141,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
                 list_of_blobs.apply_modification(frame_number, blobs_in_frame)
         
         if save:
+            logger.info(f"Saving list of blobs --> {blobs_collection}")
             list_of_blobs.save(blobs_collection)
     except Exception as error:
         shutil.copy(f"{blobs_collection}.bak", blobs_collection)
