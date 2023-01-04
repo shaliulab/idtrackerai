@@ -92,7 +92,7 @@ USING_PYTHON_VIDEO_ANNOTATOR=False
 # Animal detection advanced parameters
 ###############################################################################
 # TODO: Fix compatibility frames per episode and background subtraction period
-FRAMES_PER_EPISODE = int(os.environ.get("FRAMES_PER_EPISODE", 500))
+FRAMES_PER_EPISODE = int(os.environ.get("FRAMES_PER_EPISODE", 800))
 BACKGROUND_SUBTRACTION_PERIOD = int(
     os.environ.get("BACKGROUND_SUBTRACTION_PERIOD", 250)
 )
@@ -271,3 +271,4 @@ VALIDATION="from_data"
 CHECK_FOR_CROSSING_TIMEOUT=300
 ADVANCED_SEGMENTATION=False
 SKIP_EVERY_FRAME=1
+EROSION_DISK_SKIP_EVERY_FRAME=100

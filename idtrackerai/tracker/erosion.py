@@ -43,7 +43,7 @@ from idtrackerai.animals_detection.segmentation_utils import blob_extractor
 
 def compute_erosion_disk(video, blobs_in_video):
     min_frame_distance_transform = []
-    for blobs_in_frame in tqdm(blobs_in_video, desc="Computing erosion disk"):
+    for blobs_in_frame in tqdm(blobs_in_video[::conf.EROSION_DISK_SKIP_EVERY_FRAME], desc="Computing erosion disk"):
         if len(blobs_in_frame) > 0:
             min_frame_distance_transform.append(
                 compute_min_frame_distance_transform(video, blobs_in_frame)
