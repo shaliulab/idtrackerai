@@ -42,6 +42,11 @@ def compute_overlapping_between_two_subsequent_frames_fraction(
         overlap_fractions[blob_0].append(blob_0.overlaps_with_fraction(blob_1))
     
     for i, blob_0 in enumerate(overlap_fractions):
+        if len(overlap_fractions[blob_0]) == 0:
+            # this happens if there are no blobs in the next frame,
+            # which is expected if
+            # the current frame is the last frame of the chunk
+            continue
         if (max(overlap_fractions[blob_0]) * 100) < threshold:
             continue
         else:
