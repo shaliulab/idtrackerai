@@ -279,6 +279,13 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 blobs_in_next_frame=self.blobs_in_video[frame_number+1]
                 if any([blob.modified for blob in blobs_in_frame + blobs_in_next_frame]):
                     logger.info(f"Computing overlap between {frame_number} and {frame_number+1} ")
+                    for blob in blobs_in_frame:
+                        blob.next = []
+                        blob._now_points_to_blob_fn_index["next"] = []
+                    for blob in blobs_in_next_frame:
+                        blob.previous = []
+                        blob._now_points_to_blob_fn_index["previous"] = []
+
                     compute_overlapping_between_two_subsequent_frames_fraction(blobs_in_frame, blobs_in_next_frame, threshold=0.5, do=True)
                 else:
 
