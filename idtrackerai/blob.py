@@ -1171,6 +1171,22 @@ class Blob(object):
         pixels = self.pixels
         bounding_box_image=self.bounding_box_image
         try:
+            pxs = unravel_pixels(pixels, height, width, self.bounding_box_in_frame_coordinates)
+            if any([m == bounding_box_image.shape[i] for i, m in enumerate(pxs.max(axis=1))]):
+                # this is needed to remove pixels that are on the right and bottom edges of the bounding box (if any)
+                # if they exist and they are not removed, the _mask_background_pixels function fails
+                # because there we attempt to get the ith coordinate of an array with shape i
+                # (which fails in Python because then only from 0 to i-1 are available)
+                logger.info("Correcting pixels to remove edge pixels")
+                new_pixels = []
+                for i, p in enumerate(self.pixels):
+                     if pxs[0, i] == bounding_box_image.shape[0] or pxs[1, i] == bounding_box_image.shape[1]:
+                         continue
+                     new_pixels.append(p)
+                self.pixels = np.array(new_pixels)
+                pixels = self.pixels
+
+                
             image, delay, rot_angle =self._get_image_for_identification(
                 height,
                 width,
@@ -2151,6 +2167,21 @@ class Blob(object):
         self._modified = value
 
 
+def unravel_pixels(
+    pixels,
+    height,
+    width,
+    bounding_box_in_frame_coordinates
+):
+    pxs = np.array(np.unravel_index(pixels, (height, width))).T
+    pxs = np.array(
+        [
+            pxs[:, 0] - bounding_box_in_frame_coordinates[0][1],
+            pxs[:, 1] - bounding_box_in_frame_coordinates[0][0],
+        ]
+    )
+    return pxs
+
 def _mask_background_pixels(
     height,
     width,
@@ -2184,20 +2215,14 @@ def _mask_background_pixels(
     ndarray
         Image with black background pixels
     """
-    pxs = np.array(np.unravel_index(pixels, (height, width))).T
-    pxs = np.array(
-        [
-            pxs[:, 0] - bounding_box_in_frame_coordinates[0][1],
-            pxs[:, 1] - bounding_box_in_frame_coordinates[0][0],
-        ]
-    )
+    pxs = unravel_pixels(pixels, height, width, bounding_box_in_frame_coordinates)
     temp_image = np.zeros_like(bounding_box_image).astype("uint8")
+
     try:
         temp_image[pxs[0, :], pxs[1, :]] = 255
     except Exception as error:
         print(error)
         print(traceback.print_exc())
-        
         import ipdb; ipdb.set_trace()
 
     temp_image = cv2.dilate(
