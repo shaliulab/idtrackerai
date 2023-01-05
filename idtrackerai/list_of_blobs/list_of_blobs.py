@@ -554,8 +554,8 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 )
         return blobs_in_episode
 
-    def check_maximal_number_of_blob(
-        self, number_of_animals, return_maximum_number_of_blobs=False
+    def check_segmentation(
+        self, number_of_animals
     ):
         """Checks that the number of blobs per frame is not greater than the
         number of animals to be tracked.
@@ -576,10 +576,26 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         """
         maximum_number_of_blobs = 0
         frames_with_more_blobs_than_animals = []
+        frames_with_less_blobs_than_animals = []
+        frames_with_imperfect_overlap = []
         for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):
 
             if len(blobs_in_frame) > number_of_animals:
                 frames_with_more_blobs_than_animals.append(frame_number)
+            elif len(blobs_in_frame) < number_of_animals:
+                frames_with_less_blobs_than_animals.append(frame_number)
+                
+            for blob in blobs_in_frame:
+                if len(blob.previous) != 1:
+                    if frame_number != 0 and len(self.blobs_in_video[frame_number-1]) != 0:
+                        frames_with_imperfect_overlap.append(frame_number)
+                        break
+                elif len(blob.next) != 1:
+                    if frame_number != len(self.blobs_in_video) and len(self.blobs_in_video[frame_number+1]) != 0:
+                        frames_with_imperfect_overlap.append(frame_number)
+                        break
+
+
             maximum_number_of_blobs = (
                 len(blobs_in_frame)
                 if len(blobs_in_frame) > maximum_number_of_blobs
@@ -596,11 +612,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 % str(frames_with_more_blobs_than_animals)
             )
 
-        # TODO: it is not good practice to have two different outputs
-        if return_maximum_number_of_blobs:
-            return frames_with_more_blobs_than_animals, maximum_number_of_blobs
-        else:
-            return frames_with_more_blobs_than_animals
+        return (frames_with_more_blobs_than_animals, frames_with_less_blobs_than_animals, frames_with_imperfect_overlap), maximum_number_of_blobs
 
     # TODO: maybe move to crossing detector
     def update_identification_image_dataset_with_crossings(self, video):

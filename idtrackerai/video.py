@@ -121,6 +121,8 @@ class Video(object):
         # During segmentation
         self._maximum_number_of_blobs = 0  # initialized to 0. updated later
         self._frames_with_more_blobs_than_animals = None  # updated later
+        self._frames_with_less_blobs_than_animals = None  # updated later
+        self._frames_with_imperfect_overlap = None  # updated later
         # During crossing detection
         self._median_body_length = None  # updated later
         self._model_area = None  # updated later
@@ -449,6 +451,17 @@ class Video(object):
     @property
     def frames_with_more_blobs_than_animals(self):
         return self._frames_with_more_blobs_than_animals
+
+    # TODO: move to animals_detection.py
+    @property
+    def frames_with_less_blobs_than_animals(self):
+        return self._frames_with_less_blobs_than_animals
+
+    # TODO: move to animals_detection.py
+    @property
+    def frames_with_imperfect_overlap(self):
+        return self._frames_with_imperfect_overlap
+
 
     # TODO: move to accumulation_manager.py
     @property

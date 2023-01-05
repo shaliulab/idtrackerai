@@ -41,7 +41,8 @@ from idtrackerai.list_of_blobs import (
     ListOfBlobs,
     extend_blobs_in_video_to_absolute_start_and_end
 )
-from idtrackerai.animals_detection.segmentation import segment
+from idtrackerai.animals_detection.segmentation import segment, VideoCapture
+import cv2
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +207,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
 
         return ListOfBlobs(blobs_in_video=blobs_in_video)
 
-    def check_segmentation(self):
+    def check_segmentation(self, original=True):
         """
         idtracker.ai is designed to work under the assumption that all the
         detected blobs are animals. In the frames where the number of
@@ -224,16 +225,61 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         """
         logger.info("--> check_segmentation")
         (
-            self.video._frames_with_more_blobs_than_animals,
+            (
+                self.video._frames_with_more_blobs_than_animals,
+                self.video._frames_with_less_blobs_than_animals,
+                self.video._frames_with_imperfect_overlap,
+            ),
             self.video._maximum_number_of_blobs,
-        ) = self.list_of_blobs.check_maximal_number_of_blob(
-            self.video.user_defined_parameters["number_of_animals"],
-            return_maximum_number_of_blobs=True,
+        ) = self.list_of_blobs.check_segmentation(
+            self.video.user_defined_parameters["number_of_animals"]
         )
-        consistent_segmentation = (
-            len(self.video.frames_with_more_blobs_than_animals) == 0
-        )
+
+        if original:
+            consistent_segmentation = (
+                len(self.video.frames_with_more_blobs_than_animals) == 0
+            )
+        else:
+            consistent_segmentation = {
+                "more": len(self.video.frames_with_more_blobs_than_animals) != 0,
+                "less": len(self.video.frames_with_less_blobs_than_animals) != 0,
+                "imperfect": len(self.video.frames_with_imperfect_overlap) != 0,
+            }
+
         return consistent_segmentation
+    
+    
+    def save_incomplete_frames(self):
+
+
+        # self.save_frames(self.video.frames_with_more_blobs_than_animals, "more")
+        # self.save_frames(self.video.frames_with_more_blobs_than_animals, "less")    
+        self.save_frames(self.video.frames_with_imperfect_overlap, "imperfect")
+        
+    def save_frames(self, frame_numbers, folder):
+        
+        if len(frame_numbers) == 0:
+            return None
+
+
+        os.makedirs(folder, exist_ok=True)
+
+        try:
+            cap = VideoCapture(self.video.video_path, self.video._chunk)
+        except Exception as error:
+            logger.error(error)
+            return None
+
+
+        chunk = self.video._chunk
+        first_frame_of_chunk = cap.get("STARTING_FRAME_OF_CHUNK")
+        frame_idx = frame_number - first_frame_of_chunk
+        
+        for frame_number in frame_numbers:
+            cap.set(1, frame_number)
+            ret, frame = cap.read()
+            cv2.imwrite(os.path.join(folder, f"{frame_number}_{chunk}-{frame_idx}.png"), frame)
+
 
     def save_inconsistent_frames(self):
         """
