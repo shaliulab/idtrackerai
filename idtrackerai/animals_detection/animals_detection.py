@@ -196,8 +196,8 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
                 self.video.video_paths,
             )
 
-            with open(pickle_file, "wb") as filehandle:
-                pickle.dump((blobs_in_video, max_num_blobs), filehandle)
+            #with open(pickle_file, "wb") as filehandle:
+            #    pickle.dump((blobs_in_video, max_num_blobs), filehandle)
 
         frames_before = self.video.episodes_start_end[0][0]
         frames_after = self.video.number_of_frames - self.video.episodes_start_end[-1][-1]
