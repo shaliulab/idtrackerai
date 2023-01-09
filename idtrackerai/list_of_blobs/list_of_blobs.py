@@ -553,7 +553,22 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                     identification_image_size, height, width, file
                 )
         return blobs_in_episode
-
+    
+    
+    @property
+    def frame_interval(self):
+        if getattr(self, "_frame_interval") is None:
+            if len(self._start_end_with_blobs) == 0:
+                self._annotate_location_of_blobs()
+            video_path = self.blobs_in_video[self._start_end_with_blobs[0]][0].video_path
+            video_object = np.load(video_path, allow_pickle=True)           
+            self._frame_interval = (
+                video_object.number_of_frames_in_chunk * video_object._chunk,
+                video_object.number_of_frames_in_chunk * (video_object._chunk+1),
+            )
+        
+        return self._frame_interval
+    
     def check_segmentation(
         self, number_of_animals
     ):
@@ -579,6 +594,10 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         frames_with_less_blobs_than_animals = []
         frames_with_imperfect_overlap = []
         for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):
+            if frame_number < self.frame_interval[0]:
+                continue
+            elif frame_number >= self.frame_interval[1]:
+                continue
 
             if len(blobs_in_frame) > number_of_animals:
                 frames_with_more_blobs_than_animals.append(frame_number)
