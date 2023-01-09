@@ -253,7 +253,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
 
 
         self.save_frames(self.video.frames_with_imperfect_overlap, "imperfect/frames")
-        self.save_frames(self.video.frames_with_more_blobs_than_animals, "imperfect/frames")
+        self.save_frames(self.video.frames_with_less_blobs_than_animals, "imperfect/frames")
         self.save_frames(self.video.frames_with_more_blobs_than_animals, "imperfect/frames")    
         
     def save_frames(self, frame_numbers, folder):
