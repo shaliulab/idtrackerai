@@ -254,7 +254,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
 
         # self.save_frames(self.video.frames_with_more_blobs_than_animals, "more")
         # self.save_frames(self.video.frames_with_more_blobs_than_animals, "less")    
-        self.save_frames(self.video.frames_with_imperfect_overlap, "imperfect")
+        self.save_frames(self.video.frames_with_imperfect_overlap, "imperfect/frames")
         
     def save_frames(self, frame_numbers, folder):
         
@@ -273,12 +273,13 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
 
         chunk = self.video._chunk
         first_frame_of_chunk = cap.get("STARTING_FRAME_OF_CHUNK")
-        frame_idx = frame_number - first_frame_of_chunk
         
         for frame_number in frame_numbers:
+            frame_idx = frame_number - first_frame_of_chunk
+            basename = f"{frame_number}_{chunk}-{frame_idx}.png"
             cap.set(1, frame_number)
             ret, frame = cap.read()
-            cv2.imwrite(os.path.join(folder, f"{frame_number}_{chunk}-{frame_idx}.png"), frame)
+            cv2.imwrite(os.path.join(folder, basename), frame)
 
 
     def save_inconsistent_frames(self):
