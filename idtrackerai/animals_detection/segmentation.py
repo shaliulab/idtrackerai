@@ -458,15 +458,21 @@ def _create_blobs_objects(
 
         if save_segmentation_image == "DISK":
             with h5py.File(bounding_box_images_path, "a") as f1:
-                f1.create_dataset(
-                    dataset_name, data=miniframes[i]
-                )
+                try:
+                    f1.create_dataset(
+                        dataset_name, data=miniframes[i]
+                    )
+                except ValueError as error:
+                   print(error)
             miniframes[i] = None
         if save_pixels == "DISK":
             with h5py.File(pixels_path, "a") as f2:
-                f2.create_dataset(
-                    dataset_name, data=pixels[i]
-                )
+                try:
+                    f2.create_dataset(
+                        dataset_name, data=pixels[i]
+                    )
+                except ValueError as error:
+                    print(error)
             pixels[i] = None
 
         blob = Blob(
