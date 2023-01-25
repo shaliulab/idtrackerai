@@ -75,9 +75,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         frame=frame[:,:,0]
     
         label_file=get_label_file_path(input, frame_number, chunk, frame_idx)
-        lines=read_yolov7_label(label_file)
-        detections = [yolo_line_to_detection(line) for line in lines]
-        
+        detections=load_detections(label_file)
 
         for detection in detections:
             detection["keep"] = True
@@ -150,6 +148,12 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
     processed_successfully = len(blobs_in_frame_all)
     return list_of_blobs, processed_successfully, failed_frames
 
+
+def load_detections(label_file):
+
+    lines=read_yolov7_label(label_file)
+    detections = [yolo_line_to_detection(line) for line in lines]
+    return detections
 
 
 def yolo_line_to_detection(line):
