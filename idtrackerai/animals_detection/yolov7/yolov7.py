@@ -167,11 +167,16 @@ def load_detections_from_one_file(label_file, count=None, class_id=None, false_a
             detections=None
 
     if detections is None:
-        false_action(label_file)
+        if false_action:
+            false_action(label_file)
     else:
-        true_action(label_file)
-        
-    return detections
+        if true_action:
+            true_action(label_file)
+
+    if false_action or true_action:
+        return None
+    else:
+        return detections
 
 def load_detections_from_files(label_files, **kwargs):
 
