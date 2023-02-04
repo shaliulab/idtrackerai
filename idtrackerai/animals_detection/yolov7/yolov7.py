@@ -2,8 +2,12 @@ import os.path
 import logging
 import traceback
 import shutil
+import math
+import itertools
+
 import cv2
 import numpy as np
+import joblib
 
 from idtrackerai.animals_detection.segmentation import _create_blobs_objects
 from idtrackerai.animals_detection.segmentation_utils import (
@@ -76,9 +80,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         frame=frame[:,:,0]
     
         label_file=get_label_file_path(input, frame_number, chunk, frame_idx)
-        lines=read_yolov7_label(label_file)
-        detections = [yolo_line_to_detection(line) for line in lines]
-        
+        detections=load_detections_from_one_file(label_file)
 
         for detection in detections:
             detection["keep"] = True
@@ -150,6 +152,67 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         raise error
     
     return list_of_blobs, successful_frames, failed_frames
+
+
+def load_detections_from_one_file(label_file, count=None, class_id=None, false_action=None, true_action=None):
+
+    lines=read_yolov7_label(label_file)
+    detections = [yolo_line_to_detection(line) for line in lines]
+
+    if class_id is not None:
+        detections = [detection for detection in detections if detection[0] == class_id]
+
+    if count is not None:
+        detection_count = len(detections)
+        if detection_count != count:
+            detections=None
+
+    if detections is None:
+        if false_action:
+            false_action(label_file)
+    else:
+        if true_action:
+            true_action(label_file)
+
+    if false_action or true_action:
+        return None
+    else:
+        return detections
+
+def load_detections_from_files(label_files, **kwargs):
+
+    detections = []
+    for label_file in label_files:
+        detections.append(load_detections_from_one_file(label_file, **kwargs))
+    
+    return detections
+
+def load_detections(label_files, n_jobs=1,  **kwargs):
+
+    if n_jobs > 0:
+        jobs = n_jobs
+    else:
+        nproc = os.sched_getaffinity(0)
+        jobs = max(1, nproc - n_jobs)
+    
+    partition_size = math.ceil(len(label_files) / jobs)
+
+    label_files_partition = [
+        label_files[(i*partition_size):(i*(partition_size+1))]
+        for i in range(jobs)
+    ]
+
+    detections = joblib.Parallel(n_jobs=n_jobs)(
+        joblib.delayed(load_detections_from_files)(files, **kwargs)
+        for files in label_files_partition
+    )
+
+    detections = list(itertools.chain(*detections))
+
+    assert len(detections) == len(label_files)
+
+    return detections
+
 
 
 
