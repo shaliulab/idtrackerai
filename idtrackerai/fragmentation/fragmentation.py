@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 from abc import ABC, abstractmethod
+import os.path
 import logging
 import warnings
 import time
@@ -41,7 +42,46 @@ from idtrackerai.list_of_fragments import (
     create_list_of_fragments,
 )
 
+from imgstore.stores.utils.mixins.extract import _extract_store_metadata
+
 logger = logging.getLogger(__name__)
+
+def show_fragment_structure(chunk=None, seconds=None, list_of_fragments=None):
+
+    assert seconds is not None
+
+    if list_of_fragments is None:
+
+        fragment_file = os.path.join(f"session_{str(chunk).zfill(6)}", "preprocessing", "fragments.npy")
+        video_file = os.path.join(f"session_{str(chunk).zfill(6)}", "video_object.npy")
+        video_object = np.load(video_file, allow_pickle=True).item()
+        assert os.path.exists(fragment_file), f"{fragment_file} not found"
+        list_of_fragments = np.load(fragment_file, allow_pickle=True).item()
+
+        store_md = os.path.realpath(video_object.video_path)
+        assert os.path.exists(store_md), f"Path to metadata.yaml ({store_md}) not found"
+        metadata = _extract_store_metadata(store_md)
+        framerate = metadata["framerate"]
+    else:
+        framerate = 100
+
+    structure = []
+
+    for fragment in list_of_fragments.fragments:
+        length = fragment.start_end[1] - fragment.start_end[0]
+        followed = fragment.start_end[1] !=  video_object.episodes_start_end[-1][-1]
+        if followed:
+            followed_str="FOLLOWED"
+        else:
+            followed_str="BROKEN"
+
+        structure.append((fragment.start_end, length, length > (framerate * seconds), fragment.identity, followed_str))
+        print("FRAGMENT STRUCTURE: ", end = "")
+        for field in structure[-1]:
+            print(field, end=" ")
+        print("")
+
+    return structure
 
 
 class FragmentationABC(ABC):
@@ -122,6 +162,9 @@ class FragmentationAPI(FragmentationABC):
             fragments,
             self.video.identification_images_file_paths,
         )
+
+        show_fragment_structure(seconds=1, list_of_fragments=list_of_fragments)
+        
         self._update_video_object_with_fragments(list_of_fragments)
         return list_of_fragments
 

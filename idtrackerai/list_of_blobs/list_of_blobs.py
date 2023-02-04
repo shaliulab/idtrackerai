@@ -32,6 +32,7 @@
 import itertools
 import logging
 import sys
+import os.path
 import codetiming
 import traceback
 import h5py
@@ -42,6 +43,8 @@ from tqdm import tqdm
 from idtrackerai.blob import Blob
 from .feed_integration import bypass_crossings
 from idtrackerai.utils.py_utils import interpolate_nans, find_blob
+from imgstore.stores.utils.mixins.extract import _extract_store_metadata
+
 
 from .parallel import ParallelBlobOverlap
 from .overlap import (
@@ -557,14 +560,16 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
     
     @property
     def frame_interval(self):
-        if getattr(self, "_frame_interval") is None:
+        if getattr(self, "_frame_interval", None) is None:
             if len(self._start_end_with_blobs) == 0:
                 self._annotate_location_of_blobs()
+            chunk = self.blobs_in_video[self._start_end_with_blobs[0]][0].chunk
             video_path = self.blobs_in_video[self._start_end_with_blobs[0]][0].video_path
-            video_object = np.load(video_path, allow_pickle=True)           
+            metadata = _extract_store_metadata(video_path)
+            chunksize = metadata["chunksize"]
             self._frame_interval = (
-                video_object.number_of_frames_in_chunk * video_object._chunk,
-                video_object.number_of_frames_in_chunk * (video_object._chunk+1),
+                chunksize * chunk,
+                chunksize * (chunk+1),
             )
         
         return self._frame_interval
