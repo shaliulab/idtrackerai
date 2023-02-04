@@ -67,6 +67,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
     
     blobs_in_frame_all = []
     failed_frames = []
+    successful_frames = []
 
     cap = cv2.VideoCapture(video_path)
     for frame_number, frame_idx in frames:
@@ -124,6 +125,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
                 print(f"Could not process YOLOv7 predictions in frame {frame_number}")
                 continue
             blobs_in_frame_all.append((frame_number, blobs_in_frame))
+            successful_frames.append(frame_number)
         else:
             failed_frames.append(frame_number)
             logger.debug(f"YOLOv7 failed in frame {frame_number}")
@@ -147,8 +149,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         shutil.copy(f"{blobs_collection}.bak", blobs_collection)
         raise error
     
-    processed_successfully = len(blobs_in_frame_all)
-    return list_of_blobs, processed_successfully, failed_frames
+    return list_of_blobs, successful_frames, failed_frames
 
 
 

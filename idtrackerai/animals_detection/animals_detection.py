@@ -34,6 +34,7 @@ import os
 import logging
 import time
 import pickle
+import glob
 from confapp import conf
 
 from idtrackerai.video import Video
@@ -249,12 +250,17 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         return consistent_segmentation
     
     
-    def save_incomplete_frames(self):
+    def save_incomplete_frames(self, folder):
 
+        self.save_frames(self.video.frames_with_imperfect_overlap, folder)
+        self.save_frames(self.video.frames_with_less_blobs_than_animals, folder)
+        self.save_frames(self.video.frames_with_more_blobs_than_animals, folder)
 
-        self.save_frames(self.video.frames_with_imperfect_overlap, "imperfect/frames")
-        self.save_frames(self.video.frames_with_less_blobs_than_animals, "imperfect/frames")
-        self.save_frames(self.video.frames_with_more_blobs_than_animals, "imperfect/frames")    
+    def remove_frames(self, folder, chunk):
+        files = sorted(glob.glob(os.path.join(folder, f"*_{chunk}-*")))
+        print(f"Removing {files}")
+        for file in files:
+            os.remove(file)
         
     def save_frames(self, frame_numbers, folder):
         
