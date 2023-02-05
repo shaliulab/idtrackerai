@@ -304,7 +304,7 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
     Arguments:
     
     * frame (np.ndarray):
-    * detection (dict):
+    * detections (list):
     * kwargs: Extra arguments to _create_blobs_objects
     """
 
@@ -359,8 +359,9 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
         modified=True,
         **kwargs
     )
-    for blob in blobs_in_frame:
+    for i, blob in enumerate(blobs_in_frame):
         blob.modified=True
+        blob._annotation["class"]=detection[i]["class_name"]
         blob.segmentation_contour = blob.contour.copy()
         bbox=blob.bounding_box_in_frame_coordinates
         bbox = [bbox[0][0], bbox[0][1], bbox[1][0]-bbox[0][0], bbox[1][1]-bbox[0][1]]
