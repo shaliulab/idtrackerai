@@ -107,7 +107,7 @@ def assign_P2_to_identity(P2_vector, identity, frame_number, id_probabilities):
     return id_probabilities
 
 
-def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
+def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals, chunk=None):
     """Produce trajectories array from ListOfBlobs
 
     Parameters
@@ -135,7 +135,13 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
     if conf.SAVE_AREAS:
         areas = np.ones((number_of_frames, number_of_animals)) * np.NaN
 
-    for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video, desc="Producing trajectories")):
+
+    if chunk is None:
+        desc="Producing trajectories for chunk"
+    else:
+        desc=f"Producing trajectories for chunk {chunk}"
+
+    for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video, desc=desc)):
 
         for blob in blobs_in_frame:
             for identity, centroid in zip(

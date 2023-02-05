@@ -463,7 +463,11 @@ def _create_blobs_objects(
                         dataset_name, data=miniframes[i]
                     )
                 except ValueError as error:
-                   print(error)
+                    if dataset_name.endswith("-modified"):
+                        f1[dataset_name][:] = miniframes[i]
+                    else:
+                        raise error
+
             miniframes[i] = None
         if save_pixels == "DISK":
             with h5py.File(pixels_path, "a") as f2:
@@ -472,7 +476,11 @@ def _create_blobs_objects(
                         dataset_name, data=pixels[i]
                     )
                 except ValueError as error:
-                    print(error)
+                    if dataset_name.endswith("-modified"):
+                        f2[dataset_name][:] = pixels[i]
+                    else:
+                       raise error
+
             pixels[i] = None
 
         blob = Blob(

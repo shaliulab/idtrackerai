@@ -27,7 +27,7 @@ logger=logging.getLogger(__name__)
 
 yolov7_repo = "/scratch/leuven/333/vsc33399/Projects/YOLOv7/yolov7"
 
-def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes=None, save=True, **kwargs):
+def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes=None, minimum_confidence=None, save=True, **kwargs):
     """
     Correct idtrackerai preprocessing errors with YOLOv7 results,
     which should be made available in the runs/detect folder of the YOLOv7 repository
@@ -49,7 +49,10 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         * allowed_classes (iterable): id of the classes taken from the yolov7 output
         
     Returns:
-        None
+        * list_of_blobs
+        * successful_frames (list): Frame number of frames where the number of objects of the allowed class matches the expected.
+        which is the number of animals recorded in the video_object of the chunk
+        * failed_frames (list): Frame numbers where this condition is not met
     """
 
     assert len(frames) > 0
@@ -61,23 +64,26 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
     session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
     number_of_animals=video_object._user_defined_parameters["number_of_animals"]
     
-
-    # TODO Let's get a more robust way of getting the experiment
-    # maybe as a property of the metadata
-    # experiment = os.path.sep.join(
-    #     os.path.dirname(store_path).split(os.path.sep)[-3:]
-    # )
     
-    # get the problematic frame
     video_path=os.path.join(os.path.dirname(store_path), f"{str(chunk).zfill(6)}.mp4")
     assert os.path.exists(video_path)
     
     blobs_in_frame_all = []
     failed_frames = []
+    successful_frames = []
+
+
+    def record_failed_frame(fn):
+        failed_frames.append(fn)
+        logger.debug(f"YOLOv7 failed in frame {frame_number}")
 
     cap = cv2.VideoCapture(video_path)
+    last_frame_idx = 0
     for frame_number, frame_idx in frames:
-        cap.set(1, frame_idx)
+        if frame_idx != (last_frame_idx+1):
+            cap.set(1, frame_idx)
+        last_frame_idx = frame_idx
+        assert cap.get(1) == frame_idx
         ret, frame = cap.read()
         frame=frame[:,:,0]
     
@@ -95,7 +101,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
                 logger.info(f"MULTILABEL RESOLVED {label_file}")
 
             elif len(detections) > number_of_animals:
-                # if it's still too many detections are found, keep the ones with the most confidence
+                # if still too many detections are found, keep the ones with the most confidence
                 detections = keep_best_detections(detections, number_of_animals)
                 logger.info(f"FILTERING detections in {label_file} w confidence >= {detections[-1]['confidence']}")
             else:
@@ -103,23 +109,25 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
 
 
         if len(detections) == 0:
-            print(f"No detections found for frame_number {frame_number}")
-            logger.debug(f"Label file {label_file}")
+            record_failed_frame(frame_number)
             continue
 
         if allowed_classes is not None:
             detections=[detection for detection in detections if detection["class"] in allowed_classes]
 
+
+        if minimum_confidence is not None:
+            detections=[detection for detection in detections if detection["confidence"] > minimum_confidence]
+            
+
         if len(detections) == 0:
-            print(f"No detections found for frame_number {frame_number} for allowed classes {allowed_classes}")
-            logger.debug(f"Label file {label_file}")
+            record_failed_frame(frame_number)
             continue
 
-
-        kwargs.update(load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx))
-        config=kwargs["segmentation_parameters"]
-        
         if len(detections) == video_object.user_defined_parameters["number_of_animals"]:
+            
+            kwargs.update(load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx))
+            config=kwargs["segmentation_parameters"]
             segmented_frame, _ = apply_segmentation_criteria(frame, config)
             try:
                 blobs_in_frame = yolo_detections_to_blobs(frame, segmented_frame, detections, frame_number=frame_number, **kwargs)
@@ -127,11 +135,13 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
                 logger.error(error)
                 logger.error(traceback.print_exc())
                 print(f"Could not process YOLOv7 predictions in frame {frame_number}")
+                record_failed_frame(frame_number)
                 continue
             blobs_in_frame_all.append((frame_number, blobs_in_frame))
+            successful_frames.append(frame_number)
         else:
-            failed_frames.append(frame_number)
-            logger.debug(f"YOLOv7 failed in frame {frame_number}")
+            record_failed_frame(frame_number)        
+        # end of for loop over frames
         
     cap.release()
 
@@ -152,8 +162,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         shutil.copy(f"{blobs_collection}.bak", blobs_collection)
         raise error
     
-    processed_successfully = len(blobs_in_frame_all)
-    return list_of_blobs, processed_successfully, failed_frames
+    return list_of_blobs, successful_frames, failed_frames
 
 
 def load_detections_from_one_file(label_file, count=None, class_id=None, false_action=None, true_action=None, class_names={}):
