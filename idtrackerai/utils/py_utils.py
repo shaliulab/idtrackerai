@@ -35,11 +35,32 @@ import logging
 import multiprocessing
 import os
 import re
+import requests
+from tqdm.auto import tqdm
 
 import numpy as np
 from matplotlib import cm
 
 logger = logging.getLogger("__main__.py_utils")
+
+def list_files(path, wildcard=".*"):
+    
+    print(f"Listing files in {path}...")
+    f = requests.get(path)
+    lines = f.content.decode()
+    files = []
+    for line in tqdm(lines, desc="Generating list of files"):
+        fname = re.search(f"<li><a href=({wildcard})>({wildcard})</a></li>", line).group(1)
+        file = os.path.join(path, fname)
+        files.append(file)
+
+    return files
+
+
+def download_file(source, dest):
+    file = requests.get(source)
+    return open(dest, 'wb').write(file.content)
+
 
 ### MKL
 def set_mkl_to_single_thread():
