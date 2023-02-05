@@ -3,8 +3,10 @@ import logging
 import traceback
 import shutil
 import math
+import tempfile
 import itertools
 
+from tqdm.auto import tqdm
 import cv2
 import numpy as np
 import joblib
@@ -19,6 +21,7 @@ from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.utils.py_utils import read_json_file
 from idtrackerai.animals_detection.yolov7.nms_multilabel import resolve_multilabel
 from idtrackerai.animals_detection.yolov7.filter import keep_best_detections
+from idtrackerai.utils.py_utils import download_file
 
 logger=logging.getLogger(__name__)
 
@@ -153,35 +156,38 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
     return list_of_blobs, processed_successfully, failed_frames
 
 
-def load_detections_from_one_file(label_file, count=None, class_id=None, false_action=None, true_action=None):
+def load_detections_from_one_file(label_file, count=None, class_id=None, false_action=None, true_action=None, class_names={}):
 
     lines=read_yolov7_label(label_file)
-    detections = [yolo_line_to_detection(line) for line in lines]
+    detections = [yolo_line_to_detection(line, class_names) for line in lines]
+    result=detections
+    experiment="_".join(label_file.split("idtrackerai")[0].split(os.path.sep)[-3:])
+    
 
     if class_id is not None:
-        detections = [detection for detection in detections if detection[0] == class_id]
+        detections = [detection for detection in detections if detection["class"] == class_id]
 
     if count is not None:
         detection_count = len(detections)
         if detection_count != count:
-            detections=None
+            result=None
 
-    if detections is None:
+    if result is None:
         if false_action:
-            false_action(label_file)
+            false_action(label_file, detections=detections, experiment=experiment)
     else:
         if true_action:
-            true_action(label_file)
+            true_action(label_file, detections=detections, experiment=experiment)
 
     if false_action or true_action:
         return None
     else:
-        return detections
+        return result
 
 def load_detections_from_files(label_files, **kwargs):
 
     detections = []
-    for label_file in label_files:
+    for label_file in tqdm(label_files, desc="Loading detections"):
         detections.append(load_detections_from_one_file(label_file, **kwargs))
     
     return detections
@@ -193,15 +199,15 @@ def load_detections(label_files, n_jobs=1,  **kwargs):
     else:
         nproc = os.sched_getaffinity(0)
         jobs = max(1, nproc - n_jobs)
-    
+
     partition_size = math.ceil(len(label_files) / jobs)
 
     label_files_partition = [
-        label_files[(i*partition_size):(i*(partition_size+1))]
+        label_files[(i*partition_size):((i+1)*partition_size)]
         for i in range(jobs)
     ]
 
-    detections = joblib.Parallel(n_jobs=n_jobs)(
+    detections = joblib.Parallel(n_jobs=jobs)(
         joblib.delayed(load_detections_from_files)(files, **kwargs)
         for files in label_files_partition
     )
@@ -215,7 +221,7 @@ def load_detections(label_files, n_jobs=1,  **kwargs):
 
 
 
-def yolo_line_to_detection(line):
+def yolo_line_to_detection(line, class_names={}):
     """
     
     Argumennts:
@@ -243,6 +249,9 @@ def yolo_line_to_detection(line):
         "bounding_box": bounding_box
     }
     
+    if class_names:
+        detection["class_name"]=class_names[line[0]]
+
     if len(line) == 6:
         detection["confidence"] =line[5]
     
@@ -398,6 +407,13 @@ def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_num
     assert os.path.exists(kwargs["pixels_path"])
 
 def read_yolov7_label(label_file):
+
+    if label_file.startswith("http://"):
+        extension = os.path.splitext(label_file)[1]
+        temp_file = tempfile.mktemp(prefix="yolov7", suffix=extension)
+        download_file(label_file, temp_file)
+        label_file = temp_file
+
     with open(label_file, "r") as filehandle:
         lines = filehandle.readlines()
         lines = [line.strip() for line in lines]
