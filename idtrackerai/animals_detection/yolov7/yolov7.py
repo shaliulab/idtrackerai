@@ -88,7 +88,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         frame=frame[:,:,0]
     
         label_file=get_label_file_path(input, frame_number, chunk, frame_idx)
-        detections=load_detections_from_one_file(label_file)
+        detections=load_detections_from_one_file(label_file, class_names=allowed_classes)
 
         for detection in detections:
             detection["keep"] = True
@@ -370,7 +370,8 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
     )
     for i, blob in enumerate(blobs_in_frame):
         blob.modified=True
-        blob._annotation["class"]=detection[i]["class_name"]
+        blob._annotation["class"]=detections[i]["class_name"]
+        blob._annotation["confidence"]=detections[i]["confidence"]
         blob.segmentation_contour = blob.contour.copy()
         bbox=blob.bounding_box_in_frame_coordinates
         bbox = [bbox[0][0], bbox[0][1], bbox[1][0]-bbox[0][0], bbox[1][1]-bbox[0][1]]
