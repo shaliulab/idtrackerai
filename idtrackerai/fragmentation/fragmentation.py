@@ -46,23 +46,40 @@ from imgstore.stores.utils.mixins.extract import _extract_store_metadata
 
 logger = logging.getLogger(__name__)
 
-def show_fragment_structure(chunk, seconds=None, list_of_fragments=None):
+def show_fragment_structure(chunk, min_duration=None, list_of_fragments=None):
+    """
+    Get a detailed overview of the fragmentation results for a given chunk
+    
+    Args:
+        chunk (int): Chunk number of an imgstore dataset
+        min_duration (int): Minimal duration of a fragment for it to be considered significant (seconds)
+        list_of_fragments (idtrackerai.list_of_fragments.ListOfFragments): Optional, list of fragments instance corresponding to the requested chunk
 
-    assert seconds is not None
-    fragment_file = os.path.join(f"session_{str(chunk).zfill(6)}", "preprocessing", "fragments.npy")
+    Return:
+        structure (list) For every fragment, the following information:
+            * start_end: first and last frame number where the fragment is present. last frame follows Python convention (= actually first frame after the fragment is over)
+            * length (length of the fragment (i.e. the diff of start_end)
+            * whether the fragment is longer than the min_duration
+            * the identity of the fragment (fragment identifier, not to be confused with blob identity)
+            * annotation. One of FOLLOWED or FINISH. FOLLOWED means there should be another fragment after this for the same animal. FINISH otherwise
+
+    Note: annotation is used in idtrackerai_app.cli.annotation.annotation to decide where does each scene start/end
+    """
+
+
+    assert min_duration is not None
     video_file = os.path.join(f"session_{str(chunk).zfill(6)}", "video_object.npy")
     video_object = np.load(video_file, allow_pickle=True).item()
 
     if list_of_fragments is None:
-
+        fragment_file = os.path.join(f"session_{str(chunk).zfill(6)}", "preprocessing", "fragments.npy")
         assert os.path.exists(fragment_file), f"{fragment_file} not found"
         list_of_fragments = np.load(fragment_file, allow_pickle=True).item()
-        store_md = os.path.realpath(video_object.video_path)
-        assert os.path.exists(store_md), f"Path to metadata.yaml ({store_md}) not found"
-        metadata = _extract_store_metadata(store_md)
-        framerate = metadata["framerate"]
-    else:
-        framerate = 100
+
+    store_md = os.path.realpath(video_object.video_path)
+    assert os.path.exists(store_md), f"Path to metadata.yaml ({store_md}) not found"
+    metadata = _extract_store_metadata(store_md)
+    framerate = metadata["framerate"]
 
     structure = []
 
@@ -74,7 +91,7 @@ def show_fragment_structure(chunk, seconds=None, list_of_fragments=None):
         else:
             followed_str="FINISH"
 
-        structure.append((fragment.start_end, length, length > (framerate * seconds), fragment.identity, followed_str))
+        structure.append((fragment.start_end, length, length > (framerate * min_duration), fragment.identity, followed_str))
         print("FRAGMENT STRUCTURE: ", end = "")
         for field in structure[-1]:
             print(field, end=" ")
@@ -164,7 +181,7 @@ class FragmentationAPI(FragmentationABC):
 
         chunk = getattr(self.video, "_chunk", None)
         if chunk is not None:
-            show_fragment_structure(chunk=chunk, seconds=1, list_of_fragments=list_of_fragments)
+            show_fragment_structure(chunk=chunk, min_duration=1, list_of_fragments=list_of_fragments)
         
         self._update_video_object_with_fragments(list_of_fragments)
         return list_of_fragments
