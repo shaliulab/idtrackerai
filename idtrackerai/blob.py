@@ -191,7 +191,7 @@ class Blob(object):
         self.video_path = video_path
         self.chunk = chunk
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
-        self.modified = modified 
+        self.modified = modified
         self._resolution_reduction = resolution_reduction
         self._rotation_angle = None
 
@@ -238,12 +238,12 @@ class Blob(object):
         if getattr(self, "_annotation", None) is None:
             self._annotation={}
         return self._annotation
-        
+
     def get_rotation_angle(self, height, width):
         if getattr(self, "_rotation_angle", None) is None:
             self._rotation_angle, _, _ = _get_rotation_angle(self.pixels, height, width)
-            
-       
+
+
         return self._rotation_angle
 
 
@@ -275,9 +275,9 @@ class Blob(object):
     def bridge_start(self):
         if getattr(self, "_bridge_start", None) is None:
             self._bridge_start = None
-        
+
         return self._bridge_start
-    
+
     @bridge_start.setter
     def bridge_start(self, value):
         if getattr(self, "_bridge_start", None) is None:
@@ -286,14 +286,14 @@ class Blob(object):
             print(f"Already a bridge start ({self._bridge_start})")
             import ipdb; ipdb.set_trace()
             # raise Exception(f"Already a bridge start ({self.bridge_start})")
-   
+
     @property
     def bridge_end(self):
         if getattr(self, "_bridge_end", None) is None:
             self._bridge_end = None
-        
+
         return self._bridge_end
-    
+
     @bridge_end.setter
     def bridge_end(self, value):
         if getattr(self, "_bridge_end", None) is None:
@@ -308,9 +308,9 @@ class Blob(object):
     def source_fragment_identifier(self):
         if getattr(self, "_source_fragment_identifier", None) is None:
             self._source_fragment_identifier = None
-        
+
         return self._source_fragment_identifier
-    
+
 
     @source_fragment_identifier.setter
     def source_fragment_identifier(self, value):
@@ -449,11 +449,11 @@ class Blob(object):
             Set of integers indicating the linarized indices of the pixels
             that represent the blob.
         """
-        
+
         # NOTE:
         # I changed
         # self._pixels_set
-        # for 
+        # for
         # getattr(self, "_pixels_set", None)
         # because old blob files dont serialize this property
         if getattr(self, "_pixels_set", None) is None:
@@ -823,9 +823,9 @@ class Blob(object):
         self_mask = cv2.drawContours(mask.copy(), [self.contour], -1, 255, -1)
         other_mask = cv2.drawContours(mask.copy(), [other.contour], -1, 255, -1)
         intersection = cv2.bitwise_and(self_mask, other_mask)
-        
+
         return round(intersection.sum() / self_mask.sum(), 3)
-    
+
 
     def fragment_transfer_overlaps_with(self, other):
         """
@@ -836,13 +836,13 @@ class Blob(object):
 
         self_source_f_identifier = self.source_fragment_identifier
         other_source_f_identifier = other.source_fragment_identifier
-        
+
         if self_source_f_identifier is not None and other_source_f_identifier is not None:
                 if self_source_f_identifier == other_source_f_identifier:
                     return True
                 else:
                     return False
-            
+
 
     def overlaps_with(self, other, use_fragment_transfer_info=False, only_use_fragment_transfer_info=False):
         """Computes whether the pixels in `self` intersect with the pixels in
@@ -892,21 +892,21 @@ class Blob(object):
             overlaps = False
         return overlaps
 
-    
+
     def reset_next(self):
-        
+
         for blob in self.next:
             blob.previous.pop(blob.previous.index(self))
-            
+
         self.next = []
         self._cache_next_and_previous()
-        
-        
+
+
     def reset_previous(self):
-        
+
         for blob in self.previous:
             blob.next.pop(blob.next.index(self))
-            
+
         self.previous = []
         self._cache_next_and_previous()
 
@@ -919,7 +919,7 @@ class Blob(object):
         other : <Blob object>
             An instance of the class Blob
         """
-        
+
         assert other.frame_number > self.frame_number
 
         self.next.append(other)
@@ -970,10 +970,10 @@ class Blob(object):
             value=self._resolution_reduction
         else:
             value=1.0
-            
+
         if isinstance(value, dict):
             value = value["value"]
-            
+
         return value
 
     @property
@@ -1174,7 +1174,7 @@ class Blob(object):
             Square image with black background used to train the crossings
             detector CNN and the identifiactio CNN.
         """
-        
+
         pixels = self.pixels
         bounding_box_image=self.bounding_box_image
         try:
@@ -1193,7 +1193,7 @@ class Blob(object):
                 self.pixels = np.array(new_pixels)
                 pixels = self.pixels
 
-                
+
             image, delay, rot_angle =self._get_image_for_identification(
                 height,
                 width,
@@ -1205,7 +1205,7 @@ class Blob(object):
         except Exception as error:
             print(f"Could not process blob in frame {self.frame_number}")
             raise error
-        
+
         if rot_angle is not None:
             self._rotation_angle = rot_angle
 
@@ -1256,7 +1256,7 @@ class Blob(object):
             pixels,
             bounding_box_in_frame_coordinates,
         )
-    
+
         try:
             every=1
             with open("debug_pca.txt", "r") as filehandle:
@@ -1797,13 +1797,13 @@ class Blob(object):
                 else:
                     id_pos = i
                     new_identity = int(e)
-            
+
             if (np.array(stop_propagation) < id_pos).any():
                 past = False
-            
+
             if (np.array(stop_propagation) > id_pos).any():
                 future = False
-        
+
         else:
             new_identity = int(new_identity)
 
@@ -1923,6 +1923,8 @@ class Blob(object):
             f"{self.is_a_sure_individual()}-"
             f"{self.is_a_sure_crossing()}\n"
         )
+        in_frame_index = f"in frame index: {self.in_frame_index}\n"
+
         individual_crossing = (
             f"individual-crossing: "
             f"{self.is_an_individual}-"
@@ -1974,6 +1976,7 @@ class Blob(object):
             + final_identities
             + final_centroids
             + unique_index
+            + in_frame_index
             + borders_crossing_scene
             + is_split
             + frame_number
@@ -2118,7 +2121,7 @@ class Blob(object):
             return self.in_frame_index
 
         # this is safer because it's guaranteed to be unique
-        # even if we add 
+        # even if we add
         elif self._use_coordinates_in_frame:
             return self.bounding_box_in_frame_coordinates
 
@@ -2168,7 +2171,7 @@ class Blob(object):
     def modified(self):
         value = getattr(self, "_modified", False)
         return value
-    
+
     @modified.setter
     def modified(self, value):
         self._modified = value
@@ -2267,4 +2270,4 @@ def _transform_to_bbox_coordinates(point, bounding_box):
         np.asarray(point)
         - np.asarray([bounding_box[0][0], bounding_box[0][1]])
     )
-    
+
