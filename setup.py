@@ -69,7 +69,7 @@ requirements = [
     "dask >= 0.17.0",
     #"opencv-python == 3.4.5.20",
     "opencv-python == 3.4.8.29",
-    "confapp >= 1.1.11",
+    #"confapp-shaliulab >= 1.1.11",
     "gdown >= 3.10.0",
     "codetiming",
 ]
