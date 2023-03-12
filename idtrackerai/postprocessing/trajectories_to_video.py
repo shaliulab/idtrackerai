@@ -37,10 +37,11 @@ from tqdm import tqdm
 
 from idtrackerai.utils.py_utils import get_spaced_colors_util
 
-try:
-    from imgstore.interface import VideoCapture
-except ModuleNotFoundError:
-    from cv2 import VideoCapture
+# try:
+#     from imgstore.interface import VideoCapture
+# except ModuleNotFoundError:
+#     from cv2 import VideoCapture
+from cv2 import VideoCapture
 
 
 def writeIds(
@@ -102,19 +103,23 @@ def apply_func_on_frame(
     func=None,
     centroid_trace_length=10,
 ):
+
+    # import ipdb; ipdb.set_trace()
+    frame_idx=frame_number
+    frame_number += video_object._episodes_start_end[0][0]
     segment_number = video_object.in_which_episode(frame_number)
     if cap is None:
-        cap = VideoCapture(video_object.video_paths[segment_number], chunk=video_object._chunk)
+        cap = VideoCapture(video_object.video_paths[segment_number])
         start = video_object._episodes_start_end[segment_number][0]
-        cap.set(1, frame_number - start)
+        cap.set(1, frame_idx - start)
     else:
-        cap.set(1, frame_number)
+        cap.set(1, frame_idx)
     ret, frame = cap.read()
     if ret:
         frame = func(
             video_object,
             frame,
-            frame_number,
+            frame_idx,
             trajectories,
             centroid_trace_length,
             colors,
@@ -130,6 +135,8 @@ def generate_trajectories_video(
     centroid_trace_length=10,
     starting_frame=0,
     ending_frame=None,
+    downsample=1,
+    framerate=None
 ):
 
     video_name = (
@@ -139,17 +146,28 @@ def generate_trajectories_video(
     colors = get_spaced_colors_util(
         video_object.user_defined_parameters["number_of_animals"], black=False
     )
+
+    if framerate is None:
+        framerate=video_object.frames_per_second
+
     path_to_save_video = os.path.join(video_object._session_folder, video_name)
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
+    frameSize=(video_object.original_width, video_object.original_height)
+
     video_writer = cv2.VideoWriter(
         path_to_save_video,
         fourcc,
-        video_object.frames_per_second,
-        (video_object.original_width, video_object.original_height),
+        fps=framerate,
+        frameSize=frameSize,
     )
 
     if len(video_object.video_paths) == 1:
-        cap = VideoCapture(video_object.video_path, chunk=video_object._chunk)
+        if video_object.video_paths[0] == "../metadata.yaml":
+            video_path = os.path.join(os.path.dirname(video_object.video_paths[0]), f"{str(video_object._chunk).zfill(6)}.mp4")
+        else:
+            video_path = video_object.video_paths[0]
+
+        cap = VideoCapture(video_path)
     else:
         cap = None
 
@@ -157,7 +175,7 @@ def generate_trajectories_video(
         ending_frame = len(trajectories)
 
     for frame_number in tqdm(
-        range(starting_frame, ending_frame),
+        range(starting_frame, ending_frame, downsample),
         desc="Generating video with trajectories...",
     ):
         frame = apply_func_on_frame(
@@ -168,8 +186,9 @@ def generate_trajectories_video(
             colors,
             cap=cap,
             func=writeIds,
-            centroid_trace_length=centroid_trace_length,
+            centroid_trace_length=int(centroid_trace_length/downsample),
         )
+        assert frame is not None
         video_writer.write(frame)
 
 

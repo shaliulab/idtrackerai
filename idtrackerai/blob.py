@@ -1988,7 +1988,7 @@ class Blob(object):
 
     def draw(
         self, frame, colors_lst=None, selected_id=None, is_selected=False,
-        scale_multiplier=1
+        scale_multiplier=1, write_identity=True, blob_index=False, write_contour=True,
     ):
         """[Validation] Draw the blob in a given frame of the video.
 
@@ -2003,6 +2003,8 @@ class Blob(object):
         is_selected : bool, optional
             Flag indicated if the blob has been selected by the user,
             by default False
+        blob_index: bool, optional
+            If True, also write the blob index of this blob in parenthesis
         """
 
         contour = self.contour_full_resolution
@@ -2023,7 +2025,7 @@ class Blob(object):
             else:
                 color = (0, 0, 255)
 
-            if contour is not None:
+            if contour is not None and write_contour:
                 if not is_selected:
                     cv2.polylines(
                         frame, np.array([contour]), True, (0, 255, 0), 1
@@ -2057,7 +2059,12 @@ class Blob(object):
                 ):
                     idroot = "c-"
 
-                idstr = idroot + str(identity)
+                if write_identity:
+                    idstr = idroot + str(identity)
+                else:
+                    idstr = ""
+                if blob_index:
+                    idstr += f" ({self.in_frame_index})"
                 text_size = cv2.getTextSize(
                     idstr, cv2.FONT_HERSHEY_SIMPLEX, 1.0, thickness=2
                 )
@@ -2097,7 +2104,14 @@ class Blob(object):
                     frame, bounding_box[0], bounding_box[1], rect_color, 2
                 )
 
-                idstr = "0"
+                if write_identity:
+                    idstr = "0"
+                else:
+                    idstr = ""
+
+                if blob_index:
+                    idstr += f" ({self.in_frame_index})"
+
                 text_size = cv2.getTextSize(
                     idstr, cv2.FONT_HERSHEY_SIMPLEX, 1.0, thickness=2
                 )

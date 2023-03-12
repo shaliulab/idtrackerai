@@ -22,6 +22,7 @@ from idtrackerai.utils.py_utils import read_json_file
 from idtrackerai.animals_detection.yolov7.nms_multilabel import resolve_multilabel
 from idtrackerai.animals_detection.yolov7.filter import keep_best_detections
 from idtrackerai.utils.py_utils import download_file
+from idtrackerai.animals_detection.yolov7.detection import Detection
 
 logger=logging.getLogger(__name__)
 
@@ -32,22 +33,22 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
     Correct idtrackerai preprocessing errors with YOLOv7 results,
     which should be made available in the runs/detect folder of the YOLOv7 repository
     under a folder called like the experiment
-    
+
     The function loads the list_of_blobs,
     modifies it with the information collected from the YOLOv7 output
     and saves it back to the original file
-    
+
     The attribute yolov7_annotated of the list_of_blobs contains the frame number
     of the frames where a modification has been made
 
     Arguments:
-    
+
         * store_path (str): Path to the metadata.yaml file of the imgstore
         * chunk (int): Chunk to be processed
         * frames (list): frame_number, frame_idx tuples for each frame in the experiment where idtrackerai preprocessing failed
         * input (str): Path to folder with labels (each frame must have a corresponding label here)
         * allowed_classes (iterable): id of the classes taken from the yolov7 output
-        
+
     Returns:
         * list_of_blobs
         * successful_frames (list): Frame number of frames where the number of objects of the allowed class matches the expected.
@@ -56,18 +57,17 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
     """
 
     assert len(frames) > 0
-    
+
     idtrackerai_folder=os.path.join(os.path.dirname(store_path), "idtrackerai")
     video_object_path = os.path.join(idtrackerai_folder, f"session_{str(chunk).zfill(6)}", "video_object.npy")
     assert os.path.exists(video_object_path)
     video_object = np.load(video_object_path, allow_pickle=True).item()
     session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
     number_of_animals=video_object._user_defined_parameters["number_of_animals"]
-    
-    
+
     video_path=os.path.join(os.path.dirname(store_path), f"{str(chunk).zfill(6)}.mp4")
     assert os.path.exists(video_path)
-    
+
     blobs_in_frame_all = []
     failed_frames = []
     successful_frames = []
@@ -86,14 +86,10 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         assert cap.get(1) == frame_idx
         ret, frame = cap.read()
         frame=frame[:,:,0]
-    
+
         label_file=get_label_file_path(input, frame_number, chunk, frame_idx)
         detections=load_detections_from_one_file(label_file, class_names=allowed_classes)
 
-        for detection in detections:
-            detection["keep"] = True
-            detection["overwrites"] = False
-            
         if len(detections) > number_of_animals:
             # if two detections highly overlap, keep the blurry
             detections=resolve_multilabel(detections)
@@ -103,7 +99,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
             elif len(detections) > number_of_animals:
                 # if still too many detections are found, keep the ones with the most confidence
                 detections = keep_best_detections(detections, number_of_animals)
-                logger.info(f"FILTERING detections in {label_file} w confidence >= {detections[-1]['confidence']}")
+                logger.info(f"FILTERING detections in {label_file} w confidence >= {detections[-1].conf}")
             else:
                 logger.info(f"FAIL {label_file}")
 
@@ -113,24 +109,24 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
             continue
 
         if allowed_classes is not None:
-            detections=[detection for detection in detections if detection["class"] in allowed_classes]
+            detections=[detection for detection in detections if detection.class_id in allowed_classes]
 
 
         if minimum_confidence is not None:
-            detections=[detection for detection in detections if detection["confidence"] > minimum_confidence]
-            
+            detections=[detection for detection in detections if detection.conf > minimum_confidence]
+
 
         if len(detections) == 0:
             record_failed_frame(frame_number)
             continue
 
         if len(detections) == video_object.user_defined_parameters["number_of_animals"]:
-            
+
             kwargs.update(load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx))
             config=kwargs["segmentation_parameters"]
             segmented_frame, _ = apply_segmentation_criteria(frame, config)
             try:
-                blobs_in_frame = yolo_detections_to_blobs(frame, segmented_frame, detections, frame_number=frame_number, **kwargs)
+                blobs_in_frame = yolo_detections_to_blobs(frame, config, segmented_frame, detections, frame_number=frame_number, **kwargs)
             except Exception as error:
                 logger.error(error)
                 logger.error(traceback.print_exc())
@@ -140,9 +136,9 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
             blobs_in_frame_all.append((frame_number, blobs_in_frame))
             successful_frames.append(frame_number)
         else:
-            record_failed_frame(frame_number)        
+            record_failed_frame(frame_number)
         # end of for loop over frames
-        
+
     cap.release()
 
     blobs_collection = os.path.join(idtrackerai_folder, session_folder, "preprocessing", "blobs_collection.npy")
@@ -150,18 +146,18 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
     try:
         shutil.copy(blobs_collection, f"{blobs_collection}.bak")
         list_of_blobs=ListOfBlobs.load(blobs_collection)
-        
+
         if blobs_in_frame_all:
             for frame_number, blobs_in_frame in blobs_in_frame_all:
                 list_of_blobs.apply_modification(frame_number, blobs_in_frame)
-        
+
         if save:
             logger.info(f"Saving list of blobs --> {blobs_collection}")
             list_of_blobs.save(blobs_collection)
     except Exception as error:
         shutil.copy(f"{blobs_collection}.bak", blobs_collection)
         raise error
-    
+
     return list_of_blobs, successful_frames, failed_frames
 
 
@@ -171,10 +167,10 @@ def load_detections_from_one_file(label_file, count=None, class_id=None, false_a
     detections = [yolo_line_to_detection(line, class_names) for line in lines]
     result=detections
     experiment="_".join(label_file.split("idtrackerai")[0].split(os.path.sep)[-3:])
-    
+
 
     if class_id is not None:
-        detections = [detection for detection in detections if detection["class"] == class_id]
+        detections = [detection for detection in detections if detection.class_id == class_id]
 
     if count is not None:
         detection_count = len(detections)
@@ -198,7 +194,7 @@ def load_detections_from_files(label_files, **kwargs):
     detections = []
     for label_file in tqdm(label_files, desc="Loading detections"):
         detections.append(load_detections_from_one_file(label_file, **kwargs))
-    
+
     return detections
 
 def load_detections(label_files, n_jobs=1,  **kwargs):
@@ -232,42 +228,39 @@ def load_detections(label_files, n_jobs=1,  **kwargs):
 
 def yolo_line_to_detection(line, class_names={}):
     """
-    
+
     Argumennts:
-    
+
     * line (str): Label as read from a yolo .txt file
-    
+
     Returns
-    
+
     * detection (dict): class (int), bounding_box (x, y, w, h) and confidence (0 to 1)
     """
-    
+
     line=line.split(" ")
-    
+
     # class id
-    line[0] = int(line[0])
-    
+    class_id = int(line[0])
+
     # bounding_box and confidence optinally
     for i in range(1, len(line)):
         line[i] = float(line[i])
-    
-    bounding_box = (line[1]-line[3]/2, line[2]-line[4]/2, *line[3:5])
-    
-    detection = {
-        "class": line[0],
-        "bounding_box": bounding_box
-    }
-    
-    if class_names:
-        detection["class_name"]=class_names[line[0]]
 
-    if len(line) == 6:
-        detection["confidence"] =line[5]
-    
+    bounding_box = (line[1]-line[3]/2, line[2]-line[4]/2, *line[3:5])
+    x,y,w,h=bounding_box
+
+
+    detection=Detection(class_id=class_id, conf=float(line[5]), x=x, y=y, w=w, h=h)
+
+
+    if class_names:
+        detection.class_name=class_names[class_id]
+
     return detection
 
 def detection2mask(detection, frame):
-    bbox_norm = detection["bounding_box"]
+    bbox_norm = detection.bounding_box
     bbox = [
         bbox_norm[0] * frame.shape[1],
         bbox_norm[1] * frame.shape[0],
@@ -276,42 +269,48 @@ def detection2mask(detection, frame):
     ]
 
     bbox = tuple([int(round(coord)) for coord in bbox])
-    
+
 
     detection_mask = np.zeros_like(frame)
     detection_mask = cv2.rectangle(detection_mask, (bbox[0], bbox[1]), (bbox[0]+bbox[2], bbox[1]+bbox[3]), 255, -1)
     return detection_mask
-    
-def yolo_detection_to_contour(segmented_frame, detection, other_detections=[]):
+
+def yolo_detection_to_contour(frame, config, segmented_frame, detection, other_detections=[]):
     """
-    
+
     Arguments
     """
-    
+
     detection_mask=detection2mask(detection, segmented_frame)
-    
+
     and_mask = cv2.bitwise_and(segmented_frame, detection_mask)
-    
+
     if other_detections:
         other_detections_masks=[detection2mask(detection_, segmented_frame) for detection_ in other_detections]
         for mask in other_detections_masks:
             and_mask = cv2.subtract(and_mask, mask)
-    
-    
-    
-    assert (and_mask == 255).any()
-    
+
+
+    if not (and_mask == 255).any():
+        assert detection.class_name is not None
+        if detection.class_name == "fly":
+            raise ValueError("Animal not found")
+        else:
+            and_mask=detection_mask
+
+
+
     contours=cv2.findContours(and_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[1]
     contours=sorted(contours, key=lambda c: cv2.contourArea(c))
     contour=contours[-1]
-        
+
     return contour
 
-def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True, frame_number=None, **kwargs):
+def yolo_detections_to_blobs(frame, config, segmented_frame, detections, exclusive=True, frame_number=None, **kwargs):
     """
-    
+
     Arguments:
-    
+
     * frame (np.ndarray):
     * detections (list):
     * kwargs: Extra arguments to _create_blobs_objects
@@ -329,7 +328,7 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
         else:
             other_detections = []
 
-        contour = yolo_detection_to_contour(segmented_frame, detection, other_detections)
+        contour = yolo_detection_to_contour(frame, config, segmented_frame, detection, other_detections)
         assert contour.shape[0] >= 4
         contours.append(contour)
 
@@ -347,14 +346,14 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
         save_segmentation_image,
         tight=True,
     )
-            
+
     miniframes=[
         frame[
             bounding_box[0][1]:bounding_box[1][1],
             bounding_box[0][0]:bounding_box[1][0]
         ] for bounding_box in bounding_boxes
     ]
-       
+
     blobs_in_frame = _create_blobs_objects(
         bounding_boxes,
         miniframes,
@@ -370,8 +369,8 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
     )
     for i, blob in enumerate(blobs_in_frame):
         blob.modified=True
-        blob._annotation["class"]=detections[i]["class_name"]
-        blob._annotation["confidence"]=detections[i]["confidence"]
+        blob._annotation["class"]=detections[i].class_name
+        blob._annotation["confidence"]=detections[i].conf
         blob.segmentation_contour = blob.contour.copy()
         bbox=blob.bounding_box_in_frame_coordinates
         bbox = [bbox[0][0], bbox[0][1], bbox[1][0]-bbox[0][0], bbox[1][1]-bbox[0][1]]
@@ -381,11 +380,11 @@ def yolo_detections_to_blobs(frame, segmented_frame, detections, exclusive=True,
             [bbox[0]+bbox[2]-1, bbox[1]+bbox[3]-1],
             [bbox[0], bbox[1]+bbox[3]-1],
         ]).reshape((4, 1, 2))
-    
+
     return blobs_in_frame
 
 def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx):
-    
+
     idtrackerai_folder = os.path.join(os.path.dirname(store_path), "idtrackerai")
     session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
 
