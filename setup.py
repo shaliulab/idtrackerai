@@ -64,7 +64,7 @@ requirements = [
     "msgpack-python >= 0.4.8",
     "pandas < 1.4",
     "scipy < 1.8.0",
-    "sklearn >= 0.0",
+    "scikit-learn >= 0.0",
     "tables >= 3.3.0",
     "dask >= 0.17.0",
     #"opencv-python == 3.4.5.20",
