@@ -202,7 +202,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
 
         frames_before = self.video.episodes_start_end[0][0]
         frames_after = self.video.number_of_frames - self.video.episodes_start_end[-1][-1]
-        blobs_in_video = extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)        
+        blobs_in_video = extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after)
         assert len(blobs_in_video) == self.video.number_of_frames
         logger.info("Generating ListOfBlobs object")
 
@@ -248,8 +248,8 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             }
 
         return consistent_segmentation
-    
-    
+
+
     def save_incomplete_frames(self, folder):
 
         self.save_frames(self.video.frames_with_imperfect_overlap, folder)
@@ -261,14 +261,13 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         print(f"Removing {files}")
         for file in files:
             os.remove(file)
-        
-    def save_frames(self, frame_numbers, folder):
-        
-        if len(frame_numbers) == 0:
-            return None
 
+    def save_frames(self, frame_numbers, folder):
 
         os.makedirs(folder, exist_ok=True)
+
+        if len(frame_numbers) == 0:
+            return None
 
         try:
             cap = VideoCapture(self.video.video_path, self.video._chunk)
@@ -279,7 +278,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
 
         chunk = self.video._chunk
         first_frame_of_chunk = cap.get("STARTING_FRAME_OF_CHUNK")
-        
+
         for frame_number in frame_numbers:
             frame_idx = frame_number - first_frame_of_chunk
             basename = f"{frame_number}_{chunk}-{frame_idx}.png"
