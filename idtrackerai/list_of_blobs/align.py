@@ -19,14 +19,13 @@ class AlignableList:
     
     def dealign(self, video_object):
 
-        config = conf.__dict__
         cap=imgstore.interface.VideoCapture(
             video_object.video_path,
             chunk=video_object._chunk
         )
 
-        if getattr(config, "MULTI_STORE_ENABLED", False):
-            cap.select_store(config.SELECTED_STORE) 
+        if getattr(conf, "MULTI_STORE_ENABLED", False):
+            cap.select_store(conf.SELECTED_STORE)
 
             ids=cap.crossindex.get_refresh_ids()
 
@@ -51,14 +50,13 @@ class AlignableList:
         """
 
 
-        config = load_config(imgstore.constants)
         cap=imgstore.interface.VideoCapture(
             video_object.video_path,
             chunk=video_object._chunk
         )
 
-        if getattr(config, "MULTI_STORE_ENABLED", False):
-            cap.select_store(config.SELECTED_STORE)            
+        if getattr(conf, "MULTI_STORE_ENABLED", False):
+            cap.select_store(conf.SELECTED_STORE)
         
             cur = cap.crossindex._conn.cursor()
             cur.execute(f"SELECT COUNT(id) FROM selected;") # also from master is the same number :)
