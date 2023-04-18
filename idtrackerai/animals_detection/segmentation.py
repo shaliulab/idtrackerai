@@ -757,6 +757,11 @@ def segment(
                 zip(episode_paths, episode_numbers, episode_start_ends)
             )
         single_video_file = False
+
+    episodes = []
+    for element in episodes_sublists:
+        episodes.append(list(element))
+    episodes_sublists=episodes
     # print("******************************************************************")
     # print(num_jobs)
     # print(len(episodes_start_end))
@@ -765,7 +770,6 @@ def segment(
     # print([list(episodes_sublist) for episodes_sublist in episodes_sublists])
     # print("******************************************************************")
     set_mkl_to_single_thread()
-    
     blobs_in_video, maximum_number_of_blobs = _segment_video_in_parallel(
         episodes_sublists,
         chunk,
