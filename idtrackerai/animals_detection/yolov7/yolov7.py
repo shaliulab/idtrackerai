@@ -28,7 +28,7 @@ logger=logging.getLogger(__name__)
 
 yolov7_repo = "/scratch/leuven/333/vsc33399/Projects/YOLOv7/yolov7"
 
-def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes=None, minimum_confidence=None, save=True, **kwargs):
+def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input, allowed_classes=None, minimum_confidence=None, **kwargs):
     """
     Correct idtrackerai preprocessing errors with YOLOv7 results,
     which should be made available in the runs/detect folder of the YOLOv7 repository
@@ -58,11 +58,10 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
 
     assert len(frames) > 0
 
-    idtrackerai_folder=os.path.join(os.path.dirname(store_path), "idtrackerai")
-    video_object_path = os.path.join(idtrackerai_folder, f"session_{str(chunk).zfill(6)}", "video_object.npy")
+
+    video_object_path = os.path.join(session_folder, "video_object.npy")
     assert os.path.exists(video_object_path)
     video_object = np.load(video_object_path, allow_pickle=True).item()
-    session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
     number_of_animals=video_object._user_defined_parameters["number_of_animals"]
 
     video_path=os.path.join(os.path.dirname(store_path), f"{str(chunk).zfill(6)}.mp4")
@@ -140,8 +139,8 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
         # end of for loop over frames
 
     cap.release()
-
-    blobs_collection = os.path.join(idtrackerai_folder, session_folder, "preprocessing", "blobs_collection.npy")
+    step = "preprocessing"
+    blobs_collection = os.path.join(session_folder, step, "blobs_collection.npy")
     assert os.path.exists(blobs_collection)
     try:
         shutil.copy(blobs_collection, f"{blobs_collection}.bak")
@@ -151,9 +150,7 @@ def annotate_chunk_with_yolov7(store_path, chunk, frames, input, allowed_classes
             for frame_number, blobs_in_frame in blobs_in_frame_all:
                 list_of_blobs.apply_modification(frame_number, blobs_in_frame)
 
-        if save:
-            logger.info(f"Saving list of blobs --> {blobs_collection}")
-            list_of_blobs.save(blobs_collection)
+
     except Exception as error:
         shutil.copy(f"{blobs_collection}.bak", blobs_collection)
         raise error
@@ -385,7 +382,6 @@ def yolo_detections_to_blobs(frame, config, segmented_frame, detections, exclusi
 
 def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx):
 
-    idtrackerai_folder = os.path.join(os.path.dirname(store_path), "idtrackerai")
     session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
 
     conf_file = os.path.join(os.path.dirname(store_path), os.path.basename(os.path.dirname(store_path)) + ".conf")
@@ -408,8 +404,8 @@ def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_num
         "global_frame_number": frame_number,
         "frame_number_in_video_path": frame_number, # this would be the frame idx in the multiple video interface from idtrackerai, but not if we use imgstore
         "segmentation_parameters": config,
-        "bounding_box_images_path": os.path.join(idtrackerai_folder, session_folder, f"segmentation_data/episode_images_{episode_number}.hdf5"),
-        "pixels_path": os.path.join(idtrackerai_folder, session_folder, f"segmentation_data/episode_pixels_{episode_number}.hdf5")
+        "bounding_box_images_path": os.path.join(session_folder, f"segmentation_data/episode_images_{episode_number}.hdf5"),
+        "pixels_path": os.path.join(session_folder, f"segmentation_data/episode_pixels_{episode_number}.hdf5")
     }
     return kwargs
 

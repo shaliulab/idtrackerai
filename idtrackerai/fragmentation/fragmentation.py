@@ -72,7 +72,7 @@ def show_fragment_structure(chunk, min_duration=None, list_of_fragments=None):
     video_object = np.load(video_file, allow_pickle=True).item()
 
     if list_of_fragments is None:
-        fragment_file = os.path.join(f"session_{str(chunk).zfill(6)}", "preprocessing", "fragments.npy")
+        fragment_file = os.path.join(f"session_{str(chunk).zfill(6)}", "crossings_detection_and_fragmentation_folder", "fragments.npy")
         assert os.path.exists(fragment_file), f"{fragment_file} not found"
         list_of_fragments = np.load(fragment_file, allow_pickle=True).item()
 

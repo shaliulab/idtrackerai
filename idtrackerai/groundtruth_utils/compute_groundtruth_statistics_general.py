@@ -540,7 +540,8 @@ def reduce_resolution_gt_blobs(video, gt_blobs_in_video):
 def compute_and_save_session_accuracy_wrt_groundtruth(video, gt_type=None):
 
     if gt_type == "normal":
-        list_of_blobs_path = video.blobs_path
+        raise NotImplementedError
+        list_of_blobs_path = video.get_blobs_path()
         gt_path = os.path.join(video.video_folder, "_groundtruth.npy")
         performance_func = get_accuracy_wrt_groundtruth
     elif gt_type == "no_gaps":

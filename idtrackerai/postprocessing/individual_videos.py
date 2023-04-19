@@ -462,7 +462,7 @@ def compute_width_height_individual_video(video_object):
 
 def generate_individual_videos_rotation_invariant(video_object, trajectories, identity=None):
     
-    list_of_blobs = ListOfBlobs.load(video_object.blobs_path)
+    list_of_blobs = ListOfBlobs.load(video_object.get_blobs_path("tracking"))
     
     # Cretae folder to store videos
     video_object.create_individual_videos_folder()

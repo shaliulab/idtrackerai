@@ -224,6 +224,7 @@ class TrackerAPI(object):
         list_of_fragments.compute_total_number_of_images_in_global_fragments()
 
     def track_multiple_animals(self):
+        self.video.create_tracking_folder()
         list_of_global_fragments = self._get_global_fragments()
         self.list_of_global_fragments = list_of_global_fragments
         if list_of_global_fragments.number_of_global_fragments == 1:
@@ -1140,7 +1141,7 @@ class TrackerAPI(object):
         )
         # if False:
         #     self.list_of_blobs.compute_nose_and_head_coordinates()
-        self.list_of_blobs.save(self.video.blobs_path)
+        self.list_of_blobs.save(self.video.get_blobs_path("tracking"))
         self.video._identify_time = time.time() - self.video.identify_time
         create_trajectories()
 
@@ -1212,7 +1213,7 @@ class TrackerAPI(object):
             self.video._estimated_accuracy = 1.0
             self.video._has_crossings_solved = False
             self.video._has_trajectories_wo_gaps = False
-            self.list_of_blobs.save(self.video.blobs_path)
+            self.list_of_blobs.save(self.video.get_blobs_path("tracking"))
             # Call GUI function
             if update_and_show_happy_ending_popup:
                 update_and_show_happy_ending_popup()
@@ -1233,7 +1234,7 @@ class TrackerAPI(object):
             self.list_of_fragments,
         )
         self.video.blobs_no_gaps_path = os.path.join(
-            os.path.split(self.video.blobs_path)[0],
+            os.path.split(self.video.get_blobs_path("tracking"))[0],
             "blobs_collection_no_gaps.npy",
         )
         self.list_of_blobs_no_gaps.save(

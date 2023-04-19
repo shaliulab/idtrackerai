@@ -578,7 +578,8 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
 ):
     logger.info("loading list_of_blobs")
     if groundtruth_type == "normal":
-        list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
+        raise NotImplementedError
+        list_of_blobs = ListOfBlobs.load(video, video.get_blobs_path())
     elif groundtruth_type == "interpolated":
         list_of_blobs = ListOfBlobs.load(video, video.blobs_path_interpolated)
     elif groundtruth_type == "no_gaps":

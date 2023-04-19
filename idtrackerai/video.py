@@ -628,6 +628,10 @@ class Video(object):
         return self._preprocessing_folder
 
     @property
+    def crossings_detection_and_fragmentation_folder(self):
+        return self._crossings_detection_and_fragmentation_folder
+    
+    @property
     def images_folder(self):
         return self._images_folder
 
@@ -635,6 +639,10 @@ class Video(object):
     def crossings_detector_folder(self):
         return self._crossings_detector_folder
 
+    @property
+    def tracking_folder(self):
+        return self._tracking_folder
+    
     # TODO: Probably not used, check and remove if not used.
     @property
     def previous_session_folder(self):
@@ -654,14 +662,13 @@ class Video(object):
     def session_folder(self):
         return self._session_folder
 
-    @property
-    def blobs_path(self):
+    def get_blobs_path(self, step):
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        if self.preprocessing_folder is None:
+        if self.session_folder is None:
             return None
         self._blobs_path = os.path.join(
-            self.preprocessing_folder, "blobs_collection.npy"
+            self.session_folder, step, "blobs_collection.npy"
         )
         return self._blobs_path
 
@@ -686,7 +693,7 @@ class Video(object):
         """get the path to save the list of global fragments after
         fragmentation"""
         self._global_fragments_path = os.path.join(
-            self.preprocessing_folder, "global_fragments.npy"
+            self.crossings_detection_and_fragmentation_folder, "global_fragments.npy"
         )
         return self._global_fragments_path
 
@@ -695,7 +702,7 @@ class Video(object):
         """get the path to save the list of global fragments after
         fragmentation"""
         self._fragments_path = os.path.join(
-            self.preprocessing_folder, "fragments.npy"
+            self.crossings_detection_and_fragmentation_folder, "fragments.npy"
         )
         return self._fragments_path
 
@@ -963,7 +970,7 @@ class Video(object):
         else:
             session_name = "session_" + name
 
-        self._session_folder = os.path.join(self.video_folder, conf.ANALYSIS_FOLDER, session_name)
+        self._session_folder = session_name
         logger.info(f"Creating session folder at {self._session_folder}")
 
         # TODO: `_previons_session_folder` is probably not used. Remove.
@@ -1025,6 +1032,16 @@ class Video(object):
                 "the folder %s has been created" % self._preprocessing_folder
             )
 
+    def create_crossings_detection_and_fragmentation_folder(self):
+        self._crossings_detection_and_fragmentation_folder = os.path.join(
+            self.session_folder, "crossings_detection_and_fragmentation"
+        )
+        if not os.path.isdir(self.crossings_detection_and_fragmentation_folder):
+            os.makedirs(self.crossings_detection_and_fragmentation_folder)
+            logger.info(
+                "the folder %s has been created" % self._crossings_detection_and_fragmentation_folder
+            )
+
     def create_crossings_detector_folder(self):
         """If it does not exist creates a folder called crossing_detector
         in the video folder"""
@@ -1038,6 +1055,20 @@ class Video(object):
                 % self.crossings_detector_folder
             )
             os.makedirs(self.crossings_detector_folder)
+
+    def create_tracking_folder(self):
+        """If it does not exist creates a folder called crossing_detector
+        in the video folder"""
+        logger.info("setting path to save crossing detector model")
+        self._tracking_folder = os.path.join(
+            self.session_folder, "tracking"
+        )
+        if not os.path.isdir(self.tracking_folder):
+            logger.info(
+                "the folder %s has been created"
+                % self.tracking_folder
+            )
+            os.makedirs(self.tracking_folder)
 
     def create_pretraining_folder(self, delete=False):
         """Creates a folder named pretraining in video_folder where the model

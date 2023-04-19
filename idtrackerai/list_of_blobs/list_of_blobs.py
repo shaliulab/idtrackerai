@@ -1151,6 +1151,7 @@ def initialize_identification_images_file(
         Path to the video file.
     """
     image_shape = identification_image_size[0]
+    os.makedirs(os.path.dirname(file), exist_ok=True)
     with h5py.File(file, "w") as f:
         f.create_dataset(
             "identification_images",

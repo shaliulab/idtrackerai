@@ -170,8 +170,9 @@ if __name__ == "__main__":
     )
     # read blob list from video
     fragments_path = os.path.join(
-        session_path, "preprocessing", "fragments.npy"
+        session_path, "crossings_detection_and_fragmentation_folder", "fragments.npy"
     )
+    raise NotImplementedError
     blobs_path = os.path.join(
         session_path, "preprocessing", "blobs_collection.npy"
     )

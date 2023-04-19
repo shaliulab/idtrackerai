@@ -54,6 +54,7 @@ class CrossingsDetectionABC(ABC):
     def __call__(self):
         self.video._crossing_detector_time = time.time()
         self.video.create_crossings_detector_folder()
+        self.video.create_crossings_detection_and_fragmentation_folder()
         self.classify_blobs_as_crossings_or_individuals()
         assert len(self.list_of_blobs) == self.video.number_of_frames
         self.video._crossing_detector_time = (
