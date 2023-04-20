@@ -143,6 +143,7 @@ def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
     training_blobs = {"individuals": [], "crossings": []}
     validation_blobs = {}
     toassign_blobs = []
+    blob=None
     for i, blobs_in_frame in tqdm.tqdm(enumerate(list_of_blobs.blobs_in_video), desc="get_train_validation_and_eval_blobs"):
 
         if len(blobs_in_frame) == 0:
@@ -161,6 +162,8 @@ def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
                 and not blob.is_a_sure_individual()
             ) or (blob.is_a_crossing and not blob.is_a_sure_crossing()):
                 toassign_blobs.append(blob)
+
+    assert blob is not None, f"No blobs found in this list_of_blobs!"
 
     n_blobs_crossings = len(training_blobs["crossings"])
     n_blobs_individuals = len(training_blobs["individuals"])
