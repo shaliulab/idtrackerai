@@ -382,8 +382,7 @@ def yolo_detections_to_blobs(frame, config, segmented_frame, detections, exclusi
 
 def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx):
 
-    session_folder=os.path.sep.join(video_object.session_folder.split(os.path.sep)[2:])
-
+    session_folder=video_object.session_folder
     conf_file = os.path.join(os.path.dirname(store_path), os.path.basename(os.path.dirname(store_path)) + ".conf")
     config = read_json_file(conf_file)
 
