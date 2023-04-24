@@ -77,9 +77,9 @@ def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input,
         logger.debug(f"YOLOv7 failed in frame {frame_number}")
 
     cap = cv2.VideoCapture(video_path)
-    last_frame_idx = 0
+    last_frame_idx = None
     for frame_number, frame_idx in frames:
-        if frame_idx != (last_frame_idx+1):
+        if last_frame_idx is None or frame_idx != (last_frame_idx+1):
             cap.set(1, frame_idx)
         last_frame_idx = frame_idx
         assert cap.get(1) == frame_idx
