@@ -78,6 +78,7 @@ def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input,
 
     cap = cv2.VideoCapture(video_path)
     last_frame_idx = None
+    print(f"YOLOv7 will annotate {len(frames)} frames")
     for frame_number, frame_idx in frames:
         if last_frame_idx is None or frame_idx != (last_frame_idx+1):
             cap.set(1, frame_idx)
