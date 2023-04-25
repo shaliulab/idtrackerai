@@ -42,8 +42,10 @@ def compute_overlapping_between_subsequent_frames_single_job(
         
         if any([blob.modified for blob in blobs_before + blobs_after]):
             f = functions[1]
+            threshold_=threshold
         else:
             f = functions[0]
+            threshold_=None
             
         # blobs_before, blobs_after, queue=None, do=True, threshold=None
         data.extend(f(
@@ -51,7 +53,7 @@ def compute_overlapping_between_subsequent_frames_single_job(
             blobs_after=blobs_after,
             queue=queue,
             do=False,
-            threshold=threshold,
+            threshold=threshold_,
             use_fragment_transfer_info=use_fragment_transfer_info
         ))
 
@@ -92,7 +94,7 @@ class ParallelBlobOverlap:
 
     def compute_overlapping_between_subsequent_frames_parallel(
         self, n_jobs=None, threshold=.5, use_fragment_transfer_info=False,
-        debug=False,
+        debug=False, only_modified=False
     ):
 
         if n_jobs is None:
@@ -121,8 +123,11 @@ class ParallelBlobOverlap:
             self.blobs_in_video[starts[i] : ends[i]]
             for i in range(len(starts))
         ]
+
+
         starts_ends = [(starts[i], ends[i]) for i in range(len(starts))]
         thresholds = [threshold for _ in range(len(starts))]
+        only_modifieds = [only_modified for _ in range(len(starts))]
         queues = [None for _ in range(len(starts))]
         use_fragment_transfer_infos = [use_fragment_transfer_info for _ in range(len(starts))]
         
