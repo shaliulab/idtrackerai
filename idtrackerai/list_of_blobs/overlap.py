@@ -13,9 +13,8 @@ def compute_overlapping_between_two_subsequent_frames(blobs_before, blobs_after,
         )
 
 
-
 def compute_overlapping_between_two_subsequent_frames_fraction(
-    blobs_before, blobs_after, queue=None, do=True, threshold=0, **kwargs
+    blobs_before, blobs_after, queue=None, do=True, threshold=0.5, **kwargs
 ):
     """
     If two or more blobs overlap with the same blob in the future/past
@@ -29,10 +28,9 @@ def compute_overlapping_between_two_subsequent_frames_fraction(
     """
     
     if threshold is None:
-        threshold = 0
+        threshold = 0.5
 
     assert any([blob.modified for blob in blobs_before]) or any([blob.modified for blob in blobs_after])
-
 
     data = []
     overlap_fractions = {blob_0: [] for blob_0 in blobs_before}

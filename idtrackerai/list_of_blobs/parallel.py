@@ -91,7 +91,7 @@ class ParallelBlobOverlap:
                 blob_0.now_points_to(blob_1)
 
     def compute_overlapping_between_subsequent_frames_parallel(
-        self, n_jobs=None, threshold=None, use_fragment_transfer_info=False,
+        self, n_jobs=None, threshold=.5, use_fragment_transfer_info=False,
         debug=False,
     ):
 

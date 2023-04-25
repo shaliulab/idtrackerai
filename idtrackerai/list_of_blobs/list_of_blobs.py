@@ -271,6 +271,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
 
         # go through each frame
         for blobs_in_frame in tqdm(self.blobs_in_video, desc="Connecting blobs from cache"):
+
             # go through each blob in the frame
             for blob in blobs_in_frame:
                 # go through each of the next blobs of the current blob
@@ -280,51 +281,43 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 
                 frame_number=blob.frame_number
                 blobs_in_next_frame=self.blobs_in_video[frame_number+1]
-                if any([blob.modified for blob in blobs_in_frame + blobs_in_next_frame]):
-                    logger.info(f"Computing overlap between {frame_number} and {frame_number+1} ")
-                    for blob in blobs_in_frame:
-                        blob.next = []
-                        blob._now_points_to_blob_fn_index["next"] = []
-                    for blob in blobs_in_next_frame:
-                        blob.previous = []
-                        blob._now_points_to_blob_fn_index["previous"] = []
+                # disable this reconnect from data when YOLOv7 has intervened
 
-                    compute_overlapping_between_two_subsequent_frames_fraction(blobs_in_frame, blobs_in_next_frame, threshold=0.5, do=True)
-                else:
-
-                    for next_blob in blob._now_points_to_blob_fn_index["next"]:
-                        next_blob_fn = next_blob[0]
-
-                        blobs_in_next_frame=self.blobs_in_video[next_blob_fn]
-                        next_blob_unique_identifier = next_blob[1]
+                for next_blob in blob._now_points_to_blob_fn_index["next"]:
+                    
+                    next_blob_fn = next_blob[0]
 
 
-                        if isinstance(next_blob_unique_identifier, int):
-                            # NOTE
-                            # I was using before the position in the lsit
-                            # as identifier. This is wrong
-                            for next_blob_instance in blobs_in_next_frame:
-                                if blob.overlaps_with(next_blob_instance):
-                                    blob.now_points_to(next_blob_instance)
-                        else:
+                    blobs_in_next_frame=self.blobs_in_video[next_blob_fn]
+                    next_blob_unique_identifier = next_blob[1]
+
+
+                    if isinstance(next_blob_unique_identifier, int):
+                        # NOTE
+                        # I was using before the position in the lsit
+                        # as identifier. This is wrong
+                        for next_blob_instance in blobs_in_next_frame:
+                            if blob.overlaps_with(next_blob_instance):
+                                blob.now_points_to(next_blob_instance)
+                    else:
+                        try:
+                            a_next_blob = blobs_in_next_frame[
+                                next_blob_unique_identifier
+                            ]
+                            blob.now_points_to(a_next_blob)
+                        # an error is raised if blobs_in_next_frame
+                        # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
+                        except TypeError:
                             try:
-                                a_next_blob = blobs_in_next_frame[
-                                    next_blob_unique_identifier
-                                ]
+                                a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
                                 blob.now_points_to(a_next_blob)
-                            # an error is raised if blobs_in_next_frame
-                            # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
-                            except TypeError:
-                                try:
-                                    a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
-                                    blob.now_points_to(a_next_blob)
-                                except KeyError:
-                                    print(error)
-                                    import ipdb; ipdb.set_trace()
-                            except Exception as error:
-                                logger.error(f"Could not process frame {next_blob_fn}")
-                                logger.error(traceback.print_exc())
-                                raise error
+                            except KeyError:
+                                print(error)
+                                import ipdb; ipdb.set_trace()
+                        except Exception as error:
+                            logger.error(f"Could not process frame {next_blob_fn}")
+                            logger.error(traceback.print_exc())
+                            raise error
 
         self.blobs_are_connected = True
         self._annotate_location_of_blobs()
