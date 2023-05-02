@@ -64,9 +64,9 @@ def extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_befor
     blobs_in_video = [[], ] * frames_before + \
         blobs_in_video + \
         [[], ] * frames_after
-    
+
     return blobs_in_video
-    
+
 
 class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
     """Contains all the instances of the class :class:`~blob.Blob` for all
@@ -107,7 +107,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 last_frame_with_blobs = i
                 if first_frame_with_blobs is None:
                     first_frame_with_blobs = i
-        
+
         self._start_end_with_blobs = (first_frame_with_blobs, last_frame_with_blobs)
 
 
@@ -154,13 +154,13 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 length=len(blobs_in_frame)
                 if length > 0:
                     lengths.append(length)
-                
+
             counts = np.unique(lengths, return_counts=True)
             number_of_animals=counts[0][np.argsort(counts[1])[-1]]
             print(number_of_animals)
             if use_bypass_crossings:
                 bypass_crossings(self, number_of_animals=number_of_animals)
-        
+
         self.blobs_are_connected = True
         self._annotate_location_of_blobs()
 
@@ -169,7 +169,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         """
         Non concurrent implementation of blob overlap computation
         """
-        
+
         if debug:
             import ipdb; ipdb.set_trace()
 
@@ -198,7 +198,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             del blob.pixels_set
 
 
-    def disconnect(self):
+    def disconnect(self, cache=False):
         """Reinitialise the previous and next attributes of each blob.
 
         See Also
@@ -210,7 +210,9 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
                 blob._bridge_start, blob._bridge_end = None, None
-                
+                if cache:
+                    blob._now_points_to_blob_fn_index = {"next": [], "previous": []}
+
         self.blobs_are_connected = False
 
     # TODO: Check if used. Otherwise delete
@@ -278,13 +280,13 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 # (> 99% of the time there is only one next blob, sometimes none or > 1)
                 # if there is no next blob, this for loop does not run
                 # if there is > 1, it runs > 1 time accordingly
-                
+
                 frame_number=blob.frame_number
                 blobs_in_next_frame=self.blobs_in_video[frame_number+1]
                 # disable this reconnect from data when YOLOv7 has intervened
 
                 for next_blob in blob._now_points_to_blob_fn_index["next"]:
-                    
+
                     next_blob_fn = next_blob[0]
 
 
@@ -305,13 +307,15 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                                 next_blob_unique_identifier
                             ]
                             blob.now_points_to(a_next_blob)
+                        # except KeyError:
+                        #     import ipdb; ipdb.set_trace()
                         # an error is raised if blobs_in_next_frame
                         # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
                         except TypeError:
                             try:
                                 a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
                                 blob.now_points_to(a_next_blob)
-                            except KeyError:
+                            except KeyError as error:
                                 print(error)
                                 import ipdb; ipdb.set_trace()
                         except Exception as error:
@@ -329,11 +333,11 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
 
         Blobs must be connected and classified as individuals or crossings.
         This means the blob attributes:
-        
+
         * blob.can_continue_fragment
         * blob.is_an_individual_in_a_fragment
         * blob.
-        
+
         must be set to something different from None
 
         Parameters
@@ -549,8 +553,8 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                     identification_image_size, height, width, file
                 )
         return blobs_in_episode
-    
-    
+
+
     @property
     def frame_interval(self):
         if getattr(self, "_frame_interval", None) is None:
@@ -564,9 +568,9 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 chunksize * chunk,
                 chunksize * (chunk+1),
             )
-        
+
         return self._frame_interval
-    
+
     def check_segmentation(
         self, number_of_animals
     ):
@@ -601,7 +605,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 frames_with_more_blobs_than_animals.append(frame_number)
             elif len(blobs_in_frame) < number_of_animals:
                 frames_with_less_blobs_than_animals.append(frame_number)
-                
+
             for blob in blobs_in_frame:
                 if len(blob.previous) != 1:
                     if frame_number != 0 and len(self.blobs_in_video[frame_number-1]) != 0:
