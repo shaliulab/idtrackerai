@@ -33,7 +33,7 @@ def filter_detections_in_roi(detections, mask):
     detections_in_roi=[]
     for detection in detections:
         if np.any(mask[detection.y:(detection.y+detection.h), detection.x:(detection.x+detection.w)]):
-            detections_in_roi.append(detection):
+            detections_in_roi.append(detection)
     return detections_in_roi
 
 
