@@ -28,6 +28,15 @@ logger=logging.getLogger(__name__)
 
 yolov7_repo = "/scratch/leuven/333/vsc33399/Projects/YOLOv7/yolov7"
 
+def filter_detections_in_roi(detections, mask):
+
+    detections_in_roi=[]
+    for detection in detections:
+        if np.any(mask[detection.y:(detection.y+detection.h), detection.x:(detection.x+detection.w)]):
+            detections_in_roi.append(detection):
+    return detections_in_roi
+
+
 def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input, allowed_classes=None, minimum_confidence=None, **kwargs):
     """
     Correct idtrackerai preprocessing errors with YOLOv7 results,
@@ -89,6 +98,15 @@ def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input,
 
         label_file=get_label_file_path(input, frame_number, chunk, frame_idx)
         detections=load_detections_from_one_file(label_file, class_names=allowed_classes)
+        
+        
+        kwargs_for_blob_regeneration=load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx)
+        kwargs.update(kwargs_for_blob_regeneration)
+        config=kwargs["segmentation_parameters"]
+        roi=np.array(eval(config["_roi"]["value"][0][0]))
+        mask = np.zeros_like(frame)
+        mask = cv2.drawContours(mask, [roi], -1, 255, -1)
+        detections=filter_detections_in_roi(detections, mask)
 
         if len(detections) > number_of_animals:
             # if two detections highly overlap, keep the blurry
@@ -122,8 +140,7 @@ def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input,
 
         if len(detections) == video_object.user_defined_parameters["number_of_animals"]:
 
-            kwargs.update(load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx))
-            config=kwargs["segmentation_parameters"]
+
             segmented_frame, _ = apply_segmentation_criteria(frame, config)
             try:
                 blobs_in_frame = yolo_detections_to_blobs(frame, config, segmented_frame, detections, frame_number=frame_number, **kwargs)
