@@ -32,7 +32,18 @@ def filter_detections_in_roi(detections, mask):
 
     detections_in_roi=[]
     for detection in detections:
-        if np.any(mask[detection.y:(detection.y+detection.h), detection.x:(detection.x+detection.w)]):
+
+        bbox = (
+                int(detection.x * mask.shape[1]),
+                int(detection.y * mask.shape[0]),
+                int(detection.w * mask.shape[1]),
+                int(detection.h * mask.shape[0]),
+        )
+        if np.any(mask[
+            bbox[1]:(bbox[1]+bbox[3]),
+            bbox[0]:(bbox[0]+bbox[2])
+            ]):
+
             detections_in_roi.append(detection)
     return detections_in_roi
 
