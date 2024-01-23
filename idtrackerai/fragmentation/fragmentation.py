@@ -166,7 +166,6 @@ class FragmentationAPI(FragmentationABC):
         n_fragments = len(f_ids)
         if n_fragments > 1000:
             warnings.warn(f"{n_fragments} fragments detected. Is that right?")
-            import ipdb; ipdb.set_trace()
 
         fragments = create_list_of_fragments(
             self.list_of_blobs.blobs_in_video,

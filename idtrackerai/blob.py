@@ -416,8 +416,8 @@ class Blob(object):
                 try:
                     pixels = f[dataset_name][:]
                 except Exception as error:
+                    print(f"Cannot open pixels for dataset {dataset_name} on file {self._pixels_path}, working dir {os.getcwd()}")
                     print(error)
-                    # warnings.warn(error.args[0], stacklevel=2)
                     pixels = None
 
 
