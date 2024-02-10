@@ -4,3 +4,6 @@
 [submodule "idtrackerai-app"]
 	path = idtrackerai-app
 	url = git@github.com:shaliulab/idtrackerai-app
+[submodule "confapp"]
+	path = confapp
+	url = git@github.com:shaliulab/confapp
