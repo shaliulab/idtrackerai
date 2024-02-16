@@ -284,7 +284,9 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             basename = f"{frame_number}_{chunk}-{frame_idx}.png"
             cap.set(1, frame_number)
             ret, frame = cap.read()
-            cv2.imwrite(os.path.join(folder, basename), frame)
+            path=os.path.join(folder, basename)
+            logger.debug("Saving --> %s", path)
+            cv2.imwrite(path, frame)
 
 
     def save_inconsistent_frames(self):

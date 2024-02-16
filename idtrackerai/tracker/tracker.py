@@ -1151,6 +1151,7 @@ class TrackerAPI(object):
         interpolate_crossings=None,
         update_and_show_happy_ending_popup=None,
     ):
+        return None
 
         if interpolate_crossings is None:
             interpolate_crossings = self.interpolate_crossings

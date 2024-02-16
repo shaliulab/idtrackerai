@@ -3,4 +3,7 @@
 	url = https://github.com/UmSenhorQualquer/pythonVideoAnnotator.git
 [submodule "idtrackerai-app"]
 	path = idtrackerai-app
-	url = https://gitlab.com/polavieja_lab/idtrackerai-app.git 
+	url = git@github.com:shaliulab/idtrackerai-app
+[submodule "confapp"]
+	path = confapp
+	url = git@github.com:shaliulab/confapp
