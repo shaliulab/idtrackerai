@@ -83,6 +83,23 @@ def _get_rotation_angle(pixels, height, width):
 
     return rot_ang, center, delay
 
+def _overlaps_with_fraction(contour1, contour2):
+    """
+    Find the percentage of the overlapping blob that overlaps with blob
+    """
+
+    # NOTE
+    # Verify the docstring is correct, i.e. that is not % percentage of blob that overlaps with crossing blob
+    all_points = np.vstack([contour1, contour2])
+    br_corner = all_points.max(axis=(0, 1))[::-1]
+    mask = np.zeros(br_corner, np.uint8)
+    self_mask = cv2.drawContours(mask.copy(), [contour1], -1, 255, -1)
+    other_mask = cv2.drawContours(mask.copy(), [contour2], -1, 255, -1)
+    intersection = cv2.bitwise_and(self_mask, other_mask)
+    return round(intersection.sum() / self_mask.sum(), 3)
+
+
+
 class Blob(object):
     """Represents a segmented blob (collection of pixels) from a given frame.
 
@@ -811,20 +828,7 @@ class Blob(object):
             return False
 
     def overlaps_with_fraction(self, other):
-        """
-        Find the percentage of the overlapping blob that overlaps with blob
-        """
-
-        # NOTE
-        # Verify the docstring is correct, i.e. that is not % percentage of blob that overlaps with crossing blob
-        all_points = np.vstack([self.contour, other.contour])
-        br_corner = all_points.max(axis=(0, 1))[::-1]
-        mask = np.zeros(br_corner, np.uint8)
-        self_mask = cv2.drawContours(mask.copy(), [self.contour], -1, 255, -1)
-        other_mask = cv2.drawContours(mask.copy(), [other.contour], -1, 255, -1)
-        intersection = cv2.bitwise_and(self_mask, other_mask)
-
-        return round(intersection.sum() / self_mask.sum(), 3)
+        return _overlaps_with_fraction(self.contour, other.contour)
 
 
     def fragment_transfer_overlaps_with(self, other):
