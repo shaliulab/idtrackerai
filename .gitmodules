@@ -7,3 +7,6 @@
 [submodule "confapp"]
 	path = confapp
 	url = git@github.com:shaliulab/confapp
+[submodule "imgstore"]
+	path = imgstore
+	url = git@github.com:shaliulab/imgstore
