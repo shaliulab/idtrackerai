@@ -27,8 +27,8 @@ def main():
 def parse_roi(roi):
 
     ellipse_roi=eval(roi.lstrip("+ Ellipse "))
-    center=ellipse_roi["center"]
-    axes=ellipse_roi["axes"]
+    center=tuple(ellipse_roi["center"])
+    axes=tuple(ellipse_roi["axes"])
     angle=ellipse_roi["angle"]
 
     # Create a blank image, size should be large enough to contain the ellipse
@@ -47,7 +47,7 @@ def parse_roi(roi):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Find contours
-    contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, _= cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contour=contours[0]
     n_points=contour.shape[0]
     contour=contour[::n_points//50, ...]
