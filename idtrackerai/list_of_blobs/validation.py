@@ -56,12 +56,12 @@ def check_tracking(blobs_in_frame, number_of_animals, strict=True):
         if step_2:
             return step_2
         elif strict:
-            blobs_in_frame_are_feed_integrated=[]
+            risky_blobs=[]
             for blob in blobs_in_frame:
-                blobs_in_frame_are_feed_integrated.append(
-                    blob.borders_crossing_scene or blob.is_split or blob.bridge_start is not None or blob.bridge_end is not None
+                risky_blobs.append(
+                    blob.modified or blob.final_identities[0] != blob.identity
                 )
-            step_3 = any(blobs_in_frame_are_feed_integrated)
+            step_3 = any(risky_blobs)
             
             return step_3
 

@@ -138,6 +138,8 @@ setup(
     entry_points={
         "console_scripts": [
             "idtrackerai_test=idtrackerai.utils.idtrackerai_test:test",
+            "conf-convert=idtrackerai.utils.conf_convert:main",
+            "viz-roi=idtrackerai.utils.viz_roi:main",
         ],
     },
 )
