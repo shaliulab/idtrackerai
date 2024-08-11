@@ -607,6 +607,7 @@ def _segment_episode(
     frame_number = 0
     blobs_in_episode = []
     called = 0
+    reset=None
     while frame_number < number_of_frames_in_episode:
 
         # Compute the global fragment number in the video
@@ -621,8 +622,9 @@ def _segment_episode(
 
         if _frame_in_intervals(
             global_frame_number, segmentation_parameters["tracking_interval"]
-        ) and (global_frame_number % conf.SKIP_EVERY_FRAME  == 0 or frame_number == 0 or frame_number >= (number_of_frames_in_episode-conf.SKIP_EVERY_FRAME)):
+        ) and ((global_frame_number % conf.SKIP_EVERY_FRAME) == 0 or frame_number == 0):# or frame_number >= (number_of_frames_in_episode-conf.SKIP_EVERY_FRAME)):
             try:
+                reset=True
                 blobs_in_frame, max_number_of_blobs = _get_blobs_in_frame(
                     cap,
                     video_params_to_store,
@@ -644,7 +646,15 @@ def _segment_episode(
                 # print(f"Called {called} times")
                 raise error
         else:
-            ret, _ = cap.read()
+            if conf.SKIP_EVERY_FRAME > 5:
+                if reset is not None and reset==True:
+                    next_fn=conf.SKIP_EVERY_FRAME*(global_frame_number//conf.SKIP_EVERY_FRAME)+conf.SKIP_EVERY_FRAME
+                    print(f"{global_frame_number}: Skipping to frame {next_fn}")
+                    cap.set(1, next_fn)
+                    reset=False
+            else:
+                ret, _ = cap.read()
+
             blobs_in_frame = BlobsInFrame()
 
         # store all the blobs encountered in the episode
