@@ -334,11 +334,12 @@ def yolo_detection_to_contour(frame, config, segmented_frame, detection, other_d
 
 def yolo_detections_to_blobs(frame, config, segmented_frame, detections, exclusive=True, frame_number=None, **kwargs):
     """
+    Process the yolov7 detections into idtrackerai blobs
 
     Arguments:
 
-    * frame (np.ndarray):
-    * detections (list):
+    * frame (np.ndarray): Original frame
+    * detections (list): Collection of idtrackerai.animals_detection.yolov7.detection.Detection objects
     * kwargs: Extra arguments to _create_blobs_objects
     """
 

@@ -32,6 +32,9 @@ def compute_overlap_fraction(detection1, detection2):
 
 
 def resolve_multilabel(detections):
+    """
+    If two labels overlap with each other in more than 90%, they are considered the same label
+    """
 
     for detection1, detection2 in itertools.combinations(detections, 2):
         ov12, ov21 = compute_overlap_fraction(detection1, detection2)
