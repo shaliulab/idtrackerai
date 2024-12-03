@@ -214,9 +214,9 @@ def _process_frame(
     try:
 
         bkg = segmentation_parameters["bkg_model"]
-        mask = segmentation_parameters["mask"]
+        mask = segmentation_parameters["mask"].copy()
 
-        assert frame.shape[:2] == mask.shape
+        assert frame.shape[:2] == mask.shape, f"{frame.shape[:2]} != {mask.shape}"
 
         frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
         # Convert the frame to gray scale
