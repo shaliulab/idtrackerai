@@ -220,10 +220,12 @@ def _process_frame(
         # Convert the frame to gray scale
         gray = to_gray_scale(frame)
 
-        # assert frame.shape[:2] == mask.shape, f"Frame shape {frame.shape[:2]} != Mask shape {mask.shape}"
         if frame.shape[:2] != mask.shape:
             logger.warning("Frame and mask don't have same shape. Adjusting.")
             mask=mask[:frame.shape[0], :frame.shape[1]]
+        
+        assert frame.shape[:2] == mask.shape, f"Frame shape {frame.shape[:2]} != Mask shape {mask.shape}"
+        
 
         # Normalize frame
         avg_intensity = get_frame_average_intensity(gray, mask)
