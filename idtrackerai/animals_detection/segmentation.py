@@ -216,15 +216,15 @@ def _process_frame(
         bkg = segmentation_parameters["bkg_model"]
         mask = segmentation_parameters["mask"].copy()
 
+        frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
+        # Convert the frame to gray scale
+        gray = to_gray_scale(frame)
+
         # assert frame.shape[:2] == mask.shape, f"Frame shape {frame.shape[:2]} != Mask shape {mask.shape}"
         if frame.shape[:2] != mask.shape:
             logger.warning("Frame and mask don't have same shape. Adjusting.")
             mask=mask[:frame.shape[0], :frame.shape[1]]
 
-
-        frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
-        # Convert the frame to gray scale
-        gray = to_gray_scale(frame)
         # Normalize frame
         avg_intensity = get_frame_average_intensity(gray, mask)
         # print(avg_intensity)
