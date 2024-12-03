@@ -216,7 +216,7 @@ def _process_frame(
         bkg = segmentation_parameters["bkg_model"]
         mask = segmentation_parameters["mask"].copy()
 
-        assert frame.shape[:2] == mask.shape, f"{frame.shape[:2]} != {mask.shape}"
+        assert frame.shape[:2] == mask.shape, f"Frame shape {frame.shape[:2]} != Mask shape {mask.shape}"
 
         frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
         # Convert the frame to gray scale
@@ -315,9 +315,9 @@ def _process_frame(
                 )
 
     except Exception as error:
-        print(f"Error on frame {frame_number}: {error}")
-        logger.warning(traceback.print_exc())
-        logger.info(
+        logger.error(f"Error on frame {frame_number}: {error}")
+        logger.error(traceback.print_exc())
+        logger.error(
             "An error occurred while reading frame number : %i" % frame_number
         )
         bounding_boxes = []
