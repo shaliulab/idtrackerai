@@ -252,9 +252,9 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
 
     def save_incomplete_frames(self, folder):
 
-        self.save_frames(self.video.frames_with_imperfect_overlap, folder)
-        self.save_frames(self.video.frames_with_less_blobs_than_animals, folder)
-        self.save_frames(self.video.frames_with_more_blobs_than_animals, folder)
+        self.save_frames(self.video.frames_with_imperfect_overlap, folder, "imperfect overlap")
+        self.save_frames(self.video.frames_with_less_blobs_than_animals, folder, "blobs < animals")
+        self.save_frames(self.video.frames_with_more_blobs_than_animals, folder, "blobs > animals")
 
     def remove_frames(self, folder, chunk):
         files = sorted(glob.glob(os.path.join(folder, f"*_{chunk}-*")))
@@ -262,7 +262,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         for file in files:
             os.remove(file)
 
-    def save_frames(self, frame_numbers, folder):
+    def save_frames(self, frame_numbers, folder, reason=None):
 
         os.makedirs(folder, exist_ok=True)
 
@@ -285,7 +285,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             cap.set(1, frame_number)
             ret, frame = cap.read()
             path=os.path.join(folder, basename)
-            logger.debug("Saving --> %s", path)
+            logger.debug("Saving --> %s because %s", path, reason)
             cv2.imwrite(path, frame)
 
 
