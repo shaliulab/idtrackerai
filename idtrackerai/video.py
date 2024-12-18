@@ -911,26 +911,12 @@ class Video(object):
         `_width`, `_height` and `_frames_per_second`.
         """
 
-        widths, heights, frames_per_seconds = [], [], []
-        for path in self._video_paths:
-            cap = VideoCapture(path, chunk=self._chunk)
-            widths.append(int(cap.get(3)))
-            heights.append(int(cap.get(4)))
+        cap=VideoCapture(self._video_paths[0], self._chunk)
 
-            try:
-                frames_per_seconds.append(int(cap.get(5)))
-            except cv2.error:
-                logger.warning(f"Cannot read frame per second for {path}")
-                frames_per_seconds.append(None)
-            cap.release()
+        self._width=self._original_width=cap.get(3)
+        self._height=self._original_height=cap.get(4)
+        self._frames_per_second = cap.get(5)
 
-        assert len(set(widths)) == 1
-        assert len(set(heights)) == 1
-        assert len(set(frames_per_seconds)) == 1
-
-        self._width = self._original_width = widths[0]
-        self._height = self._original_height = heights[0]
-        self._frames_per_second = frames_per_seconds[0]
 
     # TODO: move to crossings_detection.py
     def compute_identification_image_size(self, maximum_body_length):
