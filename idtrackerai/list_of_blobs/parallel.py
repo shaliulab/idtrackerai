@@ -104,6 +104,7 @@ class ParallelBlobOverlap:
         FRAME_WITH_FIRST_BLOB=self._start_end_with_blobs[0]
         FRAME_WITH_LAST_BLOB=self._start_end_with_blobs[1]
         number_of_frames = len(self.blobs_in_video)
+        #import ipdb; ipdb.set_trace()
         assert FRAME_WITH_FIRST_BLOB is not None, "No blobs found"
 
         starts = list(

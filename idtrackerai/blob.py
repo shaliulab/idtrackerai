@@ -1207,8 +1207,13 @@ class Blob(object):
                 identification_image_size[0],
             )
         except Exception as error:
-            print(f"Could not process blob in frame {self.frame_number}")
-            raise error
+            logger.error(f"Could not process blob in frame {self.frame_number}")
+            logger.error(error)
+            black_image=np.zeros(
+                (identification_image_size[0], identification_image_size[0]),
+                dtype=np.uint8
+            )
+            return black_image
 
         if rot_angle is not None:
             self._rotation_angle = rot_angle
