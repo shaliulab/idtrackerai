@@ -36,6 +36,7 @@ import os.path
 import codetiming
 import traceback
 import h5py
+import pickle
 import numpy as np
 from confapp import conf
 from joblib import Parallel, delayed
@@ -44,7 +45,6 @@ from idtrackerai.blob import Blob
 from .feed_integration import bypass_crossings
 from idtrackerai.utils.py_utils import interpolate_nans, find_blob
 from imgstore.stores.utils.mixins.extract import _extract_store_metadata
-
 
 from .parallel import ParallelBlobOverlap
 from .overlap import (
@@ -256,9 +256,13 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
 
         """
         logger.info("loading blobs list from %s" % path_to_load_blob_list_file)
-        list_of_blobs = np.load(
-            path_to_load_blob_list_file, allow_pickle=True
-        ).item()
+        try:
+            list_of_blobs = np.load(
+                path_to_load_blob_list_file, allow_pickle=True
+            ).item()
+        except pickle.UnpicklingError as error:
+            logger.error("Cannot read %s", path_to_load_blob_list_file)
+            raise error
         list_of_blobs.blobs_are_connected = False
         if reconnect_from_cache:
             list_of_blobs.reconnect_from_cache()
