@@ -62,7 +62,7 @@ requirements = [
     "xlib == 0.21",
     "msgpack-numpy >= 0.3.9",
     "msgpack-python >= 0.4.8",
-    "pandas < 1.4",
+    "pandas<=1.4.2",
     "scipy < 1.8.0",
     "scikit-learn >= 0.0",
     "tables >= 3.3.0",
