@@ -1,6 +1,3 @@
-[submodule "python-video-annotator"]
-	path = python-video-annotator
-	url = https://github.com/UmSenhorQualquer/pythonVideoAnnotator.git
 [submodule "idtrackerai-app"]
 	path = idtrackerai-app
 	url = git@github.com:shaliulab/idtrackerai-app
