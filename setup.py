@@ -72,6 +72,8 @@ requirements = [
     #"confapp-shaliulab >= 1.1.11",
     "gdown >= 3.10.0",
     "codetiming",
+    "torch",
+    "torchvision",
 ]
 
 IDTRACKERAI_APP_DEPENDENCY="idtrackerai-app-shaliulab==1.0.10",
