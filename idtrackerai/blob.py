@@ -83,6 +83,23 @@ def _get_rotation_angle(pixels, height, width):
 
     return rot_ang, center, delay
 
+def contour_to_ravelled_pixels(contour, height, width):
+    """Ravelled indices (in a frame of shape (height, width)) of the pixels inside the contour
+
+    Equivalent to drawing the filled contour on an empty frame and
+    collecting the coordinates of the pixels drawn (in row-major order),
+    but only allocates an image as large as the bounding box of the contour
+    """
+    x, y, w, h = cv2.boundingRect(contour)
+    canvas = np.zeros((h, w), np.uint8)
+    cv2.drawContours(canvas, [contour], -1, color=255, thickness=-1, offset=(-x, -y))
+    rows, columns = np.nonzero(canvas)
+    rows += y
+    columns += x
+    inside = (rows >= 0) & (rows < height) & (columns >= 0) & (columns < width)
+    return np.ravel_multi_index([rows[inside], columns[inside]], (height, width))
+
+
 def _overlaps_with_fraction(contour1, contour2):
     """
     Find the percentage of the overlapping blob that overlaps with blob
@@ -96,7 +113,10 @@ def _overlaps_with_fraction(contour1, contour2):
     self_mask = cv2.drawContours(mask.copy(), [contour1], -1, 255, -1)
     other_mask = cv2.drawContours(mask.copy(), [contour2], -1, 255, -1)
     intersection = cv2.bitwise_and(self_mask, other_mask)
-    return round(intersection.sum() / self_mask.sum(), 3)
+    self_area = self_mask.sum()
+    if self_area == 0:
+        return 0.0
+    return round(intersection.sum() / self_area, 3)
 
 
 
@@ -337,8 +357,13 @@ class Blob(object):
     def regenerate_bounding_box_image(self):
 
         cap = VideoCapture(self.video_path, chunk=self.chunk)
-        cap.set(1, self.frame_number_in_video_path)
-        ret, frame = cap.read()
+        try:
+            cap.set(1, self.frame_number_in_video_path)
+            ret, frame = cap.read()
+        finally:
+            cap.release()
+        if not ret or frame is None:
+            raise ValueError(f"Could not read frame {self.frame_number_in_video_path} of {self.video_path} (chunk {self.chunk})")
         bb = self.bounding_box_in_frame_coordinates
         if len(frame.shape) == 3:
             return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
@@ -447,15 +472,7 @@ class Blob(object):
         if conf.USING_PYTHON_VIDEO_ANNOTATOR:
             warnings.warn(f"{self._pixels_path} not found", stacklevel=2)
 
-        cimg = np.zeros((self.video_height, self.video_width))
-        cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
-        pts = np.where(cimg == 255)
-        pixels = np.asarray(list(zip(pts[0], pts[1])))
-        pixels = np.ravel_multi_index(
-            [pixels[:, 0], pixels[:, 1]],
-            (self.video_height, self.video_width),
-        )
-        return pixels
+        return contour_to_ravelled_pixels(self.contour, self.video_height, self.video_width)
     @property
     def pixels_set(self):
         """A set() version of blob.pixels, used in `blob.overlaps_with()`
@@ -498,7 +515,7 @@ class Blob(object):
             that represent the blob after the erosion process.
         """
         if self._eroded_pixels is not None:
-            return self._pixels
+            return self._eroded_pixels
         elif self._pixels_path is not None and os.path.isfile(
             self._pixels_path
         ):
@@ -513,15 +530,7 @@ class Blob(object):
             # TODO: Check that if the blob is eroded the contour is updated.
             # Otherwise this pixels will be the original ones and no the
             # eroded ones.
-            cimg = np.zeros((self.video_height, self.video_width))
-            cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
-            pts = np.where(cimg == 255)
-            pixels = np.asarray(list(zip(pts[0], pts[1])))
-            pixels = np.ravel_multi_index(
-                [pixels[:, 0], pixels[:, 1]],
-                (self.video_height, self.video_width),
-            )
-            return pixels
+            return contour_to_ravelled_pixels(self.contour, self.video_height, self.video_width)
 
     @eroded_pixels.setter
     def eroded_pixels(self, eroded_pixels):
@@ -901,6 +910,7 @@ class Blob(object):
 
         for blob in self.next:
             blob.previous.pop(blob.previous.index(self))
+            blob._update_cached_links("previous")
 
         self.next = []
         self._cache_next_and_previous()
@@ -910,6 +920,7 @@ class Blob(object):
 
         for blob in self.previous:
             blob.next.pop(blob.next.index(self))
+            blob._update_cached_links("next")
 
         self.previous = []
         self._cache_next_and_previous()
@@ -929,6 +940,10 @@ class Blob(object):
         self.next.append(other)
         other.previous.append(self)
         self._cache_next_and_previous()
+        # keep the cache of both blobs consistent.
+        # Only the previous links of other change: its cached next links
+        # must be kept, because they may not have been restored yet (see ListOfBlobs.reconnect_from_cache)
+        other._update_cached_links("previous")
 
     def squared_distance_to(self, other):
         """Returns the squared distance from the centroid of self to the
@@ -2158,6 +2173,16 @@ class Blob(object):
         elif isinstance(identifier, tuple):
             return self.unique_index == identifier
 
+
+    def _update_cached_links(self, direction):
+        """Update the cached links of the blob in one direction (next or previous)"""
+        cache = getattr(self, "_now_points_to_blob_fn_index", None)
+        if cache is None:
+            self._cache_next_and_previous()
+            return
+        cache[direction] = [
+            (blob.frame_number_in_video_path, blob.unique_index) for blob in getattr(self, direction, [])
+        ]
 
     def _cache_next_and_previous(self, update=True):
         previous_blobs = getattr(self, "previous", [])

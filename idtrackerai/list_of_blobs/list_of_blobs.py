@@ -43,7 +43,7 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 from idtrackerai.blob import Blob
 from .feed_integration import bypass_crossings
-from idtrackerai.utils.py_utils import interpolate_nans, find_blob
+from idtrackerai.utils.py_utils import interpolate_nans, find_blob, effective_n_jobs
 from imgstore.stores.utils.mixins.extract import _extract_store_metadata
 
 from .parallel import ParallelBlobOverlap
@@ -55,17 +55,22 @@ from .overlap import (
 from .align import AlignableList
 from .validation import validate_from_file, check_tracking
 from .modifiable import Modifications
+from .blobs_in_video import BlobsInVideo, frame_range
 
 logger = logging.getLogger("__main__.list_of_blobs")
 
 
 def extend_blobs_in_video_to_absolute_start_and_end(blobs_in_video, frames_before, frames_after):
-
-    blobs_in_video = [[], ] * frames_before + \
-        blobs_in_video + \
-        [[], ] * frames_after
-
-    return blobs_in_video
+    """
+    Make blobs_in_video indexable by absolute frame number, with
+    frames_before empty frames before it and frames_after empty frames after it.
+    The empty frames are not stored (see BlobsInVideo)
+    """
+    return BlobsInVideo(
+        blobs_in_video,
+        offset=frames_before,
+        total=frames_before + len(blobs_in_video) + frames_after,
+    )
 
 
 class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
@@ -95,14 +100,22 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
     def __len__(self):
         return len(self.blobs_in_video)
 
-    def extend_blobs_in_video_to_absolute_start_and_end(self, *args, **kwargs):
-        return extend_blobs_in_video_to_absolute_start_and_end(self.list_of_blobs.blobs_in_video, *args, **kwargs)
+    @property
+    def frame_range(self):
+        """Range of frame numbers that may contain blobs"""
+        return frame_range(self.blobs_in_video)
+
+    @property
+    def stored_frames(self):
+        """blobs_in_frame of every frame that may contain blobs (see frame_range)"""
+        frames = self.frame_range
+        return self.blobs_in_video[frames.start:frames.stop]
 
     def _annotate_location_of_blobs(self):
 
         last_frame_with_blobs = 0
         first_frame_with_blobs = None
-        for i in tqdm(range(len(self.blobs_in_video)), desc="Annotating location of blobs in data"):
+        for i in self.frame_range:
             if len(self.blobs_in_video[i]) > 0:
                 last_frame_with_blobs = i
                 if first_frame_with_blobs is None:
@@ -133,6 +146,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
 
         if n_jobs is None:
             n_jobs=conf.NUMBER_OF_JOBS_FOR_CONNECTING_BLOBS
+        n_jobs = effective_n_jobs(n_jobs)
 
         if n_jobs == 1:
             self._compute_overlapping_between_subsequent_frames(
@@ -150,7 +164,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
 
         if use_fragment_transfer_info:
             lengths = []
-            for blobs_in_frame in self.blobs_in_video:
+            for blobs_in_frame in self.stored_frames:
                 length=len(blobs_in_frame)
                 if length > 0:
                     lengths.append(length)
@@ -173,8 +187,9 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         if debug:
             import ipdb; ipdb.set_trace()
 
+        frames = self.frame_range
         for frame_i in tqdm(
-            range(1, self.number_of_frames), desc="Connecting blobs "
+            range(max(1, frames.start), frames.stop), desc="Connecting blobs "
         ):
             if threshold is None:
                 compute_overlapping_between_two_subsequent_frames(
@@ -194,7 +209,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             # clean pixels_sets created in overlaps_with() to free memory
             for blob in self.blobs_in_video[frame_i - 1]:
                 del blob.pixels_set
-        for blob in self.blobs_in_video[self.number_of_frames - 1]:
+        for blob in self.blobs_in_video[frames.stop - 1]:
             del blob.pixels_set
 
 
@@ -206,8 +221,8 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         :attr:`blob.Blob.next`
         :attr:`blob.Blob.previous`
         """
-        for blobs_in_frame in tqdm(self.blobs_in_video, desc="Disconnecting"):
-            for blob in blobs_in_frame:
+        for frame_number in self.frame_range:
+            for blob in self.blobs_in_video[frame_number]:
                 blob.next, blob.previous = [], []
                 blob._bridge_start, blob._bridge_end = None, None
                 if cache:
@@ -270,33 +285,33 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         return list_of_blobs
 
 
-    def reconnect_from_cache(self):
+    def reconnect_from_cache(self, skip_frames=None):
+        """Restore the connections between blobs cached in each blob
+        when the list of blobs was saved.
 
-        # this should run much faster than
-        # compute_overlapping_between_subsequent_frames
+        This runs much faster than compute_overlapping_between_subsequent_frames
 
-        # go through each frame
-        for blobs_in_frame in tqdm(self.blobs_in_video, desc="Connecting blobs from cache"):
+        Arguments:
+            skip_frames (iterable): Frame numbers whose blobs have been replaced
+                since the cache was produced (e.g. by YOLOv7).
+                Cached connections from or to these frames are ignored
+                and must be recomputed (see recompute_overlapping_around_frames)
+        """
+        skip_frames = set(skip_frames or [])
+
+        for frame_number in tqdm(self.frame_range, desc="Connecting blobs from cache"):
+            if frame_number in skip_frames:
+                continue
 
             # go through each blob in the frame
-            for blob in blobs_in_frame:
+            for blob in self.blobs_in_video[frame_number]:
                 # go through each of the next blobs of the current blob
                 # (> 99% of the time there is only one next blob, sometimes none or > 1)
-                # if there is no next blob, this for loop does not run
-                # if there is > 1, it runs > 1 time accordingly
-
-                frame_number=blob.frame_number
-                blobs_in_next_frame=self.blobs_in_video[frame_number+1]
-                # disable this reconnect from data when YOLOv7 has intervened
-
-                for next_blob in blob._now_points_to_blob_fn_index["next"]:
-
-                    next_blob_fn = next_blob[0]
-
+                for next_blob_fn, next_blob_unique_identifier in blob._now_points_to_blob_fn_index["next"]:
+                    if next_blob_fn in skip_frames:
+                        continue
 
                     blobs_in_next_frame=self.blobs_in_video[next_blob_fn]
-                    next_blob_unique_identifier = next_blob[1]
-
 
                     if isinstance(next_blob_unique_identifier, int):
                         # NOTE
@@ -307,25 +322,52 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                                 blob.now_points_to(next_blob_instance)
                     else:
                         try:
-                            a_next_blob = blobs_in_next_frame[
-                                next_blob_unique_identifier
-                            ]
-                            blob.now_points_to(a_next_blob)
-                        # except KeyError:
-                        #     import ipdb; ipdb.set_trace()
-                        # an error is raised if blobs_in_next_frame
-                        # is of type List and not of type BlobsInFrame (defined in idtrackerai.animals_detection.segmentation)
-                        except TypeError:
-                            try:
-                                a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
-                                blob.now_points_to(a_next_blob)
-                            except KeyError as error:
-                                print(error)
-                                import ipdb; ipdb.set_trace()
-                        except Exception as error:
-                            logger.error(f"Could not process frame {next_blob_fn}")
-                            logger.error(traceback.print_exc())
-                            raise error
+                            a_next_blob = find_blob(blobs_in_next_frame, next_blob_unique_identifier)
+                        except KeyError as error:
+                            raise KeyError(
+                                f"Cached connection of blob {blob.unique_index} in frame {frame_number} "
+                                f"points to a blob that does not exist in frame {next_blob_fn}"
+                            ) from error
+                        blob.now_points_to(a_next_blob)
+
+        self.blobs_are_connected = True
+        self._annotate_location_of_blobs()
+
+    def recompute_overlapping_around_frames(self, frame_numbers, **kwargs):
+        """
+        Compute the overlap between the blobs in the passed frames and the blobs
+        in the frames right before and after them, discarding whatever
+        connections they had before.
+
+        Used after modifying a few frames (e.g. with YOLOv7) instead of
+        recomputing the overlap of the whole video
+        """
+        frame_numbers = sorted(set(frame_numbers))
+        frames = self.frame_range
+
+        # remove the old connections in both directions
+        for frame_number in frame_numbers:
+            for blob in self.blobs_in_video[frame_number]:
+                blob.reset_next()
+                blob.reset_previous()
+
+        pairs = set()
+        for frame_number in frame_numbers:
+            if frame_number - 1 >= frames.start:
+                pairs.add((frame_number - 1, frame_number))
+            if frame_number + 1 < frames.stop:
+                pairs.add((frame_number, frame_number + 1))
+
+        for frame_before, frame_after in sorted(pairs):
+            compute_overlapping_between_two_subsequent_frames(
+                self.blobs_in_video[frame_before],
+                self.blobs_in_video[frame_after],
+                **kwargs
+            )
+            for blob in self.blobs_in_video[frame_before]:
+                del blob.pixels_set
+            for blob in self.blobs_in_video[frame_after]:
+                del blob.pixels_set
 
         self.blobs_are_connected = True
         self._annotate_location_of_blobs()
@@ -353,7 +395,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         possible_blob_indices = range(number_of_animals)
 
         for blobs_in_frame in tqdm(
-            self.blobs_in_video, desc="assigning fragment identifier"
+            self.stored_frames, desc="assigning fragment identifier"
         ):
             used_blob_indices = [
                 blob.blob_index
@@ -424,7 +466,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
 
         fragment_identifier = self.number_of_individual_fragments
 
-        for blobs_in_frame in self.blobs_in_video:
+        for blobs_in_frame in self.stored_frames:
             for blob in blobs_in_frame:
                 if blob.is_a_crossing and blob.fragment_identifier is None:
                     _propagate_crossing_identifier(blob, fragment_identifier)
@@ -487,6 +529,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
             NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
         else:
             NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES=n_jobs
+        NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES=effective_n_jobs(NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)
 
         with codetiming.Timer(text="Setting identification images took {:.8f} seconds", logger=logger.info):
 
@@ -599,11 +642,13 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         frames_with_more_blobs_than_animals = []
         frames_with_less_blobs_than_animals = []
         frames_with_imperfect_overlap = []
-        for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):
-            if frame_number < self.frame_interval[0]:
-                continue
-            elif frame_number >= self.frame_interval[1]:
-                continue
+        last_frame = len(self.blobs_in_video) - 1
+        frames = range(
+            max(int(self.frame_interval[0]), self.frame_range.start),
+            min(int(self.frame_interval[1]), self.frame_range.stop),
+        )
+        for frame_number in frames:
+            blobs_in_frame = self.blobs_in_video[frame_number]
 
             if len(blobs_in_frame) > number_of_animals:
                 frames_with_more_blobs_than_animals.append(frame_number)
@@ -616,7 +661,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                         frames_with_imperfect_overlap.append(frame_number)
                         break
                 elif len(blob.next) != 1:
-                    if frame_number != len(self.blobs_in_video) and len(self.blobs_in_video[frame_number+1]) != 0:
+                    if frame_number != last_frame and len(self.blobs_in_video[frame_number+1]) != 0:
                         frames_with_imperfect_overlap.append(frame_number)
                         break
 
@@ -658,14 +703,20 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                     fillvalue=np.nan,
                 )
 
-        for blobs_in_frame in tqdm(self.blobs_in_video, desc="Updating hdf5"):
-            for blob in blobs_in_frame:
-                episode = video.in_which_episode(blob.frame_number)
-                image = blob.identification_image_index
-                with h5py.File(
-                    video.identification_images_file_paths[episode], "a"
-                ) as f:
-                    f["crossings"][image] = int(blob.is_a_crossing)
+        files = {}
+        try:
+            for blobs_in_frame in tqdm(self.stored_frames, desc="Updating hdf5"):
+                for blob in blobs_in_frame:
+                    episode = video.in_which_episode(blob.frame_number)
+                    image = blob.identification_image_index
+                    if episode not in files:
+                        files[episode] = h5py.File(
+                            video.identification_images_file_paths[episode], "a"
+                        )
+                    files[episode]["crossings"][image] = int(blob.is_a_crossing)
+        finally:
+            for f in files.values():
+                f.close()
 
     def update_from_list_of_fragments(
         self, fragments, fragment_identifier_to_index
@@ -696,7 +747,7 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         ]
 
         for blobs_in_frame in tqdm(
-            self.blobs_in_video,
+            self.stored_frames,
             desc="updating list of blobs from list of fragments",
         ):
             for blob in blobs_in_frame:
@@ -1124,7 +1175,10 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
         new_blob.number_of_animals = video.user_defined_parameters[
             "number_of_animals"
         ]
-        self.blobs_in_video[frame_number].append(new_blob)
+        if isinstance(self.blobs_in_video, BlobsInVideo):
+            self.blobs_in_video.ensure_frame(frame_number).append(new_blob)
+        else:
+            self.blobs_in_video[frame_number].append(new_blob)
         video._is_centroid_updated = True
 
 

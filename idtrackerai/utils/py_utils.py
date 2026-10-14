@@ -63,6 +63,35 @@ def download_file(source, dest):
 
 
 ### MKL
+def available_cpus():
+    """Number of CPUs this process may use.
+
+    It honors the CPU affinity of the process (e.g. set by SLURM or taskset)
+    and the environment variable IDTRACKERAI_MAX_JOBS
+    (e.g. export IDTRACKERAI_MAX_JOBS=${task.cpus} in a nextflow process)
+    """
+    if hasattr(os, "sched_getaffinity"):
+        cpus = len(os.sched_getaffinity(0))
+    else:
+        cpus = os.cpu_count() or 1
+    limit = os.environ.get("IDTRACKERAI_MAX_JOBS", "")
+    if limit.strip():
+        cpus = min(cpus, int(limit))
+    return max(1, cpus)
+
+
+def effective_n_jobs(n_jobs):
+    """Translate a joblib-like n_jobs setting (None, positive or negative)
+    into a positive number of jobs not greater than available_cpus()"""
+    cpus = available_cpus()
+    if n_jobs is None:
+        return 1
+    n_jobs = int(n_jobs)
+    if n_jobs < 0:
+        n_jobs = cpus + 1 + n_jobs
+    return max(1, min(n_jobs, cpus))
+
+
 def set_mkl_to_single_thread():
     logger.info("Setting MKL library to use single thread")
     os.environ["MKL_NUM_THREADS"] = "1"
@@ -181,7 +210,9 @@ def read_json_file(config_file):
     
     with open(config_file, "r") as filehandle:
         config = json.load(filehandle)
-    roi_contour = np.array(eval(config["_roi"]["value"][0][0])).reshape((-1, 1, 2))
-    
-    config["_roi_contour"] = roi_contour
+    rois = config.get("_roi", {}).get("value", [])
+    if rois:
+        config["_roi_contour"] = np.array(eval(rois[0][0])).reshape((-1, 1, 2))
+    else:
+        config["_roi_contour"] = None
     return config

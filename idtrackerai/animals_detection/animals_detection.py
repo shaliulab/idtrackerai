@@ -250,44 +250,87 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         return consistent_segmentation
 
 
-    def save_incomplete_frames(self, folder):
+    def frames_to_correct(self):
+        """
+        Frame numbers where the segmentation is likely wrong and
+        should be corrected (e.g. by YOLOv7), with the reason why
 
-        self.save_frames(self.video.frames_with_imperfect_overlap, folder, "imperfect overlap")
-        self.save_frames(self.video.frames_with_less_blobs_than_animals, folder, "blobs < animals")
-        self.save_frames(self.video.frames_with_more_blobs_than_animals, folder, "blobs > animals")
+        When a single animal is tracked, a blob that does not overlap with
+        the blob in the previous / next frame just means the animal moved fast,
+        so these frames are only flagged if conf.SINGLE_ANIMAL_FLAG_IMPERFECT_OVERLAP is True
+
+        Returns:
+            dict: frame_number -> reason
+        """
+        number_of_animals = self.video.user_defined_parameters["number_of_animals"]
+        reasons = [
+            (self.video.frames_with_more_blobs_than_animals, "blobs > animals"),
+            (self.video.frames_with_less_blobs_than_animals, "blobs < animals"),
+        ]
+        if number_of_animals != 1 or getattr(conf, "SINGLE_ANIMAL_FLAG_IMPERFECT_OVERLAP", False):
+            reasons.insert(0, (self.video.frames_with_imperfect_overlap, "imperfect overlap"))
+        else:
+            logger.info(
+                "Single animal: %s frames with imperfect overlap are not flagged",
+                len(self.video.frames_with_imperfect_overlap)
+            )
+
+        frames = {}
+        for frame_numbers, reason in reasons:
+            for frame_number in frame_numbers:
+                frames.setdefault(frame_number, reason)
+        return frames
+
+    def save_incomplete_frames(self, folder):
+        frames = self.frames_to_correct()
+        logger.info("Saving %s frames to %s", len(frames), folder)
+        self.save_frames(sorted(frames), folder, reasons=frames)
 
     def remove_frames(self, folder, chunk):
         files = sorted(glob.glob(os.path.join(folder, f"*_{chunk}-*")))
-        print(f"Removing {files}")
+        logger.info(f"Removing {len(files)} frames of chunk {chunk} from {folder}")
         for file in files:
             os.remove(file)
 
-    def save_frames(self, frame_numbers, folder, reason=None):
+    def save_frames(self, frame_numbers, folder, reason=None, reasons=None):
+        """
+        Save the passed frames of the chunk to folder
+        with name {frame_number}_{chunk}-{frame_idx}.png
+        """
 
         os.makedirs(folder, exist_ok=True)
 
+        frame_numbers = sorted(set(frame_numbers))
         if len(frame_numbers) == 0:
             return None
 
+        cap = VideoCapture(self.video.video_path, self.video._chunk)
         try:
-            cap = VideoCapture(self.video.video_path, self.video._chunk)
-        except Exception as error:
-            logger.error(error)
-            return None
+            chunk = self.video._chunk
+            first_frame_of_chunk = cap.get("STARTING_FRAME_OF_CHUNK")
 
+            last_frame_number = None
+            for frame_number in frame_numbers:
+                frame_idx = frame_number - first_frame_of_chunk
+                basename = f"{frame_number}_{chunk}-{frame_idx}.png"
+                # only seek if the frames are not consecutive
+                if last_frame_number is None or frame_number != last_frame_number + 1:
+                    cap.set(1, frame_number)
+                ret, frame = cap.read()
+                last_frame_number = frame_number
+                if not ret or frame is None:
+                    logger.error("Could not read frame %s of chunk %s. It will not be saved", frame_number, chunk)
+                    last_frame_number = None
+                    continue
 
-        chunk = self.video._chunk
-        first_frame_of_chunk = cap.get("STARTING_FRAME_OF_CHUNK")
-
-        for frame_number in frame_numbers:
-            frame_idx = frame_number - first_frame_of_chunk
-            basename = f"{frame_number}_{chunk}-{frame_idx}.png"
-            cap.set(1, frame_number)
-            ret, frame = cap.read()
-            path=os.path.join(folder, basename)
-            logger.debug("Saving --> %s because %s", path, reason)
-            cv2.imwrite(path, frame)
-
+                path=os.path.join(folder, basename)
+                logger.debug(
+                    "Saving --> %s because %s", path,
+                    reasons.get(frame_number) if reasons is not None else reason
+                )
+                cv2.imwrite(path, frame)
+        finally:
+            cap.release()
 
     def save_inconsistent_frames(self):
         """

@@ -29,29 +29,24 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
+
 from typing import Tuple, List, Dict, Optional, Union
-import time
 import gc
 import logging
-import multiprocessing
 import os
-import traceback
 
 import cv2
 import h5py
 import numpy as np
 
-from scipy import ndimage
 from confapp import conf
 from joblib import Parallel, delayed
-from torch import normal
-from tqdm import tqdm
 
 # this is needed, otherwise conf.SIGMA_GAUSSIAN_BLURRING is the default
 try:
-    import local_settings # type: ignore
+    import local_settings  # type: ignore
     conf += local_settings
-except:
+except ImportError:
     pass
 
 from idtrackerai.blob import Blob
@@ -60,10 +55,10 @@ from idtrackerai.utils.py_utils import (
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
     find_blob,
+    effective_n_jobs,
 )
 from idtrackerai.animals_detection.segmentation_utils import (
     blob_extractor,
-    get_frame_average_intensity,
     segment_frame,
     to_gray_scale,
     gaussian_blur,
@@ -97,10 +92,30 @@ class BlobsInFrame(List):
             raise Exception(
                 """
                 BlobsInFrame can only be indexed by:
-                  int: return the blob under that position of the list
-                  list: return the blob with the bounding box given by the list (errors if no match)
+                int: return the blob under that position of the list
+                list: return the blob with the bounding box given by the list (errors if no match)
                 """
             )
+
+
+def get_segmentation_storage(number_of_animals):
+    """
+    Where to store the pixels and the image of each blob (DISK, RAM or NONE)
+
+    When tracking a single animal, the identification images are never needed
+    and the pixels can be recomputed cheaply from the contour of each blob,
+    so SINGLE_ANIMAL_SAVE_PIXELS and SINGLE_ANIMAL_SAVE_SEGMENTATION_IMAGE are used instead
+
+    Returns:
+        save_pixels (str)
+        save_segmentation_image (str)
+    """
+    if number_of_animals == 1:
+        return (
+            getattr(conf, "SINGLE_ANIMAL_SAVE_PIXELS", conf.SAVE_PIXELS),
+            getattr(conf, "SINGLE_ANIMAL_SAVE_SEGMENTATION_IMAGE", conf.SAVE_SEGMENTATION_IMAGE),
+        )
+    return conf.SAVE_PIXELS, conf.SAVE_SEGMENTATION_IMAGE
 
 
 def _get_blobs_in_frame(
@@ -116,6 +131,8 @@ def _get_blobs_in_frame(
     pixels_path,
     save_pixels,
     save_segmentation_image,
+    images_file=None,
+    pixels_file=None,
 ):
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
@@ -126,21 +143,15 @@ def _get_blobs_in_frame(
     ----------
     cap : <VideoCapture object>
         OpenCV object used to read the frames of the video
-    video : <Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
-    segmentation_thresholds : dict
+    segmentation_parameters : dict
         Dictionary with the thresholds used for the segmentation: `min_threshold`,
         `max_threshold`, `min_area`, `max_area`
     max_number_of_blobs : int
         Maximum number of blobs found in the whole video so far in the segmentation process
-    frame_number : int
-        Number of the frame being segmented. It is used to print in the terminal the frames
-        where the segmentation fails. This frame is the frame of the episode if the video
-        is chuncked.
     global_frame_number : int
-        This is the frame number in the whole video. It will be different to the frame_number
-        if the video is chuncked.
-
+        This is the frame number in the whole video.
+    images_file, pixels_file: h5py.File
+        Open hdf5 files where the segmentation images and pixels are saved (if saved to DISK)
 
     Returns
     -------
@@ -148,6 +159,8 @@ def _get_blobs_in_frame(
         List of <Blob object> segmented in the current frame
     max_number_of_blobs : int
         Maximum number of blobs found in the whole video so far in the segmentation process
+    success: bool
+        False if the frame could not be read or segmented
 
     See Also
     --------
@@ -157,6 +170,29 @@ def _get_blobs_in_frame(
     blob_extractor
     """
     ret, frame = cap.read()
+    if not ret or frame is None:
+        logger.error("Could not read frame %s from %s (chunk %s)", global_frame_number, video_path, chunk)
+        return BlobsInFrame(), max_number_of_blobs, False
+
+    if conf.ADVANCED_SEGMENTATION:
+        result, success = _process_frame_with_advanced_segmentation(
+            frame,
+            segmentation_parameters,
+            global_frame_number,
+            save_pixels,
+            save_segmentation_image,
+            return_success=True,
+        )
+    else:
+        result, success = _process_frame(
+            frame,
+            segmentation_parameters,
+            global_frame_number,
+            save_pixels,
+            save_segmentation_image,
+            return_success=True,
+        )
+
     (
         bounding_boxes,
         miniframes,
@@ -165,14 +201,7 @@ def _get_blobs_in_frame(
         pixels,
         contours,
         estimated_body_lengths,
-    ) = _process_frame(
-        frame,
-        segmentation_parameters,
-        global_frame_number,
-        save_pixels,
-        save_segmentation_image,
-    )
-
+    ) = result
 
     blobs_in_frame = _create_blobs_objects(
         bounding_boxes,
@@ -192,11 +221,24 @@ def _get_blobs_in_frame(
         video_path,
         chunk,
         segmentation_parameters,
+        images_file=images_file,
+        pixels_file=pixels_file,
     )
 
     max_number_of_blobs = max(max_number_of_blobs, len(centroids))
 
-    return blobs_in_frame, max_number_of_blobs
+    return blobs_in_frame, max_number_of_blobs, success
+
+
+def _resize(image, resolution_reduction):
+    return cv2.resize(
+        image,
+        None,
+        fx=resolution_reduction,
+        fy=resolution_reduction,
+        interpolation=cv2.INTER_AREA,
+    )
+
 
 def _process_frame(
     frame,
@@ -207,60 +249,46 @@ def _process_frame(
     iteration=0,
     erosion=None,
     number_of_animals=None,
+    return_success=False,
 ):
+    """
+    Segment a frame
 
-    orig_frame = frame.copy()
+    Returns:
+        (bounding_boxes, miniframes, centroids, areas, pixels, contours, estimated_body_lengths)
+        If any error occurs, all these lists are empty
+
+        if return_success is True, the tuple above and a bool which is False if an error occurred
+
+    iteration and number_of_animals are not used anymore and kept for backwards compatibility
+    (see _process_frame_with_advanced_segmentation)
+    """
 
     try:
-
         bkg = segmentation_parameters["bkg_model"]
-        mask = segmentation_parameters["mask"].copy()
+        mask = segmentation_parameters["mask"]
+        resolution_reduction = segmentation_parameters["resolution_reduction"]
 
         frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
         # Convert the frame to gray scale
         gray = to_gray_scale(frame)
 
-        if frame.shape[:2] != mask.shape:
-            raise ValueError(f"Frame and mask don't have same shape. {frame.shape[:2]} != {mask.shape}")
-            # logger.warning("Frame and mask don't have same shape. Adjusting.")
-            # mask=mask[:frame.shape[0], :frame.shape[1]]
-        
-        assert frame.shape[:2] == mask.shape, f"Frame shape {frame.shape[:2]} != Mask shape {mask.shape}"
-
-        # Normalize frame
-        avg_intensity = get_frame_average_intensity(gray, mask)
-        # print(avg_intensity)
-        # normalized_framed = gray / avg_intensity
-        normalized_framed = gray
+        if gray.shape != mask.shape:
+            raise ValueError(f"Frame and mask don't have same shape. {gray.shape} != {mask.shape}")
 
         # Apply resolution reduction
-        if segmentation_parameters["resolution_reduction"] != 1:
-            frame = cv2.resize(
-                frame,
-                None,
-                fx=segmentation_parameters["resolution_reduction"],
-                fy=segmentation_parameters["resolution_reduction"],
-                interpolation=cv2.INTER_AREA,
-            )
+        # the frame that is segmented and the frame where the blob images
+        # are taken from must have the same resolution as the mask and the background
+        if resolution_reduction != 1:
+            gray = _resize(gray, resolution_reduction)
             if bkg is not None:
-                bkg = cv2.resize(
-                    bkg,
-                    None,
-                    fx=segmentation_parameters["resolution_reduction"],
-                    fy=segmentation_parameters["resolution_reduction"],
-                    interpolation=cv2.INTER_AREA,
-                )
+                bkg = _resize(bkg, resolution_reduction)
             if mask is not None:
-                mask = cv2.resize(
-                    mask,
-                    None,
-                    fx=segmentation_parameters["resolution_reduction"],
-                    fy=segmentation_parameters["resolution_reduction"],
-                    interpolation=cv2.INTER_AREA,
-                )
+                mask = _resize(mask, resolution_reduction)
+
         # Binarize frame
         segmentedFrame = segment_frame(
-            normalized_framed,
+            gray,
             segmentation_parameters["min_threshold"],
             segmentation_parameters["max_threshold"],
             bkg,
@@ -275,132 +303,89 @@ def _process_frame(
         else:
             min_area = segmentation_parameters["min_area"]
 
-
-        # Fill holes in the segmented frame to avoid duplication of contours
-        segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype(
-            "uint8"
-        )
         # Extract blobs info
-        (
-            bounding_boxes,
-            miniframes,
-            centroids,
-            areas,
-            pixels,
-            contours,
-            estimated_body_lengths,
-        ) = blob_extractor(
+        # Only the outermost contours are retrieved, which is equivalent to
+        # filling the holes of the segmented frame (and much faster)
+        result = blob_extractor(
             segmentedFrame,
             gray,
             min_area,
             segmentation_parameters["max_area"],
             save_pixels,
             save_segmentation_image,
+            external_only=True,
         )
-        segmentation_parameters=segmentation_parameters.copy()
+        success = True
+
+    except Exception:
+        logger.exception("Error while segmenting frame number %s", frame_number)
+        result = ([], [], [], [], [], [], [])
+        success = False
+
+    if return_success:
+        return result, success
+    return result
 
 
-        if conf.ADVANCED_SEGMENTATION:
-            if len(contours) == 0:
-                np.save(str(frame_number) + "_segmentation_parameters.npy", segmentation_parameters)
-                np.save(str(frame_number) + "_normalized.npy", normalized_framed)
-                cv2.imwrite(str(frame_number) + "_frame.png", gray)
-                cv2.imwrite(str(frame_number) + "_segmented_frame.png", segmentedFrame)
-                raise Exception("No contour found")
-            
-            if number_of_animals is not None and len(contours) != number_of_animals:
+def _process_frame_with_advanced_segmentation(
+    frame,
+    segmentation_parameters,
+    frame_number,
+    save_pixels,
+    save_segmentation_image,
+    max_iterations=10,
+    return_success=False,
+):
+    """
+    Segment a frame like _process_frame.
+    If fewer blobs than animals are found,
+    the maximum intensity threshold is progressively lowered
+    (and the minimum threshold too, if the range becomes narrower than 10)
+    until enough blobs are found or max_iterations are done
+    """
+    number_of_animals = segmentation_parameters["number_of_animals"]
+    segmentation_parameters = segmentation_parameters.copy()
 
-                return perform_advanced_segmentation(
-                    orig_frame.copy(),
-                    frame_number=frame_number,
-                    contours=contours,
-                    segmentation_parameters=segmentation_parameters,
-                    save_pixels=save_pixels,
-                    save_segmentation_image=save_segmentation_image,
-                    iteration=iteration,
-                )
-
-    except Exception as error:
-        logger.error(f"Error on frame {frame_number}: {error}")
-        logger.error(traceback.print_exc())
-        logger.error(
-            "An error occurred while reading frame number : %i" % frame_number
-        )
-        bounding_boxes = []
-        miniframes = []
-        centroids = []
-        areas = []
-        pixels = []
-        contours = []
-        estimated_body_lengths = []
-
-    return (
-        bounding_boxes,
-        miniframes,
-        centroids,
-        areas,
-        pixels,
-        contours,
-        estimated_body_lengths,
+    result, success = _process_frame(
+        frame, segmentation_parameters, frame_number,
+        save_pixels, save_segmentation_image, return_success=True,
     )
-
-
-def perform_advanced_segmentation(frame, frame_number, contours, segmentation_parameters, iteration, **kwargs):
-    
-    bounding_boxes = []
-    miniframes = []
-    centroids = []
-    areas = []
-    pixels = []
-    contours = []
-    estimated_body_lengths = []
-    result = (
-        bounding_boxes,
-        miniframes,
-        centroids,
-        areas,
-        pixels,
-        contours,
-        estimated_body_lengths,
-    )
-
-    if (
-        # iteration < 20 and
-        iteration < 10 and
-        len(contours) < segmentation_parameters["number_of_animals"] and
-        segmentation_parameters["max_threshold"] > (segmentation_parameters["min_threshold"]+1)
+    iteration = 0
+    while (
+        success
+        and iteration < max_iterations
+        and len(result[5]) < number_of_animals
+        and segmentation_parameters["max_threshold"] > (segmentation_parameters["min_threshold"] + 1)
     ):
-        # print(frame_number, len(contours), segmentation_parameters)
-        iteration+=1
-        # print(frame_number, f"Iteration: {iteration}")
+        iteration += 1
         segmentation_parameters["max_threshold"] -= 1
         if (segmentation_parameters["max_threshold"] - segmentation_parameters["min_threshold"]) < 10:
             segmentation_parameters["min_threshold"] -= 1
-            
-            
-        logger.debug("Dynamic segmentation parameters: ")
-        logger.debug(segmentation_parameters)
 
-        result = _process_frame(
-            frame,
-            segmentation_parameters,
-            frame_number,
-            iteration=iteration,
-            **kwargs
+        logger.debug(
+            "Frame %s: %s contours found. Trying thresholds %s - %s (iteration %s)",
+            frame_number, len(result[5]),
+            segmentation_parameters["min_threshold"], segmentation_parameters["max_threshold"],
+            iteration,
+        )
+        result, success = _process_frame(
+            frame, segmentation_parameters, frame_number,
+            save_pixels, save_segmentation_image, return_success=True,
         )
 
-    if iteration != 0:
-        logger.debug(f"""
-            Calling _process_frame with segmentation thresholds
-                min: {segmentation_parameters['min_threshold']}
-                max: {segmentation_parameters['max_threshold']}
-                frame_number: {frame_number}
-                iteration: {iteration}
-                # contours: {len(contours)}
-            """
-        )
-
+    if return_success:
+        return result, success
     return result
+
+
+def _save_dataset(file, dataset_name, data):
+    try:
+        file.create_dataset(dataset_name, data=data)
+    except ValueError as error:
+        if dataset_name.endswith("-modified"):
+            file[dataset_name][:] = data
+        else:
+            raise error
 
 
 def _create_blobs_objects(
@@ -422,18 +407,20 @@ def _create_blobs_objects(
     chunk,
     segmentation_parameters,
     modified=False,
+    images_file=None,
+    pixels_file=None,
 ):
     """
     Generate idtrackerai.Blob instances from the segmentation results
-    
+
     Args:
         bounding_boxes (list): Bounding box of each segmented contour, in format ((x1, y1), (x2, y2))
         miniframes (list):Image crops, one per passed bounding box.
             Their width and height must agree with the width and height of the corresponding bounding box
         centroids (list): Centroid of the contour in coordinates of the image, in format (x, y). x and y may be floats
-        areas (list): Area of each contour, may be float 
+        areas (list): Area of each contour, may be float
         pixels (list): Pixels of the contour, in raveled format (i.e. in 1D)
-        contours (list): Contour of the segmented blob 
+        contours (list): Contour of the segmented blob
         estimated_body_lengths (list): Approximate length of the longest side of each animal, in int format
         save_segmentation_image (str): Whether to save the segmentation data to disk (DISK), RAM (RAM) or not (NONE)
         bounding_box_images_path (str): Path to a segmentation_data/episode_images_X.hdf5 file to which the segmentation image will be saved if required
@@ -447,71 +434,66 @@ def _create_blobs_objects(
         segmentation_parameters (dict):
             min_threshold, max_threshold, min_area, max_area, apply_ROI (bool), rois (list), mask (np.ndarray),
             subtract_bkg (bool), bkg_model, resolution_reduction, tracking_interval (list of length 2 lists), number_of_animals (int)
+        images_file, pixels_file (h5py.File): Already open hdf5 files for bounding_box_images_path and pixels_path.
+            If not passed, the files are opened (once per call) if anything needs to be saved to them
 
     Returns:
-        blobs_in_frame (list): Collection of blobs generated from the segmentation results of a single frame 
+        blobs_in_frame (list): Collection of blobs generated from the segmentation results of a single frame
     """
 
     blobs_in_frame = BlobsInFrame()
-       
-    # create blob objects
-    for i, bounding_box in enumerate(bounding_boxes):
-        if not modified:
-            dataset_name = str(global_frame_number) + "-" + str(i)
-        else:
-            dataset_name = str(global_frame_number) + "-" + str(i) + "-modified"
-            print(dataset_name)
 
-        if save_segmentation_image == "DISK":
-            with h5py.File(bounding_box_images_path, "a") as f1:
-                try:
-                    f1.create_dataset(
-                        dataset_name, data=miniframes[i]
-                    )
-                except ValueError as error:
-                    if dataset_name.endswith("-modified"):
-                        f1[dataset_name][:] = miniframes[i]
-                    else:
-                        raise error
+    files_to_close = []
+    if len(bounding_boxes) > 0:
+        if save_segmentation_image == "DISK" and images_file is None:
+            images_file = h5py.File(bounding_box_images_path, "a")
+            files_to_close.append(images_file)
+        if save_pixels == "DISK" and pixels_file is None:
+            pixels_file = h5py.File(pixels_path, "a")
+            files_to_close.append(pixels_file)
 
-            miniframes[i] = None
-        if save_pixels == "DISK":
-            with h5py.File(pixels_path, "a") as f2:
-                try:
-                    f2.create_dataset(
-                        dataset_name, data=pixels[i]
-                    )
-                except ValueError as error:
-                    if dataset_name.endswith("-modified"):
-                        f2[dataset_name][:] = pixels[i]
-                    else:
-                       raise error
+    try:
+        # create blob objects
+        for i, bounding_box in enumerate(bounding_boxes):
+            if not modified:
+                dataset_name = str(global_frame_number) + "-" + str(i)
+            else:
+                dataset_name = str(global_frame_number) + "-" + str(i) + "-modified"
 
-            pixels[i] = None
+            if save_segmentation_image == "DISK":
+                _save_dataset(images_file, dataset_name, miniframes[i])
+                miniframes[i] = None
 
-        blob = Blob(
-            centroids[i],
-            contours[i],
-            areas[i],
-            bounding_box,
-            bounding_box_image=miniframes[i],
-            bounding_box_images_path=bounding_box_images_path,
-            estimated_body_length=estimated_body_lengths[i],
-            number_of_animals=video_params_to_store["number_of_animals"],
-            frame_number=global_frame_number,
-            pixels=pixels[i],
-            pixels_path=pixels_path,
-            in_frame_index=i,
-            video_height=video_params_to_store["height"],
-            video_width=video_params_to_store["width"],
-            video_path=video_path,
-            chunk=chunk,
-            frame_number_in_video_path=frame_number_in_video_path,
-            resolution_reduction=segmentation_parameters[
-                "resolution_reduction"
-            ],
-        )
-        blobs_in_frame.append(blob)
+            if save_pixels == "DISK":
+                _save_dataset(pixels_file, dataset_name, pixels[i])
+                pixels[i] = None
+
+            blob = Blob(
+                centroids[i],
+                contours[i],
+                areas[i],
+                bounding_box,
+                bounding_box_image=miniframes[i],
+                bounding_box_images_path=bounding_box_images_path if save_segmentation_image == "DISK" else None,
+                estimated_body_length=estimated_body_lengths[i],
+                number_of_animals=video_params_to_store["number_of_animals"],
+                frame_number=global_frame_number,
+                pixels=pixels[i],
+                pixels_path=pixels_path if save_pixels == "DISK" else None,
+                in_frame_index=i,
+                video_height=video_params_to_store["height"],
+                video_width=video_params_to_store["width"],
+                video_path=video_path,
+                chunk=chunk,
+                frame_number_in_video_path=frame_number_in_video_path,
+                resolution_reduction=segmentation_parameters[
+                    "resolution_reduction"
+                ],
+            )
+            blobs_in_frame.append(blob)
+    finally:
+        for file in files_to_close:
+            file.close()
 
     return blobs_in_frame
 
@@ -534,6 +516,17 @@ def _frame_in_intervals(frame_number, intervals):
     return False
 
 
+def _episode_file(segmentation_data_folder, kind, episode_number, save):
+    """Path to the hdf5 file where the pixels or images of an episode are saved,
+    or None if they are not saved to DISK. Any previous file is removed"""
+    if save != "DISK":
+        return None
+    path = os.path.join(segmentation_data_folder, f"episode_{kind}_{episode_number}.hdf5")
+    if os.path.isfile(path):
+        os.remove(path)
+    return path
+
+
 def _segment_episode(
     episode_number,
     start,
@@ -551,19 +544,6 @@ def _segment_episode(
     given by `path` (if the video is splitted in different files) or by
     `episode_start_end_frames` (if the video is given in a single file)
 
-    Parameters
-    ----------
-    video : <Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
-    segmentation_thresholds : dict
-        Dictionary with the thresholds used for the segmentation: `min_threshold`,
-        `max_threshold`, `min_area`, `max_area`
-    path : string
-        Path to the video file from where to get the VideoCapture (OpenCV) object
-    episode_start_end_frames : tuple
-        Tuple (starting_frame, ending_frame) indicanting the start and end of the episode
-        when the video is given in a single file
-
     Returns
     -------
     blobs_in_episode : list
@@ -579,59 +559,50 @@ def _segment_episode(
     segment_frame
     blob_extractor
     """
+    # Each episode runs in its own process,
+    # so OpenCV should not spawn more threads
+    previous_number_of_threads = cv2.getNumThreads()
+    cv2.setNumThreads(1)
+
     # Set file path to store blobs segmentation image and blobs pixels
-    if save_segmentation_image == "DISK":
-        bounding_box_images_path = os.path.join(
-            segmentation_data_folder,
-            f"episode_images_{episode_number}.hdf5",
-        )
-        if os.path.isfile(bounding_box_images_path):
-            os.remove(bounding_box_images_path)
-    else:
-        bounding_box_images_path = None
-    if save_pixels == "DISK":
-        pixels_path = os.path.join(
-            segmentation_data_folder,
-            f"episode_pixels_{episode_number}.hdf5",
-        )
-        if os.path.isfile(pixels_path):
-            os.remove(pixels_path)
-    else:
-        pixels_path = None
+    bounding_box_images_path = _episode_file(segmentation_data_folder, "images", episode_number, save_segmentation_image)
+    pixels_path = _episode_file(segmentation_data_folder, "pixels", episode_number, save_pixels)
+    images_file = h5py.File(bounding_box_images_path, "a") if bounding_box_images_path else None
+    pixels_file = h5py.File(pixels_path, "a") if pixels_path else None
+
     # Read video for the episode
     cap = VideoCapture(video_path, chunk)
 
-    # Get number of frames in the episode
-    if single_video_file:
-        number_of_frames_in_episode = end - start
-        # Moving to first frame of the episode from the single file
-        cap.set(1, start)
-    else:
-        number_of_frames_in_episode = int(cap.get(7))
-
-    max_number_of_blobs = 0
-    frame_number = 0
-    blobs_in_episode = []
-    called = 0
-    reset=None
-    while frame_number < number_of_frames_in_episode:
-
-        # Compute the global fragment number in the video
-        global_frame_number = start + frame_number
-        # Compute the frame number in the video file
+    try:
+        # Get number of frames in the episode
         if single_video_file:
-            frame_number_in_video_path = global_frame_number
+            number_of_frames_in_episode = end - start
+            # Moving to first frame of the episode from the single file
+            cap.set(1, start)
         else:
-            frame_number_in_video_path = frame_number
-        if single_video_file:
-            assert global_frame_number == frame_number_in_video_path
+            number_of_frames_in_episode = int(cap.get(7))
 
-        if _frame_in_intervals(
-            global_frame_number, segmentation_parameters["tracking_interval"]
-        ) and ((global_frame_number % conf.SKIP_EVERY_FRAME) == 0 or frame_number == 0):# or frame_number >= (number_of_frames_in_episode-conf.SKIP_EVERY_FRAME)):
-            try:
+        max_number_of_blobs = 0
+        frame_number = 0
+        blobs_in_episode = []
+        segmented_frames = 0
+        failed_frames = 0
+        reset=None
+        while frame_number < number_of_frames_in_episode:
+
+            # Compute the global fragment number in the video
+            global_frame_number = start + frame_number
+            # Compute the frame number in the video file
+            if single_video_file:
+                frame_number_in_video_path = global_frame_number
+            else:
+                frame_number_in_video_path = frame_number
+
+            if _frame_in_intervals(
+                global_frame_number, segmentation_parameters["tracking_interval"]
+            ) and ((global_frame_number % conf.SKIP_EVERY_FRAME) == 0 or frame_number == 0):
                 reset=True
-                blobs_in_frame, max_number_of_blobs = _get_blobs_in_frame(
+                blobs_in_frame, max_number_of_blobs, success = _get_blobs_in_frame(
                     cap,
                     video_params_to_store,
                     segmentation_parameters,
@@ -644,73 +615,93 @@ def _segment_episode(
                     pixels_path,
                     save_pixels,
                     save_segmentation_image,
+                    images_file=images_file,
+                    pixels_file=pixels_file,
                 )
-                called += 1
-            except Exception as error:
-                # print(f"Start {start}")
-                # print(global_frame_number)
-                # print(f"Called {called} times")
-                raise error
-        else:
-            if conf.SKIP_EVERY_FRAME > 5:
-                if reset is not None and reset==True:
-                    next_fn=conf.SKIP_EVERY_FRAME*(global_frame_number//conf.SKIP_EVERY_FRAME)+conf.SKIP_EVERY_FRAME
-                    print(f"{global_frame_number}: Skipping to frame {next_fn}")
-                    cap.set(1, next_fn)
-                    reset=False
+                segmented_frames += 1
+                failed_frames += int(not success)
             else:
-                ret, _ = cap.read()
+                if conf.SKIP_EVERY_FRAME > 5:
+                    if reset is not None and reset==True:
+                        next_fn=conf.SKIP_EVERY_FRAME*(global_frame_number//conf.SKIP_EVERY_FRAME)+conf.SKIP_EVERY_FRAME
+                        logger.debug(f"{global_frame_number}: Skipping to frame {next_fn}")
+                        cap.set(1, next_fn)
+                        reset=False
+                else:
+                    ret, _ = cap.read()
 
-            blobs_in_frame = BlobsInFrame()
+                blobs_in_frame = BlobsInFrame()
 
-        # store all the blobs encountered in the episode
-        blobs_in_episode.append(blobs_in_frame)
-        frame_number += 1
+            # store all the blobs encountered in the episode
+            blobs_in_episode.append(blobs_in_frame)
+            frame_number += 1
 
-    cap.release()
+    finally:
+        cap.release()
+        for file in [images_file, pixels_file]:
+            if file is not None:
+                file.close()
+        cv2.setNumThreads(previous_number_of_threads)
+
+    if failed_frames > 0:
+        logger.warning(
+            "Episode %s (frames %s - %s): %s of %s frames could not be read or segmented",
+            episode_number, start, end, failed_frames, segmented_frames
+        )
+        if failed_frames == segmented_frames:
+            raise RuntimeError(
+                f"None of the frames of episode {episode_number} (frames {start} - {end}) "
+                f"of {video_path} (chunk {chunk}) could be segmented. See the log for details"
+            )
+
     gc.collect()
     return blobs_in_episode, max_number_of_blobs
 
 
 def _segment_video_in_parallel(
-    episodes_sublists,
+    episodes,
     chunk,
     segmentation_data_folder,
     segmentation_parameters,
     video_params_to_store,
     single_video_file,
+    n_jobs,
+    save_pixels,
+    save_segmentation_image,
 ):
-    # init variables to store data
-    blobs_in_video = []
-    maximum_number_of_blobs_in_episode = []
-    logger.info("There is only one path, segmenting by frame indices")
-    logger.info(f"Pixels stored in {conf.SAVE_PIXELS}")
-    logger.info(
-        f"Segmentation images stored in {conf.SAVE_SEGMENTATION_IMAGE}"
+    """
+    Segment all the episodes in parallel
+
+    Arguments:
+        episodes (list): (episode_path, episode_number, (start, end)) of each episode
+
+    Returns:
+        blobs_in_video (list): blobs_in_frame of each frame of the episodes, in order
+        maximum_number_of_blobs (list): maximum number of blobs in a frame of each episode
+    """
+    logger.info(f"Segmenting {len(episodes)} episodes with {n_jobs} jobs")
+    logger.info(f"Pixels stored in {save_pixels}")
+    logger.info(f"Segmentation images stored in {save_segmentation_image}")
+
+    output = Parallel(n_jobs=n_jobs)(
+        delayed(_segment_episode)(
+            episode_number,
+            start_end[0],
+            start_end[1],
+            episode_path,
+            chunk,
+            segmentation_parameters,
+            segmentation_data_folder,
+            video_params_to_store,
+            single_video_file,
+            save_pixels,
+            save_segmentation_image,
+        )
+        for episode_path, episode_number, start_end in episodes
     )
-    for episodes_sublist in tqdm(episodes_sublists, desc="Segmenting video"):
-        OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
-            delayed(_segment_episode)(
-                episode_number,
-                start_end[0],
-                start_end[1],
-                episode_path,
-                chunk,
-                segmentation_parameters,
-                segmentation_data_folder,
-                video_params_to_store,
-                single_video_file,
-                conf.SAVE_PIXELS,
-                conf.SAVE_SEGMENTATION_IMAGE,
-            )
-            for episode_path, episode_number, start_end in episodes_sublist
-        )
-        blobs_in_episode = [out[0] for out in OupPutParallel]
-        maximum_number_of_blobs_in_episode.append(
-            [out[1] for out in OupPutParallel]
-        )
-        blobs_in_video.append(blobs_in_episode)
-    return blobs_in_video, maximum_number_of_blobs_in_episode
+    blobs_in_video = flatten([blobs_in_episode for blobs_in_episode, _ in output])
+    maximum_number_of_blobs = [max_number_of_blobs for _, max_number_of_blobs in output]
+    return blobs_in_video, maximum_number_of_blobs
 
 
 def segment(
@@ -726,78 +717,41 @@ def segment(
     Computes a list of blobs for each frame of the video and the maximum
     number of blobs found in a frame.
 
-    Parameters
-    ----------
-    video_path
-    segmentation_parameters
-    video_attributes_to_store_in_each_blob
-    episodes_start_end
-    segmentation_data_folder
-    video_paths
-
-    Returns
-    -------
-
     See Also
     --------
     _segment_video_in_parallel
 
     """
-    # avoid computing with all the cores in very large videos. It fills the RAM.
-    num_cpus = int(multiprocessing.cpu_count())
-    num_jobs = conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
-    if conf.NUMBER_OF_JOBS_FOR_SEGMENTATION is None:
-        num_jobs = 1
-    elif num_jobs < 0:
-        num_jobs = num_cpus + 1 + num_jobs
+    num_jobs = effective_n_jobs(conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)
 
     if len(video_paths) == 1:
         logger.debug("Single video paths")
-        episodes_sublists = []
-        for i in range(0, len(episodes_start_end), num_jobs):
-            episode_numbers = range(i, i + num_jobs)
-            episode_start_ends = episodes_start_end[i : i + num_jobs]
-            episode_paths = [video_path] * len(episode_start_ends)
-            episodes_sublists.append(
-                zip(episode_paths, episode_numbers, episode_start_ends)
-            )
+        episode_paths = [video_path] * len(episodes_start_end)
         single_video_file = True
     else:
         logger.debug("Many video paths")
-        episodes_sublists = []
-        for i in range(0, len(episodes_start_end), num_jobs):
-            episode_numbers = range(i, i + num_jobs)
-            episode_paths = video_paths[i : i + num_jobs]
-            episode_start_ends = episodes_start_end[i : i + num_jobs]
-            episodes_sublists.append(
-                zip(episode_paths, episode_numbers, episode_start_ends)
-            )
+        episode_paths = video_paths
         single_video_file = False
 
-    episodes = []
-    for element in episodes_sublists:
-        episodes.append(list(element))
-    episodes_sublists=episodes
-    # print("******************************************************************")
-    # print(num_jobs)
-    # print(len(episodes_start_end))
-    # print(episode_numbers)
-    # print(episode_start_ends)
-    # print([list(episodes_sublist) for episodes_sublist in episodes_sublists])
-    # print("******************************************************************")
+    episodes = list(zip(episode_paths, range(len(episodes_start_end)), episodes_start_end))
+
+    save_pixels, save_segmentation_image = get_segmentation_storage(
+        segmentation_parameters["number_of_animals"]
+    )
+
     set_mkl_to_single_thread()
     blobs_in_video, maximum_number_of_blobs = _segment_video_in_parallel(
-        episodes_sublists,
+        episodes,
         chunk,
         segmentation_data_folder,
         segmentation_parameters,
         video_attributes_to_store_in_each_blob,
         single_video_file,
+        num_jobs,
+        save_pixels,
+        save_segmentation_image,
     )
     set_mkl_to_multi_thread()
 
-    # blobs_in_video is flattened to obtain a list of blobs per
-    # episode and then the list of all blobs
-    blobs_in_video = flatten(flatten(blobs_in_video))
-    maximum_number_of_blobs = max(flatten(maximum_number_of_blobs))
+    maximum_number_of_blobs = max(maximum_number_of_blobs)
     return blobs_in_video, maximum_number_of_blobs

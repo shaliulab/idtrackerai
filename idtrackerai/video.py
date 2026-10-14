@@ -49,6 +49,49 @@ except ModuleNotFoundError:
 logger = logging.getLogger("__main__.video")
 
 
+class NonSquareFramesError(ValueError):
+    pass
+
+
+def check_frames_are_square(video_path, chunk):
+    """
+    Raise NonSquareFramesError if the frames of the video (chunk) are not square.
+
+    imgstore crops non square frames to a square, while other readers (e.g. YOLOv7)
+    may not, so the coordinates of an animal in a non square video are ambiguous.
+    Both the shape declared in the imgstore metadata and the shape of the frames
+    actually encoded in the chunk are checked.
+
+    Set ALLOW_NON_SQUARE_FRAMES = True in local_settings.py to skip this check
+    """
+    if getattr(conf, "ALLOW_NON_SQUARE_FRAMES", False):
+        return
+
+    cap = VideoCapture(video_path, chunk)
+    try:
+        shapes = {}
+        metadata = getattr(cap, "_metadata", None)
+        if isinstance(metadata, dict) and "imgshape" in metadata:
+            shapes["metadata imgshape"] = tuple(int(v) for v in metadata["imgshape"][:2])
+
+        # the opencv capture reading the chunk (imgstore) or the video
+        raw_capture = getattr(cap, "_cap", cap)
+        raw_capture = getattr(raw_capture, "_cap", raw_capture)
+        height, width = int(raw_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(raw_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        if height > 0 and width > 0:
+            shapes["encoded frames"] = (height, width)
+    finally:
+        cap.release()
+
+    non_square = {k: shape for k, shape in shapes.items() if shape[0] != shape[1]}
+    if non_square:
+        raise NonSquareFramesError(
+            f"{video_path} (chunk {chunk}) has non square frames: {non_square}. "
+            "Non square frames are not supported yet. "
+            "Set ALLOW_NON_SQUARE_FRAMES = True in local_settings.py to process them anyway"
+        )
+
+
 class Video(object):
     """
     A class containing the main features of the video.
@@ -61,7 +104,7 @@ class Video(object):
     However, this is bad practice and it will change in the future.
     """
 
-    def __init__(self, video_path, open_multiple_files, chunk=0):
+    def __init__(self, video_path, open_multiple_files, chunk=0, balance_episodes=False):
         """Initializes a video object
 
         Parameters
@@ -70,6 +113,12 @@ class Video(object):
             Path to a video file
         open_multiple_files : bool
             Flag to indicate that multiple files must be loaded
+        balance_episodes : bool
+            If True, the episodes are made shorter than FRAMES_PER_EPISODE if needed
+            so that their number is a multiple of the number of segmentation jobs
+            (see compute_frames_per_episode). This changes how the identification
+            images are stored, and therefore the training of the identification network,
+            so it should only be used when it is not needed (a single animal)
         """
         logger.debug("Video object init")
         # General video properties
@@ -107,7 +156,7 @@ class Video(object):
             self._number_of_frames_in_chunk,
             self._episodes_start_end,
             self._number_of_episodes,
-        ) = self.get_num_frames_and_processing_episodes(self._video_paths, chunk=self._chunk)
+        ) = self.get_num_frames_and_processing_episodes(self._video_paths, chunk=self._chunk, balance_episodes=balance_episodes)
 
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
         # Currently idtracker.ai does not rely on color. All color videos
@@ -1174,7 +1223,23 @@ class Video(object):
         ]
 
     @staticmethod
-    def get_num_frames_and_processing_episodes(video_paths, chunk):
+    def compute_frames_per_episode(number_of_frames):
+        """
+        Number of frames in each episode, such that
+        no episode has more than FRAMES_PER_EPISODE frames and
+        the number of episodes is a multiple of the number of jobs used to segment them
+        (so all jobs are busy until the end of the segmentation)
+        """
+        from idtrackerai.utils.py_utils import effective_n_jobs
+
+        number_of_frames = max(1, int(number_of_frames))
+        n_jobs = effective_n_jobs(conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)
+        number_of_episodes = int(np.ceil(number_of_frames / conf.FRAMES_PER_EPISODE))
+        number_of_episodes = int(np.ceil(number_of_episodes / n_jobs)) * n_jobs
+        return max(1, int(np.ceil(number_of_frames / number_of_episodes)))
+
+    @staticmethod
+    def get_num_frames_and_processing_episodes(video_paths, chunk, balance_episodes=False):
         """Gets the number of frames in the video, the eposides of the video,
         and the number of episodes.
 
@@ -1202,10 +1267,15 @@ class Video(object):
             number_of_frames = int(cap.get("TOTAL_NUMBER_OF_FRAMES"))
             last_frame_in_episode = int(cap.get("NUMBER_OF_FRAMES"))
             number_of_frames_in_chunk=int(cap.get("NUMBER_OF_FRAMES_IN_CHUNK"))
-            start = list(range(int(cap.get("STARTING_FRAME_OF_CHUNK")), int(last_frame_in_episode), conf.FRAMES_PER_EPISODE))
+            first_frame = int(cap.get("STARTING_FRAME_OF_CHUNK"))
+            if balance_episodes:
+                frames_per_episode = Video.compute_frames_per_episode(last_frame_in_episode - first_frame)
+            else:
+                frames_per_episode = conf.FRAMES_PER_EPISODE
+            start = list(range(first_frame, int(last_frame_in_episode), frames_per_episode))
             end = start[1:] + [last_frame_in_episode]
             episodes_start_end = list(zip(start, end))
-            print(episodes_start_end)
+            logger.debug(f"Episodes: {episodes_start_end}")
             assert last_frame_in_episode == end[-1]
             number_of_episodes = len(episodes_start_end)
         else:  # multiple video files
@@ -1213,7 +1283,7 @@ class Video(object):
             logger.info(f"{video_paths}")
             num_frames_in_video_segments = [
                 # This cv2.VideoCapture is OK because it's only used with opencv videos
-                int(cv2.VideoCapture(video_segment, chunk=None).get(7))
+                int(cv2.VideoCapture(video_segment).get(7))
                 for video_segment in video_paths
             ]
             end = list(np.cumsum(num_frames_in_video_segments))

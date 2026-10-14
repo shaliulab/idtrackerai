@@ -135,6 +135,23 @@ SAVE_PIXELS = "DISK"  # 'RAM' or 'NONE'
 # RAM: image is stored in the blob object in the ram
 # NONE: image is not stored and are computed from the contour everytime
 SAVE_SEGMENTATION_IMAGE = "DISK"  # "DISK"  # 'RAM' or 'NONE'
+# Same as SAVE_PIXELS and SAVE_SEGMENTATION_IMAGE, used instead of them
+# when number_of_animals is 1. A single animal never needs identification images,
+# and the pixels can be cheaply recomputed from the contour of the blob
+SINGLE_ANIMAL_SAVE_PIXELS = "NONE"
+SINGLE_ANIMAL_SAVE_SEGMENTATION_IMAGE = "NONE"
+# If False, frames where the blob of a single animal does not overlap with
+# the blob in the previous / next frame (i.e. the animal moved fast) are not
+# considered imperfect and are not sent to the AI (YOLOv7) for correction.
+# Only used when number_of_animals is 1
+SINGLE_ANIMAL_FLAG_IMPERFECT_OVERLAP = False
+# imgstore crops non square frames to a square, which makes their coordinates
+# ambiguous. If False, an error is raised when a non square video is found
+ALLOW_NON_SQUARE_FRAMES = False
+# If True, the overlap between all blobs of the chunk is recomputed after
+# integrating the AI predictions. If False, only the overlap around the frames
+# modified by the AI is recomputed (the rest is restored from the cache)
+INTEGRATION_FULL_OVERLAP_RECOMPUTE = False
 
 ###############################################################################
 # GUI advanced parameters

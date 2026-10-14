@@ -11,10 +11,12 @@ import cv2
 import numpy as np
 import joblib
 
-from idtrackerai.animals_detection.segmentation import _create_blobs_objects
+from idtrackerai.animals_detection.segmentation import _create_blobs_objects, get_segmentation_storage
 from idtrackerai.animals_detection.segmentation_utils import (
     _get_blobs_information_per_frame,
-    apply_segmentation_criteria
+    apply_segmentation_criteria,
+    get_roi_mask,
+    parse_contours,
 )
 
 from idtrackerai.list_of_blobs import ListOfBlobs
@@ -23,6 +25,11 @@ from idtrackerai.animals_detection.yolov7.nms_multilabel import resolve_multilab
 from idtrackerai.animals_detection.yolov7.filter import keep_best_detections
 from idtrackerai.utils.py_utils import download_file
 from idtrackerai.animals_detection.yolov7.detection import Detection
+
+try:
+    from imgstore.interface import VideoCapture
+except ModuleNotFoundError:
+    from cv2 import VideoCapture
 
 logger=logging.getLogger(__name__)
 
@@ -48,15 +55,42 @@ def filter_detections_in_roi(detections, mask):
     return detections_in_roi
 
 
-def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input, allowed_classes=None, minimum_confidence=None, **kwargs):
+def read_frames(store_path, chunk, frame_numbers):
+    """
+    Yield (frame_number, frame) for each of the passed frame numbers of the chunk, in increasing order,
+    read with the same reader used during preprocessing, so the frames are identical (same cropping)
+
+    The frame is None if it could not be read
+    """
+    cap = VideoCapture(store_path, chunk)
+    try:
+        last_frame_number = None
+        for frame_number in sorted(frame_numbers):
+            # only seek if the frames are not consecutive
+            if last_frame_number is None or frame_number != last_frame_number + 1:
+                cap.set(1, frame_number)
+            ret, frame = cap.read()
+            if not ret or frame is None:
+                logger.error("Could not read frame %s of chunk %s", frame_number, chunk)
+                last_frame_number = None
+                yield frame_number, None
+                continue
+            last_frame_number = frame_number
+            if frame.ndim == 3:
+                frame = frame[:,:,0]
+            yield frame_number, frame
+    finally:
+        cap.release()
+
+
+def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input, allowed_classes=None, minimum_confidence=None, list_of_blobs=None, **kwargs):
     """
     Correct idtrackerai preprocessing errors with YOLOv7 results,
     which should be made available in the runs/detect folder of the YOLOv7 repository
     under a folder called like the experiment
 
-    The function loads the list_of_blobs,
-    modifies it with the information collected from the YOLOv7 output
-    and saves it back to the original file
+    The function modifies the list_of_blobs (loaded from the preprocessing step if not passed)
+    with the information collected from the YOLOv7 output
 
     The attribute yolov7_annotated of the list_of_blobs contains the frame number
     of the frames where a modification has been made
@@ -67,7 +101,9 @@ def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input,
         * chunk (int): Chunk to be processed
         * frames (list): frame_number, frame_idx tuples for each frame in the experiment where idtrackerai preprocessing failed
         * input (str): Path to folder with labels (each frame must have a corresponding label here)
-        * allowed_classes (iterable): id of the classes taken from the yolov7 output
+        * allowed_classes (dict): id -> name of the classes taken from the yolov7 output
+        * minimum_confidence (float): If passed, detections with lower confidence are ignored
+        * list_of_blobs (ListOfBlobs): blobs produced by the preprocessing step
 
     Returns:
         * list_of_blobs
@@ -84,40 +120,57 @@ def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input,
     video_object = np.load(video_object_path, allow_pickle=True).item()
     number_of_animals=video_object._user_defined_parameters["number_of_animals"]
 
-    video_path=os.path.join(os.path.dirname(store_path), f"{str(chunk).zfill(6)}.mp4")
-    assert os.path.exists(video_path)
+    if list_of_blobs is None:
+        blobs_collection = os.path.join(session_folder, "preprocessing", "blobs_collection.npy")
+        assert os.path.exists(blobs_collection)
+        list_of_blobs=ListOfBlobs.load(blobs_collection)
 
     blobs_in_frame_all = []
     failed_frames = []
     successful_frames = []
 
-
     def record_failed_frame(fn):
         failed_frames.append(fn)
-        logger.debug(f"YOLOv7 failed in frame %s", frame_number)
+        logger.debug(f"YOLOv7 failed in frame %s", fn)
 
-    cap = cv2.VideoCapture(video_path)
-    last_frame_idx = None
+    # these do not change from frame to frame
+    config = load_config(store_path)
+    save_pixels, save_segmentation_image = get_segmentation_storage(number_of_animals)
+    if save_pixels == "NONE":
+        # the contour of the blobs modified by YOLOv7 is replaced by its bounding box,
+        # so their pixels cannot be recomputed from the contour
+        save_pixels = "RAM"
+
+    frame_idxs = dict(frames)
+    roi_mask = None
+
     logger.info(f"YOLOv7 will annotate {len(frames)} frames")
-    for frame_number, frame_idx in frames:
-        if last_frame_idx is None or frame_idx != (last_frame_idx+1):
-            cap.set(1, frame_idx)
-        last_frame_idx = frame_idx
-        assert cap.get(1) == frame_idx
-        ret, frame = cap.read()
-        frame=frame[:,:,0]
+    for frame_number, frame in read_frames(store_path, chunk, frame_idxs.keys()):
+        frame_idx = frame_idxs[frame_number]
+        if frame is None:
+            record_failed_frame(frame_number)
+            continue
+
+        if frame.shape != (video_object.height, video_object.width):
+            raise ValueError(
+                f"Frame {frame_number} has shape {frame.shape}, "
+                f"but the video was preprocessed with shape {(video_object.height, video_object.width)}"
+            )
+
+        if roi_mask is None:
+            roi_mask = get_roi_mask(config, frame.shape)
 
         label_file=get_label_file_path(input, frame_number, chunk, frame_idx)
         detections=load_detections_from_one_file(label_file, class_names=allowed_classes)
-        
-        
-        kwargs_for_blob_regeneration=load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx)
-        kwargs.update(kwargs_for_blob_regeneration)
-        config=kwargs["segmentation_parameters"]
-        roi=np.array(eval(config["_roi"]["value"][0][0]))
-        mask = np.zeros_like(frame)
-        mask = cv2.drawContours(mask, [roi], -1, 255, -1)
-        detections=filter_detections_in_roi(detections, mask)
+
+        # filter by class and confidence before choosing the best detections
+        if allowed_classes is not None:
+            detections=[detection for detection in detections if detection.class_id in allowed_classes]
+
+        if minimum_confidence is not None:
+            detections=[detection for detection in detections if detection.conf > minimum_confidence]
+
+        detections=filter_detections_in_roi(detections, roi_mask)
 
         if len(detections) > number_of_animals:
             # if two detections highly overlap, keep the blurry
@@ -129,36 +182,19 @@ def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input,
                 # if still too many detections are found, keep the ones with the most confidence
                 detections = keep_best_detections(detections, number_of_animals)
                 logger.info(f"FILTERING detections in %s w confidence >= %s", label_file, detections[-1].conf)
-            else:
-                logger.info(f"NO DETECTIONS FOUND IN %s", label_file)
 
+        if len(detections) == number_of_animals:
 
-        if len(detections) == 0:
-            record_failed_frame(frame_number)
-            continue
-
-        if allowed_classes is not None:
-            detections=[detection for detection in detections if detection.class_id in allowed_classes]
-
-
-        if minimum_confidence is not None:
-            detections=[detection for detection in detections if detection.conf > minimum_confidence]
-
-
-        if len(detections) == 0:
-            record_failed_frame(frame_number)
-            continue
-
-        if len(detections) == video_object.user_defined_parameters["number_of_animals"]:
-
-
-            segmented_frame, _ = apply_segmentation_criteria(frame, config)
+            blob_kwargs = get_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, config)
+            segmented_frame, _ = apply_segmentation_criteria(frame, config, roi_mask=roi_mask)
             try:
-                blobs_in_frame = yolo_detections_to_blobs(frame, config, segmented_frame, detections, frame_number=frame_number, **kwargs)
-            except Exception as error:
-                logger.error(error)
-                logger.error(traceback.print_exc())
-                print(f"Could not process YOLOv7 predictions in frame {frame_number}")
+                blobs_in_frame = yolo_detections_to_blobs(
+                    frame, config, segmented_frame, detections, frame_number=frame_number,
+                    save_pixels=save_pixels, save_segmentation_image=save_segmentation_image,
+                    **blob_kwargs, **kwargs
+                )
+            except Exception:
+                logger.exception(f"Could not process YOLOv7 predictions in frame {frame_number}")
                 record_failed_frame(frame_number)
                 continue
             blobs_in_frame_all.append((frame_number, blobs_in_frame))
@@ -167,22 +203,8 @@ def annotate_chunk_with_yolov7(store_path, session_folder, chunk, frames, input,
             record_failed_frame(frame_number)
         # end of for loop over frames
 
-    cap.release()
-    step = "preprocessing"
-    blobs_collection = os.path.join(session_folder, step, "blobs_collection.npy")
-    assert os.path.exists(blobs_collection)
-    try:
-        shutil.copy(blobs_collection, f"{blobs_collection}.bak")
-        list_of_blobs=ListOfBlobs.load(blobs_collection)
-
-        if blobs_in_frame_all:
-            for frame_number, blobs_in_frame in blobs_in_frame_all:
-                list_of_blobs.apply_modification(frame_number, blobs_in_frame)
-
-
-    except Exception as error:
-        shutil.copy(f"{blobs_collection}.bak", blobs_collection)
-        raise error
+    for frame_number, blobs_in_frame in blobs_in_frame_all:
+        list_of_blobs.apply_modification(frame_number, blobs_in_frame)
 
     return list_of_blobs, successful_frames, failed_frames
 
@@ -281,7 +303,7 @@ def yolo_line_to_detection(line, class_names={}):
 
 
     if class_names:
-        detection.class_name=class_names[class_id]
+        detection.class_name=class_names.get(class_id)
 
     return detection
 
@@ -326,13 +348,13 @@ def yolo_detection_to_contour(frame, config, segmented_frame, detection, other_d
 
 
 
-    contours=cv2.findContours(and_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[1]
+    contours=parse_contours(cv2.findContours(and_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE))
     contours=sorted(contours, key=lambda c: cv2.contourArea(c))
     contour=contours[-1]
 
     return contour
 
-def yolo_detections_to_blobs(frame, config, segmented_frame, detections, exclusive=True, frame_number=None, **kwargs):
+def yolo_detections_to_blobs(frame, config, segmented_frame, detections, exclusive=True, frame_number=None, save_pixels="DISK", save_segmentation_image="DISK", **kwargs):
     """
     Process the yolov7 detections into idtrackerai blobs
 
@@ -343,8 +365,6 @@ def yolo_detections_to_blobs(frame, config, segmented_frame, detections, exclusi
     * kwargs: Extra arguments to _create_blobs_objects
     """
 
-    save_pixels="DISK"
-    save_segmentation_image="DISK"
     contours = []
     indices = np.arange(len(detections)).tolist()
 
@@ -410,21 +430,24 @@ def yolo_detections_to_blobs(frame, config, segmented_frame, detections, exclusi
 
     return blobs_in_frame
 
-def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx):
-
-    session_folder=video_object.session_folder
+def load_config(store_path):
+    """Load the .conf file of the experiment (next to the metadata.yaml) with the resolution reduction"""
     conf_file = os.path.join(os.path.dirname(store_path), os.path.basename(os.path.dirname(store_path)) + ".conf")
     config = read_json_file(conf_file)
+    config["resolution_reduction"]=config["_resreduct"]["value"]
+    return config
+
+
+def get_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, config):
+
+    session_folder=video_object.session_folder
 
     episode_number = None
     for i, episode in enumerate(video_object.episodes_start_end):
         if episode[0] <= frame_number < episode[1]:
             episode_number = i
-
-    assert episode_number is not None
-    episode_number
-
-    config["resolution_reduction"]=config["_resreduct"]["value"]
+            break
+    assert episode_number is not None, f"Frame {frame_number} is not in any episode"
 
     kwargs = {
         "video_path": video_object.video_path,
@@ -438,8 +461,10 @@ def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_num
     }
     return kwargs
 
-    assert os.path.exists(kwargs["bounding_box_images_path"])
-    assert os.path.exists(kwargs["pixels_path"])
+
+def load_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, frame_idx):
+    return get_kwargs_for_blob_regeneration(store_path, video_object, chunk, frame_number, load_config(store_path))
+
 
 def read_yolov7_label(label_file):
 

@@ -43,6 +43,7 @@ from joblib import Parallel, delayed
 from idtrackerai.utils.py_utils import (
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
+    effective_n_jobs,
 )
 
 try:
@@ -227,7 +228,7 @@ def compute_background(
         logger.debug(
             "one single video, computing bkg in parallel from single video"
         )
-        output = Parallel(n_jobs=num_jobs_parallel)(
+        output = Parallel(n_jobs=effective_n_jobs(num_jobs_parallel))(
             delayed(_compute_episode_bkg)(
                 video_path,
                 chunk,
@@ -248,7 +249,7 @@ def compute_background(
         logger.debug(
             "multiple videos, computing bkg in parallel from every episode"
         )
-        output = Parallel(n_jobs=num_jobs_parallel)(
+        output = Parallel(n_jobs=effective_n_jobs(num_jobs_parallel))(
             delayed(_compute_episode_bkg)(
                 video_path,
                 chunk,
@@ -523,10 +524,9 @@ def _get_pixels(cnt: np.ndarray, width: int, height: int) -> np.ndarray:
     pixels_coordinates_list : list
         List of the coordinates of the pixels in a given width and height
     """
-    cimg = np.zeros((height, width))
+    cimg = np.zeros((height, width), np.uint8)
     cv2.drawContours(cimg, [cnt], -1, color=255, thickness=-1)
-    pts = np.where(cimg == 255)
-    return np.asarray(list(zip(pts[0], pts[1])))
+    return np.column_stack(np.nonzero(cimg))
 
 
 def _get_bounding_box_image(
@@ -697,6 +697,7 @@ def blob_extractor(
     max_area: int,
     save_pixels: Optional[str] = "DISK",
     save_segmentation_image: Optional[str] = "DISK",
+    external_only: bool = False,
 ) -> Tuple[
     List[Tuple],
     List[np.ndarray],
@@ -706,9 +707,20 @@ def blob_extractor(
     List[List],
     List[float],
 ]:
-    # TODO: Document
+    """
+    Find the contours in segmented_frame and compute the properties
+    of those with an area between min_area and max_area
+
+    Arguments:
+        external_only (bool): If True, only the outermost contours are retrieved.
+            This gives the same blobs as filling the holes of segmented_frame
+            (scipy.ndimage.binary_fill_holes) and retrieving all contours,
+            but much faster
+    """
     find_contours = cv2.findContours(
-        segmented_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
+        segmented_frame,
+        cv2.RETR_EXTERNAL if external_only else cv2.RETR_TREE,
+        cv2.CHAIN_APPROX_NONE,
     )
     contours = parse_contours(find_contours)
 
@@ -742,18 +754,43 @@ def blob_extractor(
     )
 
 
-def apply_segmentation_criteria(frame, config):
-    """
-    Repeat the idtrackerai preprocessing step for a single frame given a set of parameters 
-    """
+def _parse_roi(row):
+    """Points of a ROI as stored in the _roi field of a .conf file"""
+    if isinstance(row, (list, tuple)) and len(row) > 0 and isinstance(row[0], str):
+        row = row[0]
+    if isinstance(row, str):
+        row = eval(row)
+    return np.array(row, np.int32).reshape((-1, 1, 2))
 
-    if eval(config["_applyroi"]["value"]):
-        roi_mask = np.zeros_like(frame)
-        roi_contour = np.array(eval(config["_roi"]["value"][0][0])).reshape((-1, 1, 2))
-        roi_mask = cv2.drawContours(roi_mask, [roi_contour], -1, 255, -1)
+
+def get_roi_mask(config, shape):
+    """
+    Mask (255 inside the ROIs, 0 outside) of the ROIs defined in a .conf file
+    (all 255 if the ROI is not applied or there are no ROIs)
+    """
+    rois = config.get("_roi", {}).get("value", []) or []
+    if str(config.get("_applyroi", {}).get("value", False)) == "True" and len(rois) > 0:
+        roi_mask = np.zeros(shape, np.uint8)
+        for row in rois:
+            roi_contour = _parse_roi(row)
+            if len(roi_contour) < 3:
+                continue
+            roi_mask = cv2.drawContours(roi_mask, [roi_contour], -1, 255, -1)
     else:
-        roi_mask = np.ones_like(frame)*255
+        roi_mask = np.ones(shape, np.uint8)*255
+    return roi_mask
 
+
+def apply_segmentation_criteria(frame, config, roi_mask=None):
+    """
+    Repeat the idtrackerai preprocessing step for a single frame given a set of parameters
+
+    Arguments:
+        roi_mask (np.ndarray): If passed, it is used instead of computing the ROI mask from the config
+    """
+
+    if roi_mask is None:
+        roi_mask = get_roi_mask(config, frame.shape[:2])
 
     segmented_frame = segment_frame(frame, config["_intensity"]["value"][0], config["_intensity"]["value"][1], None, roi_mask, False)
     find_contours = cv2.findContours(
@@ -770,5 +807,3 @@ def apply_segmentation_criteria(frame, config):
     frame_canvas = np.zeros_like(frame)
     final_frame = cv2.drawContours(frame_canvas.copy(), good_contours_in_full_frame, -1, 255, -1)
     return final_frame, good_contours_in_full_frame
-
-
