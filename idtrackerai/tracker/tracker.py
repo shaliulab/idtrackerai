@@ -187,6 +187,9 @@ class TrackerAPI(object):
                 blob._P2_vector = [1.0]
                 blob.frame_number = f
 
+        # a single animal is always identified correctly
+        # (set here because create_trajectories returns early and never sets it)
+        self.video._estimated_accuracy = 1.0
         create_trajectories()
 
     def _get_global_fragments(self):
@@ -300,6 +303,9 @@ class TrackerAPI(object):
         first_frame_global_fragment = fragment.start_end[0]
         logger.info(f"The first frame of the first global global fragment is {first_frame_global_fragment}")
         self.video._first_frame_first_global_fragment = [first_frame_global_fragment]  # in case
+        # identities are certain when there is a single global fragment
+        # (set here because create_trajectories returns early and never sets it)
+        self.video._estimated_accuracy = 1.0
         create_trajectories()
 
     def track_wo_identification(self, create_trajectories=None):
