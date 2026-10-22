@@ -1312,7 +1312,8 @@ class Blob(object):
             np.sum(np.asarray(bounding_box_image.shape) ** 2)
         ).astype(int)
         diag = (diag, diag)
-        M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
+        # OpenCV 4 only accepts a center of Python numbers (OpenCV 3 also accepted numpy integers)
+        M = cv2.getRotationMatrix2D((int(center[0]), int(center[1])), rot_ang, 1)
         minif_rot = cv2.warpAffine(
             bounding_box_image,
             M,
