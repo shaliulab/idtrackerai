@@ -359,6 +359,13 @@ class ListOfBlobs(ParallelBlobOverlap, AlignableList, Modifications, object):
                 pairs.add((frame_number, frame_number + 1))
 
         for frame_before, frame_after in sorted(pairs):
+            # sync the cache with the live links, dropping cached links between
+            # these frames that reconnect_from_cache skipped. Otherwise a link to a
+            # replaced blob survives if the new blobs do not overlap
+            for blob in self.blobs_in_video[frame_before]:
+                blob._update_cached_links("next")
+            for blob in self.blobs_in_video[frame_after]:
+                blob._update_cached_links("previous")
             compute_overlapping_between_two_subsequent_frames(
                 self.blobs_in_video[frame_before],
                 self.blobs_in_video[frame_after],
