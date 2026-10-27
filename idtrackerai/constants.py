@@ -147,6 +147,7 @@ SINGLE_ANIMAL_SAVE_SEGMENTATION_IMAGE = "NONE"
 SINGLE_ANIMAL_FLAG_IMPERFECT_OVERLAP = False
 # imgstore crops non square frames to a square, which makes their coordinates
 # ambiguous. If False, an error is raised when a non square video is found
+# (unless imgstore pads them, i.e. SQUARE_METHOD = "pad")
 ALLOW_NON_SQUARE_FRAMES = False
 # If True, the overlap between all blobs of the chunk is recomputed after
 # integrating the AI predictions. If False, only the overlap around the frames

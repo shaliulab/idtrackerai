@@ -63,8 +63,10 @@ def check_frames_are_square(video_path, chunk):
     actually encoded in the chunk are checked.
 
     Set ALLOW_NON_SQUARE_FRAMES = True in local_settings.py to skip this check
+    Set SQUARE_METHOD = "pad" instead to have imgstore pad the frames to a square,
+    which keeps the coordinates and all the pixels of the frame
     """
-    if getattr(conf, "ALLOW_NON_SQUARE_FRAMES", False):
+    if getattr(conf, "ALLOW_NON_SQUARE_FRAMES", False) or getattr(conf, "SQUARE_METHOD", "crop") == "pad":
         return
 
     cap = VideoCapture(video_path, chunk)
