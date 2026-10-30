@@ -210,9 +210,14 @@ def read_json_file(config_file):
     
     with open(config_file, "r") as filehandle:
         config = json.load(filehandle)
+    # imported here because segmentation_utils imports this module
+    from idtrackerai.animals_detection.segmentation_utils import parse_rois
+
     rois = config.get("_roi", {}).get("value", [])
-    if rois:
-        config["_roi_contour"] = np.array(eval(rois[0][0])).reshape((-1, 1, 2))
+    # first positive ROI (negative ROIs, i.e. rows starting with -, are excluded areas)
+    positive_rois = [roi_contour for sign, roi_contour in parse_rois(rois) if sign > 0]
+    if positive_rois:
+        config["_roi_contour"] = positive_rois[0]
     else:
         config["_roi_contour"] = None
     return config

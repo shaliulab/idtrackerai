@@ -1,5 +1,6 @@
 import argparse
 import json
+import re
 from pathlib import Path
 import tomli
 
@@ -18,15 +19,48 @@ def main():
     args=ap.parse_args()
     conf=tomli.loads(Path(args.toml_file).read_text(encoding="utf-8"))
 
-    roi_str=parse_roi(conf["roi_list"][0])
+    roi_str=parse_rois(conf["roi_list"])
     conf_json=generate_v4_conf(conf["intensity_ths"][0], conf["intensity_ths"][1], conf["area_ths"][0], conf["area_ths"][1], conf["number_of_animals"], roi_str=roi_str)
     with open(args.json_file, "w") as handle:
         json.dump(conf_json, handle)
     
 
-def parse_roi(roi):
+def parse_rois(roi_list):
+    """
+    Convert the roi_list of an idtrackerai v5 .toml (e.g. ["+ Ellipse {...}", "- Polygon [[...], ...]"])
+    to the rows of the _roi field of a v4 .conf.
+    Negative ROIs (areas excluded from the ROI) are written with a leading -
 
-    ellipse_roi=eval(roi.lstrip("+ Ellipse "))
+    Return:
+        * list of str, one per ROI
+    """
+    return [parse_roi(roi) for roi in roi_list]
+
+
+def parse_roi(roi):
+    match=re.match(r"^\s*([+-])\s*(Ellipse|Polygon)\s*(.*)$", roi, re.DOTALL)
+    if match is None:
+        raise ValueError(f"Cannot parse ROI {roi}. Supported ROIs are + or - followed by Ellipse or Polygon")
+    sign, kind, definition = match.groups()
+
+    if kind == "Ellipse":
+        contour_str=parse_ellipse(eval(definition))
+    else:
+        contour_str=parse_polygon(eval(definition))
+
+    if sign == "-":
+        contour_str="- " + contour_str
+    return contour_str
+
+
+def parse_polygon(points):
+    contour=np.round(np.array(points, np.float64)).astype(np.int32)
+    contour_str=", ".join([str(e) for e in contour.tolist()]) + ", "
+    return contour_str
+
+
+def parse_ellipse(ellipse_roi):
+
     center=tuple(ellipse_roi["center"])
     axes=tuple(ellipse_roi["axes"])
     angle=ellipse_roi["angle"]
@@ -57,7 +91,11 @@ def parse_roi(roi):
 
 
 def generate_v4_conf(min_intensity, max_intensity, min_area, max_area, number_of_animals, roi_str):
-    "[1180, 652], [1180, 652],"
+    """
+    roi_str: list of ROI rows like "[1180, 652], [1180, 652]," (negative ROIs start with -)
+    """
+    if isinstance(roi_str, str):
+        roi_str=[roi_str]
 
     conf={
         "open-multiple-files": False,
@@ -112,8 +150,8 @@ def generate_v4_conf(min_intensity, max_intensity, min_area, max_area, number_of
         "_roi": {
             "value": [
                 [
-                    roi_str
-                ]
+                    row
+                ] for row in roi_str
             ]
         },
         "_no_ids": {

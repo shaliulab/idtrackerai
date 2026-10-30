@@ -4,12 +4,16 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from idtrackerai.animals_detection import AnimalsDetectionAPI 
+from idtrackerai.animals_detection.segmentation_utils import draw_roi_mask
 detection_parameters_keys=AnimalsDetectionAPI.detection_parameters_keys
 
 def load_mask_img(store, config):
-    roi = np.array(eval("[" + config["_roi"]["value"][0][0] + "]"))
+    """
+    Mask (255 inside the ROI, 0 outside) of the ROIs in the config,
+    with the negative ROIs (rows starting with -) removed from it
+    """
     mask=store.get_black_mask()
-    mask=cv2.drawContours(mask, [roi], -1, 255, -1)
+    mask=draw_roi_mask(config["_roi"]["value"], mask.shape)
     return mask
 
 

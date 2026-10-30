@@ -754,13 +754,66 @@ def blob_extractor(
     )
 
 
-def _parse_roi(row):
-    """Points of a ROI as stored in the _roi field of a .conf file"""
+def _split_roi_sign(row):
+    """
+    Sign and points (as a string) of a ROI as stored in the _roi field of a .conf file
+
+    Rows starting with - are areas excluded from the ROI (negative ROIs).
+    Rows starting with + or without a sign are included
+    """
     if isinstance(row, (list, tuple)) and len(row) > 0 and isinstance(row[0], str):
         row = row[0]
+    if not isinstance(row, str):
+        return 1, row
+    row = row.strip()
+    if row.startswith("-"):
+        return -1, row[1:]
+    if row.startswith("+"):
+        return 1, row[1:]
+    return 1, row
+
+
+def _parse_roi(row):
+    """Points of a ROI as stored in the _roi field of a .conf file"""
+    _, row = _split_roi_sign(row)
     if isinstance(row, str):
         row = eval(row)
     return np.array(row, np.int32).reshape((-1, 1, 2))
+
+
+def parse_rois(rois):
+    """
+    List of (sign, points) of the ROIs stored in the _roi field of a .conf file,
+    where sign is 1 for ROIs to include and -1 for ROIs to exclude.
+    ROIs with less than 3 points are skipped
+    """
+    parsed_rois = []
+    for row in rois:
+        sign, _ = _split_roi_sign(row)
+        roi_contour = _parse_roi(row)
+        if len(roi_contour) < 3:
+            continue
+        parsed_rois.append((sign, roi_contour))
+    return parsed_rois
+
+
+def draw_roi_mask(rois, shape, value=255):
+    """
+    Mask (value inside the ROIs, 0 outside) of the ROIs stored in the _roi field of a .conf file
+
+    The ROIs are applied in order: positive ROIs add their area to the mask
+    and negative ROIs remove it, so an ellipse followed by negative rectangles
+    is the ellipse without the rectangles.
+    If the first ROI is negative, the mask starts from the full frame
+    """
+    parsed_rois = parse_rois(rois)
+    if parsed_rois and parsed_rois[0][0] < 0:
+        roi_mask = np.full(shape, value, np.uint8)
+    else:
+        roi_mask = np.zeros(shape, np.uint8)
+    for sign, roi_contour in parsed_rois:
+        roi_mask = cv2.drawContours(roi_mask, [roi_contour], -1, value if sign > 0 else 0, -1)
+    return roi_mask
 
 
 def get_roi_mask(config, shape):
@@ -770,12 +823,7 @@ def get_roi_mask(config, shape):
     """
     rois = config.get("_roi", {}).get("value", []) or []
     if str(config.get("_applyroi", {}).get("value", False)) == "True" and len(rois) > 0:
-        roi_mask = np.zeros(shape, np.uint8)
-        for row in rois:
-            roi_contour = _parse_roi(row)
-            if len(roi_contour) < 3:
-                continue
-            roi_mask = cv2.drawContours(roi_mask, [roi_contour], -1, 255, -1)
+        roi_mask = draw_roi_mask(rois, shape)
     else:
         roi_mask = np.ones(shape, np.uint8)*255
     return roi_mask
