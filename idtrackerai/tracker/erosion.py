@@ -49,7 +49,7 @@ def compute_erosion_disk(video, blobs_in_video):
                 compute_min_frame_distance_transform(video, blobs_in_frame)
             )
 
-    return np.ceil(np.nanmedian(min_frame_distance_transform)).astype(np.int)
+    return np.ceil(np.nanmedian(min_frame_distance_transform)).astype(int)
 
 
 def compute_min_frame_distance_transform(video, blobs_in_frame):
